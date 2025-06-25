@@ -78,7 +78,17 @@ export default {
 	"OBAS Framework Folder Description": "OBAS 框架文件夹说明",
 	"Get The Latest Version Of Style": "获取最新版本的样式",
 	"Get The Latest Version Of Templates": "获取最新版本的模板",
+	"Get The Latest Version Of Demo Slides": "获取最新版本的演示示例",
 	"One Click to Deploy": "一键部署",
 	"Please enter the path to the OBAS Framework Folder": "请输入 OBAS 框架文件夹的路径",
 	"Enter the full path to the OBAS Framework folder": "输入 OBAS 框架文件夹的完整路径",
+	"Create New Slides": "创建新的演示",
+	"Slide Design A": "演示设计A",
+	"Slide Design B": "演示设计B",
+	"Slide Design C": "演示设计C",
+	"Slide Design D": "演示设计D",
+	"Slide Design E": "演示设计E",
+	"Please select a slide design": "请选择演示设计",
+	"New Slide": "新演示",
+	"Untitled Slide": "未命名演示"
 };

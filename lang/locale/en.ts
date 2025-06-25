@@ -87,7 +87,17 @@ export default {
 	"OBAS Framework Folder Description": "OBAS Framework Folder Description",
 	"Get The Latest Version Of Style": "Get The Latest Version Of Style",
 	"Get The Latest Version Of Templates": "Get The Latest Version Of Templates",
+	"Get The Latest Version Of Demo Slides": "Get The Latest Version Of Demo Slides",
 	"One Click to Deploy": "One Click to Deploy",
 	"Please enter the path to the OBAS Framework Folder": "Please enter the path to the OBAS Framework Folder",
 	"Enter the full path to the OBAS Framework folder": "Enter the full path to the OBAS Framework folder",
+	"Create New Slides": "Create New Slides",
+	"Slide Design A": "Slide Design A",
+	"Slide Design B": "Slide Design B",
+	"Slide Design C": "Slide Design C",
+	"Slide Design D": "Slide Design D",
+	"Slide Design E": "Slide Design E",
+	"Please select a slide design": "Please select a slide design",
+	"New Slide": "New Slide",
+	"Untitled Slide": "Untitled Slide"
 };

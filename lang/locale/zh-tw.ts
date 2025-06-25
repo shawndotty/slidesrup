@@ -79,7 +79,17 @@ export default {
 	"OBAS Framework Folder Description": "OBAS 框架資料夾說明",
 	"Get The Latest Version Of Style": "獲取最新版本的樣式",
 	"Get The Latest Version Of Templates": "獲取最新版本的模板",
+	"Get The Latest Version Of Demo Slides": "獲取最新版本的演示示例",
 	"One Click to Deploy": "一鍵部署",
 	"Please enter the path to the OBAS Framework Folder": "請輸入 OBAS 框架資料夾的路徑",
 	"Enter the full path to the OBAS Framework folder": "輸入 OBAS 框架資料夾的完整路徑",
+	"Create New Slides": "建立新的簡報",
+	"Slide Design A": "簡報設計A",
+	"Slide Design B": "簡報設計B", 
+	"Slide Design C": "簡報設計C",
+	"Slide Design D": "簡報設計D",
+	"Slide Design E": "簡報設計E",
+	"Please select a slide design": "請選擇簡報設計",
+	"New Slide": "新簡報",
+	"Untitled Slide": "無題簡報"
 };

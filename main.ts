@@ -4,9 +4,13 @@ import {
 	normalizePath,
 	Plugin,
 	PluginSettingTab,
-	Setting
+	FuzzySuggestModal,
+	FuzzyMatch,
+	Setting,
+	TFile,
 } from "obsidian";
 import { t } from "./lang/helpers";
+import { slideTemplate } from "./templates/slide-template";
 
 // 扩展 App 类型以包含 commands 属性
 declare module "obsidian" {
@@ -44,6 +48,11 @@ interface OBASUpdateSettings {
 			tableID: string;
 			viewID: string;
 		};
+		demo: {
+			baseID: string;
+			tableID: string;
+			viewID: string;
+		};
 	};
 }
 
@@ -60,6 +69,11 @@ const DEFAULT_SETTINGS: OBASUpdateSettings = {
 			viewID: "",
 		},
 		templates: {
+			baseID: "",
+			tableID: "",
+			viewID: "",
+		},
+		demo: {
 			baseID: "",
 			tableID: "",
 			viewID: "",
@@ -161,29 +175,52 @@ export default class OBSyncWithMDB extends Plugin {
 			}
 		);
 
-		this.addCommand(
+		createNocoDBCommand(
+			"update-demo-slides",
+			t("Get The Latest Version Of Demo Slides"),
 			{
-				id: "obas-update-one-click-deploy",
-				name: t("One Click to Deploy"),
-				callback: async () => {
-					// 执行更新样式的命令
-					await this.app.commands.executeCommandById('obas-update:update-style');
-					// 等待一段时间确保样式更新完成
-					await new Promise(r => setTimeout(r, 2000));
-
-					// 执行更新模板的命令
-					await this.app.commands.executeCommandById('obas-update:update-templates');
-					// 等待一段时间确保模板更新完成
-					await new Promise(r => setTimeout(r, 2000));
-				}
+				baseID: this.settings.updateIDs.demo.baseID,
+				tableID: this.settings.updateIDs.demo.tableID,
+				viewID: this.settings.updateIDs.demo.viewID,
+				targetFolderPath: this.settings.obasFrameworkFolder,
 			}
-		)
+		);
+
+		this.addCommand({
+			id: "obas-update-one-click-deploy",
+			name: t("One Click to Deploy"),
+			callback: async () => {
+				// 定义需要执行的命令ID数组
+				const commandIds = [
+					"obas-update:update-style",
+					"obas-update:update-templates", 
+					"obas-update:update-demo-slides"
+				];
+
+				// 依次执行每个命令并等待完成
+				for (const commandId of commandIds) {
+					await this.app.commands.executeCommandById(commandId);
+					// 等待2秒确保更新完成
+					await new Promise((r) => setTimeout(r, 2000));
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "obas-update:create-slides",
+			name: t("Create New Slides"),
+			callback: async () => {
+				await this.createSlides();
+			},
+		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new OBSyncWithMDBSettingTab(this.app, this));
 	}
 
-	onunload() {}
+	onunload() {
+		
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -224,6 +261,56 @@ export default class OBSyncWithMDB extends Plugin {
 		return emailRegex.test(email);
 	}
 
+	private async createSlides(){
+		const template = slideTemplate.replace("{{OBASPath}}", this.settings.obasFrameworkFolder);
+
+		// 在当前文件夹创建新笔记
+		const currentFolder = this.app.workspace.getActiveFile()?.parent?.path || '';
+		// 使用时间戳和计数器生成文件名
+		const now = new Date();
+		const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+		const fileName = `${t("Untitled Slide")}-${timestamp}`;
+		
+		let designOption: SlideDesignOption | null = null;
+		const suggester = new SlideDesignSuggester(this.app);
+		// 创建一个弹出窗口让用户选择设计
+		designOption = await new Promise<SlideDesignOption>((resolve) => {
+			suggester.onChooseItem = (item) => {
+				resolve(item);
+				return item;
+			};
+			suggester.open();
+		});
+
+		// 如果用户取消了选择，直接返回
+		if (!designOption) {
+			new Notice(t("Please select a slide design"));
+			return;
+		}
+
+		// 将选中的设计替换到模板中
+		const finalTemplate = template.replace("{{design}}", designOption.value);
+		const filePath = currentFolder !== "/" ? `${currentFolder}/${fileName}.md` : `${fileName}.md`;
+		
+		// 使用模板内容创建新文件
+		await this.app.vault.create(
+			filePath,
+			finalTemplate.trim().replace(/^\t+/gm, '').replace("{{title}}", fileName)
+		);
+
+		console.log(filePath);
+
+		// 打开新创建的文件
+		const newFile = this.app.vault.getAbstractFileByPath(filePath);
+		console.dir(newFile);
+		if (newFile) {
+			console.log("here");
+			if (newFile instanceof TFile) {
+				await this.app.workspace.getLeaf().openFile(newFile);
+			}
+		}
+	}
+
 	private getTemplater() {
 		const templater = this.app.plugins.plugins["templater-obsidian"];
 		this.app.plugins.plugins["templater-obsidian"];
@@ -244,7 +331,7 @@ export default class OBSyncWithMDB extends Plugin {
 		if (templater) {
 			templater.settings[settingName] = value;
 			await templater.save_settings();
-			if(settingName === "trigger_on_file_creation"){
+			if (settingName === "trigger_on_file_creation") {
 				await templater.event_handler.update_trigger_file_on_creation();
 			}
 		}
@@ -273,7 +360,6 @@ export default class OBSyncWithMDB extends Plugin {
 			);
 			this.settings.userChecked = true;
 		} else {
-			
 			this.settings.updateIDs = DEFAULT_SETTINGS.updateIDs;
 			this.settings.userChecked = DEFAULT_SETTINGS.userChecked;
 		}
@@ -325,7 +411,6 @@ export default class OBSyncWithMDB extends Plugin {
 
 		await this.saveSettings();
 	}
-
 }
 
 class OBSyncWithMDBSettingTab extends PluginSettingTab {
@@ -560,7 +645,6 @@ class MyObsidian {
 		sourceTable: NocoDBTable,
 		updateAPIKeyIsValid: boolean = false
 	): Promise<string | undefined> {
-		
 		if (!updateAPIKeyIsValid) {
 			new Notice(
 				this.buildFragment(
@@ -571,7 +655,7 @@ class MyObsidian {
 			);
 			return;
 		}
-		
+
 		await this.nocoDBSyncer.createOrUpdateNotesInOBFromSourceTable(
 			sourceTable
 		);
@@ -784,5 +868,42 @@ class NocoDBSync {
 				new Notice(t("All Finished."));
 			}
 		}
+	}
+}
+
+interface SlideDesignOption {
+	id: string;
+	name: string;
+	value: string;
+}
+
+class SlideDesignSuggester extends FuzzySuggestModal<SlideDesignOption> {
+	private options: SlideDesignOption[] = [
+		{ id: "A", name: `1. ${t("Slide Design A")}`, value: "A" },
+		{ id: "B", name: `2. ${t("Slide Design B")}`, value: "B" },
+		{ id: "C", name: `3. ${t("Slide Design C")}`, value: "C" },
+
+	];
+
+	getItems(): SlideDesignOption[] {
+		return this.options;
+	}
+
+	getItemText(item: SlideDesignOption): string {
+		return item.name;
+	}
+
+	onChooseItem(
+		item: SlideDesignOption,
+		evt: MouseEvent | KeyboardEvent
+	): SlideDesignOption {
+		return item;
+	}
+
+	renderSuggestion(
+		item: FuzzyMatch<SlideDesignOption>,
+		el: HTMLElement
+	): void {
+		el.createEl("div", { text: item.item.name, cls: "suggester-title" });
 	}
 }
