@@ -3,14 +3,15 @@ import {
 	Notice,
 	normalizePath,
 	Plugin,
-	PluginSettingTab,
-	FuzzySuggestModal,
-	FuzzyMatch,
-	Setting,
 	TFile,
+	moment
 } from "obsidian";
 import { t } from "./lang/helpers";
+import { OBASAssistantSettingTab } from "./settings-tab";
 import { slideTemplate } from "./templates/slide-template";
+import { SuggesterOption } from "./utils/base-suggester";
+import { SlideLocationSuggester, SlideDesignSuggester } from "./utils/suggesters";
+
 
 // 扩展 App 类型以包含 commands 属性
 declare module "obsidian" {
@@ -27,41 +28,33 @@ declare module "obsidian" {
 }
 
 interface AirtableIds {
-	baseId: string;
-	tableId: string;
-	viewId: string;
+	baseID: string;
+	tableID: string;
+	viewID: string;
 }
-interface OBASUpdateSettings {
+interface OBASAssistantSettings {
 	updateAPIKey: string;
 	updateAPIKeyIsValid: boolean;
 	obasFrameworkFolder: string;
 	userEmail: string;
 	userChecked: boolean;
+	newSlideLocationOption: string;
+	assignedNewSlideLocation: string;
 	updateIDs: {
-		style: {
-			baseID: string;
-			tableID: string;
-			viewID: string;
-		};
-		templates: {
-			baseID: string;
-			tableID: string;
-			viewID: string;
-		};
-		demo: {
-			baseID: string;
-			tableID: string;
-			viewID: string;
-		};
+		style: AirtableIds;
+		templates: AirtableIds;
+		demo: AirtableIds;
 	};
 }
 
-const DEFAULT_SETTINGS: OBASUpdateSettings = {
+const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	updateAPIKey: "",
 	updateAPIKeyIsValid: false,
 	obasFrameworkFolder: "",
 	userEmail: "",
 	userChecked: false,
+	newSlideLocationOption: "current",
+	assignedNewSlideLocation: "",
 	updateIDs: {
 		style: {
 			baseID: "",
@@ -81,8 +74,8 @@ const DEFAULT_SETTINGS: OBASUpdateSettings = {
 	},
 };
 
-export default class OBSyncWithMDB extends Plugin {
-	settings: OBASUpdateSettings;
+export default class OBASAssistant extends Plugin {
+	settings: OBASAssistantSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -128,10 +121,13 @@ export default class OBSyncWithMDB extends Plugin {
 							false
 						);
 					}
-
-					const nocoDBSettings = {
+					const fieldNames = this.buildFieldNames();
+					const nocoDBSettings: NocoDBSettings = {
 						apiKey: apiKey,
 						tables: [tableConfig],
+						syncSettings: {
+							recordFieldsNames: fieldNames,
+						},	
 					};
 					const myNocoDB = new MyNocoDB(nocoDBSettings);
 					const nocoDBSync = new NocoDBSync(myNocoDB, this.app);
@@ -187,14 +183,14 @@ export default class OBSyncWithMDB extends Plugin {
 		);
 
 		this.addCommand({
-			id: "obas-update-one-click-deploy",
+			id: "one-click-deploy",
 			name: t("One Click to Deploy"),
 			callback: async () => {
 				// 定义需要执行的命令ID数组
 				const commandIds = [
-					"obas-update:update-style",
-					"obas-update:update-templates", 
-					"obas-update:update-demo-slides"
+					"obas-assistant:update-style",
+					"obas-assistant:update-templates", 
+					"obas-assistant:update-demo-slides"
 				];
 
 				// 依次执行每个命令并等待完成
@@ -207,15 +203,15 @@ export default class OBSyncWithMDB extends Plugin {
 		});
 
 		this.addCommand({
-			id: "obas-update:create-slides",
+			id: "obas-assistant:create-slides",
 			name: t("Create New Slides"),
 			callback: async () => {
 				await this.createSlides();
 			},
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new OBSyncWithMDBSettingTab(this.app, this));
+		// 添加设置标签页
+		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
 	}
 
 	onunload() {
@@ -261,20 +257,89 @@ export default class OBSyncWithMDB extends Plugin {
 		return emailRegex.test(email);
 	}
 
+	buildFieldNames(forceDefaultFetchFields: boolean = false) {
+		const local = moment.locale();
+		if (forceDefaultFetchFields) {
+			return {
+				title: "Title",
+				subFolder: "SubFolder",
+				content: "MD",
+			};
+		}
+		const fieldNames = {
+			zhCN: {
+				title: "Title",
+				subFolder: "SubFolder",
+				content: "MD",
+			},
+			en: {
+				title: "TitleEN",
+				subFolder: "SubFolderEN",
+				content: "MDEN",
+			},
+			zhTW: {
+				title: "TitleTW",
+				subFolder: "SubFolderTW",
+				content: "MDTW",
+			},
+		};
+		switch (local) {
+			case "zh-cn":
+				return fieldNames.zhCN;
+			case "en":
+				return fieldNames.en;
+			case "zh-tw":
+				return fieldNames.zhTW;
+			default:
+				return fieldNames.en;
+		}
+	}
+
 	private async createSlides(){
-		const template = slideTemplate.replace("{{OBASPath}}", this.settings.obasFrameworkFolder);
 
 		// 在当前文件夹创建新笔记
+		const newSlideLocationChoice = this.settings.newSlideLocationOption;
 		const currentFolder = this.app.workspace.getActiveFile()?.parent?.path || '';
+		let newSlideLocation = currentFolder;
+		switch(newSlideLocationChoice) {
+			case "current":
+				break;
+			case "decideByUser":
+				const locationSuggester = new SlideLocationSuggester(this.app, currentFolder, this.settings.assignedNewSlideLocation);
+				const locationOption = await new Promise<SuggesterOption>((resolve) => {
+				locationSuggester.onChooseItem = (item) => {
+					resolve(item);
+					return item;
+				};
+				locationSuggester.open();
+				});
+
+				// 如果用户取消了位置选择，直接返回
+				if (!locationOption) {
+					new Notice(t("Select Location"));
+					return;
+				}
+				newSlideLocation = locationOption.value;
+				break;
+			case "assigned":
+				newSlideLocation = this.settings.assignedNewSlideLocation;
+				break;
+		}
+		
+		
+
+		const template = slideTemplate.replace("{{OBASPath}}", this.settings.obasFrameworkFolder);
+
+		
 		// 使用时间戳和计数器生成文件名
 		const now = new Date();
 		const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
 		const fileName = `${t("Untitled Slide")}-${timestamp}`;
 		
-		let designOption: SlideDesignOption | null = null;
+		let designOption: SuggesterOption | null = null;
 		const suggester = new SlideDesignSuggester(this.app);
 		// 创建一个弹出窗口让用户选择设计
-		designOption = await new Promise<SlideDesignOption>((resolve) => {
+		designOption = await new Promise<SuggesterOption>((resolve) => {
 			suggester.onChooseItem = (item) => {
 				resolve(item);
 				return item;
@@ -289,13 +354,14 @@ export default class OBSyncWithMDB extends Plugin {
 		}
 
 		// 将选中的设计替换到模板中
-		const finalTemplate = template.replace("{{design}}", designOption.value);
-		const filePath = currentFolder !== "/" ? `${currentFolder}/${fileName}.md` : `${fileName}.md`;
+		// 使用正则表达式全局替换所有匹配的占位符
+		const finalTemplate = template.replace(/\{\{design\}\}/g, designOption.value);
+		const filePath = newSlideLocation !== "/" ? `${newSlideLocation}/${fileName}.md` : `${fileName}.md`;
 		
 		// 使用模板内容创建新文件
 		await this.app.vault.create(
 			filePath,
-			finalTemplate.trim().replace(/^\t+/gm, '').replace("{{title}}", fileName)
+			finalTemplate.trim().replace("{{title}}", fileName)
 		);
 
 		console.log(filePath);
@@ -314,7 +380,6 @@ export default class OBSyncWithMDB extends Plugin {
 	private getTemplater() {
 		const templater = this.app.plugins.plugins["templater-obsidian"];
 		this.app.plugins.plugins["templater-obsidian"];
-
 		return templater || null;
 	}
 
@@ -413,186 +478,7 @@ export default class OBSyncWithMDB extends Plugin {
 	}
 }
 
-class OBSyncWithMDBSettingTab extends PluginSettingTab {
-	plugin: OBSyncWithMDB;
 
-	constructor(app: App, plugin: OBSyncWithMDB) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		containerEl.createEl("h2", {
-			text: t("Main Setting"),
-			cls: "my-plugin-title", // 添加自定义CSS类
-		});
-
-		new Setting(containerEl)
-			.setName(t("OBAS Update API Key"))
-			.setDesc(t("Please enter a valid update API Key"))
-			.addText((text) => {
-				const validSpan = createEl("span", {
-					text: t("Valid API Key"),
-					cls: "valid-text",
-				});
-				const loadingSpan = createEl("span", {
-					text: t("Validating..."),
-					cls: "loading-text",
-				});
-				validSpan.style.display = "none";
-				loadingSpan.style.display = "none";
-				text.inputEl.parentElement?.insertBefore(
-					validSpan,
-					text.inputEl
-				);
-				text.inputEl.parentElement?.insertBefore(
-					loadingSpan,
-					text.inputEl
-				);
-
-				const updateValidState = (
-					isValid: boolean,
-					isLoading: boolean = false
-				) => {
-					if (isLoading) {
-						text.inputEl.removeClass("valid-api-key");
-						text.inputEl.removeClass("invalid-api-key");
-						validSpan.style.display = "none";
-						loadingSpan.style.display = "inline";
-					} else {
-						loadingSpan.style.display = "none";
-						if (isValid) {
-							text.inputEl.removeClass("invalid-api-key");
-							text.inputEl.addClass("valid-api-key");
-							text.inputEl.style.borderColor = "#4CAF50";
-							text.inputEl.style.color = "#4CAF50";
-							validSpan.style.display = "inline";
-						} else {
-							text.inputEl.removeClass("valid-api-key");
-							text.inputEl.addClass("invalid-api-key");
-							text.inputEl.style.borderColor = "#FF5252";
-							text.inputEl.style.color = "#FF5252";
-							validSpan.style.display = "none";
-						}
-					}
-				};
-
-				// 初始状态设置
-				updateValidState(this.plugin.settings.updateAPIKeyIsValid);
-				return text
-					.setPlaceholder(t("Enter the API Key"))
-					.setValue(this.plugin.settings.updateAPIKey)
-					.onChange(async (value) => {
-						this.plugin.settings.updateAPIKey = value;
-						if (this.plugin.isValidApiKey(value)) {
-							updateValidState(false, true); // 显示加载状态
-							await this.plugin.checkApiKey();
-							updateValidState(
-								this.plugin.settings.updateAPIKeyIsValid
-							);
-						} else {
-							updateValidState(false);
-						}
-						await this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName(t("Your Email Address"))
-			.setDesc(
-				t(
-					"Please enter the email you provided when you purchase this product"
-				)
-			)
-			.addText((text) => {
-				const validSpan = createEl("span", {
-					text: t("Valid Email"),
-					cls: "valid-text",
-				});
-				const loadingSpan = createEl("span", {
-					text: t("Validating..."),
-					cls: "loading-text",
-				});
-				validSpan.style.display = "none";
-				loadingSpan.style.display = "none";
-				text.inputEl.parentElement?.insertBefore(
-					validSpan,
-					text.inputEl
-				);
-				text.inputEl.parentElement?.insertBefore(
-					loadingSpan,
-					text.inputEl
-				);
-
-				const updateValidState = (
-					isValid: boolean,
-					isLoading: boolean = false
-				) => {
-					if (isLoading) {
-						text.inputEl.removeClass("valid-email");
-						text.inputEl.removeClass("invalid-email");
-						validSpan.style.display = "none";
-						loadingSpan.style.display = "inline";
-					} else {
-						loadingSpan.style.display = "none";
-						if (isValid) {
-							text.inputEl.removeClass("invalid-email");
-							text.inputEl.addClass("valid-email");
-							text.inputEl.style.borderColor = "#4CAF50";
-							text.inputEl.style.color = "#4CAF50";
-							validSpan.style.display = "inline";
-						} else {
-							text.inputEl.removeClass("valid-email");
-							text.inputEl.addClass("invalid-email");
-							text.inputEl.style.borderColor = "#FF5252";
-							text.inputEl.style.color = "#FF5252";
-							validSpan.style.display = "none";
-						}
-					}
-				};
-
-				// 初始状态设置
-				updateValidState(this.plugin.settings.userChecked);
-				return text
-					.setPlaceholder(t("Enter your email"))
-					.setValue(this.plugin.settings.userEmail)
-					.onChange(async (value) => {
-						this.plugin.settings.userEmail = value;
-						if (
-							this.plugin.isValidEmail(
-								this.plugin.settings.userEmail
-							)
-						) {
-							updateValidState(false, true);
-							await this.plugin.getUpdateIDs();
-							updateValidState(this.plugin.settings.userChecked);
-						} else {
-							updateValidState(false);
-						}
-						await this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName(t("OBAS Framework Folder"))
-			.setDesc(t("Please enter the path to the OBAS Framework Folder"))
-			.addText((text) =>
-				text
-					.setPlaceholder(
-						t("Enter the full path to the OBAS Framework folder")
-					)
-					.setValue(this.plugin.settings.obasFrameworkFolder)
-					.onChange(async (value) => {
-						this.plugin.settings.obasFrameworkFolder = value;
-						await this.plugin.saveSettings();
-					})
-			);
-	}
-}
 
 // 类型定义
 interface NocoDBTable {
@@ -604,7 +490,7 @@ interface NocoDBTable {
 
 interface NocoDBSettings {
 	apiKey: string;
-	tables?: NocoDBTable[];
+	tables: NocoDBTable[];
 	iotoUpdate?: boolean;
 	syncSettings?: {
 		recordFieldsNames?: {
@@ -760,7 +646,33 @@ class NocoDBSync {
 
 		let records = await this.getAllRecordsFromTable(url);
 
-		return records;
+		if (!records || records.length === 0) {
+			//new Notice(t("No records found"));
+			return [];
+		}
+		// 将 records 中的 fields 映射到 mappedRecords 中
+		const mappedRecords = records.map((record) => {
+			const fields = record.fields;
+			const mappedFields: any = {};
+
+			for (const key in fields) {
+				if (key.includes("Title")) {
+					mappedFields.Title = fields[key];
+				} else if (key.includes("SubFolder")) {
+					mappedFields.SubFolder = fields[key];
+				} else if (key.includes("MD")) {
+					mappedFields.MD = fields[key];
+				} else {
+					mappedFields[key] = fields[key];
+				}
+			}
+
+			record.fields = mappedFields;
+
+			return record;
+		});
+
+		return mappedRecords;
 	}
 
 	async getAllRecordsFromTable(url: string): Promise<any[]> {
@@ -868,42 +780,5 @@ class NocoDBSync {
 				new Notice(t("All Finished."));
 			}
 		}
-	}
-}
-
-interface SlideDesignOption {
-	id: string;
-	name: string;
-	value: string;
-}
-
-class SlideDesignSuggester extends FuzzySuggestModal<SlideDesignOption> {
-	private options: SlideDesignOption[] = [
-		{ id: "A", name: `1. ${t("Slide Design A")}`, value: "A" },
-		{ id: "B", name: `2. ${t("Slide Design B")}`, value: "B" },
-		{ id: "C", name: `3. ${t("Slide Design C")}`, value: "C" },
-
-	];
-
-	getItems(): SlideDesignOption[] {
-		return this.options;
-	}
-
-	getItemText(item: SlideDesignOption): string {
-		return item.name;
-	}
-
-	onChooseItem(
-		item: SlideDesignOption,
-		evt: MouseEvent | KeyboardEvent
-	): SlideDesignOption {
-		return item;
-	}
-
-	renderSuggestion(
-		item: FuzzyMatch<SlideDesignOption>,
-		el: HTMLElement
-	): void {
-		el.createEl("div", { text: item.item.name, cls: "suggester-title" });
 	}
 }
