@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import { t } from "./lang/helpers";
 import OBASAssistant from "./main";
+import { isValidApiKey, isValidEmail } from "./utils";
 
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
@@ -77,7 +78,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.updateAPIKey)
 					.onChange(async (value) => {
 						this.plugin.settings.updateAPIKey = value;
-						if (this.plugin.isValidApiKey(value)) {
+						if (isValidApiKey(value)) {
 							updateValidState(false, true); // 显示加载状态
 							await this.plugin.checkApiKey();
 							updateValidState(
@@ -151,11 +152,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.userEmail)
 					.onChange(async (value) => {
 						this.plugin.settings.userEmail = value;
-						if (
-							this.plugin.isValidEmail(
-								this.plugin.settings.userEmail
-							)
-						) {
+						if (isValidEmail(this.plugin.settings.userEmail)) {
 							updateValidState(false, true);
 							await this.plugin.getUpdateIDs();
 							updateValidState(this.plugin.settings.userChecked);
@@ -187,26 +184,31 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOptions({
-						"current": t("Current Folder"),
-						"decideByUser": t("Decide At Creation"),
-						"assigned": t("User Assigned Folder"),
+						current: t("Current Folder"),
+						decideByUser: t("Decide At Creation"),
+						assigned: t("User Assigned Folder"),
 					})
 					.setValue(this.plugin.settings.newSlideLocationOption)
 					.onChange(async (value) => {
 						this.plugin.settings.newSlideLocationOption = value;
 						// 根据选项控制Default New Slide Location设置项的显示状态
-						defaultLocationSetting.settingEl.style.display = value === "assigned" ? "" : "none";
+						defaultLocationSetting.settingEl.style.display =
+							value === "assigned" ? "" : "none";
 						await this.plugin.saveSettings();
 					})
 			);
 
 		const defaultLocationSetting = new Setting(containerEl)
 			.setName(t("Default New Slide Location"))
-			.setDesc(t("Please enter the path to the default new slide location"))
+			.setDesc(
+				t("Please enter the path to the default new slide location")
+			)
 			.addText((text) =>
 				text
 					.setPlaceholder(
-						t("Enter the full path to the default new slide location")
+						t(
+							"Enter the full path to the default new slide location"
+						)
 					)
 					.setValue(this.plugin.settings.assignedNewSlideLocation)
 					.onChange(async (value) => {
@@ -216,7 +218,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			);
 
 		// 根据初始选项设置显示状态
-		defaultLocationSetting.settingEl.style.display = 
-			this.plugin.settings.newSlideLocationOption === "assigned" ? "" : "none";
+		defaultLocationSetting.settingEl.style.display =
+			this.plugin.settings.newSlideLocationOption === "assigned"
+				? ""
+				: "none";
 	}
 }
