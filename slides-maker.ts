@@ -18,48 +18,79 @@ export class SlidesMaker {
 	}
 
 	async createSlides(): Promise<void> {
-		// 在当前文件夹创建新笔记
-		const newSlideLocationChoice = this.settings.newSlideLocationOption;
+		const newSlideLocation = await this._determineNewSlideLocation();
+		if (newSlideLocation === null) {
+			new Notice(t("Operation cancelled by user"));
+			return;
+		}
+
+		const designOption = await this._selectSlideDesign();
+		if (!designOption) {
+			new Notice(t("Please select a slide design"));
+			return;
+		}
+
+		const fileName = this._generateNewSlideFileName();
+		const finalTemplate = this._prepareFinalTemplate(
+			designOption.value,
+			fileName
+		);
+
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			fileName,
+			finalTemplate
+		);
+	}
+
+	private async _determineNewSlideLocation(): Promise<string | null> {
+		const { newSlideLocationOption, assignedNewSlideLocation } =
+			this.settings;
 		const currentFolder =
 			this.app.workspace.getActiveFile()?.parent?.path || "";
-		let newSlideLocation = currentFolder;
-		switch (newSlideLocationChoice) {
+
+		switch (newSlideLocationOption) {
 			case "current":
-				break;
-			case "decideByUser":
+				return currentFolder;
+			case "decideByUser": {
 				const locationSuggester = new SlideLocationSuggester(
 					this.app,
 					currentFolder,
-					this.settings.assignedNewSlideLocation
+					assignedNewSlideLocation
 				);
 				const locationOption = await new Promise<SuggesterOption>(
 					(resolve) => {
-						locationSuggester.onChooseItem = (item) => {
+						locationSuggester.onChooseItem = (
+							item: SuggesterOption,
+							evt: MouseEvent | KeyboardEvent
+						) => {
 							resolve(item);
 							return item;
 						};
 						locationSuggester.open();
 					}
 				);
-
-				// 如果用户取消了位置选择，直接返回
-				if (!locationOption) {
-					new Notice(t("Select Location"));
-					return;
-				}
-				newSlideLocation = locationOption.value;
-				break;
+				return locationOption ? locationOption.value : null;
+			}
 			case "assigned":
-				newSlideLocation = this.settings.assignedNewSlideLocation;
-				break;
+				return assignedNewSlideLocation;
+			default:
+				return currentFolder;
 		}
+	}
 
-		const template = slideTemplate.replace(
-			"{{OBASPath}}",
-			this.settings.obasFrameworkFolder
-		);
+	private async _selectSlideDesign(): Promise<SuggesterOption | null> {
+		const suggester = new SlideDesignSuggester(this.app);
+		return new Promise((resolve) => {
+			suggester.onChooseItem = (item: SuggesterOption) => {
+				resolve(item);
+				return item;
+			};
+			suggester.open();
+		});
+	}
 
-		// 使用时间戳和计数器生成文件名
+	private _generateNewSlideFileName(): string {
 		const now = new Date();
 		const timestamp = `${now.getFullYear()}-${String(
 			now.getMonth() + 1
@@ -69,52 +100,31 @@ export class SlidesMaker {
 			2,
 			"0"
 		)}-${String(now.getSeconds()).padStart(2, "0")}`;
-		const fileName = `${t("Untitled Slide")}-${timestamp}`;
+		return `${t("Untitled Slide")}-${timestamp}`;
+	}
 
-		let designOption: SuggesterOption | null = null;
-		const suggester = new SlideDesignSuggester(this.app);
-		// 创建一个弹出窗口让用户选择设计
-		designOption = await new Promise<SuggesterOption>((resolve) => {
-			suggester.onChooseItem = (item) => {
-				resolve(item);
-				return item;
-			};
-			suggester.open();
-		});
-
-		// 如果用户取消了选择，直接返回
-		if (!designOption) {
-			new Notice(t("Please select a slide design"));
-			return;
-		}
-
-		// 将选中的设计替换到模板中
-		// 使用正则表达式全局替换所有匹配的占位符
-		const finalTemplate = template.replace(
-			/\{\{design\}\}/g,
-			designOption.value
+	private _prepareFinalTemplate(designValue: string, title: string): string {
+		const template = slideTemplate.replace(
+			"{{OBASPath}}",
+			this.settings.obasFrameworkFolder
 		);
+		const finalTemplate = template.replace(/\{\{design\}\}/g, designValue);
+		return finalTemplate.trim().replace("{{title}}", title);
+	}
+
+	private async _createAndOpenSlide(
+		location: string,
+		fileName: string,
+		content: string
+	): Promise<void> {
 		const filePath =
-			newSlideLocation !== "/"
-				? `${newSlideLocation}/${fileName}.md`
-				: `${fileName}.md`;
+			location === "/" ? fileName + ".md" : `${location}/${fileName}.md`;
 
-		// 使用模板内容创建新文件
-		await this.app.vault.create(
-			filePath,
-			finalTemplate.trim().replace("{{title}}", fileName)
-		);
+		await this.app.vault.create(filePath, content);
 
-		console.log(filePath);
-
-		// 打开新创建的文件
 		const newFile = this.app.vault.getAbstractFileByPath(filePath);
-		console.dir(newFile);
-		if (newFile) {
-			console.log("here");
-			if (newFile instanceof TFile) {
-				await this.app.workspace.getLeaf().openFile(newFile);
-			}
+		if (newFile instanceof TFile) {
+			await this.app.workspace.getLeaf().openFile(newFile);
 		}
 	}
 }

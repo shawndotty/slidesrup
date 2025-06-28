@@ -115,4 +115,5 @@ export default {
 	"Content is the king": "内容为王",
 	"Keep is simple and powerful": "简单却强大",
 	"Focus on the basic first": "关注基本",
+	"Operation cancelled by user": "用户取消操作",
 };

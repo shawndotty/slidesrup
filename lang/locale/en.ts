@@ -124,4 +124,5 @@ export default {
 	"Content is the king": "Content is the king",
 	"Keep is simple and powerful": "Keep is simple and powerful",
 	"Focus on the basic first": "Focus on the basic first",
+	"Operation cancelled by user": "Operation cancelled by user",
 };
