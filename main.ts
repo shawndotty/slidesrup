@@ -1,12 +1,12 @@
 import { Notice, Plugin, requestUrl } from "obsidian";
 import { t } from "./lang/helpers";
-import { OBASAssistantSettingTab } from "./settings-tab";
-import { OBASAssistantSettings, NocoDBSettings } from "./types";
-import { buildFieldNames } from "./utils";
-import { SlidesMaker } from "./slides-maker";
-import { MyNocoDB, NocoDBSync } from "./noco-db";
-import { MyObsidian } from "./my-obsidian";
-import { AIRTABLE_CONFIG } from "./constants";
+import { OBASAssistantSettingTab } from "./src/settings-tab";
+import { OBASAssistantSettings, NocoDBSettings } from "./src/types";
+import { buildFieldNames } from "./src/utils";
+import { SlidesMaker } from "./src/slides-maker";
+import { MyNocoDB, NocoDBSync } from "./src/noco-db";
+import { MyObsidian } from "./src/my-obsidian";
+import { AIRTABLE_CONFIG } from "./src/constants";
 
 const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	updateAPIKey: "",

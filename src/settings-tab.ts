@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import { t } from "./lang/helpers";
-import OBASAssistant from "./main";
+import { t } from "../lang/helpers";
+import OBASAssistant from "../main";
 import { isValidApiKey, isValidEmail } from "./utils";
 
 export class OBASAssistantSettingTab extends PluginSettingTab {

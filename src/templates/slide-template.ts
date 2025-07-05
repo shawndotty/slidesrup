@@ -1,4 +1,4 @@
-import { t } from "../lang/helpers";
+import { t } from "../../lang/helpers";
 
 export const slideTemplate = `
 ---
@@ -17,7 +17,9 @@ width: 1920
 
 ---
 
-<!-- slide template="[[${t("TOC")}-{{design}}]]"  class="order-list-with-border" -->
+<!-- slide template="[[${t(
+	"TOC"
+)}-{{design}}]]"  class="order-list-with-border" -->
 
 ## ${t("TOC")}
 
@@ -28,7 +30,9 @@ width: 1920
 
 ---
 
-<!-- slide template="[[${t("Chapter")}-{{design}}]]"  class="order-list-with-border" -->
+<!-- slide template="[[${t(
+	"Chapter"
+)}-{{design}}]]"  class="order-list-with-border" -->
 
 ## ${t("Chapter")} 1
 
@@ -52,7 +56,9 @@ width: 1920
 
 ---
 
-<!-- slide template="[[${t("BackCover")}-{{design}}]]" class="order-list-with-border" -->
+<!-- slide template="[[${t(
+	"BackCover"
+)}-{{design}}]]" class="order-list-with-border" -->
 
 # ${t("Farewell")}
 

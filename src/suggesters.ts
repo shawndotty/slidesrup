@@ -2,7 +2,6 @@ import { App } from "obsidian";
 import { BaseSuggester, SuggesterOption } from "./base-suggester";
 import { t } from "../lang/helpers";
 
-
 export class SlideDesignSuggester extends BaseSuggester {
 	constructor(app: App) {
 		super(app);
@@ -25,13 +24,13 @@ export class SlideLocationSuggester extends BaseSuggester {
 			{
 				id: "current",
 				name: t("Current Folder") + ": " + (currentFolder || "/"),
-				value: currentFolder || "/"
+				value: currentFolder || "/",
 			},
 			{
 				id: "assigned",
 				name: t("User Assigned Folder") + ": " + assignedFolder,
-				value: assignedFolder
-			}
+				value: assignedFolder,
+			},
 		]);
 	}
 }
