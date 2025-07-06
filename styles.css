@@ -8,12 +8,12 @@ If your plugin does not need CSS, delete this file.
 */
 
 /* Validation Input Styles */
-.valid-input {
+input.valid-input {
     border-color: #4CAF50; /* Green */
     color: #4CAF50;
 }
 
-.invalid-input {
+input.invalid-input {
     border-color: #FF5252; /* Red */
     color: #FF5252;
 }

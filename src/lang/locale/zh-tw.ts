@@ -127,4 +127,9 @@ export default {
 	"Templates updated.": "模板已更新。",
 	"Demo slides updated.": "演示示例已更新。",
 	"One-click deployment finished!": "一键部署完成！",
+	"Default Design": "預設設計",
+	"Please select your default design": "請選擇你的預設設計",
+	None: "無",
+	"Add Chapter": "新增章節",
+	"Add Page": "新增內容頁",
 };

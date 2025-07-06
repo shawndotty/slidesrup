@@ -26,6 +26,7 @@ export interface OBASAssistantSettings {
 	userChecked: boolean;
 	newSlideLocationOption: string;
 	assignedNewSlideLocation: string;
+	defaultDesign: string;
 	updateIDs: {
 		style: AirtableIds;
 		templates: AirtableIds;

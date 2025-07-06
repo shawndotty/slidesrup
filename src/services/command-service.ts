@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { App, Notice, Command } from "obsidian";
 import { t } from "../lang/helpers";
 import { OBASAssistantSettings, NocoDBSettings } from "../types";
 import { buildFieldNames } from "../utils";
@@ -9,11 +9,16 @@ import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
 
 export class CommandService {
+	private slidesMaker: SlidesMaker;
+
 	constructor(
-		private plugin: Plugin,
+		private addCommand: (command: Command) => void,
+		private app: App,
 		private settings: OBASAssistantSettings,
 		private templaterService: TemplaterService
-	) {}
+	) {
+		this.slidesMaker = new SlidesMaker(this.app, this.settings);
+	}
 
 	private async runNocoDBCommand(
 		tableConfig: {
@@ -56,8 +61,8 @@ export class CommandService {
 			},
 		};
 		const myNocoDB = new NocoDB(nocoDBSettings);
-		const nocoDBSync = new NocoDBSync(myNocoDB, this.plugin.app);
-		const myObsidian = new MyObsidian(this.plugin.app, nocoDBSync);
+		const nocoDBSync = new NocoDBSync(myNocoDB, this.app);
+		const myObsidian = new MyObsidian(this.app, nocoDBSync);
 		await myObsidian.onlyFetchFromNocoDB(
 			nocoDBSettings.tables[0],
 			this.settings.updateAPIKeyIsValid
@@ -82,15 +87,13 @@ export class CommandService {
 			},
 			reloadOB: boolean = false
 		) => {
-			this.plugin.addCommand({
+			this.addCommand({
 				id,
 				name,
 				callback: async () => {
 					await this.runNocoDBCommand(tableConfig);
 					if (reloadOB) {
-						this.plugin.app.commands.executeCommandById(
-							"app:reload"
-						);
+						this.app.commands.executeCommandById("app:reload");
 					}
 				},
 			});
@@ -129,7 +132,7 @@ export class CommandService {
 			}
 		);
 
-		this.plugin.addCommand({
+		this.addCommand({
 			id: "one-click-deploy",
 			name: t("One Click to Deploy"),
 			callback: async () => {
@@ -163,15 +166,27 @@ export class CommandService {
 			},
 		});
 
-		this.plugin.addCommand({
+		this.addCommand({
 			id: "obas-assistant:create-slides",
 			name: t("Create New Slides"),
 			callback: async () => {
-				const slidesMaker = new SlidesMaker(
-					this.plugin.app,
-					this.settings
-				);
-				await slidesMaker.createSlides();
+				await this.slidesMaker.createSlides();
+			},
+		});
+
+		this.addCommand({
+			id: "obas-assistant:add-slide-chapter",
+			name: t("Add Chapter"),
+			callback: async () => {
+				await this.slidesMaker.addSlideChapter();
+			},
+		});
+
+		this.addCommand({
+			id: "obas-assistant:add-slide-page",
+			name: t("Add Page"),
+			callback: async () => {
+				await this.slidesMaker.addSlidePage();
 			},
 		});
 	}

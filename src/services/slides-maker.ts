@@ -1,6 +1,10 @@
-import { App, Notice, TFile } from "obsidian";
+import { App, Editor, Notice, TFile } from "obsidian";
 import { t } from "../lang/helpers";
-import { slideTemplate } from "../templates/slide-template";
+import {
+	slideChapterTemplate,
+	slidePageTemplate,
+	slideTemplate,
+} from "../templates/slide-template";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import {
 	SlideLocationSuggester,
@@ -24,23 +28,76 @@ export class SlidesMaker {
 			return;
 		}
 
-		const designOption = await this._selectSlideDesign();
-		if (!designOption) {
-			new Notice(t("Please select a slide design"));
-			return;
+		let design = "";
+
+		if ("none" === this.settings.defaultDesign) {
+			const designOption = await this._selectSlideDesign();
+			if (!designOption) {
+				new Notice(t("Please select a slide design"));
+				return;
+			}
+			design = designOption.value;
+		} else {
+			design = this.settings.defaultDesign.toUpperCase();
 		}
 
 		const fileName = this._generateNewSlideFileName();
-		const finalTemplate = this._prepareFinalTemplate(
-			designOption.value,
-			fileName
-		);
+		const finalTemplate = this._prepareFinalTemplate(design, fileName);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			fileName,
 			finalTemplate
 		);
+	}
+
+	async addSlideChapter(): Promise<void> {
+		await this.addSlidePartial(slideChapterTemplate);
+	}
+
+	async addSlidePage(): Promise<void> {
+		await this.addSlidePartial(slidePageTemplate);
+	}
+
+	async addSlidePartial(template: string): Promise<void> {
+		const editor = this.app.workspace.activeEditor?.editor;
+		if (!editor) {
+			new Notice(
+				t("No active editor. Please open a file to add a slide.")
+			);
+			return;
+		}
+
+		let design = "";
+
+		if ("none" === this.settings.defaultDesign) {
+			const designOption = await this._selectSlideDesign();
+			if (!designOption) {
+				new Notice(t("Please select a slide design"));
+				return;
+			}
+			design = designOption.value;
+		} else {
+			design = this.settings.defaultDesign.toUpperCase();
+		}
+
+		const finalTemplate = this._preparePartialTemplate(template, design);
+		this._insertAtCursor(editor, finalTemplate + "\n\n");
+	}
+
+	private _preparePartialTemplate(
+		template: string,
+		designValue: string
+	): string {
+		const finalTemplate = template.replace(/\{\{design\}\}/g, designValue);
+		return finalTemplate.trim();
+	}
+
+	private _insertAtCursor(editor: Editor, content: string): void {
+		const cursor = editor.getCursor();
+		console.dir(cursor);
+		editor.replaceRange(content, cursor);
+		editor.setCursor(cursor.line + content.split("\n").length + 1);
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {

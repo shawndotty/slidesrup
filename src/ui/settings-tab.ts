@@ -70,6 +70,28 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					})
 			);
 
+		new Setting(containerEl)
+			.setName(t("Default Design"))
+			.setDesc(t("Please select your default design"))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions({
+						none: t("None"),
+						a: t("Slide Design A"),
+						b: t("Slide Design B"),
+						c: t("Slide Design C"),
+						d: t("Slide Design D"),
+						e: t("Slide Design E"),
+						f: t("Slide Design F"),
+						g: t("Slide Design G"),
+					})
+					.setValue(this.plugin.settings.defaultDesign)
+					.onChange(async (value) => {
+						this.plugin.settings.defaultDesign = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
 		const newSlideLocationSetting = new Setting(containerEl)
 			.setName(t("New Slide Location Option"))
 			.setDesc(t("Please select the default new slide location option"))

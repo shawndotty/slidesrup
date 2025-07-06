@@ -66,3 +66,35 @@ width: 1920
 + ${t("Keep is simple and powerful")}
 + ${t("Focus on the basic first")}
 `;
+
+export const slideChapterTemplate = `
+---
+
+<!-- slide template="[[${t(
+	"Chapter"
+)}-{{design}}]]"  class="order-list-with-border" -->
+
+## ${t("Chapter")} 1
+
++ ${t("SubSlide")} 1
++ ${t("SubSlide")} 2
++ ${t("SubSlide")} 3
++ ${t("SubSlide")} 4
+
+`;
+
+export const slidePageTemplate = `
+---
+
+<!-- slide class="chapter-1 fancy-list-row" -->
+
+## ${t("SubSlide")} 1
+
++ ${t("List")} 1
+	+ ${t("SubList")} 1-1
+	+ ${t("SubList")} 2-2
++ ${t("List")} 2
+	+ ${t("SubList")} 2-1
+    + ${t("SubList")} 2-2
+
+`;

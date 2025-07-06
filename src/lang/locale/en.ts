@@ -137,4 +137,13 @@ export default {
 	"Templates updated.": "Templates updated.",
 	"Demo slides updated.": "Demo slides updated.",
 	"One-click deployment finished!": "One-click deployment finished!",
+	"Default Design": "Default Design",
+	"Please select your default design": "Please select your default design",
+	None: "None",
+	"No active editor. Please open a file to add a slide.":
+		"No active editor. Please open a file to add a slide.",
+	"Add Slide Partial": "Add Slide Partial",
+	Valid: "Valid",
+	"Add Chapter": "Add Chapter",
+	"Add Page": "Add Page",
 };

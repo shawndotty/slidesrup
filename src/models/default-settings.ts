@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	userChecked: false,
 	newSlideLocationOption: "current",
 	assignedNewSlideLocation: "",
+	defaultDesign: "none",
 	updateIDs: {
 		style: {
 			baseID: "",

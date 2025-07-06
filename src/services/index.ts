@@ -12,7 +12,8 @@ export function createServices(
 	const templaterService = new TemplaterService(app);
 	const apiService = new ApiService(settings);
 	const commandService = new CommandService(
-		plugin,
+		plugin.addCommand.bind(plugin),
+		app,
 		settings,
 		templaterService
 	);
