@@ -6,3 +6,24 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* Validation Input Styles */
+.valid-input {
+    border-color: #4CAF50; /* Green */
+    color: #4CAF50;
+}
+
+.invalid-input {
+    border-color: #FF5252; /* Red */
+    color: #FF5252;
+}
+
+.valid-text {
+	color: #4CAF50; /* Green */
+	margin-left: 10px;
+	font-weight: bold;
+}
+
+.loading-text {
+	margin-left: 10px;
+}

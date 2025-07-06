@@ -43,7 +43,6 @@ export function isValidEmail(email: string): boolean {
  * @returns 根据当前语言环境返回相应的字段名称映射
  */
 export function buildFieldNames(forceDefaultFetchFields: boolean = false) {
-	const local = moment.locale();
 	if (forceDefaultFetchFields) {
 		return {
 			title: "Title",
@@ -51,31 +50,23 @@ export function buildFieldNames(forceDefaultFetchFields: boolean = false) {
 			content: "MD",
 		};
 	}
-	const fieldNames = {
-		zhCN: {
-			title: "Title",
-			subFolder: "SubFolder",
-			content: "MD",
-		},
-		en: {
-			title: "TitleEN",
-			subFolder: "SubFolderEN",
-			content: "MDEN",
-		},
-		zhTW: {
+
+	const locale = moment.locale();
+	const fieldNamesMap: {
+		[key: string]: {
+			title: string;
+			subFolder: string;
+			content: string;
+		};
+	} = {
+		"zh-cn": { title: "Title", subFolder: "SubFolder", content: "MD" },
+		en: { title: "TitleEN", subFolder: "SubFolderEN", content: "MDEN" },
+		"zh-tw": {
 			title: "TitleTW",
 			subFolder: "SubFolderTW",
 			content: "MDTW",
 		},
 	};
-	switch (local) {
-		case "zh-cn":
-			return fieldNames.zhCN;
-		case "en":
-			return fieldNames.en;
-		case "zh-tw":
-			return fieldNames.zhTW;
-		default:
-			return fieldNames.en;
-	}
+
+	return fieldNamesMap[locale] || fieldNamesMap["en"];
 }
