@@ -3,6 +3,7 @@ import { SettingsManager } from "./models/settings";
 import { OBASAssistantSettingTab } from "./ui/settings-tab";
 import { OBASAssistantSettings } from "./types";
 import { createServices } from "./services";
+import { ClassesSuggest } from "./editor/classes-sugguest";
 
 export default class OBASAssistant extends Plugin {
 	settings: OBASAssistantSettings;
@@ -26,6 +27,8 @@ export default class OBASAssistant extends Plugin {
 
 		// Add settings tab
 		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
+
+		this.registerEditorSuggest(new ClassesSuggest(this.app));
 	}
 
 	onunload() {

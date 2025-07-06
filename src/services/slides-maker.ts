@@ -97,7 +97,7 @@ export class SlidesMaker {
 		const cursor = editor.getCursor();
 		console.dir(cursor);
 		editor.replaceRange(content, cursor);
-		editor.setCursor(cursor.line + content.split("\n").length + 1);
+		editor.setCursor(cursor.line + content.split("\n").length);
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {
