@@ -1,14 +1,17 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import { t } from "./lang/helpers";
-import OBASAssistant from "./main";
-import { isValidApiKey, isValidEmail } from "./utils";
+import { t } from "../lang/helpers";
+import OBASAssistant from "../main";
+import { isValidApiKey, isValidEmail } from "../utils";
+import { ApiService } from "../services/api-services";
 
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
+	private apiService: ApiService;
 
 	constructor(app: App, plugin: OBASAssistant) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.apiService = new ApiService(this.plugin.settings);
 	}
 
 	display(): void {
@@ -80,7 +83,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 						this.plugin.settings.updateAPIKey = value;
 						if (isValidApiKey(value)) {
 							updateValidState(false, true); // 显示加载状态
-							await this.plugin.checkApiKey();
+							await this.apiService.checkApiKey();
 							updateValidState(
 								this.plugin.settings.updateAPIKeyIsValid
 							);
@@ -154,7 +157,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 						this.plugin.settings.userEmail = value;
 						if (isValidEmail(this.plugin.settings.userEmail)) {
 							updateValidState(false, true);
-							await this.plugin.getUpdateIDs();
+							await this.apiService.getUpdateIDs();
 							updateValidState(this.plugin.settings.userChecked);
 						} else {
 							updateValidState(false);

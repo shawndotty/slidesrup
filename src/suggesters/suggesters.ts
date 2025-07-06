@@ -1,6 +1,6 @@
 import { App } from "obsidian";
 import { BaseSuggester, SuggesterOption } from "./base-suggester";
-import { t } from "./lang/helpers";
+import { t } from "../lang/helpers";
 
 export class SlideDesignSuggester extends BaseSuggester {
 	constructor(app: App) {

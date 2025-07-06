@@ -1,7 +1,7 @@
 import { Notice } from "obsidian";
-import { NocoDBTable } from "./types";
-import { NocoDBSync } from "./noco-db";
-import { t } from "./lang/helpers";
+import { NocoDBTable } from "../../types";
+import { NocoDBSync } from "./nocodb-sync";
+import { t } from "../../lang/helpers";
 
 export class MyObsidian {
 	app: any;

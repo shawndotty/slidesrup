@@ -1,46 +1,10 @@
 import { App, Notice, normalizePath } from "obsidian";
-import { NocoDBTable, NocoDBSettings, RecordFields, Record } from "./types";
-import { t } from "./lang/helpers";
-
-export class MyNocoDB {
-	apiKey: string;
-	tables: NocoDBTable[];
-	apiUrlRoot: string;
-	apiUrlBase: string;
-	apiUrl: string;
-	recordUrlBase: string;
-	iotoUpdate: boolean;
-	recordFieldsNames: {
-		title: string;
-		content: string;
-		subFolder: string;
-		extension: string;
-		[key: string]: string;
-	};
-
-	constructor(nocoDBSettings: NocoDBSettings) {
-		this.apiKey = nocoDBSettings.apiKey;
-		this.tables = nocoDBSettings.tables || [];
-		this.apiUrlRoot = "https://api.airtable.com/v0/";
-		this.iotoUpdate = nocoDBSettings.iotoUpdate || false;
-		this.recordFieldsNames = {
-			...{
-				title: "Title",
-				content: "MD",
-				subFolder: "SubFolder",
-				extension: "Extension",
-			},
-			...(nocoDBSettings.syncSettings?.recordFieldsNames || {}),
-		};
-	}
-
-	makeApiUrl(sourceTable: NocoDBTable): string {
-		return `${this.apiUrlRoot}${sourceTable.baseID}/${sourceTable.tableID}`;
-	}
-}
+import { NocoDBTable, RecordFields, Record } from "../../types";
+import { t } from "../../lang/helpers";
+import { NocoDB } from "./noco-db";
 
 export class NocoDBSync {
-	nocodb: MyNocoDB;
+	nocodb: NocoDB;
 	app: any;
 	vault: any;
 	notesToCreate: any[];
@@ -50,7 +14,7 @@ export class NocoDBSync {
 	subFolder: string;
 	extension: string;
 
-	constructor(nocodb: MyNocoDB, app: any) {
+	constructor(nocodb: NocoDB, app: any) {
 		this.nocodb = nocodb;
 		this.app = app;
 		this.vault = app.vault;

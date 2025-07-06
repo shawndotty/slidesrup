@@ -1,9 +1,12 @@
 import { App, Notice, TFile } from "obsidian";
-import { t } from "./lang/helpers";
-import { slideTemplate } from "./templates/slide-template";
-import { SuggesterOption } from "./base-suggester";
-import { SlideLocationSuggester, SlideDesignSuggester } from "./suggesters";
-import { OBASAssistantSettings } from "./types";
+import { t } from "../lang/helpers";
+import { slideTemplate } from "../templates/slide-template";
+import { SuggesterOption } from "../suggesters/base-suggester";
+import {
+	SlideLocationSuggester,
+	SlideDesignSuggester,
+} from "../suggesters/suggesters";
+import { OBASAssistantSettings } from "../types";
 
 export class SlidesMaker {
 	private app: App;
