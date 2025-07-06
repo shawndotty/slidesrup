@@ -1,6 +1,6 @@
 import { App, Notice, normalizePath } from "obsidian";
 import { NocoDBTable, NocoDBSettings, RecordFields, Record } from "./types";
-import { t } from "../lang/helpers";
+import { t } from "./lang/helpers";
 
 export class MyNocoDB {
 	apiKey: string;

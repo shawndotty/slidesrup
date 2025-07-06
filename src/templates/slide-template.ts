@@ -1,4 +1,4 @@
-import { t } from "../../lang/helpers";
+import { t } from "../lang/helpers";
 
 export const slideTemplate = `
 ---

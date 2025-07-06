@@ -1,5 +1,5 @@
 import { App, Notice, TFile } from "obsidian";
-import { t } from "../lang/helpers";
+import { t } from "./lang/helpers";
 import { slideTemplate } from "./templates/slide-template";
 import { SuggesterOption } from "./base-suggester";
 import { SlideLocationSuggester, SlideDesignSuggester } from "./suggesters";
