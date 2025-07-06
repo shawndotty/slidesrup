@@ -1,45 +1,44 @@
 import { Plugin } from "obsidian";
+import { SettingsManager } from "./models/settings";
 import { OBASAssistantSettingTab } from "./ui/settings-tab";
 import { OBASAssistantSettings } from "./types";
-import { DEFAULT_SETTINGS } from "./models/default-settings";
-import { ApiService } from "./services/api-services";
-import { TemplaterService } from "./services/templater-service";
-import { CommandService } from "./services/command-service";
+import { createServices } from "./services";
 
 export default class OBASAssistant extends Plugin {
 	settings: OBASAssistantSettings;
-	private apiService: ApiService;
-	private templaterService: TemplaterService;
-	private commandService: CommandService;
+	settingsManager: SettingsManager;
+
+	private services: ReturnType<typeof createServices>;
 
 	async onload() {
-		await this.loadSettings();
-		this.apiService = new ApiService(this.settings);
-		this.templaterService = new TemplaterService(this.app);
-		this.commandService = new CommandService(
-			this,
-			this.settings,
-			this.templaterService
+		// Initialize settings manager
+		this.settingsManager = new SettingsManager(
+			() => this.loadData(),
+			(data) => this.saveData(data)
 		);
+		await this.loadSettings();
 
-		// 注册所有命令
-		this.commandService.registerCommands();
+		// Create services using dependency injection
+		this.services = createServices(this, this.app, this.settings);
 
-		// 添加设置标签页
+		// Register all commands
+		this.services.commandService.registerCommands();
+
+		// Add settings tab
 		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
 	}
 
-	onunload() {}
+	onunload() {
+		// Clean up any resources, listeners, etc.
+		console.log("Unloading OBASAssistant plugin");
+	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		this.settings = await this.settingsManager.load();
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		this.settingsManager.update(this.settings);
+		await this.settingsManager.save();
 	}
 }
