@@ -9,6 +9,11 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	newSlideLocationOption: "current",
 	assignedNewSlideLocation: "",
 	defaultDesign: "none",
+	templatesFolder: "",
+	demoFolder: "",
+	userSlideTemplate: "",
+	userChapterTemplate: "",
+	userPageTemplate: "",
 	updateIDs: {
 		style: {
 			baseID: "",

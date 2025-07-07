@@ -28,21 +28,17 @@ export class SlidesMaker {
 			return;
 		}
 
-		let design = "";
+		let finalTemplate = "";
 
-		if ("none" === this.settings.defaultDesign) {
-			const designOption = await this._selectSlideDesign();
-			if (!designOption) {
-				new Notice(t("Please select a slide design"));
-				return;
-			}
-			design = designOption.value;
+		if (this.settings.userSlideTemplate) {
+			finalTemplate = await this.getUserTemplate(
+				this.settings.userSlideTemplate
+			);
 		} else {
-			design = this.settings.defaultDesign.toUpperCase();
+			finalTemplate = await this.getDefaultTemplate(slideTemplate);
 		}
 
 		const fileName = this._generateNewSlideFileName();
-		const finalTemplate = this._prepareFinalTemplate(design, fileName);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -51,15 +47,55 @@ export class SlidesMaker {
 		);
 	}
 
+	async getUserTemplate(path: string) {
+		let template = "";
+		const slideFile = this.app.vault.getAbstractFileByPath(path);
+		if (slideFile instanceof TFile) {
+			template = await this.app.vault.read(slideFile);
+		}
+		return template;
+	}
+
+	async getDefaultTemplate(
+		template: string,
+		partial: boolean = false
+	): Promise<string> {
+		let design = "";
+
+		if ("none" === this.settings.defaultDesign) {
+			const designOption = await this._selectSlideDesign();
+			if (!designOption) {
+				new Notice(t("Please select a slide design"));
+				return "";
+			}
+			design = designOption.value;
+		} else {
+			design = this.settings.defaultDesign.toUpperCase();
+		}
+
+		return partial
+			? this._preparePartialTemplate(template, design)
+			: this._prepareSlideTemplate(template, design);
+	}
+
 	async addSlideChapter(): Promise<void> {
-		await this.addSlidePartial(slideChapterTemplate);
+		await this.addSlidePartial(
+			slideChapterTemplate,
+			this.settings.userChapterTemplate
+		);
 	}
 
 	async addSlidePage(): Promise<void> {
-		await this.addSlidePartial(slidePageTemplate);
+		await this.addSlidePartial(
+			slidePageTemplate,
+			this.settings.userPageTemplate
+		);
 	}
 
-	async addSlidePartial(template: string): Promise<void> {
+	async addSlidePartial(
+		defaultTemplate: string,
+		userTemplatePath: string
+	): Promise<void> {
 		const editor = this.app.workspace.activeEditor?.editor;
 		if (!editor) {
 			new Notice(
@@ -68,21 +104,17 @@ export class SlidesMaker {
 			return;
 		}
 
-		let design = "";
+		let finalTemplate = "";
 
-		if ("none" === this.settings.defaultDesign) {
-			const designOption = await this._selectSlideDesign();
-			if (!designOption) {
-				new Notice(t("Please select a slide design"));
-				return;
-			}
-			design = designOption.value;
+		if (userTemplatePath) {
+			finalTemplate = await this.getUserTemplate(userTemplatePath);
 		} else {
-			design = this.settings.defaultDesign.toUpperCase();
+			finalTemplate = await this.getDefaultTemplate(
+				defaultTemplate,
+				true
+			);
 		}
-
-		const finalTemplate = this._preparePartialTemplate(template, design);
-		this._insertAtCursor(editor, finalTemplate + "\n\n");
+		this._insertAtCursor(editor, finalTemplate.trim() + "\n\n");
 	}
 
 	private _preparePartialTemplate(
@@ -90,6 +122,21 @@ export class SlidesMaker {
 		designValue: string
 	): string {
 		const finalTemplate = template.replace(/\{\{design\}\}/g, designValue);
+		return finalTemplate.trim();
+	}
+
+	private _prepareSlideTemplate(
+		template: string,
+		designValue: string
+	): string {
+		const modifiedTemplate = template.replace(
+			"{{OBASPath}}",
+			this.settings.obasFrameworkFolder
+		);
+		const finalTemplate = modifiedTemplate.replace(
+			/\{\{design\}\}/g,
+			designValue
+		);
 		return finalTemplate.trim();
 	}
 
@@ -158,15 +205,6 @@ export class SlidesMaker {
 			"0"
 		)}-${String(now.getSeconds()).padStart(2, "0")}`;
 		return `${t("Untitled Slide")}-${timestamp}`;
-	}
-
-	private _prepareFinalTemplate(designValue: string, title: string): string {
-		const template = slideTemplate.replace(
-			"{{OBASPath}}",
-			this.settings.obasFrameworkFolder
-		);
-		const finalTemplate = template.replace(/\{\{design\}\}/g, designValue);
-		return finalTemplate.trim().replace("{{title}}", title);
 	}
 
 	private async _createAndOpenSlide(

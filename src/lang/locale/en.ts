@@ -146,4 +146,22 @@ export default {
 	Valid: "Valid",
 	"Add Chapter": "Add Chapter",
 	"Add Page": "Add Page",
+	"User Templates Folder": "User Templates Folder",
+	"Please enter the path to your own templates":
+		"Please enter the path to your own templates",
+	"Choose your templates folder": "Choose your templates folder",
+	"User Slide Template": "User Slide Template",
+	"Please choose your personal slide template":
+		"Please choose your personal slide template",
+	"Choose your personal slide template":
+		"Choose your personal slide template",
+	"User Chapter Template": "User Chapter Template",
+	"Please choose your personal chapter template":
+		"Please choose your personal chapter template",
+	"Choose your personal chapter template":
+		"Choose your personal chapter template",
+	"User Page Template": "User Page Template",
+	"Please choose your personal page template":
+		"Please choose your personal page template",
+	"Choose your personal page template": "Choose your personal page template",
 };

@@ -9,6 +9,9 @@ declare module "obsidian" {
 				[key: string]: any;
 			};
 		};
+		dom: {
+			appContainerEl: HTMLElement;
+		};
 	}
 }
 
@@ -27,6 +30,11 @@ export interface OBASAssistantSettings {
 	newSlideLocationOption: string;
 	assignedNewSlideLocation: string;
 	defaultDesign: string;
+	templatesFolder: string;
+	userSlideTemplate: string;
+	userChapterTemplate: string;
+	userPageTemplate: string;
+	demoFolder: string;
 	updateIDs: {
 		style: AirtableIds;
 		templates: AirtableIds;

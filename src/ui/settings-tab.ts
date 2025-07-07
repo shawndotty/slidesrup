@@ -3,6 +3,8 @@ import { t } from "../lang/helpers";
 import OBASAssistant from "../main";
 import { isValidApiKey, isValidEmail } from "../utils";
 import { ApiService } from "../services/api-services";
+import { FolderSuggest } from "./pickers/folder-picker";
+import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
@@ -58,17 +60,17 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName(t("OBAS Framework Folder"))
 			.setDesc(t("Please enter the path to the OBAS Framework Folder"))
-			.addText((text) =>
-				text
-					.setPlaceholder(
-						t("Enter the full path to the OBAS Framework folder")
-					)
+			.addSearch((text) => {
+				new FolderSuggest(this.app, text.inputEl);
+				text.setPlaceholder(
+					t("Enter the full path to the OBAS Framework folder")
+				)
 					.setValue(this.plugin.settings.obasFrameworkFolder)
 					.onChange(async (value) => {
 						this.plugin.settings.obasFrameworkFolder = value;
 						await this.plugin.saveSettings();
-					})
-			);
+					});
+			});
 
 		new Setting(containerEl)
 			.setName(t("Default Design"))
@@ -134,6 +136,70 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			this.plugin.settings.newSlideLocationOption === "assigned"
 				? ""
 				: "none";
+
+		new Setting(containerEl)
+			.setName(t("User Templates Folder"))
+			.setDesc(t("Please enter the path to your own templates"))
+			.addSearch((text) => {
+				new FolderSuggest(this.app, text.inputEl);
+				text.setPlaceholder(t("Choose your templates folder"))
+					.setValue(this.plugin.settings.templatesFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.templatesFolder = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("User Slide Template"))
+			.setDesc(t("Please choose your personal slide template"))
+			.addSearch((text) => {
+				new FileSuggest(
+					text.inputEl,
+					this.plugin,
+					FileSuggestMode.TemplateFiles
+				);
+				text.setPlaceholder(t("Choose your personal slide template"))
+					.setValue(this.plugin.settings.userSlideTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.userSlideTemplate = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("User Chapter Template"))
+			.setDesc(t("Please choose your personal chapter template"))
+			.addSearch((text) => {
+				new FileSuggest(
+					text.inputEl,
+					this.plugin,
+					FileSuggestMode.TemplateFiles
+				);
+				text.setPlaceholder(t("Choose your personal chapter template"))
+					.setValue(this.plugin.settings.userChapterTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.userChapterTemplate = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("User Page Template"))
+			.setDesc(t("Please choose your personal page template"))
+			.addSearch((text) => {
+				new FileSuggest(
+					text.inputEl,
+					this.plugin,
+					FileSuggestMode.TemplateFiles
+				);
+				text.setPlaceholder(t("Choose your personal page template"))
+					.setValue(this.plugin.settings.userPageTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.userPageTemplate = value;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 	/**
