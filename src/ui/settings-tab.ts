@@ -158,7 +158,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			cls: "obas-hsl-preview-container setting-item",
 		});
 		const colorPreviewLabel = colorPreviewContainer.createSpan({
-			text: "当前主题色预览：",
+			text: t("Preview Your Slide Theme Color"),
 			cls: "obas-hsl-preview-label",
 		});
 		const colorPreviewBlock = colorPreviewContainer.createDiv({
@@ -191,8 +191,8 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		};
 
 		new Setting(containerEl)
-			.setName("Hue")
-			.setDesc("Set Hue")
+			.setName(t("Hue"))
+			.setDesc(t("Adjust the hue of the theme"))
 			.addSlider(
 				(slider) =>
 					slider
@@ -209,8 +209,8 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Saturation")
-			.setDesc("Set Saturation")
+			.setName(t("Saturation"))
+			.setDesc(t("Adjust the saturation of the theme"))
 			.addSlider(
 				(slider) =>
 					slider
@@ -227,8 +227,8 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Lightness")
-			.setDesc("Set Lightness")
+			.setName(t("Lightness"))
+			.setDesc(t("Adjust the lightness of the theme"))
 			.addSlider(
 				(slider) =>
 					slider

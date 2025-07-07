@@ -143,4 +143,12 @@ export default {
 	"User Page Template": "你的内容页模板",
 	"Please choose your personal page template": "请选择你的内容页模板文件",
 	"Choose your personal page template": "选择你的内容页模板",
+	"Theme Setting": "主题设置",
+	Hue: "色相",
+	Saturation: "饱和度",
+	Lightness: "亮度",
+	"Preview Your Slide Theme Color": "预览你的演示主题色",
+	"Adjust the hue of the theme": "调整主题色的色相",
+	"Adjust the saturation of the theme": "调整主题色的饱和度",
+	"Adjust the lightness of the theme": "调整主题色的亮度",
 };

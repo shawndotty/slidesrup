@@ -168,6 +168,7 @@ export default {
 	Hue: "Hue",
 	Saturation: "Saturation",
 	Lightness: "Lightness",
+	"Preview Your Slide Theme Color": "Preview Your Slide Theme Color",
 	"Adjust the hue of the theme": "Adjust the hue of the theme",
 	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
 	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
