@@ -22,7 +22,7 @@ export async function errorWrapper<T>(
 		} else {
 			log_error(e);
 		}
-		return null as T;
+		throw new OBASAssistantError(msg, e.message);
 	}
 }
 
@@ -31,6 +31,6 @@ export function errorWrapperSync<T>(fn: () => T, msg: string): T {
 		return fn();
 	} catch (e) {
 		log_error(new OBASAssistantError(msg, e.message));
-		return null as T;
+		throw new OBASAssistantError(msg, e.message);
 	}
 }
