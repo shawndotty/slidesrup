@@ -4,7 +4,7 @@ import { OBASAssistantSettings } from "../types";
 export class CssService {
 	private obasHslFilePath: string;
 	constructor(private app: App, private settings: OBASAssistantSettings) {
-		this.obasHslFilePath = `${this.settings.obasFrameworkFolder}/Style/obas-hsl.css`;
+		this.obasHslFilePath = `${this.settings.obasFrameworkFolder}/Style/my-obas-hsl.css`;
 	}
 
 	async modifyObasHslFile() {
