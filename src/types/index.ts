@@ -40,6 +40,9 @@ export interface OBASAssistantSettings {
 		templates: AirtableIds;
 		demo: AirtableIds;
 	};
+	obasHue: number;
+	obasSaturation: number;
+	obasLightness: number;
 }
 
 export interface NocoDBTable {

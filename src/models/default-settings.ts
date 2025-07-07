@@ -31,4 +31,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 			viewID: "",
 		},
 	},
+	obasHue: 225,
+	obasSaturation: 100,
+	obasLightness: 50,
 };

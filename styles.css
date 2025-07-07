@@ -27,3 +27,11 @@ input.invalid-input {
 .loading-text {
 	margin-left: 10px;
 }
+
+
+/* Theme Color Preview */
+
+.obas-hsl-preview-container {
+    display: flex;
+    justify-content: space-between;
+}

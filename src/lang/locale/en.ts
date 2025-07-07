@@ -164,4 +164,11 @@ export default {
 	"Please choose your personal page template":
 		"Please choose your personal page template",
 	"Choose your personal page template": "Choose your personal page template",
+	"Theme Setting": "Theme Setting",
+	Hue: "Hue",
+	Saturation: "Saturation",
+	Lightness: "Lightness",
+	"Adjust the hue of the theme": "Adjust the hue of the theme",
+	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
+	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
 };

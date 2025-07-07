@@ -147,6 +147,102 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Choose your personal page template",
 			"userPageTemplate"
 		);
+
+		containerEl.createEl("h2", {
+			text: t("Theme Setting"),
+			cls: "my-plugin-title",
+		});
+
+		// 添加一个色块用于预览当前的 HSL 设置
+		const colorPreviewContainer = containerEl.createDiv({
+			cls: "obas-hsl-preview-container setting-item",
+		});
+		const colorPreviewLabel = colorPreviewContainer.createSpan({
+			text: "当前主题色预览：",
+			cls: "obas-hsl-preview-label",
+		});
+		const colorPreviewBlock = colorPreviewContainer.createDiv({
+			cls: "obas-hsl-preview-block",
+		});
+		// 设置色块的初始颜色
+		const setPreviewColor = () => {
+			const h = this.plugin.settings.obasHue;
+			const s = this.plugin.settings.obasSaturation;
+			const l = this.plugin.settings.obasLightness;
+			colorPreviewBlock.style.width = "100px";
+			colorPreviewBlock.style.height = "40px";
+			colorPreviewBlock.style.display = "inline-block";
+			colorPreviewBlock.style.marginLeft = "12px";
+			colorPreviewBlock.style.borderRadius = "6px";
+			colorPreviewBlock.style.border = "1px solid #ccc";
+			colorPreviewBlock.style.verticalAlign = "middle";
+			colorPreviewBlock.style.background = `hsl(${h}, ${s}%, ${l}%)`;
+		};
+		setPreviewColor();
+
+		// 监听设置变化，实时更新色块
+		const origModifyObasHslFile =
+			this.plugin.services.cssService.modifyObasHslFile.bind(
+				this.plugin.services.cssService
+			);
+		this.plugin.services.cssService.modifyObasHslFile = async (...args) => {
+			await origModifyObasHslFile(...args);
+			setPreviewColor();
+		};
+
+		new Setting(containerEl)
+			.setName("Hue")
+			.setDesc("Set Hue")
+			.addSlider(
+				(slider) =>
+					slider
+						.setLimits(0, 360, 1) // 最小值, 最大值, 步长
+						.setValue(this.plugin.settings.obasHue)
+						.onChange(async (value) => {
+							this.plugin.settings.obasHue = value;
+							await this.plugin.saveSettings();
+							await this.plugin.services.cssService.modifyObasHslFile();
+							// 实时响应变化（可选）
+							console.log("当前值:", value);
+						})
+						.setDynamicTooltip() // 滑动时显示实时数值
+			);
+
+		new Setting(containerEl)
+			.setName("Saturation")
+			.setDesc("Set Saturation")
+			.addSlider(
+				(slider) =>
+					slider
+						.setLimits(0, 100, 1) // 最小值, 最大值, 步长
+						.setValue(this.plugin.settings.obasSaturation)
+						.onChange(async (value) => {
+							this.plugin.settings.obasSaturation = value;
+							await this.plugin.saveSettings();
+							await this.plugin.services.cssService.modifyObasHslFile();
+							// 实时响应变化（可选）
+							console.log("当前值:", value);
+						})
+						.setDynamicTooltip() // 滑动时显示实时数值
+			);
+
+		new Setting(containerEl)
+			.setName("Lightness")
+			.setDesc("Set Lightness")
+			.addSlider(
+				(slider) =>
+					slider
+						.setLimits(0, 100, 1) // 最小值, 最大值, 步长
+						.setValue(this.plugin.settings.obasLightness)
+						.onChange(async (value) => {
+							this.plugin.settings.obasLightness = value;
+							await this.plugin.saveSettings();
+							await this.plugin.services.cssService.modifyObasHslFile();
+							// 实时响应变化（可选）
+							console.log("当前值:", value);
+						})
+						.setDynamicTooltip() // 滑动时显示实时数值
+			);
 	}
 
 	private createBaseSetting(

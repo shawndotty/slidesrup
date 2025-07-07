@@ -9,7 +9,7 @@ export default class OBASAssistant extends Plugin {
 	settings: OBASAssistantSettings;
 	settingsManager: SettingsManager;
 
-	private services: ReturnType<typeof createServices>;
+	services: ReturnType<typeof createServices>;
 
 	async onload() {
 		// Initialize settings manager
