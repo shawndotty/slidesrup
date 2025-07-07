@@ -15,6 +15,7 @@ import { OBASAssistantSettings } from "../types";
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
+	private static readonly DESIGN_REGEX = /\{\{design\}\}/g;
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -28,15 +29,10 @@ export class SlidesMaker {
 			return;
 		}
 
-		let finalTemplate = "";
-
-		if (this.settings.userSlideTemplate) {
-			finalTemplate = await this.getUserTemplate(
-				this.settings.userSlideTemplate
-			);
-		} else {
-			finalTemplate = await this.getDefaultTemplate(slideTemplate);
-		}
+		const finalTemplate = await this.getFinalTemplate(
+			this.settings.userSlideTemplate,
+			slideTemplate
+		);
 
 		const fileName = this._generateNewSlideFileName();
 
@@ -78,6 +74,18 @@ export class SlidesMaker {
 			: this._prepareSlideTemplate(template, design);
 	}
 
+	async getFinalTemplate(
+		userTemplate: string,
+		defaultTemplate: string,
+		partial: boolean = false
+	) {
+		if (userTemplate) {
+			return await this.getUserTemplate(userTemplate);
+		} else {
+			return await this.getDefaultTemplate(defaultTemplate, partial);
+		}
+	}
+
 	async addSlideChapter(): Promise<void> {
 		await this.addSlidePartial(
 			slideChapterTemplate,
@@ -104,16 +112,12 @@ export class SlidesMaker {
 			return;
 		}
 
-		let finalTemplate = "";
+		const finalTemplate = await this.getFinalTemplate(
+			userTemplatePath,
+			defaultTemplate,
+			true
+		);
 
-		if (userTemplatePath) {
-			finalTemplate = await this.getUserTemplate(userTemplatePath);
-		} else {
-			finalTemplate = await this.getDefaultTemplate(
-				defaultTemplate,
-				true
-			);
-		}
 		this._insertAtCursor(editor, finalTemplate.trim() + "\n\n");
 	}
 
@@ -121,7 +125,10 @@ export class SlidesMaker {
 		template: string,
 		designValue: string
 	): string {
-		const finalTemplate = template.replace(/\{\{design\}\}/g, designValue);
+		const finalTemplate = template.replace(
+			SlidesMaker.DESIGN_REGEX,
+			designValue
+		);
 		return finalTemplate.trim();
 	}
 
@@ -134,7 +141,7 @@ export class SlidesMaker {
 			this.settings.obasFrameworkFolder
 		);
 		const finalTemplate = modifiedTemplate.replace(
-			/\{\{design\}\}/g,
+			SlidesMaker.DESIGN_REGEX,
 			designValue
 		);
 		return finalTemplate.trim();
@@ -142,7 +149,6 @@ export class SlidesMaker {
 
 	private _insertAtCursor(editor: Editor, content: string): void {
 		const cursor = editor.getCursor();
-		console.dir(cursor);
 		editor.replaceRange(content, cursor);
 		editor.setCursor(cursor.line + content.split("\n").length);
 	}
