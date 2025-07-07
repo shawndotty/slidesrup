@@ -6,6 +6,8 @@ import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 
+type SettingsKeys = keyof OBASAssistant["settings"];
+
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
 	private apiService: ApiService;
@@ -25,7 +27,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			cls: "my-plugin-title",
 		});
 
-		// Refactored API Key Setting
 		this.createValidatedInput({
 			containerEl,
 			name: t("OBAS Update API Key"),
@@ -40,7 +41,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			remoteValidator: () => this.apiService.checkApiKey(),
 		});
 
-		// Refactored Email Setting
 		this.createValidatedInput({
 			containerEl,
 			name: t("Your Email Address"),
@@ -57,149 +57,182 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			remoteValidator: () => this.apiService.getUpdateIDs(),
 		});
 
-		new Setting(containerEl)
-			.setName(t("OBAS Framework Folder"))
-			.setDesc(t("Please enter the path to the OBAS Framework Folder"))
-			.addSearch((text) => {
-				new FolderSuggest(this.app, text.inputEl);
-				text.setPlaceholder(
-					t("Enter the full path to the OBAS Framework folder")
-				)
-					.setValue(this.plugin.settings.obasFrameworkFolder)
-					.onChange(async (value) => {
-						this.plugin.settings.obasFrameworkFolder = value;
-						await this.plugin.saveSettings();
-					});
-			});
+		this.createFolderSetting(
+			containerEl,
+			"OBAS Framework Folder",
+			"Please enter the path to the OBAS Framework Folder",
+			"Enter the full path to the OBAS Framework folder",
+			"obasFrameworkFolder"
+		);
 
-		new Setting(containerEl)
-			.setName(t("Default Design"))
-			.setDesc(t("Please select your default design"))
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOptions({
-						none: t("None"),
-						a: t("Slide Design A"),
-						b: t("Slide Design B"),
-						c: t("Slide Design C"),
-						d: t("Slide Design D"),
-						e: t("Slide Design E"),
-						f: t("Slide Design F"),
-						g: t("Slide Design G"),
-					})
-					.setValue(this.plugin.settings.defaultDesign)
-					.onChange(async (value) => {
-						this.plugin.settings.defaultDesign = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		this.createDropdownSetting(
+			containerEl,
+			"Default Design",
+			"Please select your default design",
+			"defaultDesign",
+			{
+				none: "None",
+				a: "Slide Design A",
+				b: "Slide Design B",
+				c: "Slide Design C",
+				d: "Slide Design D",
+				e: "Slide Design E",
+				f: "Slide Design F",
+				g: "Slide Design G",
+			}
+		);
 
-		const newSlideLocationSetting = new Setting(containerEl)
-			.setName(t("New Slide Location Option"))
-			.setDesc(t("Please select the default new slide location option"))
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOptions({
-						current: t("Current Folder"),
-						decideByUser: t("Decide At Creation"),
-						assigned: t("User Assigned Folder"),
-					})
-					.setValue(this.plugin.settings.newSlideLocationOption)
-					.onChange(async (value) => {
-						this.plugin.settings.newSlideLocationOption = value;
-						defaultLocationSetting.settingEl.style.display =
-							value === "assigned" ? "" : "none";
-						await this.plugin.saveSettings();
-					})
-			);
+		const defaultLocationSetting = this.createFolderSetting(
+			containerEl,
+			"Default New Slide Location",
+			"Please enter the path to the default new slide location",
+			"Enter the full path to the default new slide location",
+			"assignedNewSlideLocation"
+		);
 
-		const defaultLocationSetting = new Setting(containerEl)
-			.setName(t("Default New Slide Location"))
-			.setDesc(
-				t("Please enter the path to the default new slide location")
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder(
-						t(
-							"Enter the full path to the default new slide location"
-						)
-					)
-					.setValue(this.plugin.settings.assignedNewSlideLocation)
-					.onChange(async (value) => {
-						this.plugin.settings.assignedNewSlideLocation = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		this.createDropdownSetting(
+			containerEl,
+			"New Slide Location Option",
+			"Please select the default new slide location option",
+			"newSlideLocationOption",
+			{
+				current: "Current Folder",
+				decideByUser: "Decide At Creation",
+				assigned: "User Assigned Folder",
+			},
+			(value) => {
+				defaultLocationSetting.settingEl.style.display =
+					value === "assigned" ? "" : "none";
+			}
+		);
 
 		defaultLocationSetting.settingEl.style.display =
 			this.plugin.settings.newSlideLocationOption === "assigned"
 				? ""
 				: "none";
 
-		new Setting(containerEl)
-			.setName(t("User Templates Folder"))
-			.setDesc(t("Please enter the path to your own templates"))
-			.addSearch((text) => {
+		containerEl.createEl("h2", {
+			text: t("User Setting"),
+			cls: "my-plugin-title",
+		});
+
+		this.createFolderSetting(
+			containerEl,
+			"User Templates Folder",
+			"Please enter the path to your own templates",
+			"Choose your templates folder",
+			"templatesFolder"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User Slide Template",
+			"Please choose your personal slide template",
+			"Choose your personal slide template",
+			"userSlideTemplate"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User Chapter Template",
+			"Please choose your personal chapter template",
+			"Choose your personal chapter template",
+			"userChapterTemplate"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User Page Template",
+			"Please choose your personal page template",
+			"Choose your personal page template",
+			"userPageTemplate"
+		);
+	}
+
+	private createBaseSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string
+	): Setting {
+		return new Setting(containerEl)
+			.setName(t(nameKey as any))
+			.setDesc(t(descKey as any));
+	}
+
+	private createFolderSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		placeholderKey: string,
+		settingKey: SettingsKeys
+	): Setting {
+		return this.createBaseSetting(containerEl, nameKey, descKey).addSearch(
+			(text) => {
 				new FolderSuggest(this.app, text.inputEl);
-				text.setPlaceholder(t("Choose your templates folder"))
-					.setValue(this.plugin.settings.templatesFolder)
+				text.setPlaceholder(t(placeholderKey as any))
+					.setValue(this.plugin.settings[settingKey] as string)
 					.onChange(async (value) => {
-						this.plugin.settings.templatesFolder = value;
+						(this.plugin.settings[settingKey] as unknown) = value;
 						await this.plugin.saveSettings();
 					});
-			});
+			}
+		);
+	}
 
-		new Setting(containerEl)
-			.setName(t("User Slide Template"))
-			.setDesc(t("Please choose your personal slide template"))
-			.addSearch((text) => {
+	private createFileSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		placeholderKey: string,
+		settingKey: SettingsKeys
+	) {
+		this.createBaseSetting(containerEl, nameKey, descKey).addSearch(
+			(text) => {
 				new FileSuggest(
 					text.inputEl,
 					this.plugin,
 					FileSuggestMode.TemplateFiles
 				);
-				text.setPlaceholder(t("Choose your personal slide template"))
-					.setValue(this.plugin.settings.userSlideTemplate)
+				text.setPlaceholder(t(placeholderKey as any))
+					.setValue(this.plugin.settings[settingKey] as string)
 					.onChange(async (value) => {
-						this.plugin.settings.userSlideTemplate = value;
+						(this.plugin.settings[settingKey] as unknown) = value;
 						await this.plugin.saveSettings();
 					});
-			});
+			}
+		);
+	}
 
-		new Setting(containerEl)
-			.setName(t("User Chapter Template"))
-			.setDesc(t("Please choose your personal chapter template"))
-			.addSearch((text) => {
-				new FileSuggest(
-					text.inputEl,
-					this.plugin,
-					FileSuggestMode.TemplateFiles
-				);
-				text.setPlaceholder(t("Choose your personal chapter template"))
-					.setValue(this.plugin.settings.userChapterTemplate)
-					.onChange(async (value) => {
-						this.plugin.settings.userChapterTemplate = value;
-						await this.plugin.saveSettings();
-					});
-			});
+	private createDropdownSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		settingKey: SettingsKeys,
+		options: Record<string, string>,
+		onChangeCallback?: (value: string) => void
+	): Setting {
+		const translatedOptions = Object.entries(options).reduce(
+			(acc, [key, valueKey]) => {
+				acc[key] = t(valueKey as any);
+				return acc;
+			},
+			{} as Record<string, string>
+		);
 
-		new Setting(containerEl)
-			.setName(t("User Page Template"))
-			.setDesc(t("Please choose your personal page template"))
-			.addSearch((text) => {
-				new FileSuggest(
-					text.inputEl,
-					this.plugin,
-					FileSuggestMode.TemplateFiles
-				);
-				text.setPlaceholder(t("Choose your personal page template"))
-					.setValue(this.plugin.settings.userPageTemplate)
-					.onChange(async (value) => {
-						this.plugin.settings.userPageTemplate = value;
-						await this.plugin.saveSettings();
-					});
-			});
+		return this.createBaseSetting(
+			containerEl,
+			nameKey,
+			descKey
+		).addDropdown((dropdown) => {
+			dropdown
+				.addOptions(translatedOptions)
+				.setValue(this.plugin.settings[settingKey] as string)
+				.onChange(async (value) => {
+					(this.plugin.settings[settingKey] as unknown) = value;
+					await this.plugin.saveSettings();
+					onChangeCallback?.(value);
+				});
+		});
 	}
 
 	/**
