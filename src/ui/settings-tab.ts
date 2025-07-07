@@ -22,6 +22,12 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		this.renderMainSettings(containerEl);
+		this.renderUserSettings(containerEl);
+		this.renderThemeSettings(containerEl);
+	}
+
+	private renderMainSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Main Setting"),
 			cls: "my-plugin-title",
@@ -90,6 +96,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"assignedNewSlideLocation"
 		);
 
+		const toggleDefaultLocation = (value: string) => {
+			defaultLocationSetting.settingEl.style.display =
+				value === "assigned" ? "" : "none";
+		};
+
 		this.createDropdownSetting(
 			containerEl,
 			"New Slide Location Option",
@@ -100,17 +111,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				decideByUser: "Decide At Creation",
 				assigned: "User Assigned Folder",
 			},
-			(value) => {
-				defaultLocationSetting.settingEl.style.display =
-					value === "assigned" ? "" : "none";
-			}
+			toggleDefaultLocation
 		);
 
-		defaultLocationSetting.settingEl.style.display =
-			this.plugin.settings.newSlideLocationOption === "assigned"
-				? ""
-				: "none";
+		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);
+	}
 
+	private renderUserSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("User Setting"),
 			cls: "my-plugin-title",
@@ -147,101 +154,103 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Choose your personal page template",
 			"userPageTemplate"
 		);
+	}
 
+	private renderThemeSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Theme Setting"),
 			cls: "my-plugin-title",
 		});
 
-		// 添加一个色块用于预览当前的 HSL 设置
-		const colorPreviewContainer = containerEl.createDiv({
-			cls: "obas-hsl-preview-container setting-item",
-		});
-		const colorPreviewLabel = colorPreviewContainer.createSpan({
-			text: t("Preview Your Slide Theme Color"),
-			cls: "obas-hsl-preview-label",
-		});
-		const colorPreviewBlock = colorPreviewContainer.createDiv({
-			cls: "obas-hsl-preview-block",
-		});
-		// 设置色块的初始颜色
+		const colorPreviewBlock = this.createColorPreview(containerEl);
+
 		const setPreviewColor = () => {
-			const h = this.plugin.settings.obasHue;
-			const s = this.plugin.settings.obasSaturation;
-			const l = this.plugin.settings.obasLightness;
-			colorPreviewBlock.style.width = "100px";
-			colorPreviewBlock.style.height = "40px";
-			colorPreviewBlock.style.display = "inline-block";
-			colorPreviewBlock.style.marginLeft = "12px";
-			colorPreviewBlock.style.borderRadius = "6px";
-			colorPreviewBlock.style.border = "1px solid #ccc";
-			colorPreviewBlock.style.verticalAlign = "middle";
-			colorPreviewBlock.style.background = `hsl(${h}, ${s}%, ${l}%)`;
-		};
-		setPreviewColor();
-
-		// 监听设置变化，实时更新色块
-		const origModifyObasHslFile =
-			this.plugin.services.cssService.modifyObasHslFile.bind(
-				this.plugin.services.cssService
-			);
-		this.plugin.services.cssService.modifyObasHslFile = async (...args) => {
-			await origModifyObasHslFile(...args);
-			setPreviewColor();
+			const { obasHue, obasSaturation, obasLightness } =
+				this.plugin.settings;
+			colorPreviewBlock.style.backgroundColor = `hsl(${obasHue}, ${obasSaturation}%, ${obasLightness}%)`;
 		};
 
-		new Setting(containerEl)
-			.setName(t("Hue"))
-			.setDesc(t("Adjust the hue of the theme"))
-			.addSlider(
-				(slider) =>
-					slider
-						.setLimits(0, 360, 1) // 最小值, 最大值, 步长
-						.setValue(this.plugin.settings.obasHue)
-						.onChange(async (value) => {
-							this.plugin.settings.obasHue = value;
-							await this.plugin.saveSettings();
-							await this.plugin.services.cssService.modifyObasHslFile();
-							// 实时响应变化（可选）
-							console.log("当前值:", value);
-						})
-						.setDynamicTooltip() // 滑动时显示实时数值
-			);
+		setPreviewColor(); // Set initial color
 
-		new Setting(containerEl)
-			.setName(t("Saturation"))
-			.setDesc(t("Adjust the saturation of the theme"))
-			.addSlider(
-				(slider) =>
-					slider
-						.setLimits(0, 100, 1) // 最小值, 最大值, 步长
-						.setValue(this.plugin.settings.obasSaturation)
-						.onChange(async (value) => {
-							this.plugin.settings.obasSaturation = value;
-							await this.plugin.saveSettings();
-							await this.plugin.services.cssService.modifyObasHslFile();
-							// 实时响应变化（可选）
-							console.log("当前值:", value);
-						})
-						.setDynamicTooltip() // 滑动时显示实时数值
-			);
+		const onHslChange = debounce(
+			async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.services.cssService.modifyObasHslFile();
+				setPreviewColor();
+			},
+			200,
+			true
+		);
 
+		this.createSliderSetting(
+			containerEl,
+			"Hue",
+			"Adjust the hue of the theme",
+			"obasHue",
+			360,
+			onHslChange
+		);
+
+		this.createSliderSetting(
+			containerEl,
+			"Saturation",
+			"Adjust the saturation of the theme",
+			"obasSaturation",
+			100,
+			onHslChange
+		);
+
+		this.createSliderSetting(
+			containerEl,
+			"Lightness",
+			"Adjust the lightness of the theme",
+			"obasLightness",
+			100,
+			onHslChange
+		);
+	}
+
+	private createColorPreview(containerEl: HTMLElement): HTMLElement {
+		const previewContainer = containerEl.createDiv({
+			cls: "setting-item",
+		});
+		const settingItemInfo = previewContainer.createDiv({
+			cls: "setting-item-info",
+		});
+		settingItemInfo.createDiv({
+			text: t("Preview Your Slide Theme Color"),
+			cls: "setting-item-name",
+		});
+
+		const settingItemControl = previewContainer.createDiv({
+			cls: "setting-item-control",
+		});
+		const colorBlock = settingItemControl.createDiv({
+			cls: "obas-color-preview-block",
+		});
+		return colorBlock;
+	}
+
+	private createSliderSetting(
+		containerEl: HTMLElement,
+		name: string,
+		desc: string,
+		settingKey: "obasHue" | "obasSaturation" | "obasLightness",
+		max: number,
+		onChangeCallback: (value: number) => void
+	) {
 		new Setting(containerEl)
-			.setName(t("Lightness"))
-			.setDesc(t("Adjust the lightness of the theme"))
-			.addSlider(
-				(slider) =>
-					slider
-						.setLimits(0, 100, 1) // 最小值, 最大值, 步长
-						.setValue(this.plugin.settings.obasLightness)
-						.onChange(async (value) => {
-							this.plugin.settings.obasLightness = value;
-							await this.plugin.saveSettings();
-							await this.plugin.services.cssService.modifyObasHslFile();
-							// 实时响应变化（可选）
-							console.log("当前值:", value);
-						})
-						.setDynamicTooltip() // 滑动时显示实时数值
+			.setName(t(name as any))
+			.setDesc(t(desc as any))
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, max, 1)
+					.setValue(this.plugin.settings[settingKey])
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings[settingKey] = value;
+						onChangeCallback(value);
+					})
 			);
 	}
 
@@ -268,7 +277,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				text.setPlaceholder(t(placeholderKey as any))
 					.setValue(this.plugin.settings[settingKey] as string)
 					.onChange(async (value) => {
-						(this.plugin.settings[settingKey] as unknown) = value;
+						(this.plugin.settings[settingKey] as any) = value;
 						await this.plugin.saveSettings();
 					});
 			}
@@ -292,7 +301,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				text.setPlaceholder(t(placeholderKey as any))
 					.setValue(this.plugin.settings[settingKey] as string)
 					.onChange(async (value) => {
-						(this.plugin.settings[settingKey] as unknown) = value;
+						(this.plugin.settings[settingKey] as any) = value;
 						await this.plugin.saveSettings();
 					});
 			}
@@ -324,18 +333,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				.addOptions(translatedOptions)
 				.setValue(this.plugin.settings[settingKey] as string)
 				.onChange(async (value) => {
-					(this.plugin.settings[settingKey] as unknown) = value;
+					(this.plugin.settings[settingKey] as any) = value;
 					await this.plugin.saveSettings();
 					onChangeCallback?.(value);
 				});
 		});
 	}
 
-	/**
-	 * Creates a setting with a text input that supports live, debounced validation.
-	 * Note: Add styles for `.valid-input` and `.invalid-input` classes in `styles.css`
-	 * for visual feedback.
-	 */
 	private createValidatedInput(options: {
 		containerEl: HTMLElement;
 		name: string;
@@ -352,51 +356,46 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			.setName(options.name)
 			.setDesc(options.description)
 			.addText((text) => {
-				const validSpan = createEl("span", {
-					text: t("Valid"),
-					cls: "valid-text",
-				});
-				const loadingSpan = createEl("span", {
-					text: t("Validating..."),
-					cls: "loading-text",
-				});
-				validSpan.style.display = "none";
-				loadingSpan.style.display = "none";
-				text.inputEl.parentElement?.insertBefore(
-					validSpan,
-					text.inputEl
-				);
-				text.inputEl.parentElement?.insertBefore(
-					loadingSpan,
-					text.inputEl
-				);
+				const controlEl = text.inputEl.parentElement;
+				let statusEl: HTMLElement | null = null;
 
 				const updateVisualState = (
-					isValid: boolean,
-					isLoading: boolean = false
+					state: "valid" | "invalid" | "loading" | "idle"
 				) => {
-					loadingSpan.style.display = isLoading ? "inline" : "none";
-					validSpan.style.display =
-						!isLoading && isValid ? "inline" : "none";
-
-					text.inputEl.classList.toggle(
+					// Clear previous state
+					statusEl?.remove();
+					text.inputEl.classList.remove(
 						"valid-input",
-						!isLoading && isValid
-					);
-					text.inputEl.classList.toggle(
-						"invalid-input",
-						!isLoading && !isValid
+						"invalid-input"
 					);
 
-					if (isLoading) {
-						text.inputEl.classList.remove(
-							"valid-input",
-							"invalid-input"
-						);
+					switch (state) {
+						case "loading":
+							statusEl = createEl("span", {
+								text: t("Validating..."),
+								cls: "setting-item-control-status loading-text",
+							});
+							controlEl?.append(statusEl);
+							break;
+						case "valid":
+							statusEl = createEl("span", {
+								text: t("Valid"),
+								cls: "setting-item-control-status valid-text",
+							});
+							controlEl?.append(statusEl);
+							text.inputEl.classList.add("valid-input");
+							break;
+						case "invalid":
+							text.inputEl.classList.add("invalid-input");
+							break;
+						case "idle":
+						default:
+							break;
 					}
 				};
 
-				updateVisualState(options.getIsValid());
+				const initialState = options.getIsValid() ? "valid" : "idle";
+				updateVisualState(initialState);
 
 				text.setPlaceholder(options.placeholder).setValue(
 					options.getValue()
@@ -405,15 +404,26 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				const debouncedValidation = debounce(
 					async (value: string) => {
 						options.setValue(value);
-						if (options.localValidator(value)) {
-							updateVisualState(false, true); // Show loading
-							await options.remoteValidator();
-							updateVisualState(options.getIsValid(), false);
-						} else {
-							options.setIsValid(false); // Fix bug: update stored validity
-							updateVisualState(false, false);
-						}
 						await this.plugin.saveSettings();
+
+						if (!options.localValidator(value)) {
+							options.setIsValid(false);
+							updateVisualState("invalid");
+							return;
+						}
+
+						updateVisualState("loading");
+						try {
+							await options.remoteValidator();
+							updateVisualState(
+								options.getIsValid() ? "valid" : "invalid"
+							);
+						} catch (error) {
+							console.error("Validation error:", error);
+							updateVisualState("invalid");
+						} finally {
+							await this.plugin.saveSettings();
+						}
 					},
 					500,
 					true

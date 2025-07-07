@@ -8,9 +8,11 @@ export class CssService {
 	}
 
 	async modifyObasHslFile() {
-		const hue = this.settings.obasHue;
-		const saturation = this.settings.obasSaturation;
-		const lightness = this.settings.obasLightness;
+		const {
+			obasHue: hue,
+			obasSaturation: saturation,
+			obasLightness: lightness,
+		} = this.settings;
 		const hslSettings = `
 :root {
     --obas-base-color: hsl(${hue}, ${saturation}%, ${lightness}%);
@@ -20,14 +22,9 @@ export class CssService {
 }
 `;
 
-		const file = this.app.vault.getFileByPath(this.obasHslFilePath);
-		if (file) {
-			// 如果文件已存在，则覆盖写入
-			await this.app.vault.modify(file, hslSettings);
-			await new Promise((r) => setTimeout(r, 100));
-		} else {
-			// 如果文件不存在，则新建文件并写入
-			await this.app.vault.create(this.obasHslFilePath, hslSettings);
-		}
+		// Use vault.adapter.write to simplify creation and modification.
+		// This will create the file (and any necessary parent folders) if it doesn't exist,
+		// or overwrite it if it does.
+		await this.app.vault.adapter.write(this.obasHslFilePath, hslSettings);
 	}
 }
