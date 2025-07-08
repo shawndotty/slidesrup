@@ -112,3 +112,7 @@ export function get_tfiles_from_folder(
 
 	return files;
 }
+
+export function getTimeStamp() {
+	return moment().format("YYYYMMDDHHmmSS");
+}

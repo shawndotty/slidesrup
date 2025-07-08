@@ -88,14 +88,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			}
 		);
 
-		const defaultLocationSetting = this.createFolderSetting(
-			containerEl,
-			"Default New Slide Location",
-			"Please enter the path to the default new slide location",
-			"Enter the full path to the default new slide location",
-			"assignedNewSlideLocation"
-		);
-
 		const toggleDefaultLocation = (value: string) => {
 			defaultLocationSetting.settingEl.style.display =
 				value === "assigned" ? "" : "none";
@@ -112,6 +104,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				assigned: "User Assigned Folder",
 			},
 			toggleDefaultLocation
+		);
+
+		const defaultLocationSetting = this.createFolderSetting(
+			containerEl,
+			"Default New Slide Location",
+			"Please enter the path to the default new slide location",
+			"Enter the full path to the default new slide location",
+			"assignedNewSlideLocation"
 		);
 
 		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);

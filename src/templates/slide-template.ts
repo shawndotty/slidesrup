@@ -3,7 +3,7 @@ import { t } from "../lang/helpers";
 export const slideTemplate = `
 ---
 css: {{OBASPath}}/Style/main.css
-defaultTemplate: "[[${t("BaseLayout")}]]"
+defaultTemplate: "[[{{baseLayout}}]]"
 enableLinks: true
 height: 1080
 margin: 0
@@ -97,4 +97,32 @@ export const slidePageTemplate = `
 	+ ${t("SubList")} 2-1
     + ${t("SubList")} 2-2
 
+`;
+
+export const baseLayout = `
+<grid drag="100 10" class="header bg-with-back-color has-dark-background" drop="topleft"  flow="row"   pad="0 40px"  style="color: white">
+Johnny学OB
+
+学习是一切的解药
+</grid>
+<grid class="content" drag="100 85" drop="0 10" align="topleft" pad="40px">
+<% content %>
+</grid>
+`;
+
+export const baseLayoutWithSteps = `
+<grid drag="100 10" class="header steps bg-with-back-color has-dark-background" drop="topleft"  flow="row"  pad="0 40px" style="color: white;">
+Johnny学AS
+
+- 第一章
+- 第二章
+- 第三章
+- 第四章
+- 第五章
+- 第六章
+
+</grid>
+<grid class="content" drag="100 85" drop="0 10" align="topleft" pad="40px">
+<% content %>
+</grid>
 `;

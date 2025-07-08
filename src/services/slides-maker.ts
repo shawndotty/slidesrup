@@ -4,6 +4,8 @@ import {
 	slideChapterTemplate,
 	slidePageTemplate,
 	slideTemplate,
+	baseLayout,
+	baseLayoutWithSteps,
 } from "../templates/slide-template";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import {
@@ -11,11 +13,13 @@ import {
 	SlideDesignSuggester,
 } from "../suggesters/suggesters";
 import { OBASAssistantSettings } from "../types";
+import { getTimeStamp } from "src/utils";
 
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
 	private static readonly DESIGN_REGEX = /\{\{design\}\}/g;
+	private static readonly BASELAYOUT_REGEX = /\{\{baseLayout\}\}/g;
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -29,32 +33,45 @@ export class SlidesMaker {
 			return;
 		}
 
-		const finalTemplate = await this.getFinalTemplate(
-			this.settings.userSlideTemplate,
-			slideTemplate
-		);
-
-		const fileName = this._generateNewSlideFileName();
+		const { slideName, baseLayoutName } =
+			this._generateNewSlideFilesNames();
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
-			fileName,
+			baseLayoutName,
+			baseLayoutWithSteps,
+			false
+		);
+
+		const finalTemplate = await this.getFinalTemplate(
+			this.settings.userSlideTemplate,
+			slideTemplate,
+			false,
+			baseLayoutName
+		);
+
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			slideName,
 			finalTemplate
 		);
 	}
 
-	async getUserTemplate(path: string) {
+	async getUserTemplate(path: string, defaultBaseLayout: string) {
 		let template = "";
 		const slideFile = this.app.vault.getAbstractFileByPath(path);
 		if (slideFile instanceof TFile) {
 			template = await this.app.vault.read(slideFile);
 		}
-		return template;
+		return template
+			.replace(SlidesMaker.BASELAYOUT_REGEX, defaultBaseLayout)
+			.trim();
 	}
 
 	async getDefaultTemplate(
 		template: string,
-		partial: boolean = false
+		partial: boolean = false,
+		defaultBaseLayout: string
 	): Promise<string> {
 		let design = "";
 
@@ -71,18 +88,23 @@ export class SlidesMaker {
 
 		return partial
 			? this._preparePartialTemplate(template, design)
-			: this._prepareSlideTemplate(template, design);
+			: this._prepareSlideTemplate(template, design, defaultBaseLayout);
 	}
 
 	async getFinalTemplate(
 		userTemplate: string,
 		defaultTemplate: string,
-		partial: boolean = false
+		partial: boolean = false,
+		defaultBaseLayout: string = t("BaseLayout")
 	) {
 		if (userTemplate) {
-			return await this.getUserTemplate(userTemplate);
+			return await this.getUserTemplate(userTemplate, defaultBaseLayout);
 		} else {
-			return await this.getDefaultTemplate(defaultTemplate, partial);
+			return await this.getDefaultTemplate(
+				defaultTemplate,
+				partial,
+				defaultBaseLayout
+			);
 		}
 	}
 
@@ -134,17 +156,14 @@ export class SlidesMaker {
 
 	private _prepareSlideTemplate(
 		template: string,
-		designValue: string
+		designValue: string,
+		defaultBaseLayout: string
 	): string {
-		const modifiedTemplate = template.replace(
-			"{{OBASPath}}",
-			this.settings.obasFrameworkFolder
-		);
-		const finalTemplate = modifiedTemplate.replace(
-			SlidesMaker.DESIGN_REGEX,
-			designValue
-		);
-		return finalTemplate.trim();
+		return template
+			.replace("{{OBASPath}}", this.settings.obasFrameworkFolder)
+			.replace(SlidesMaker.DESIGN_REGEX, designValue)
+			.replace(SlidesMaker.BASELAYOUT_REGEX, defaultBaseLayout)
+			.trim();
 	}
 
 	private _insertAtCursor(editor: Editor, content: string): void {
@@ -200,31 +219,29 @@ export class SlidesMaker {
 		});
 	}
 
-	private _generateNewSlideFileName(): string {
-		const now = new Date();
-		const timestamp = `${now.getFullYear()}-${String(
-			now.getMonth() + 1
-		).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}-${String(
-			now.getHours()
-		).padStart(2, "0")}-${String(now.getMinutes()).padStart(
-			2,
-			"0"
-		)}-${String(now.getSeconds()).padStart(2, "0")}`;
-		return `${t("Untitled Slide")}-${timestamp}`;
+	private _generateNewSlideFilesNames(): {
+		slideName: string;
+		baseLayoutName: string;
+	} {
+		const timestamp = getTimeStamp();
+		return {
+			slideName: `${t("Untitled Slide")}-${timestamp}`,
+			baseLayoutName: `${t("BaseLayout")}-${timestamp}`,
+		};
 	}
 
 	private async _createAndOpenSlide(
 		location: string,
 		fileName: string,
-		content: string
+		content: string,
+		open: boolean = true
 	): Promise<void> {
 		const filePath =
-			location === "/" ? fileName + ".md" : `${location}/${fileName}.md`;
+			location === "/" ? `${fileName}.md` : `${location}/${fileName}.md`;
 
-		await this.app.vault.create(filePath, content);
+		const newFile = await this.app.vault.create(filePath, content);
 
-		const newFile = this.app.vault.getAbstractFileByPath(filePath);
-		if (newFile instanceof TFile) {
+		if (open && newFile instanceof TFile) {
 			await this.app.workspace.getLeaf().openFile(newFile);
 		}
 	}
