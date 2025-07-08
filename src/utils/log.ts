@@ -5,7 +5,7 @@ export function log_update(msg: string): void {
 	const notice = new Notice("", 15000);
 	// TODO: Find better way for this
 	// @ts-ignore
-	notice.messageEl.innerHTML = `<b>Templater update</b>:<br/>${msg}`;
+	notice.messageEl.innerHTML = `<b>OBAS Assistant update</b>:<br/>${msg}`;
 }
 
 export function log_error(e: Error | OBASAssistantError): void {
@@ -13,10 +13,10 @@ export function log_error(e: Error | OBASAssistantError): void {
 	if (e instanceof OBASAssistantError && e.console_msg) {
 		// TODO: Find a better way for this
 		// @ts-ignore
-		notice.messageEl.innerHTML = `<b>Templater Error</b>:<br/>${e.message}<br/>Check console for more information`;
-		console.error(`Templater Error:`, e.message, "\n", e.console_msg);
+		notice.messageEl.innerHTML = `<b>OBAS Assistant Error</b>:<br/>${e.message}<br/>Check console for more information`;
+		console.error(`OBAS Assistant Error:`, e.message, "\n", e.console_msg);
 	} else {
 		// @ts-ignore
-		notice.messageEl.innerHTML = `<b>Templater Error</b>:<br/>${e.message}`;
+		notice.messageEl.innerHTML = `<b>OBAS Assistant Error</b>:<br/>${e.message}`;
 	}
 }
