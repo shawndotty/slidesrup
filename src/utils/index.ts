@@ -93,6 +93,62 @@ export function resolve_tfolder(app: App, folder_str: string): TFolder {
 	return folder;
 }
 
+/**
+ * 获取当前激活的笔记（TFile）
+ * @param app Obsidian 的 App 实例
+ * @returns 当前激活的笔记（TFile），如果没有则返回 null
+ */
+export function get_active_note(app: App): TFile | null {
+	const activeFile = app.workspace.getActiveFile();
+	if (activeFile instanceof TFile) {
+		return activeFile;
+	}
+	return null;
+}
+
+/**
+ * 获取当前激活笔记所在的文件夹路径
+ * @param app Obsidian 的 App 实例
+ * @returns 当前激活笔记所在的文件夹路径，如果没有激活笔记则返回 null
+ */
+export function get_active_note_folder_path(app: App): string | null {
+	const activeNote = get_active_note(app);
+	if (!activeNote) {
+		return null;
+	}
+	const parent = app.vault.getAbstractFileByPath(
+		activeNote.parent?.path || ""
+	);
+	if (parent && parent.path) {
+		return parent.path;
+	}
+	return null;
+}
+
+/**
+ * 获取指定笔记中的所有列表项（如 -、*、1. 开头的行）
+ * @param app Obsidian 的 App 实例
+ * @param file TFile 实例，表示要读取的笔记
+ * @returns 返回一个字符串数组，每个元素为一个列表项内容
+ */
+export async function get_list_items_from_note(
+	app: App,
+	file: TFile
+): Promise<string[]> {
+	const content = await app.vault.read(file);
+	const lines = content.split("\n");
+	const listItems: string[] = [];
+
+	for (const line of lines) {
+		// 匹配无序列表（-、*、+）或有序列表（数字.）
+		if (/^\s*([-*+]|[0-9]+\.)\s+/.test(line)) {
+			listItems.push(line.trim());
+		}
+	}
+
+	return listItems;
+}
+
 export function get_tfiles_from_folder(
 	app: App,
 	folder_str: string

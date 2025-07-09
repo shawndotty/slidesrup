@@ -179,4 +179,6 @@ export default {
 	"Date Format": "日期格式",
 	"Set Date Format": "设置日期格式",
 	"Your Date Format": "你的日期格式",
+	"Please input chapter index number": "请输入章节索引号",
+	"Please input chapter name": "请输入章节名字",
 };

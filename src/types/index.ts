@@ -108,4 +108,5 @@ export interface ReplaceConfig {
 	presentDate?: string;
 	cIndex?: string;
 	pIndex?: string;
+	cName?: string;
 }

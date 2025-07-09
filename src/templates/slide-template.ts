@@ -23,7 +23,7 @@ const pages = [
 	page.replace(/{{pIndex}}/g, "4"),
 ].join("\n");
 
-export const chapterAndPages = `
+const chapterAndPages = `
 ---
 
 <!-- slide id="c-{{cIndex}}" template="[[${t("Chapter")}-{{${
@@ -47,6 +47,23 @@ const chaptersAndPages = [
 	chapterAndPages.replace(/{{cIndex}}/g, "4"),
 	chapterAndPages.replace(/{{cIndex}}/g, "5"),
 ].join("\n");
+
+export const chapterAndPagesTemplate = `
+---
+
+<!-- slide id="c-{{cIndex}}" template="[[${t("Chapter")}-{{${
+	TEMPLATE_PLACE_HOLDERS.design
+}}}]]"  class="order-list-with-border" -->
+
+## {{cName}}
+
++ [${t("SubSlide")} 1](#c-{{cIndex}}-p-1)
++ [${t("SubSlide")} 2](#c-{{cIndex}}-p-2)
++ [${t("SubSlide")} 3](#c-{{cIndex}}-p-3)
++ [${t("SubSlide")} 4](#c-{{cIndex}}-p-4)
+
+${pages}
+`;
 
 export const slideTemplate = `
 ---

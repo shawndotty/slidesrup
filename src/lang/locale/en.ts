@@ -204,4 +204,5 @@ export default {
 	"Set Date Format": "Set Date Format",
 	"Your Date Format": "Your Date Format",
 	"Please input chapter index number": "Please input chapter index number",
+	"Please input chapter name": "Please input chapter name",
 };

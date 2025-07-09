@@ -6,7 +6,7 @@ import {
 	slideTemplate,
 	baseLayoutWithSteps,
 	toc,
-	chapterAndPages,
+	chapterAndPagesTemplate,
 } from "../templates/slide-template";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import {
@@ -14,7 +14,13 @@ import {
 	SlideDesignSuggester,
 } from "../suggesters/suggesters";
 import { OBASAssistantSettings, ReplaceConfig } from "../types";
-import { getTimeStamp, createPathIfNeeded } from "src/utils";
+import {
+	getTimeStamp,
+	createPathIfNeeded,
+	get_active_note_folder_path,
+	get_tfiles_from_folder,
+	get_list_items_from_note,
+} from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
 
 export class SlidesMaker {
@@ -31,6 +37,7 @@ export class SlidesMaker {
 		slogan: /\{\{SLOGAN\}\}/g,
 		cIndex: /\{\{cIndex\}\}/g,
 		pIndex: /\{\{pIndex\}\}/g,
+		cName: /\{\{cName\}\}/g,
 	};
 
 	constructor(app: App, settings: OBASAssistantSettings) {
@@ -195,25 +202,22 @@ export class SlidesMaker {
 	async addSlideChapter(): Promise<void> {
 		let finalTemplate = "";
 
-		const modal = new InputModal(
-			this.app,
-			t("Please input chapter index number"),
-			""
-		);
+		const cName = await this._getChapterName();
 
-		const cIndex = await modal.openAndGetValue();
+		const cIndex = await this._getChapterIndex();
 
-		if (!cIndex?.trim()) {
-			return;
-		}
+		const tocItem = `+ [${cName}](#c-${cIndex})`;
+
+		await this._appendItemToTocFile(tocItem);
 
 		if (this.settings.addChapterWithSubPages) {
 			finalTemplate = await this.getFinalTemplate(
 				this.settings.userChapterAndPagesTemplate,
-				chapterAndPages,
+				chapterAndPagesTemplate,
 				true,
 				{
 					cIndex: cIndex,
+					cName: cName,
 				}
 			);
 		} else {
@@ -223,6 +227,7 @@ export class SlidesMaker {
 				true,
 				{
 					cIndex: cIndex,
+					cName: cName,
 				}
 			);
 		}
@@ -255,6 +260,24 @@ export class SlidesMaker {
 		const cursor = editor.getCursor();
 		editor.replaceRange(content, cursor);
 		editor.setCursor(cursor.line + content.split("\n").length);
+	}
+
+	private async _getChapterIndex(): Promise<string> {
+		const modal = new InputModal(
+			this.app,
+			t("Please input chapter index number"),
+			""
+		);
+		return (await modal.openAndGetValue()) || "";
+	}
+
+	private async _getChapterName(): Promise<string> {
+		const modal = new InputModal(
+			this.app,
+			t("Please input chapter name"),
+			""
+		);
+		return (await modal.openAndGetValue()) || "";
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {
@@ -302,6 +325,43 @@ export class SlidesMaker {
 			};
 			suggester.open();
 		});
+	}
+
+	private _getSlideFiles() {
+		const currentFolderPath = get_active_note_folder_path(this.app);
+		return currentFolderPath
+			? get_tfiles_from_folder(this.app, currentFolderPath)
+			: [];
+	}
+
+	private _getSlideTocFile(): TFile | null {
+		const slideFiles = this._getSlideFiles();
+		// 直接查找第一个包含“TOC”关键字的文件
+		for (const file of slideFiles) {
+			if (file instanceof TFile && file.basename.includes(t("TOC"))) {
+				return file;
+			}
+		}
+		return null;
+	}
+
+	private async _getSlideTocItems(): Promise<string[]> {
+		const tocFile = this._getSlideTocFile();
+		return tocFile ? await get_list_items_from_note(this.app, tocFile) : [];
+	}
+
+	private async _appendItemToTocFile(item: string) {
+		const tocFile = this._getSlideTocFile();
+		if (!tocFile) return;
+
+		let content = await this.app.vault.read(tocFile);
+		// 去除末尾多余空行，保证追加格式整洁
+		content = content.replace(/\s+$/, "");
+		const newContent = content ? `${content}\n${item}` : item;
+
+		await this.app.vault.modify(tocFile, newContent);
+		// 等待元数据更新
+		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
 	private _generateNewSlideFilesNames(): {
