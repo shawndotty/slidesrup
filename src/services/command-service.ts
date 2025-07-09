@@ -122,6 +122,17 @@ export class CommandService {
 		);
 
 		createNocoDBCommand(
+			"update-reveal-template",
+			t("Get The Latest Version Reveal Template"),
+			{
+				baseID: this.settings.updateIDs.reveal.baseID,
+				tableID: this.settings.updateIDs.reveal.tableID,
+				viewID: this.settings.updateIDs.reveal.viewID,
+				targetFolderPath: `${this.app.vault.configDir}`,
+			}
+		);
+
+		createNocoDBCommand(
 			"update-demo-slides",
 			t("Get The Latest Version Of Demo Slides"),
 			{
@@ -153,6 +164,14 @@ export class CommandService {
 					targetFolderPath: this.settings.obasFrameworkFolder,
 				});
 				new Notice(t("Templates updated."));
+
+				await this.runNocoDBCommand({
+					baseID: this.settings.updateIDs.reveal.baseID,
+					tableID: this.settings.updateIDs.reveal.tableID,
+					viewID: this.settings.updateIDs.reveal.viewID,
+					targetFolderPath: `${this.app.vault.configDir}`,
+				});
+				new Notice(t("Reveal template updated."));
 
 				await this.runNocoDBCommand({
 					baseID: this.settings.updateIDs.demo.baseID,

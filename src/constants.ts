@@ -20,3 +20,31 @@ export const AIRTABLE_CONFIG = {
 		TOKEN: "patCw7AoXaktNgHNM.bf8eb50a33da820fde56b1f5d4cf5899bc8c508096baf36b700e94cd13570000",
 	},
 } as const;
+
+export const TEMPLATE_PLACE_HOLDERS = {
+	design: "DESIGN",
+	toc: "TOC",
+	presenter: "PRESENTER",
+	presentDate: "PRESENTDATE",
+	tagline: "TAGLINE",
+	slogan: "SLOGAN",
+};
+
+export const OBAS_LIST_CLASSES = [
+	"box-list",
+	"fancy-list",
+	"fancy-list-row",
+	"fancy-list-with-order",
+	"fancy-list-with-order-row",
+	"grid-list",
+	"grid-step-list",
+	"grid-step-list-v",
+	"order-list-with-border",
+	"two-columns-list-1-2",
+	"two-columns-list-2-1",
+	"three-columns-list",
+	"three-columns-list-1-2-1",
+	"three-columns-list-1-1-2",
+	"three-columns-list-2-1-1",
+	"four-columns-list",
+];

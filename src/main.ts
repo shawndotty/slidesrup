@@ -4,6 +4,7 @@ import { OBASAssistantSettingTab } from "./ui/settings-tab";
 import { OBASAssistantSettings } from "./types";
 import { createServices } from "./services";
 import { ClassesSuggest } from "./editor/classes-sugguest";
+import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 
 export default class OBASAssistant extends Plugin {
 	settings: OBASAssistantSettings;
@@ -29,6 +30,8 @@ export default class OBASAssistant extends Plugin {
 		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
 
 		this.registerEditorSuggest(new ClassesSuggest(this.app));
+
+		this.registerEditorSuggest(new PlaceHoldersSuggest(this.app));
 	}
 
 	onunload() {

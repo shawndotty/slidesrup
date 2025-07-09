@@ -164,6 +164,11 @@ export default {
 	"Please choose your personal page template":
 		"Please choose your personal page template",
 	"Choose your personal page template": "Choose your personal page template",
+	"User Base Layout Template": "User Base Layout Template",
+	"Please choose your personal base layout template":
+		"Please choose your personal base layout template",
+	"Choose your personal base layout template":
+		"Choose your personal base layout template",
 	"Theme Setting": "Theme Setting",
 	Hue: "Hue",
 	Saturation: "Saturation",
@@ -172,4 +177,31 @@ export default {
 	"Adjust the hue of the theme": "Adjust the hue of the theme",
 	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
 	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
+	"Get The Latest Version Reveal Template":
+		"Get The Latest Version Reveal Template",
+	"Reveal template updated.": "Reveal template updated.",
+	"User TOC Template": "User TOC Template",
+	"Please choose your personal TOC template":
+		"Please choose your personal TOC template",
+	"Choose your personal TOC template": "Choose your personal TOC template",
+	Slide: "Slide",
+	Confirm: "Confirm",
+	Cancel: "Cancel",
+	"Please input slide name": "Please input slide name",
+	"Customize Slide Folder Name": "Customize Slide Folder Name",
+	"Use Customize Slide Folder Name": "Use Customize Slide Folder Name",
+	"Keep is simple but elegant": "Keep is simple but elegant",
+	"Slide Settings": "Slide Settings",
+	Tagline: "Tagline",
+	"Set Tagline": "Set Tagline",
+	"Your Tagline": "Your Tagline",
+	Slogan: "Slogan",
+	"Set Slogan": "Set Slogan",
+	"Your Slogan": "Your Slogan",
+	Presenter: "Presenter",
+	"Set Presenter": "Set Presenter",
+	"Date Format": "Date Format",
+	"Set Date Format": "Set Date Format",
+	"Your Date Format": "Your Date Format",
+	"Please input chapter index number": "Please input chapter index number",
 };

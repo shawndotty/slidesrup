@@ -1,25 +1,37 @@
-import { App, Editor, Notice, TFile } from "obsidian";
+import { App, Editor, Notice, TFile, moment } from "obsidian";
 import { t } from "../lang/helpers";
 import {
 	slideChapterTemplate,
 	slidePageTemplate,
 	slideTemplate,
-	baseLayout,
 	baseLayoutWithSteps,
+	toc,
+	chapterAndPages,
 } from "../templates/slide-template";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import {
 	SlideLocationSuggester,
 	SlideDesignSuggester,
 } from "../suggesters/suggesters";
-import { OBASAssistantSettings } from "../types";
-import { getTimeStamp } from "src/utils";
+import { OBASAssistantSettings, ReplaceConfig } from "../types";
+import { getTimeStamp, createPathIfNeeded } from "src/utils";
+import { InputModal } from "src/ui/modals/input-modal";
 
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
-	private static readonly DESIGN_REGEX = /\{\{design\}\}/g;
-	private static readonly BASELAYOUT_REGEX = /\{\{baseLayout\}\}/g;
+	private static readonly REPLACE_REGEX = {
+		design: /\{\{DESIGN\}\}/g,
+		baseLayout: /\{\{BASELAYOUT\}\}/g,
+		toc: /\{\{TOC\}\}/g,
+		obasPath: /\{\{OBASPATH\}\}/g,
+		presenter: /\{\{PRESENTER\}\}/g,
+		presentDate: /\{\{PRESENTDATE\}\}/g,
+		tagline: /\{\{TAGLINE\}\}/g,
+		slogan: /\{\{SLOGAN\}\}/g,
+		cIndex: /\{\{cIndex\}\}/g,
+		pIndex: /\{\{pIndex\}\}/g,
+	};
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -27,19 +39,65 @@ export class SlidesMaker {
 	}
 
 	async createSlides(): Promise<void> {
-		const newSlideLocation = await this._determineNewSlideLocation();
-		if (newSlideLocation === null) {
+		const newSlideContainer = await this._determineNewSlideLocation();
+		if (newSlideContainer === null) {
 			new Notice(t("Operation cancelled by user"));
 			return;
 		}
 
-		const { slideName, baseLayoutName } =
+		let subFolder;
+
+		if (this.settings.customizeSlideFolderName) {
+			const modal = new InputModal(
+				this.app,
+				t("Please input slide name"),
+				""
+			);
+
+			subFolder = await modal.openAndGetValue();
+		}
+
+		if (!subFolder?.trim()) {
+			subFolder = t("Slide");
+		}
+
+		const newSlideLocation =
+			newSlideContainer === "/"
+				? subFolder
+				: `${newSlideContainer}/${subFolder}`;
+
+		await createPathIfNeeded(newSlideLocation);
+
+		const { slideName, baseLayoutName, tocName } =
 			this._generateNewSlideFilesNames();
+
+		const tocTemplate = await this.getFinalTemplate(
+			this.settings.userTocTemplate,
+			toc,
+			true
+		);
+
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			tocName,
+			tocTemplate,
+			false
+		);
+
+		const baseLayoutTemplate = await this.getFinalTemplate(
+			this.settings.userBaseLayoutTemplate,
+			baseLayoutWithSteps,
+			true,
+			{
+				toc: tocName,
+				tagline: this.settings.tagline,
+			}
+		);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			baseLayoutName,
-			baseLayoutWithSteps,
+			baseLayoutTemplate,
 			false
 		);
 
@@ -47,7 +105,14 @@ export class SlidesMaker {
 			this.settings.userSlideTemplate,
 			slideTemplate,
 			false,
-			baseLayoutName
+			{
+				baseLayout: baseLayoutName,
+				toc: tocName,
+				presenter: this.settings.presenter,
+				presentDate: moment().format(
+					this.settings.dateFormat || "YYYY-MM-DD"
+				),
+			}
 		);
 
 		await this._createAndOpenSlide(
@@ -57,21 +122,36 @@ export class SlidesMaker {
 		);
 	}
 
-	async getUserTemplate(path: string, defaultBaseLayout: string) {
+	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
 		let template = "";
 		const slideFile = this.app.vault.getAbstractFileByPath(path);
 		if (slideFile instanceof TFile) {
 			template = await this.app.vault.read(slideFile);
 		}
-		return template
-			.replace(SlidesMaker.BASELAYOUT_REGEX, defaultBaseLayout)
-			.trim();
+		return this._finalizeTemplate(template, replaceConfig);
+	}
+
+	private _finalizeTemplate(template: string, replaceConfig: ReplaceConfig) {
+		let finalizedTemplate = template;
+		for (const [key, value] of Object.entries(replaceConfig)) {
+			const regex =
+				SlidesMaker.REPLACE_REGEX[
+					key as keyof typeof SlidesMaker.REPLACE_REGEX
+				];
+			if (regex) {
+				finalizedTemplate = finalizedTemplate.replace(
+					regex,
+					value ?? ""
+				);
+			}
+		}
+		return finalizedTemplate.trim();
 	}
 
 	async getDefaultTemplate(
 		template: string,
 		partial: boolean = false,
-		defaultBaseLayout: string
+		replaceConfig: ReplaceConfig
 	): Promise<string> {
 		let design = "";
 
@@ -86,46 +166,80 @@ export class SlidesMaker {
 			design = this.settings.defaultDesign.toUpperCase();
 		}
 
-		return partial
-			? this._preparePartialTemplate(template, design)
-			: this._prepareSlideTemplate(template, design, defaultBaseLayout);
+		replaceConfig.design = design;
+
+		if (!partial) {
+			replaceConfig.obasPath = this.settings.obasFrameworkFolder;
+		}
+
+		return this._finalizeTemplate(template, replaceConfig);
 	}
 
 	async getFinalTemplate(
 		userTemplate: string,
 		defaultTemplate: string,
 		partial: boolean = false,
-		defaultBaseLayout: string = t("BaseLayout")
+		replaceConfig: ReplaceConfig = {}
 	) {
 		if (userTemplate) {
-			return await this.getUserTemplate(userTemplate, defaultBaseLayout);
+			return await this.getUserTemplate(userTemplate, replaceConfig);
 		} else {
 			return await this.getDefaultTemplate(
 				defaultTemplate,
 				partial,
-				defaultBaseLayout
+				replaceConfig
 			);
 		}
 	}
 
 	async addSlideChapter(): Promise<void> {
-		await this.addSlidePartial(
-			slideChapterTemplate,
-			this.settings.userChapterTemplate
+		let finalTemplate = "";
+
+		const modal = new InputModal(
+			this.app,
+			t("Please input chapter index number"),
+			""
 		);
+
+		const cIndex = await modal.openAndGetValue();
+
+		if (!cIndex?.trim()) {
+			return;
+		}
+
+		if (this.settings.addChapterWithSubPages) {
+			finalTemplate = await this.getFinalTemplate(
+				this.settings.userChapterAndPagesTemplate,
+				chapterAndPages,
+				true,
+				{
+					cIndex: cIndex,
+				}
+			);
+		} else {
+			finalTemplate = await this.getFinalTemplate(
+				this.settings.userChapterTemplate,
+				slideChapterTemplate,
+				true,
+				{
+					cIndex: cIndex,
+				}
+			);
+		}
+
+		await this.addSlidePartial(finalTemplate);
 	}
 
 	async addSlidePage(): Promise<void> {
-		await this.addSlidePartial(
+		const finalTemplate = await this.getFinalTemplate(
 			slidePageTemplate,
-			this.settings.userPageTemplate
+			this.settings.userPageTemplate,
+			true
 		);
+		await this.addSlidePartial(finalTemplate);
 	}
 
-	async addSlidePartial(
-		defaultTemplate: string,
-		userTemplatePath: string
-	): Promise<void> {
+	async addSlidePartial(content: string): Promise<void> {
 		const editor = this.app.workspace.activeEditor?.editor;
 		if (!editor) {
 			new Notice(
@@ -134,36 +248,7 @@ export class SlidesMaker {
 			return;
 		}
 
-		const finalTemplate = await this.getFinalTemplate(
-			userTemplatePath,
-			defaultTemplate,
-			true
-		);
-
-		this._insertAtCursor(editor, finalTemplate.trim() + "\n\n");
-	}
-
-	private _preparePartialTemplate(
-		template: string,
-		designValue: string
-	): string {
-		const finalTemplate = template.replace(
-			SlidesMaker.DESIGN_REGEX,
-			designValue
-		);
-		return finalTemplate.trim();
-	}
-
-	private _prepareSlideTemplate(
-		template: string,
-		designValue: string,
-		defaultBaseLayout: string
-	): string {
-		return template
-			.replace("{{OBASPath}}", this.settings.obasFrameworkFolder)
-			.replace(SlidesMaker.DESIGN_REGEX, designValue)
-			.replace(SlidesMaker.BASELAYOUT_REGEX, defaultBaseLayout)
-			.trim();
+		this._insertAtCursor(editor, content.trim() + "\n\n");
 	}
 
 	private _insertAtCursor(editor: Editor, content: string): void {
@@ -222,11 +307,13 @@ export class SlidesMaker {
 	private _generateNewSlideFilesNames(): {
 		slideName: string;
 		baseLayoutName: string;
+		tocName: string;
 	} {
 		const timestamp = getTimeStamp();
 		return {
-			slideName: `${t("Untitled Slide")}-${timestamp}`,
-			baseLayoutName: `${t("BaseLayout")}-${timestamp}`,
+			slideName: `${timestamp}-${t("Slide")}`,
+			baseLayoutName: `${timestamp}-${t("BaseLayout")}`,
+			tocName: `${timestamp}-${t("TOC")}`,
 		};
 	}
 
@@ -236,8 +323,7 @@ export class SlidesMaker {
 		content: string,
 		open: boolean = true
 	): Promise<void> {
-		const filePath =
-			location === "/" ? `${fileName}.md` : `${location}/${fileName}.md`;
+		const filePath = `${location}/${fileName}.md`;
 
 		const newFile = await this.app.vault.create(filePath, content);
 

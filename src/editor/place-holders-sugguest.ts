@@ -5,14 +5,16 @@ import {
 	Editor,
 } from "obsidian";
 import { BaseSuggest } from "./base-suggest";
-import { OBAS_LIST_CLASSES } from "src/constants";
+import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
 
-export class ClassesSuggest extends BaseSuggest {
+export class PlaceHoldersSuggest extends BaseSuggest {
 	// 预定义的补全建议列表
-	private static readonly ITEM_LIST: string[] = OBAS_LIST_CLASSES;
+	private static readonly ITEM_LIST: string[] = Object.values(
+		TEMPLATE_PLACE_HOLDERS
+	);
 
 	constructor(app: App) {
-		super(app, ClassesSuggest.ITEM_LIST);
+		super(app, PlaceHoldersSuggest.ITEM_LIST);
 	}
 
 	// 确定何时触发建议
@@ -21,7 +23,7 @@ export class ClassesSuggest extends BaseSuggest {
 		editor: Editor
 	): EditorSuggestTriggerInfo | null {
 		const line = editor.getLine(cursor.line).slice(0, cursor.ch);
-		const match = line.match(/list(\w*)$/);
+		const match = line.match(/{{(\w*)$/);
 
 		if (match) {
 			return {
@@ -31,5 +33,15 @@ export class ClassesSuggest extends BaseSuggest {
 			};
 		}
 		return null;
+	}
+
+	selectSuggestion(suggestion: string): void {
+		if (this.context) {
+			this.context.editor.replaceRange(
+				`{{${suggestion}`,
+				this.context.start,
+				this.context.end
+			);
+		}
 	}
 }

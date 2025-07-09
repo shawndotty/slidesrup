@@ -35,3 +35,80 @@ input.invalid-input {
     display: flex;
     justify-content: space-between;
 }
+
+.obas-color-preview-block {
+    width: 100px;
+    height: 40px;
+    border-radius: 8px;
+}
+
+/* Input Modal */
+
+.obas-input-modal {
+    padding: 20px;
+    border-radius: 8px;
+    background: var(--background-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.obas-input-modal-title {
+    margin: 0 0 20px 0;
+    color: var(--text-normal);
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.obas-input-container {
+    margin-bottom: 20px;
+}
+
+.obas-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.obas-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.obas-button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.obas-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.obas-button-cancel {
+    background: var(--background-modifier-border);
+    color: var(--text-muted);
+}
+
+.obas-button-cancel:hover {
+    background: var(--background-modifier-border-hover);
+}
+
+.obas-button-confirm {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.obas-button-confirm:hover {
+    background: var(--interactive-accent-hover);
+}

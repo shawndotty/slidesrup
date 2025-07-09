@@ -1,4 +1,5 @@
 import { OBASAssistantSettings } from "src/types";
+import { t } from "src/lang/helpers";
 
 export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	updateAPIKey: "",
@@ -13,7 +14,16 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	demoFolder: "",
 	userSlideTemplate: "",
 	userChapterTemplate: "",
+	userChapterAndPagesTemplate: "",
 	userPageTemplate: "",
+	userBaseLayoutTemplate: "",
+	userTocTemplate: "",
+	presenter: "Johnny",
+	tagline: "OBAS",
+	slogan: t("Keep is simple but elegant"),
+	dateFormat: "",
+	customizeSlideFolderName: true,
+	addChapterWithSubPages: true,
 	updateIDs: {
 		style: {
 			baseID: "",
@@ -26,6 +36,11 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 			viewID: "",
 		},
 		demo: {
+			baseID: "",
+			tableID: "",
+			viewID: "",
+		},
+		reveal: {
 			baseID: "",
 			tableID: "",
 			viewID: "",

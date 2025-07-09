@@ -116,3 +116,11 @@ export function get_tfiles_from_folder(
 export function getTimeStamp() {
 	return moment().format("YYYYMMDDHHmmSS");
 }
+
+export async function createPathIfNeeded(folderPath: string): Promise<void> {
+	const { vault } = this.app;
+	const directoryExists = await vault.exists(folderPath);
+	if (!directoryExists) {
+		await vault.createFolder(normalizePath(folderPath));
+	}
+}

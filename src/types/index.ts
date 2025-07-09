@@ -33,12 +33,22 @@ export interface OBASAssistantSettings {
 	templatesFolder: string;
 	userSlideTemplate: string;
 	userChapterTemplate: string;
+	userChapterAndPagesTemplate: string;
 	userPageTemplate: string;
+	userBaseLayoutTemplate: string;
+	userTocTemplate: string;
+	presenter: string;
+	tagline: string;
+	slogan: string;
+	dateFormat: string;
+	customizeSlideFolderName: boolean;
+	addChapterWithSubPages: boolean;
 	demoFolder: string;
 	updateIDs: {
 		style: AirtableIds;
 		templates: AirtableIds;
 		demo: AirtableIds;
+		reveal: AirtableIds;
 	};
 	obasHue: number;
 	obasSaturation: number;
@@ -76,4 +86,26 @@ export interface RecordFields {
 
 export interface Record {
 	fields: RecordFields;
+}
+
+// 设置项配置接口
+export interface SettingConfig {
+	name: string;
+	desc: string;
+	placeholder?: string;
+	value: any;
+	onChange: (value: any) => Promise<void>;
+}
+
+export interface ReplaceConfig {
+	baseLayout?: string;
+	toc?: string;
+	design?: string;
+	obasPath?: string;
+	tagline?: string;
+	slogan?: string;
+	presenter?: string;
+	presentDate?: string;
+	cIndex?: string;
+	pIndex?: string;
 }

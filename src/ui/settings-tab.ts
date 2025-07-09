@@ -5,6 +5,7 @@ import { isValidApiKey, isValidEmail } from "../utils";
 import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
+import { SettingConfig } from "src/types";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
@@ -25,6 +26,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		this.renderMainSettings(containerEl);
 		this.renderUserSettings(containerEl);
 		this.renderThemeSettings(containerEl);
+		this.renderSlideSettings(containerEl);
 	}
 
 	private renderMainSettings(containerEl: HTMLElement): void {
@@ -123,6 +125,16 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			cls: "my-plugin-title",
 		});
 
+		this.createToggleSetting(containerEl, {
+			name: "Customize Slide Folder Name",
+			desc: "Use Customize Slide Folder Name",
+			value: this.plugin.settings.customizeSlideFolderName,
+			onChange: async (value) => {
+				this.plugin.settings.customizeSlideFolderName = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		this.createFolderSetting(
 			containerEl,
 			"User Templates Folder",
@@ -137,6 +149,22 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Please choose your personal slide template",
 			"Choose your personal slide template",
 			"userSlideTemplate"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User Base Layout Template",
+			"Please choose your personal base layout template",
+			"Choose your personal base layout template",
+			"userBaseLayoutTemplate"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User TOC Template",
+			"Please choose your personal TOC template",
+			"Choose your personal TOC template",
+			"userTocTemplate"
 		);
 
 		this.createFileSetting(
@@ -210,6 +238,57 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 	}
 
+	private renderSlideSettings(containerEl: HTMLElement): void {
+		containerEl.createEl("h2", {
+			text: t("Slide Settings"),
+			cls: "my-plugin-title",
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Tagline",
+			desc: "Set Tagline",
+			placeholder: "Your Tagline",
+			value: this.plugin.settings.tagline,
+			onChange: async (value) => {
+				this.plugin.settings.tagline = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Slogan",
+			desc: "Set Slogan",
+			placeholder: "Your Slogan",
+			value: this.plugin.settings.slogan,
+			onChange: async (value) => {
+				this.plugin.settings.slogan = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Presenter",
+			desc: "Set Presenter",
+			placeholder: "Presenter",
+			value: this.plugin.settings.presenter,
+			onChange: async (value) => {
+				this.plugin.settings.presenter = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Date Format",
+			desc: "Set Date Format",
+			placeholder: "Your Date Format",
+			value: this.plugin.settings.dateFormat,
+			onChange: async (value) => {
+				this.plugin.settings.dateFormat = value;
+				await this.plugin.saveSettings();
+			},
+		});
+	}
+
 	private createColorPreview(containerEl: HTMLElement): HTMLElement {
 		const previewContainer = containerEl.createDiv({
 			cls: "setting-item",
@@ -252,6 +331,31 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 						onChangeCallback(value);
 					})
 			);
+	}
+
+	// 通用方法：创建切换设置项
+	private createToggleSetting(
+		content: HTMLElement,
+		config: SettingConfig
+	): void {
+		new Setting(content)
+			.setName(t(config.name as any))
+			.setDesc(t(config.desc as any))
+			.addToggle((toggle) => {
+				toggle.setValue(config.value).onChange(config.onChange);
+			});
+	}
+
+	private createTextSetting(
+		content: HTMLElement,
+		config: SettingConfig
+	): void {
+		new Setting(content)
+			.setName(t(config.name as any))
+			.setDesc(t(config.desc as any))
+			.addText((text) => {
+				text.setValue(config.value).onChange(config.onChange);
+			});
 	}
 
 	private createBaseSetting(
