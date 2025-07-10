@@ -69,6 +69,8 @@ export const slideTemplate = `
 ---
 css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Style/main.css
 defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
+aliases:
+  - {{${TEMPLATE_PLACE_HOLDERS.slideName}}}
 enableLinks: true
 height: 1080
 margin: 0
@@ -80,7 +82,7 @@ width: 1920
 <!-- slide id="home" template="[[${t("Cover")}-{{${
 	TEMPLATE_PLACE_HOLDERS.design
 }}}]]" -->
-# ${t("Use OBAS to Express Yourself")}
+# {{${TEMPLATE_PLACE_HOLDERS.slideName}}}
 
 ## {{${TEMPLATE_PLACE_HOLDERS.presenter}}}
 

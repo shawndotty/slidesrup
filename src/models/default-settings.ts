@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	tagline: "OBAS",
 	slogan: t("Keep is simple but elegant"),
 	dateFormat: "",
+	enableUserTemplates: true,
 	customizeSlideFolderName: true,
 	addChapterWithSubPages: true,
 	updateIDs: {

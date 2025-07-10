@@ -135,6 +135,26 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createToggleSetting(containerEl, {
+			name: "Enable User Templates",
+			desc: "Enable User Templates",
+			value: this.plugin.settings.enableUserTemplates,
+			onChange: async (value) => {
+				this.plugin.settings.enableUserTemplates = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Add Sub Pages When Add Chapter",
+			desc: "Add Sub Pages When Add Chapter",
+			value: this.plugin.settings.addChapterWithSubPages,
+			onChange: async (value) => {
+				this.plugin.settings.addChapterWithSubPages = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		this.createFolderSetting(
 			containerEl,
 			"User Templates Folder",
@@ -173,6 +193,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Please choose your personal chapter template",
 			"Choose your personal chapter template",
 			"userChapterTemplate"
+		);
+
+		this.createFileSetting(
+			containerEl,
+			"User Chapter With Sub Pages Template",
+			"Please choose your personal chapter with sub pages template",
+			"Choose your personal chapter with sub pages template",
+			"userChapterAndPagesTemplate"
 		);
 
 		this.createFileSetting(

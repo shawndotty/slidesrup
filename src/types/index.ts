@@ -41,6 +41,7 @@ export interface OBASAssistantSettings {
 	tagline: string;
 	slogan: string;
 	dateFormat: string;
+	enableUserTemplates: boolean;
 	customizeSlideFolderName: boolean;
 	addChapterWithSubPages: boolean;
 	demoFolder: string;
@@ -109,4 +110,5 @@ export interface ReplaceConfig {
 	cIndex?: string;
 	pIndex?: string;
 	cName?: string;
+	slideName?: string;
 }

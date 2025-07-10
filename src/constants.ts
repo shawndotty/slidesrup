@@ -35,6 +35,7 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	cName: "CHAPTER_NAME",
 	baseLayout: "BASE_LAYOUT",
 	obasPath: "OBAS_PATH",
+	slideName: "SLIDE_NAME",
 };
 
 export const OBAS_LIST_CLASSES = [

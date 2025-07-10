@@ -165,6 +165,7 @@ export default {
 	Confirm: "確認",
 	Cancel: "取消",
 	"Please input slide name": "請輸入簡報名稱",
+	"Please input slide folder name": "請輸入簡報資料夾名稱",
 	"Customize Slide Folder Name": "自訂簡報資料夾名稱",
 	"Use Customize Slide Folder Name": "使用自訂的簡報資料夾名稱",
 	"Slide Settings": "簡報設定",
@@ -182,4 +183,11 @@ export default {
 	"Please input chapter index number": "請輸入章節索引號",
 	"Please input chapter name": "請輸入章節名稱",
 	"Please input page index number": "請輸入內容頁索引號",
+	"Add Sub Pages When Add Chapter": "新增章節時同時新增子頁面",
+	"User Chapter With Sub Pages Template": "你的包含子頁面的章節模板",
+	"Please choose your personal chapter with sub pages template":
+		"請選擇你的包含子頁面的章節模板",
+	"Choose your personal chapter with sub pages template":
+		"選擇你的包含子頁面的章節模板",
+	"Enable User Templates": "啟用用戶模板",
 };

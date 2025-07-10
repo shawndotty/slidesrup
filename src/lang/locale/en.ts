@@ -188,6 +188,7 @@ export default {
 	Confirm: "Confirm",
 	Cancel: "Cancel",
 	"Please input slide name": "Please input slide name",
+	"Please input slide folder name": "Please input slide folder name",
 	"Customize Slide Folder Name": "Customize Slide Folder Name",
 	"Use Customize Slide Folder Name": "Use Customize Slide Folder Name",
 	"Keep is simple but elegant": "Keep is simple but elegant",
@@ -206,4 +207,12 @@ export default {
 	"Please input chapter index number": "Please input chapter index number",
 	"Please input chapter name": "Please input chapter name",
 	"Please input page index number": "Please input page index number",
+	"Add Sub Pages When Add Chapter": "Add Sub Pages When Add Chapter",
+	"User Chapter With Sub Pages Template":
+		"User Chapter With Sub Pages Template",
+	"Please choose your personal chapter with sub pages template":
+		"Please choose your personal chapter with sub pages template",
+	"Choose your personal chapter with sub pages template":
+		"Choose your personal chapter with sub pages template",
+	"Enable User Templates": "Enable User Templates",
 };

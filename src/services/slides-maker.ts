@@ -52,7 +52,7 @@ export class SlidesMaker {
 		if (this.settings.customizeSlideFolderName) {
 			const modal = new InputModal(
 				this.app,
-				t("Please input slide name"),
+				t("Please input slide folder name"),
 				""
 			);
 
@@ -134,9 +134,9 @@ export class SlidesMaker {
 		const config = await this._addDesignSetToReplaceConfig(
 			template,
 			replaceConfig
-		)
-			.then((cfg) => this._addChapterIndexToReplaceConfig(template, cfg))
-			.then((cfg) => this._addPageIndexToReplaceConfig(template, cfg));
+		).then(async (cfg) => {
+			return await this._fillTemplateConfig(template, cfg);
+		});
 
 		return this._finalizeTemplate(template, config);
 	}
@@ -166,7 +166,9 @@ export class SlidesMaker {
 		const config = await this._addDesignSetToReplaceConfig(
 			template,
 			replaceConfig
-		);
+		).then(async (cfg) => {
+			return await this._fillTemplateConfig(template, cfg);
+		});
 
 		if (!partial) {
 			config.obasPath = this.settings.obasFrameworkFolder;
@@ -181,7 +183,7 @@ export class SlidesMaker {
 		partial: boolean = false,
 		replaceConfig: ReplaceConfig = {}
 	) {
-		if (userTemplate) {
+		if (this.settings.enableUserTemplates && userTemplate) {
 			return await this.getUserTemplate(userTemplate, replaceConfig);
 		} else {
 			return await this.getDefaultTemplate(
@@ -248,6 +250,15 @@ export class SlidesMaker {
 		editor.setCursor(cursor.line + content.split("\n").length);
 	}
 
+	private async _getSlideName(): Promise<string> {
+		const modal = new InputModal(
+			this.app,
+			t("Please input slide name"),
+			""
+		);
+		return (await modal.openAndGetValue()) || "";
+	}
+
 	private async _getChapterIndex(): Promise<string> {
 		const modal = new InputModal(
 			this.app,
@@ -298,43 +309,47 @@ export class SlidesMaker {
 		return config;
 	}
 
-	// 优化：合并重复逻辑，抽象为通用方法，减少冗余代码
-	private async _addRuleToReplaceConfig(
+	/**
+	 * Fills the template configuration by detecting and prompting for missing values.
+	 * This optimized version consolidates multiple methods into a single, declarative function.
+	 */
+	private async _fillTemplateConfig(
 		template: string,
-		replaceConfig: ReplaceConfig,
-		regex: RegExp,
-		getValue: () => Promise<string>,
-		key: keyof ReplaceConfig
+		cfg: ReplaceConfig
 	): Promise<ReplaceConfig> {
-		if (!regex.test(template)) return replaceConfig;
-		const value = await getValue();
-		return value ? { ...replaceConfig, [key]: value } : replaceConfig;
-	}
+		const newConfig = { ...cfg };
 
-	private async _addChapterIndexToReplaceConfig(
-		template: string,
-		replaceConfig: ReplaceConfig
-	): Promise<ReplaceConfig> {
-		return this._addRuleToReplaceConfig(
-			template,
-			replaceConfig,
-			SlidesMaker.REPLACE_REGEX.cIndex,
-			() => this._getChapterIndex(),
-			"cIndex"
-		);
-	}
+		const rules: ReadonlyArray<{
+			key: keyof ReplaceConfig;
+			regex: RegExp;
+			getValue: () => Promise<string>;
+		}> = [
+			{
+				key: "cIndex",
+				regex: SlidesMaker.REPLACE_REGEX.cIndex,
+				getValue: this._getChapterIndex.bind(this),
+			},
+			{
+				key: "pIndex",
+				regex: SlidesMaker.REPLACE_REGEX.pIndex,
+				getValue: this._getPageIndex.bind(this),
+			},
+			{
+				key: "slideName",
+				regex: SlidesMaker.REPLACE_REGEX.slideName,
+				getValue: this._getSlideName.bind(this),
+			},
+		];
 
-	private async _addPageIndexToReplaceConfig(
-		template: string,
-		replaceConfig: ReplaceConfig
-	): Promise<ReplaceConfig> {
-		return this._addRuleToReplaceConfig(
-			template,
-			replaceConfig,
-			SlidesMaker.REPLACE_REGEX.pIndex,
-			() => this._getPageIndex(),
-			"pIndex"
-		);
+		for (const rule of rules) {
+			if (!newConfig[rule.key] && rule.regex.test(template)) {
+				const value = await rule.getValue();
+				if (value) {
+					(newConfig as any)[rule.key] = value;
+				}
+			}
+		}
+		return newConfig;
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {
