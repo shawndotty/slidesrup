@@ -133,8 +133,8 @@ export class CommandService {
 		);
 
 		createNocoDBCommand(
-			"update-demo-slides",
-			t("Get The Latest Version Of Demo Slides"),
+			"update-demo-templates",
+			t("Get The Latest Version Of User Templates"),
 			{
 				baseID: this.settings.updateIDs.demo.baseID,
 				tableID: this.settings.updateIDs.demo.tableID,

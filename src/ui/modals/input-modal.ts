@@ -1,16 +1,23 @@
 import { App, Modal } from "obsidian";
 import { t } from "../../lang/helpers";
+import { FolderSuggest } from "../pickers/folder-picker";
 
 export class InputModal extends Modal {
 	private resolve: (value: string | null) => void;
 	private inputEl: HTMLInputElement;
+	private folderSearch: boolean;
+	private filterPath: string;
 
 	constructor(
 		app: App,
 		private promptText: string,
-		private defaultValue?: string
+		private defaultValue?: string,
+		folderSearch: boolean = false,
+		filterPath: string = ""
 	) {
 		super(app);
+		this.folderSearch = folderSearch;
+		this.filterPath = filterPath;
 	}
 
 	onOpen() {
@@ -36,6 +43,10 @@ export class InputModal extends Modal {
 			value: this.defaultValue || "",
 			cls: "obas-input",
 		});
+
+		if (this.folderSearch) {
+			new FolderSuggest(this.app, this.inputEl, this.filterPath);
+		}
 
 		// 添加键盘事件监听
 		this.inputEl.addEventListener("keydown", (e) => {

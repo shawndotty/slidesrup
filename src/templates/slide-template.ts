@@ -67,7 +67,7 @@ ${pages}
 
 export const slideTemplate = `
 ---
-css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Style/main.css
+css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Styles/main.css
 defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
 aliases:
   - {{${TEMPLATE_PLACE_HOLDERS.slideName}}}

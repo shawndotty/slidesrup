@@ -24,7 +24,7 @@ export default {
 		"Please enter the path to the demo sync templates folder",
 	"Enter the path to the demo sync templates folder":
 		"Enter the path to the demo sync templates folder",
-	"User Setting": "User Setting",
+	"User Templates Setting": "User Templates Setting",
 	"Your Airtable Personal Token": "Your Airtable Personal Token",
 	"Please enter your personal Aritable token for your sync setting base":
 		"Please enter your personal Aritable token for your sync setting base",
@@ -88,8 +88,8 @@ export default {
 	"Get The Latest Version Of Style": "Get The Latest Version Of Style",
 	"Get The Latest Version Of Templates":
 		"Get The Latest Version Of Templates",
-	"Get The Latest Version Of Demo Slides":
-		"Get The Latest Version Of Demo Slides",
+	"Get The Latest Version Of User Templates":
+		"Get The Latest Version Of User Templates",
 	"One Click to Deploy": "One Click to Deploy",
 	"Please enter the path to the OBAS Framework Folder":
 		"Please enter the path to the OBAS Framework Folder",
@@ -215,4 +215,5 @@ export default {
 	"Choose your personal chapter with sub pages template":
 		"Choose your personal chapter with sub pages template",
 	"Enable User Templates": "Enable User Templates",
+	OBAS_Assistant_Settings_Heading: "OBAS Assistant Settings",
 };

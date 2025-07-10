@@ -6,6 +6,7 @@ import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 import { SettingConfig } from "src/types";
+import { TabbedSettings } from "./tabbed-settings";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
@@ -22,19 +23,43 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+		containerEl.createEl("h2", {
+			text: t("OBAS_Assistant_Settings_Heading"),
+		});
 
-		this.renderMainSettings(containerEl);
-		this.renderUserSettings(containerEl);
-		this.renderThemeSettings(containerEl);
-		this.renderSlideSettings(containerEl);
+		const tabbedSettings = new TabbedSettings(containerEl);
+
+		// 定义标签页配置
+		const tabConfigs = [
+			{
+				title: "Main Setting",
+				renderMethod: (content: HTMLElement) =>
+					this.renderMainSettings(content),
+			},
+			{
+				title: "User Templates Setting",
+				renderMethod: (content: HTMLElement) =>
+					this.renderUserSettings(content),
+			},
+			{
+				title: "Theme Setting",
+				renderMethod: (content: HTMLElement) =>
+					this.renderThemeSettings(content),
+			},
+			{
+				title: "Slide Settings",
+				renderMethod: (content: HTMLElement) =>
+					this.renderSlideSettings(content),
+			},
+		];
+
+		// 使用循环创建标签页
+		tabConfigs.forEach((config) => {
+			tabbedSettings.addTab(t(config.title as any), config.renderMethod);
+		});
 	}
 
 	private renderMainSettings(containerEl: HTMLElement): void {
-		containerEl.createEl("h2", {
-			text: t("Main Setting"),
-			cls: "my-plugin-title",
-		});
-
 		this.createValidatedInput({
 			containerEl,
 			name: t("OBAS Update API Key"),
@@ -117,13 +142,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 
 		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);
-	}
-
-	private renderUserSettings(containerEl: HTMLElement): void {
-		containerEl.createEl("h2", {
-			text: t("User Setting"),
-			cls: "my-plugin-title",
-		});
 
 		this.createToggleSetting(containerEl, {
 			name: "Customize Slide Folder Name",
@@ -136,21 +154,23 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 
 		this.createToggleSetting(containerEl, {
-			name: "Enable User Templates",
-			desc: "Enable User Templates",
-			value: this.plugin.settings.enableUserTemplates,
-			onChange: async (value) => {
-				this.plugin.settings.enableUserTemplates = value;
-				await this.plugin.saveSettings();
-			},
-		});
-
-		this.createToggleSetting(containerEl, {
 			name: "Add Sub Pages When Add Chapter",
 			desc: "Add Sub Pages When Add Chapter",
 			value: this.plugin.settings.addChapterWithSubPages,
 			onChange: async (value) => {
 				this.plugin.settings.addChapterWithSubPages = value;
+				await this.plugin.saveSettings();
+			},
+		});
+	}
+
+	private renderUserSettings(containerEl: HTMLElement): void {
+		this.createToggleSetting(containerEl, {
+			name: "Enable User Templates",
+			desc: "Enable User Templates",
+			value: this.plugin.settings.enableUserTemplates,
+			onChange: async (value) => {
+				this.plugin.settings.enableUserTemplates = value;
 				await this.plugin.saveSettings();
 			},
 		});
@@ -213,11 +233,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderThemeSettings(containerEl: HTMLElement): void {
-		containerEl.createEl("h2", {
-			text: t("Theme Setting"),
-			cls: "my-plugin-title",
-		});
-
 		const colorPreviewBlock = this.createColorPreview(containerEl);
 
 		const setPreviewColor = () => {
@@ -267,11 +282,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
-		containerEl.createEl("h2", {
-			text: t("Slide Settings"),
-			cls: "my-plugin-title",
-		});
-
 		this.createTextSetting(containerEl, {
 			name: "Tagline",
 			desc: "Set Tagline",
@@ -507,14 +517,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 								text: t("Validating..."),
 								cls: "setting-item-control-status loading-text",
 							});
-							controlEl?.append(statusEl);
+							controlEl?.prepend(statusEl);
 							break;
 						case "valid":
 							statusEl = createEl("span", {
 								text: t("Valid"),
 								cls: "setting-item-control-status valid-text",
 							});
-							controlEl?.append(statusEl);
+							controlEl?.prepend(statusEl);
 							text.inputEl.classList.add("valid-input");
 							break;
 						case "invalid":

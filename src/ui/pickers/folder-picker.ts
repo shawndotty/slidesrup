@@ -4,8 +4,14 @@ import { App, TAbstractFile, TFolder } from "obsidian";
 import { TextInputSuggest } from "./suggest";
 
 export class FolderSuggest extends TextInputSuggest<TFolder> {
-	constructor(app: App, inputEl: HTMLInputElement | HTMLTextAreaElement) {
+	private filterPath: string;
+	constructor(
+		app: App,
+		inputEl: HTMLInputElement | HTMLTextAreaElement,
+		filterPath: string = ""
+	) {
 		super(app, inputEl);
+		this.filterPath = filterPath;
 	}
 
 	getSuggestions(inputStr: string): TFolder[] {
@@ -13,24 +19,35 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
 		const folders: TFolder[] = [];
 		const lowerCaseInputStr = inputStr.toLowerCase();
 
-		abstractFiles.forEach((folder: TAbstractFile) => {
+		const filterPathLower = this.filterPath.toLowerCase();
+		for (const file of abstractFiles) {
 			if (
-				folder instanceof TFolder &&
-				folder.path.toLowerCase().contains(lowerCaseInputStr)
+				file instanceof TFolder &&
+				(!filterPathLower ||
+					(file.path.toLowerCase().includes(filterPathLower) &&
+						file.path.toLowerCase() !== filterPathLower)) &&
+				file.path.toLowerCase().includes(lowerCaseInputStr)
 			) {
-				folders.push(folder);
+				folders.push(file);
 			}
-		});
+		}
 
 		return folders.slice(0, 1000);
 	}
 
 	renderSuggestion(file: TFolder, el: HTMLElement): void {
-		el.setText(file.path);
+		const prefix = this.filterPath ? `${this.filterPath}/` : "";
+		const displayPath = file.path.startsWith(prefix)
+			? file.path.slice(prefix.length)
+			: file.path;
+		el.setText(displayPath);
 	}
 
 	selectSuggestion(file: TFolder): void {
-		this.inputEl.value = file.path;
+		const prefix = this.filterPath ? `${this.filterPath}/` : "";
+		this.inputEl.value = file.path.startsWith(prefix)
+			? file.path.slice(prefix.length)
+			: file.path;
 		this.inputEl.trigger("input");
 		this.close();
 	}

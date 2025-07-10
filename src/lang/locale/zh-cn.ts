@@ -19,7 +19,7 @@ export default {
 		"请输入演示同步模板文件夹的路径",
 	"Enter the path to the demo sync templates folder":
 		"输入演示同步模板文件夹的路径",
-	"User Setting": "用户设置",
+	"User Templates Setting": "用户模板设置",
 	"Your Airtable Personal Token": "你的 Airtable 个人令牌",
 	"Please enter your personal Aritable token for your sync setting base":
 		"请输入您用于同步设置的个人 Aritable 令牌",
@@ -73,12 +73,13 @@ export default {
 	"Validating...": "正在验证...",
 	"Valid API Key": "有效API密钥",
 	"Valid Email": "有效电子邮件",
+	Valid: "验证通过",
 	"OBAS Update API Key": "OBAS 更新 API 密钥",
 	"OBAS Framework Folder": "OBAS 框架文件夹",
 	"OBAS Framework Folder Description": "OBAS 框架文件夹说明",
 	"Get The Latest Version Of Style": "获取最新版本的样式",
-	"Get The Latest Version Of Templates": "获取最新版本的模板",
-	"Get The Latest Version Of Demo Slides": "获取最新版本的演示示例",
+	"Get The Latest Version Of Templates": "获取最新版本的设计模板",
+	"Get The Latest Version Of User Templates": "获取最新的用户演示模板",
 	"One Click to Deploy": "一键部署",
 	"Please enter the path to the OBAS Framework Folder":
 		"请输入 OBAS 框架文件夹的路径",
@@ -190,4 +191,5 @@ export default {
 	"Choose your personal chapter with sub pages template":
 		"选择你的包含子页面的章节模板",
 	"Enable User Templates": "启用用户模板",
+	OBAS_Assistant_Settings_Heading: "OBAS助手设置",
 };

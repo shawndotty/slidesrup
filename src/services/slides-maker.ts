@@ -53,7 +53,9 @@ export class SlidesMaker {
 			const modal = new InputModal(
 				this.app,
 				t("Please input slide folder name"),
-				""
+				"",
+				true,
+				newSlideContainer
 			);
 
 			subFolder = await modal.openAndGetValue();
@@ -75,8 +77,7 @@ export class SlidesMaker {
 
 		const tocTemplate = await this.getFinalTemplate(
 			this.settings.userTocTemplate,
-			toc,
-			true
+			toc
 		);
 
 		await this._createAndOpenSlide(
@@ -89,7 +90,6 @@ export class SlidesMaker {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
 			baseLayoutWithSteps,
-			true,
 			{
 				toc: tocName,
 				tagline: this.settings.tagline,
@@ -106,7 +106,6 @@ export class SlidesMaker {
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userSlideTemplate,
 			slideTemplate,
-			false,
 			{
 				baseLayout: baseLayoutName,
 				toc: tocName,
@@ -114,6 +113,7 @@ export class SlidesMaker {
 				presentDate: moment().format(
 					this.settings.dateFormat || "YYYY-MM-DD"
 				),
+				obasPath: this.settings.obasFrameworkFolder,
 			}
 		);
 
@@ -160,7 +160,6 @@ export class SlidesMaker {
 
 	async getDefaultTemplate(
 		template: string,
-		partial: boolean = false,
 		replaceConfig: ReplaceConfig
 	): Promise<string> {
 		const config = await this._addDesignSetToReplaceConfig(
@@ -170,17 +169,12 @@ export class SlidesMaker {
 			return await this._fillTemplateConfig(template, cfg);
 		});
 
-		if (!partial) {
-			config.obasPath = this.settings.obasFrameworkFolder;
-		}
-
 		return this._finalizeTemplate(template, config);
 	}
 
 	async getFinalTemplate(
 		userTemplate: string,
 		defaultTemplate: string,
-		partial: boolean = false,
 		replaceConfig: ReplaceConfig = {}
 	) {
 		if (this.settings.enableUserTemplates && userTemplate) {
@@ -188,7 +182,6 @@ export class SlidesMaker {
 		} else {
 			return await this.getDefaultTemplate(
 				defaultTemplate,
-				partial,
 				replaceConfig
 			);
 		}
@@ -216,7 +209,6 @@ export class SlidesMaker {
 		const finalTemplate = await this.getFinalTemplate(
 			userTemplate,
 			defaultTemplate,
-			true,
 			templateConfig
 		);
 
@@ -226,8 +218,7 @@ export class SlidesMaker {
 	async addSlidePage(): Promise<void> {
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userPageTemplate,
-			slidePageTemplate,
-			true
+			slidePageTemplate
 		);
 		await this.addSlidePartial(finalTemplate);
 	}
