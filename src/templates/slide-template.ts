@@ -4,9 +4,11 @@ import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
 const page = `
 ---
 
-<!-- slide id="c-{{cIndex}}-p-{{pIndex}}" class="chapter-{{cIndex}} fancy-list-row" -->
+<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
+	TEMPLATE_PLACE_HOLDERS.pIndex
+}}}" class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
 
-### ${t("SubSlide")} {{pIndex}}
+### ${t("SubSlide")} {{${TEMPLATE_PLACE_HOLDERS.pIndex}}}
 
 + ${t("List")} 1
 	+ ${t("SubList")} 1-1
@@ -16,59 +18,57 @@ const page = `
     + ${t("SubList")} 2-2
 `;
 
-const pages = [
-	page.replace(/{{pIndex}}/g, "1"),
-	page.replace(/{{pIndex}}/g, "2"),
-	page.replace(/{{pIndex}}/g, "3"),
-	page.replace(/{{pIndex}}/g, "4"),
-].join("\n");
+const pIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.pIndex}}}`, "g");
+
+const pages = Array.from({ length: 4 }, (_, i) =>
+	page.replace(pIndexReg, `${i + 1}`)
+).join("\n");
 
 const chapterAndPages = `
 ---
 
-<!-- slide id="c-{{cIndex}}" template="[[${t("Chapter")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]"  class="order-list-with-border" -->
+<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
+	"Chapter"
+)}-{{${TEMPLATE_PLACE_HOLDERS.design}}}]]"  class="order-list-with-border" -->
 
-## ${t("Chapter")} {{cIndex}}
+## ${t("Chapter")} {{${TEMPLATE_PLACE_HOLDERS.cIndex}}}
 
-+ [${t("SubSlide")} 1](#c-{{cIndex}}-p-1)
-+ [${t("SubSlide")} 2](#c-{{cIndex}}-p-2)
-+ [${t("SubSlide")} 3](#c-{{cIndex}}-p-3)
-+ [${t("SubSlide")} 4](#c-{{cIndex}}-p-4)
++ [${t("SubSlide")} 1](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-1)
++ [${t("SubSlide")} 2](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-2)
++ [${t("SubSlide")} 3](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-3)
++ [${t("SubSlide")} 4](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-4)
 
 ${pages}
 `;
 
-const chaptersAndPages = [
-	chapterAndPages.replace(/{{cIndex}}/g, "1"),
-	chapterAndPages.replace(/{{cIndex}}/g, "2"),
-	chapterAndPages.replace(/{{cIndex}}/g, "3"),
-	chapterAndPages.replace(/{{cIndex}}/g, "4"),
-	chapterAndPages.replace(/{{cIndex}}/g, "5"),
-].join("\n");
+const cIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}`, "g");
+
+// 优化：使用循环动态生成章节，避免硬编码
+const chaptersAndPages = Array.from({ length: 5 }, (_, i) =>
+	chapterAndPages.replace(cIndexReg, `${i + 1}`)
+).join("\n");
 
 export const chapterAndPagesTemplate = `
 ---
 
-<!-- slide id="c-{{cIndex}}" template="[[${t("Chapter")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]"  class="order-list-with-border" -->
+<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
+	"Chapter"
+)}-{{${TEMPLATE_PLACE_HOLDERS.design}}}]]"  class="order-list-with-border" -->
 
-## {{cName}}
+## {{${TEMPLATE_PLACE_HOLDERS.cName}}}
 
-+ [${t("SubSlide")} 1](#c-{{cIndex}}-p-1)
-+ [${t("SubSlide")} 2](#c-{{cIndex}}-p-2)
-+ [${t("SubSlide")} 3](#c-{{cIndex}}-p-3)
-+ [${t("SubSlide")} 4](#c-{{cIndex}}-p-4)
++ [${t("SubSlide")} 1](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-1)
++ [${t("SubSlide")} 2](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-2)
++ [${t("SubSlide")} 3](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-3)
++ [${t("SubSlide")} 4](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-4)
 
 ${pages}
 `;
 
 export const slideTemplate = `
 ---
-css: {{OBASPATH}}/Style/main.css
-defaultTemplate: "[[{{BASELAYOUT}}]]"
+css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Style/main.css
+defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
 enableLinks: true
 height: 1080
 margin: 0
@@ -130,9 +130,11 @@ export const slideChapterTemplate = `
 export const slidePageTemplate = `
 ---
 
-<!-- slide class="chapter-1 fancy-list-row" -->
+<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
+	TEMPLATE_PLACE_HOLDERS.pIndex
+}}}"  class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
 
-## ${t("SubSlide")} 1
+## ${t("SubSlide")}
 
 + ${t("List")} 1
 	+ ${t("SubList")} 1-1

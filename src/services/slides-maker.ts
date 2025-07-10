@@ -22,23 +22,18 @@ import {
 	get_list_items_from_note,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
+import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
 
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
-	private static readonly REPLACE_REGEX = {
-		design: /\{\{DESIGN\}\}/g,
-		baseLayout: /\{\{BASELAYOUT\}\}/g,
-		toc: /\{\{TOC\}\}/g,
-		obasPath: /\{\{OBASPATH\}\}/g,
-		presenter: /\{\{PRESENTER\}\}/g,
-		presentDate: /\{\{PRESENTDATE\}\}/g,
-		tagline: /\{\{TAGLINE\}\}/g,
-		slogan: /\{\{SLOGAN\}\}/g,
-		cIndex: /\{\{cIndex\}\}/g,
-		pIndex: /\{\{pIndex\}\}/g,
-		cName: /\{\{cName\}\}/g,
-	};
+	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
+	private static readonly REPLACE_REGEX = Object.fromEntries(
+		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
+			key,
+			new RegExp(`{{${value}}}`, "g"),
+		])
+	);
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -135,7 +130,11 @@ export class SlidesMaker {
 		if (slideFile instanceof TFile) {
 			template = await this.app.vault.read(slideFile);
 		}
-		return this._finalizeTemplate(template, replaceConfig);
+		const config = await this._addDesignSetToReplaceConfig(
+			template,
+			replaceConfig
+		);
+		return this._finalizeTemplate(template, config);
 	}
 
 	private _finalizeTemplate(template: string, replaceConfig: ReplaceConfig) {
@@ -160,26 +159,16 @@ export class SlidesMaker {
 		partial: boolean = false,
 		replaceConfig: ReplaceConfig
 	): Promise<string> {
-		let design = "";
-
-		if ("none" === this.settings.defaultDesign) {
-			const designOption = await this._selectSlideDesign();
-			if (!designOption) {
-				new Notice(t("Please select a slide design"));
-				return "";
-			}
-			design = designOption.value;
-		} else {
-			design = this.settings.defaultDesign.toUpperCase();
-		}
-
-		replaceConfig.design = design;
+		const config = await this._addDesignSetToReplaceConfig(
+			template,
+			replaceConfig
+		);
 
 		if (!partial) {
-			replaceConfig.obasPath = this.settings.obasFrameworkFolder;
+			config.obasPath = this.settings.obasFrameworkFolder;
 		}
 
-		return this._finalizeTemplate(template, replaceConfig);
+		return this._finalizeTemplate(template, config);
 	}
 
 	async getFinalTemplate(
@@ -278,6 +267,34 @@ export class SlidesMaker {
 			""
 		);
 		return (await modal.openAndGetValue()) || "";
+	}
+
+	private async _addDesignSetToReplaceConfig(
+		template: string,
+		replaceConfig: ReplaceConfig
+	): Promise<ReplaceConfig> {
+		// 直接复制 replaceConfig，避免修改原对象
+		const config: ReplaceConfig = { ...replaceConfig };
+
+		const needSelectDesign =
+			SlidesMaker.REPLACE_REGEX.design.test(template) &&
+			this.settings.defaultDesign === "none";
+
+		let design: string | undefined;
+
+		if (needSelectDesign) {
+			const designOption = await this._selectSlideDesign();
+			if (!designOption) {
+				new Notice(t("Please select a slide design"));
+				return replaceConfig;
+			}
+			design = designOption.value;
+		} else {
+			design = this.settings.defaultDesign?.toUpperCase?.() || "";
+		}
+
+		config.design = design;
+		return config;
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {

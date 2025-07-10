@@ -1,3 +1,5 @@
+import { baseLayout } from "./templates/slide-template";
+
 // Airtable 配置常量
 export const AIRTABLE_CONFIG = {
 	// 获取更新ID的配置
@@ -25,9 +27,14 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	design: "DESIGN",
 	toc: "TOC",
 	presenter: "PRESENTER",
-	presentDate: "PRESENTDATE",
+	presentDate: "PRESENT_DATE",
 	tagline: "TAGLINE",
 	slogan: "SLOGAN",
+	pIndex: "PAGE_INDEX",
+	cIndex: "CHAPTER_INDEX",
+	cName: "CHAPTER_NAME",
+	baseLayout: "BASE_LAYOUT",
+	obasPath: "OBAS_PATH",
 };
 
 export const OBAS_LIST_CLASSES = [
