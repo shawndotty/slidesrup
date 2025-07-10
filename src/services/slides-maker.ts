@@ -130,10 +130,14 @@ export class SlidesMaker {
 		if (slideFile instanceof TFile) {
 			template = await this.app.vault.read(slideFile);
 		}
+		// 优化：链式调用，减少中间变量，提升可读性
 		const config = await this._addDesignSetToReplaceConfig(
 			template,
 			replaceConfig
-		);
+		)
+			.then((cfg) => this._addChapterIndexToReplaceConfig(template, cfg))
+			.then((cfg) => this._addPageIndexToReplaceConfig(template, cfg));
+
 		return this._finalizeTemplate(template, config);
 	}
 
@@ -189,45 +193,38 @@ export class SlidesMaker {
 	}
 
 	async addSlideChapter(): Promise<void> {
-		let finalTemplate = "";
-
-		const cName = await this._getChapterName();
-
-		const cIndex = await this._getChapterIndex();
+		// 并行获取章节名称和编号，提高效率
+		const [cName, cIndex] = await Promise.all([
+			this._getChapterName(),
+			this._getChapterIndex(),
+		]);
 
 		const tocItem = `+ [${cName}](#c-${cIndex})`;
-
 		await this._appendItemToTocFile(tocItem);
 
-		if (this.settings.addChapterWithSubPages) {
-			finalTemplate = await this.getFinalTemplate(
-				this.settings.userChapterAndPagesTemplate,
-				chapterAndPagesTemplate,
-				true,
-				{
-					cIndex: cIndex,
-					cName: cName,
-				}
-			);
-		} else {
-			finalTemplate = await this.getFinalTemplate(
-				this.settings.userChapterTemplate,
-				slideChapterTemplate,
-				true,
-				{
-					cIndex: cIndex,
-					cName: cName,
-				}
-			);
-		}
+		const templateConfig = { cIndex, cName };
+		const [userTemplate, defaultTemplate] = this.settings
+			.addChapterWithSubPages
+			? [
+					this.settings.userChapterAndPagesTemplate,
+					chapterAndPagesTemplate,
+			  ]
+			: [this.settings.userChapterTemplate, slideChapterTemplate];
+
+		const finalTemplate = await this.getFinalTemplate(
+			userTemplate,
+			defaultTemplate,
+			true,
+			templateConfig
+		);
 
 		await this.addSlidePartial(finalTemplate);
 	}
 
 	async addSlidePage(): Promise<void> {
 		const finalTemplate = await this.getFinalTemplate(
-			slidePageTemplate,
 			this.settings.userPageTemplate,
+			slidePageTemplate,
 			true
 		);
 		await this.addSlidePartial(finalTemplate);
@@ -260,6 +257,15 @@ export class SlidesMaker {
 		return (await modal.openAndGetValue()) || "";
 	}
 
+	private async _getPageIndex(): Promise<string> {
+		const modal = new InputModal(
+			this.app,
+			t("Please input page index number"),
+			""
+		);
+		return (await modal.openAndGetValue()) || "";
+	}
+
 	private async _getChapterName(): Promise<string> {
 		const modal = new InputModal(
 			this.app,
@@ -273,28 +279,62 @@ export class SlidesMaker {
 		template: string,
 		replaceConfig: ReplaceConfig
 	): Promise<ReplaceConfig> {
-		// 直接复制 replaceConfig，避免修改原对象
+		// 优化：减少变量声明，合并逻辑，提升可读性
 		const config: ReplaceConfig = { ...replaceConfig };
 
-		const needSelectDesign =
-			SlidesMaker.REPLACE_REGEX.design.test(template) &&
-			this.settings.defaultDesign === "none";
-
-		let design: string | undefined;
-
-		if (needSelectDesign) {
-			const designOption = await this._selectSlideDesign();
-			if (!designOption) {
-				new Notice(t("Please select a slide design"));
-				return replaceConfig;
+		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
+			let design = this.settings.defaultDesign;
+			if (!design || design === "none") {
+				const designOption = await this._selectSlideDesign();
+				if (!designOption) {
+					new Notice(t("Please select a slide design"));
+					return replaceConfig;
+				}
+				design = designOption.value;
 			}
-			design = designOption.value;
-		} else {
-			design = this.settings.defaultDesign?.toUpperCase?.() || "";
+			config.design = design?.toUpperCase?.() || "";
 		}
 
-		config.design = design;
 		return config;
+	}
+
+	// 优化：合并重复逻辑，抽象为通用方法，减少冗余代码
+	private async _addRuleToReplaceConfig(
+		template: string,
+		replaceConfig: ReplaceConfig,
+		regex: RegExp,
+		getValue: () => Promise<string>,
+		key: keyof ReplaceConfig
+	): Promise<ReplaceConfig> {
+		if (!regex.test(template)) return replaceConfig;
+		const value = await getValue();
+		return value ? { ...replaceConfig, [key]: value } : replaceConfig;
+	}
+
+	private async _addChapterIndexToReplaceConfig(
+		template: string,
+		replaceConfig: ReplaceConfig
+	): Promise<ReplaceConfig> {
+		return this._addRuleToReplaceConfig(
+			template,
+			replaceConfig,
+			SlidesMaker.REPLACE_REGEX.cIndex,
+			() => this._getChapterIndex(),
+			"cIndex"
+		);
+	}
+
+	private async _addPageIndexToReplaceConfig(
+		template: string,
+		replaceConfig: ReplaceConfig
+	): Promise<ReplaceConfig> {
+		return this._addRuleToReplaceConfig(
+			template,
+			replaceConfig,
+			SlidesMaker.REPLACE_REGEX.pIndex,
+			() => this._getPageIndex(),
+			"pIndex"
+		);
 	}
 
 	private async _determineNewSlideLocation(): Promise<string | null> {

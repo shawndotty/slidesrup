@@ -181,4 +181,5 @@ export default {
 	"Your Date Format": "你的日期格式",
 	"Please input chapter index number": "请输入章节索引号",
 	"Please input chapter name": "请输入章节名字",
+	"Please input page index number": "请输入内容页索引号",
 };
