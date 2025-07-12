@@ -20,6 +20,28 @@ export class CommandService {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 	}
 
+	// 优化：抽取公共逻辑，减少重复代码
+	private async _templaterTriggerSwitch(
+		action: () => Promise<void>
+	): Promise<void> {
+		const triggerAtCreate = this.templaterService.getTemplaterSetting(
+			"trigger_on_file_creation"
+		);
+		if (triggerAtCreate) {
+			await this.templaterService.setTemplaterSetting(
+				"trigger_on_file_creation",
+				false
+			);
+		}
+		await action();
+		if (triggerAtCreate) {
+			await this.templaterService.setTemplaterSetting(
+				"trigger_on_file_creation",
+				true
+			);
+		}
+	}
+
 	private async runNocoDBCommand(
 		tableConfig: {
 			viewID: string;
@@ -189,7 +211,9 @@ export class CommandService {
 			id: "obas-assistant:create-slides",
 			name: t("Create New Slides"),
 			callback: async () => {
-				await this.slidesMaker.createSlides();
+				await this._templaterTriggerSwitch(() =>
+					this.slidesMaker.createSlides()
+				);
 			},
 		});
 
@@ -197,7 +221,9 @@ export class CommandService {
 			id: "obas-assistant:add-slide-chapter",
 			name: t("Add Chapter"),
 			callback: async () => {
-				await this.slidesMaker.addSlideChapter();
+				await this._templaterTriggerSwitch(() =>
+					this.slidesMaker.addSlideChapter()
+				);
 			},
 		});
 
@@ -205,7 +231,9 @@ export class CommandService {
 			id: "obas-assistant:add-slide-page",
 			name: t("Add Page"),
 			callback: async () => {
-				await this.slidesMaker.addSlidePage();
+				await this._templaterTriggerSwitch(() =>
+					this.slidesMaker.addSlidePage()
+				);
 			},
 		});
 	}
