@@ -63,38 +63,24 @@ export class CommandService {
 			);
 			return;
 		}
-		const templaterTrigerAtCreate =
-			this.templaterService.getTemplaterSetting(
-				"trigger_on_file_creation"
-			);
 
-		if (templaterTrigerAtCreate) {
-			await this.templaterService.setTemplaterSetting(
-				"trigger_on_file_creation",
-				false
+		await this._templaterTriggerSwitch(async () => {
+			const fieldNames = buildFieldNames();
+			const nocoDBSettings: NocoDBSettings = {
+				apiKey: apiKey,
+				tables: [tableConfig],
+				syncSettings: {
+					recordFieldsNames: fieldNames,
+				},
+			};
+			const myNocoDB = new NocoDB(nocoDBSettings);
+			const nocoDBSync = new NocoDBSync(myNocoDB, this.app);
+			const myObsidian = new MyObsidian(this.app, nocoDBSync);
+			await myObsidian.onlyFetchFromNocoDB(
+				nocoDBSettings.tables[0],
+				this.settings.updateAPIKeyIsValid
 			);
-		}
-		const fieldNames = buildFieldNames();
-		const nocoDBSettings: NocoDBSettings = {
-			apiKey: apiKey,
-			tables: [tableConfig],
-			syncSettings: {
-				recordFieldsNames: fieldNames,
-			},
-		};
-		const myNocoDB = new NocoDB(nocoDBSettings);
-		const nocoDBSync = new NocoDBSync(myNocoDB, this.app);
-		const myObsidian = new MyObsidian(this.app, nocoDBSync);
-		await myObsidian.onlyFetchFromNocoDB(
-			nocoDBSettings.tables[0],
-			this.settings.updateAPIKeyIsValid
-		);
-		if (templaterTrigerAtCreate) {
-			await this.templaterService.setTemplaterSetting(
-				"trigger_on_file_creation",
-				true
-			);
-		}
+		});
 	}
 
 	registerCommands(): void {
