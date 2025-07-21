@@ -1,6 +1,6 @@
 {
 	"name": "obas-assistant",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "This is a plugin for assistant OBAS presentation framework",
 	"main": "main.js",
 	"scripts": {
@@ -9,7 +9,7 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "JohnnyLearns",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
