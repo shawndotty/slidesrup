@@ -177,8 +177,8 @@ export default {
 	"Adjust the hue of the theme": "Adjust the hue of the theme",
 	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
 	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
-	"Get The Latest Version Reveal Template":
-		"Get The Latest Version Reveal Template",
+	"Get The Latest Version OBAS Reveal Addons":
+		"Get The Latest Version OBAS Reveal Addons",
 	"Reveal template updated.": "Reveal template updated.",
 	"User TOC Template": "User TOC Template",
 	"Please choose your personal TOC template":

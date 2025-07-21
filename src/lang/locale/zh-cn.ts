@@ -152,7 +152,8 @@ export default {
 	"Adjust the hue of the theme": "调整主题色的色相",
 	"Adjust the saturation of the theme": "调整主题色的饱和度",
 	"Adjust the lightness of the theme": "调整主题色的亮度",
-	"Get The Latest Version Reveal Template": "获取最新的Reveal模板",
+	"Get The Latest Version OBAS Reveal Addons":
+		"获取最新的OBAS Reveal框架扩展文件",
 	"Reveal template updated.": "Reveal模板已更新",
 	"User TOC Template": "你的演示目录模板",
 	"Please choose your personal TOC template": "请选择你的演示目录模板",
