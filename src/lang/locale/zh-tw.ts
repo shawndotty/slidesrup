@@ -153,7 +153,8 @@ export default {
 	"Adjust the hue of the theme": "調整主題色的色相",
 	"Adjust the saturation of the theme": "調整主題色的飽和度",
 	"Adjust the lightness of the theme": "調整主題色的亮度",
-	"Get The Latest Version Reveal Template": "獲取最新的Reveal模板",
+	"Get The Latest Version OBAS Reveal Addons":
+		"獲取最新的OBAS Reveal框架擴充檔案",
 	"Reveal template updated.": "Reveal模板已更新",
 	"User TOC Template": "用戶簡報目錄模板",
 	"Please choose your personal TOC template": "請選擇你的簡報目錄模板",

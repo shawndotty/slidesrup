@@ -122,8 +122,8 @@ export class CommandService {
 		);
 
 		createNocoDBCommand(
-			"update-reveal-template",
-			t("Get The Latest Version Reveal Template"),
+			"update-reveal-addons",
+			t("Get The Latest Version OBAS Reveal Addons"),
 			{
 				baseID: this.settings.updateIDs.reveal.baseID,
 				tableID: this.settings.updateIDs.reveal.tableID,
