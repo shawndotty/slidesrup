@@ -93,6 +93,7 @@ export class SlidesMaker {
 			{
 				toc: tocName,
 				tagline: this.settings.tagline,
+				slogan: this.settings.slogan,
 			}
 		);
 
