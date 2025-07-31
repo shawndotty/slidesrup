@@ -1,5 +1,3 @@
-import { baseLayout } from "./templates/slide-template";
-
 // Airtable 配置常量
 export const AIRTABLE_CONFIG = {
 	// 获取更新ID的配置

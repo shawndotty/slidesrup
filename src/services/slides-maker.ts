@@ -77,7 +77,7 @@ export class SlidesMaker {
 
 		const tocTemplate = await this.getFinalTemplate(
 			this.settings.userTocTemplate,
-			toc
+			toc()
 		);
 
 		await this._createAndOpenSlide(
@@ -89,7 +89,7 @@ export class SlidesMaker {
 
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
-			baseLayoutWithSteps,
+			baseLayoutWithSteps(),
 			{
 				toc: tocName,
 				tagline: this.settings.tagline,
@@ -106,7 +106,7 @@ export class SlidesMaker {
 
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userSlideTemplate,
-			slideTemplate,
+			slideTemplate(),
 			{
 				baseLayout: baseLayoutName,
 				toc: tocName,
@@ -175,16 +175,17 @@ export class SlidesMaker {
 
 	async getFinalTemplate(
 		userTemplate: string,
-		defaultTemplate: string,
+		defaultTemplate: string | (() => string),
 		replaceConfig: ReplaceConfig = {}
 	) {
 		if (this.settings.enableUserTemplates && userTemplate) {
 			return await this.getUserTemplate(userTemplate, replaceConfig);
 		} else {
-			return await this.getDefaultTemplate(
-				defaultTemplate,
-				replaceConfig
-			);
+			const template =
+				typeof defaultTemplate === "function"
+					? defaultTemplate()
+					: defaultTemplate;
+			return await this.getDefaultTemplate(template, replaceConfig);
 		}
 	}
 
@@ -203,9 +204,9 @@ export class SlidesMaker {
 			.addChapterWithSubPages
 			? [
 					this.settings.userChapterAndPagesTemplate,
-					chapterAndPagesTemplate,
+					chapterAndPagesTemplate(),
 			  ]
-			: [this.settings.userChapterTemplate, slideChapterTemplate];
+			: [this.settings.userChapterTemplate, slideChapterTemplate()];
 
 		const finalTemplate = await this.getFinalTemplate(
 			userTemplate,
@@ -219,7 +220,7 @@ export class SlidesMaker {
 	async addSlidePage(): Promise<void> {
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userPageTemplate,
-			slidePageTemplate
+			slidePageTemplate()
 		);
 		await this.addSlidePartial(finalTemplate);
 	}

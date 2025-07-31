@@ -1,12 +1,14 @@
 import { t } from "../lang/helpers";
 import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
 
-const page = `
+// 将静态模板改为函数，以便在运行时动态生成
+export function getPageTemplate() {
+	return `
 ---
 
 <!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
-	TEMPLATE_PLACE_HOLDERS.pIndex
-}}}" class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
+		TEMPLATE_PLACE_HOLDERS.pIndex
+	}}}" class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
 
 ### ${t("SubSlide")} {{${TEMPLATE_PLACE_HOLDERS.pIndex}}}
 
@@ -17,19 +19,28 @@ const page = `
 	+ ${t("SubList")} 2-1
     + ${t("SubList")} 2-2
 `;
+}
 
-const pIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.pIndex}}}`, "g");
+export function getPagesTemplate() {
+	const page = getPageTemplate();
+	const pIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.pIndex}}}`, "g");
 
-const pages = Array.from({ length: 4 }, (_, i) =>
-	page.replace(pIndexReg, `${i + 1}`)
-).join("\n");
+	return Array.from({ length: 4 }, (_, i) =>
+		page.replace(pIndexReg, `${i + 1}`)
+	).join("\n");
+}
 
-const chapterAndPages = `
+export function getChapterAndPagesTemplate() {
+	const pages = getPagesTemplate();
+
+	return `
 ---
 
 <!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
-	"Chapter"
-)}-{{${TEMPLATE_PLACE_HOLDERS.design}}}]]"  class="order-list-with-border" -->
+		"Chapter"
+	)}-{{${
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]"  class="order-list-with-border" -->
 
 ## ${t("Chapter")} {{${TEMPLATE_PLACE_HOLDERS.cIndex}}}
 
@@ -40,20 +51,29 @@ const chapterAndPages = `
 
 ${pages}
 `;
+}
 
-const cIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}`, "g");
+export function getChaptersAndPagesTemplate() {
+	const chapterAndPages = getChapterAndPagesTemplate();
+	const cIndexReg = new RegExp(`{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}`, "g");
 
-// 优化：使用循环动态生成章节，避免硬编码
-const chaptersAndPages = Array.from({ length: 5 }, (_, i) =>
-	chapterAndPages.replace(cIndexReg, `${i + 1}`)
-).join("\n");
+	// 优化：使用循环动态生成章节，避免硬编码
+	return Array.from({ length: 5 }, (_, i) =>
+		chapterAndPages.replace(cIndexReg, `${i + 1}`)
+	).join("\n");
+}
 
-export const chapterAndPagesTemplate = `
+export function getChapterAndPagesTemplateWithCustomName() {
+	const pages = getPagesTemplate();
+
+	return `
 ---
 
 <!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
-	"Chapter"
-)}-{{${TEMPLATE_PLACE_HOLDERS.design}}}]]"  class="order-list-with-border" -->
+		"Chapter"
+	)}-{{${
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]"  class="order-list-with-border" -->
 
 ## {{${TEMPLATE_PLACE_HOLDERS.cName}}}
 
@@ -64,8 +84,12 @@ export const chapterAndPagesTemplate = `
 
 ${pages}
 `;
+}
 
-export const slideTemplate = `
+export function getSlideTemplate() {
+	const chaptersAndPages = getChaptersAndPagesTemplate();
+
+	return `
 ---
 css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Styles/main.css
 defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
@@ -80,8 +104,8 @@ transition: none
 width: 1920
 ---
 <!-- slide id="home" template="[[${t("Cover")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]" -->
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]" -->
 # {{${TEMPLATE_PLACE_HOLDERS.slideName}}}
 
 ## {{${TEMPLATE_PLACE_HOLDERS.presenter}}}
@@ -91,8 +115,8 @@ width: 1920
 ---
 
 <!-- slide template="[[${t("TOC")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]"  class="order-list-with-border" -->
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]"  class="order-list-with-border" -->
 
 ## ${t("TOC")}
 
@@ -103,8 +127,8 @@ ${chaptersAndPages}
 ---
 
 <!-- slide template="[[${t("BackCover")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]" class="order-list-with-border" -->
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]" class="order-list-with-border" -->
 
 # ${t("Farewell")}
 
@@ -112,13 +136,15 @@ ${chaptersAndPages}
 + ${t("Keep is simple and powerful")}
 + ${t("Focus on the basic first")}
 `;
+}
 
-export const slideChapterTemplate = `
+export function getSlideChapterTemplate() {
+	return `
 ---
 
 <!-- slide template="[[${t("Chapter")}-{{${
-	TEMPLATE_PLACE_HOLDERS.design
-}}}]]"  class="order-list-with-border" -->
+		TEMPLATE_PLACE_HOLDERS.design
+	}}}]]"  class="order-list-with-border" -->
 
 ## ${t("Chapter")} 1
 
@@ -128,13 +154,17 @@ export const slideChapterTemplate = `
 + ${t("SubSlide")} 4
 
 `;
+}
 
-export const slidePageTemplate = `
+export function getSlidePageTemplate() {
+	return `
 ---
 
 <!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
-	TEMPLATE_PLACE_HOLDERS.pIndex
-}}}"  class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
+		TEMPLATE_PLACE_HOLDERS.pIndex
+	}}}"  class="chapter-{{${
+		TEMPLATE_PLACE_HOLDERS.cIndex
+	}}} fancy-list-row" -->
 
 ## ${t("SubSlide")}
 
@@ -146,8 +176,10 @@ export const slidePageTemplate = `
     + ${t("SubList")} 2-2
 
 `;
+}
 
-export const baseLayout = `
+export function getBaseLayout() {
+	return `
 <grid drag="100 10" class="header bg-with-back-color has-dark-background" drop="topleft"  flow="row"   pad="0 40px"  style="color: white">
 {{${TEMPLATE_PLACE_HOLDERS.tagline}}}
 
@@ -157,8 +189,10 @@ export const baseLayout = `
 <% content %>
 </grid>
 `;
+}
 
-export const baseLayoutWithSteps = `
+export function getBaseLayoutWithSteps() {
+	return `
 <grid drag="100 10" class="header steps bg-with-back-color has-dark-background no-fragments" drop="topleft"  flow="row"  pad="0 40px" style="color: white;">
 [{{${TEMPLATE_PLACE_HOLDERS.tagline}}}](#home)
 
@@ -169,11 +203,23 @@ export const baseLayoutWithSteps = `
 <% content %>
 </grid>
 `;
+}
 
-export const toc = `
+export function getToc() {
+	return `
 + [${t("Chapter")} 1](#c-1)
 + [${t("Chapter")} 2](#c-2)
 + [${t("Chapter")} 3](#c-3)
 + [${t("Chapter")} 4](#c-4)
 + [${t("Chapter")} 5](#c-5)
 `;
+}
+
+// 为了向后兼容，保留原有的导出名称
+export const chapterAndPagesTemplate = getChapterAndPagesTemplateWithCustomName;
+export const slideTemplate = getSlideTemplate;
+export const slideChapterTemplate = getSlideChapterTemplate;
+export const slidePageTemplate = getSlidePageTemplate;
+export const baseLayout = getBaseLayout;
+export const baseLayoutWithSteps = getBaseLayoutWithSteps;
+export const toc = getToc;
