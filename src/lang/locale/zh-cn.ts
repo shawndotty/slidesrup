@@ -193,4 +193,10 @@ export default {
 		"选择你的包含子页面的章节模板",
 	"Enable User Templates": "启用用户模板",
 	OBAS_Assistant_Settings_Heading: "OBAS助手设置",
+	"OBAS Running Language": "OBAS运行语言",
+	"Please select your obas framework running language":
+		"请选择你的OBAS框架运行语言",
+	"Auto (Follow System Language)": "自动（跟随系统语言）",
+	Chinese: "简体中文",
+	"Chinses Traditional": "繁体中文",
 };

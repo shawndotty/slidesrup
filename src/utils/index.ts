@@ -22,6 +22,19 @@ export function isValidApiKey(apiKey: string): boolean {
 	);
 }
 
+export function getAppInstance(): App {
+	if (typeof window !== "undefined" && (window as any).obsidianApp) {
+		return (window as any).obsidianApp as App;
+	} else if (typeof window !== "undefined" && (window as any).app) {
+		// 兼容旧版本
+		return (window as any).app as App;
+	} else {
+		throw new Error(
+			"无法获取 Obsidian App 实例：window.obsidianApp 和 window.app 均未定义"
+		);
+	}
+}
+
 /**
  * 验证邮箱格式是否有效
  * @param email - 要验证的邮箱地址
@@ -50,7 +63,10 @@ export function isValidEmail(email: string): boolean {
  * @param forceDefaultFetchFields - 是否强制使用默认获取字段
  * @returns 根据当前语言环境返回相应的字段名称映射
  */
-export function buildFieldNames(forceDefaultFetchFields: boolean = false) {
+export function buildFieldNames(
+	forceDefaultFetchFields: boolean = false,
+	obasRunningLanguage = "ob"
+) {
 	if (forceDefaultFetchFields) {
 		return {
 			title: "Title",
@@ -76,7 +92,11 @@ export function buildFieldNames(forceDefaultFetchFields: boolean = false) {
 		},
 	};
 
-	return fieldNamesMap[locale] || fieldNamesMap["en"];
+	if (obasRunningLanguage === "ob") {
+		return fieldNamesMap[locale] || fieldNamesMap["en"];
+	} else {
+		return fieldNamesMap[obasRunningLanguage] || fieldNamesMap["en"];
+	}
 }
 
 export function resolve_tfolder(app: App, folder_str: string): TFolder {

@@ -25,6 +25,7 @@ export interface OBASAssistantSettings {
 	updateAPIKey: string;
 	updateAPIKeyIsValid: boolean;
 	obasFrameworkFolder: string;
+	obasRunningLanguage: string;
 	userEmail: string;
 	userChecked: boolean;
 	newSlideLocationOption: string;

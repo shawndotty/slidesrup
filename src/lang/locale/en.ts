@@ -216,4 +216,11 @@ export default {
 		"Choose your personal chapter with sub pages template",
 	"Enable User Templates": "Enable User Templates",
 	OBAS_Assistant_Settings_Heading: "OBAS Assistant Settings",
+	"OBAS Running Language": "OBAS Running Language",
+	"Please select your obas framework running language":
+		"Please select your obas framework running language",
+	"Auto (Follow System Language)": "Auto (Follow System Language)",
+	Chinese: "Chinese",
+	"Chinses Traditional": "Chinses Traditional",
+	English: "English",
 };

@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	updateAPIKey: "",
 	updateAPIKeyIsValid: false,
 	obasFrameworkFolder: "",
+	obasRunningLanguage: "ob",
 	userEmail: "",
 	userChecked: false,
 	newSlideLocationOption: "current",

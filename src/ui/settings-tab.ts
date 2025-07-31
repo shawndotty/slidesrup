@@ -90,6 +90,19 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			remoteValidator: () => this.apiService.getUpdateIDs(),
 		});
 
+		this.createDropdownSetting(
+			containerEl,
+			"OBAS Running Language",
+			"Please select your obas framework running language",
+			"obasRunningLanguage",
+			{
+				ob: "Auto (Follow System Language)",
+				"zh-cn": "Chinese",
+				"zh-tw": "Chinses Traditional",
+				en: "English",
+			}
+		);
+
 		this.createFolderSetting(
 			containerEl,
 			"OBAS Framework Folder",

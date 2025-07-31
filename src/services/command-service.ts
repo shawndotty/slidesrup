@@ -65,7 +65,10 @@ export class CommandService {
 		}
 
 		await this._templaterTriggerSwitch(async () => {
-			const fieldNames = buildFieldNames();
+			const fieldNames = buildFieldNames(
+				false,
+				this.settings.obasRunningLanguage
+			);
 			const nocoDBSettings: NocoDBSettings = {
 				apiKey: apiKey,
 				tables: [tableConfig],
