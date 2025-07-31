@@ -12,17 +12,33 @@ const localeMap: { [k: string]: Partial<typeof en> } = {
 	"zh-tw": zhTW,
 };
 
-// 优化语言选择逻辑，简化变量声明与判断
-const app = getAppInstance();
-const iotoRunningLanguage =
-	app.plugins.plugins["obas-assistant"]?.settings?.obasRunningLanguage ??
-	"ob";
+// 使用单例模式优化 locale 获取，避免重复计算
+let cachedLocale: Partial<typeof en> | null = null;
+let cachedLang: string | null = null;
 
-const lang =
-	iotoRunningLanguage === "ob" ? moment.locale() : iotoRunningLanguage;
-const locale = localeMap[lang] ?? en;
+function _get_locale() {
+	// 获取当前语言设置
+	const app = getAppInstance();
+	const obasRunningLanguage =
+		app.plugins.plugins["obas-assistant"]?.settings?.obasRunningLanguage ??
+		"ob";
+	const lang =
+		obasRunningLanguage === "ob" ? moment.locale() : obasRunningLanguage;
+
+	// 如果缓存命中，直接返回
+	if (cachedLocale && cachedLang === lang) {
+		return cachedLocale;
+	}
+
+	// 重新计算并缓存
+	const locale = localeMap[lang] ?? en;
+	cachedLocale = locale;
+	cachedLang = lang;
+	return locale;
+}
 
 export function t(str: keyof typeof en): string {
+	const locale = _get_locale();
 	if (!locale) {
 		console.dir({
 			where: "helpers.t",
