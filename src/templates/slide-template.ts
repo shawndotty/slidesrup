@@ -166,7 +166,7 @@ export function getSlidePageTemplate() {
 		TEMPLATE_PLACE_HOLDERS.cIndex
 	}}} fancy-list-row" -->
 
-## ${t("SubSlide")}
+### ${t("SubSlide")}
 
 + ${t("List")} 1
 	+ ${t("SubList")} 1-1
