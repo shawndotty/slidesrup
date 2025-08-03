@@ -199,4 +199,5 @@ export default {
 	"Auto (Follow System Language)": "自动（跟随系统语言）",
 	Chinese: "简体中文",
 	"Chinses Traditional": "繁体中文",
+	"Reload OB": "重新加载",
 };

@@ -65,6 +65,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			name: t("OBAS Update API Key"),
 			description: t("Please enter a valid update API Key"),
 			placeholder: t("Enter the API Key"),
+			reload: false,
 			getValue: () => this.plugin.settings.updateAPIKey,
 			setValue: (value) => (this.plugin.settings.updateAPIKey = value),
 			getIsValid: () => this.plugin.settings.updateAPIKeyIsValid,
@@ -81,6 +82,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				"Please enter the email you provided when you purchase this product"
 			),
 			placeholder: t("Enter your email"),
+			reload: true,
 			getValue: () => this.plugin.settings.userEmail,
 			setValue: (value) => (this.plugin.settings.userEmail = value),
 			getIsValid: () => this.plugin.settings.userChecked,
@@ -500,6 +502,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		name: string;
 		description: string;
 		placeholder: string;
+		reload: boolean;
 		getValue: () => string;
 		setValue: (value: string) => void;
 		getIsValid: () => boolean;
@@ -552,39 +555,60 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				const initialState = options.getIsValid() ? "valid" : "idle";
 				updateVisualState(initialState);
 
-				text.setPlaceholder(options.placeholder).setValue(
-					options.getValue()
-				);
+				const initialValue = options.getValue();
+				let hasValueChanged = false;
 
-				const debouncedValidation = debounce(
-					async (value: string) => {
+				text.setPlaceholder(options.placeholder)
+					.setValue(initialValue)
+					.onChange(async (value: string) => {
 						options.setValue(value);
+						hasValueChanged = true;
 						await this.plugin.saveSettings();
+					});
 
-						if (!options.localValidator(value)) {
-							options.setIsValid(false);
-							updateVisualState("invalid");
-							return;
-						}
+				text.inputEl.addEventListener("blur", async () => {
+					if (!hasValueChanged) {
+						return;
+					}
 
-						updateVisualState("loading");
-						try {
-							await options.remoteValidator();
-							updateVisualState(
-								options.getIsValid() ? "valid" : "invalid"
-							);
-						} catch (error) {
-							console.error("Validation error:", error);
-							updateVisualState("invalid");
-						} finally {
-							await this.plugin.saveSettings();
-						}
-					},
-					500,
-					true
-				);
+					const value = text.inputEl.value;
 
-				text.onChange(debouncedValidation);
+					if (!options.localValidator(value)) {
+						options.setIsValid(false);
+						updateVisualState("invalid");
+						return;
+					}
+
+					updateVisualState("loading");
+					try {
+						await options.remoteValidator();
+						updateVisualState(
+							options.getIsValid() ? "valid" : "invalid"
+						);
+					} catch (error) {
+						console.error("Validation error:", error);
+						updateVisualState("invalid");
+					} finally {
+						await this.plugin.saveSettings();
+					}
+					if (options.getIsValid() && options.reload) {
+						// 在输入框后面添加一个重新加载按钮，使用 reload emoji，点击后重新加载 Obsidian
+						const reloadButton = document.createElement("button");
+						reloadButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;" xmlns="http://www.w3.org/2000/svg"><path d="M12 4a8 8 0 1 1-8 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="4 4 4 8 8 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+						reloadButton.title = t("Reload OB") as string;
+						reloadButton.style.padding = "2px 8px";
+						reloadButton.style.border = "1px solid #888";
+						reloadButton.style.borderRadius = "4px";
+						reloadButton.style.cursor = "pointer";
+						reloadButton.onclick = () => {
+							this.app.commands.executeCommandById("app:reload");
+						};
+						// 将按钮插入到输入框后面
+						text.inputEl.parentElement?.appendChild(reloadButton);
+					}
+
+					hasValueChanged = false;
+				});
 			});
 	}
 }

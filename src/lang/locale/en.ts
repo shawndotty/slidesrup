@@ -223,4 +223,5 @@ export default {
 	Chinese: "Chinese",
 	"Chinses Traditional": "Chinses Traditional",
 	English: "English",
+	"Reload OB": "Reload OB",
 };
