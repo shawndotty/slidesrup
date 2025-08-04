@@ -91,7 +91,7 @@ export function getSlideTemplate() {
 
 	return `
 ---
-css: {{${TEMPLATE_PLACE_HOLDERS.obasPath}}}/Styles/main.css
+css: dist/Styles/main.css
 defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
 aliases:
   - {{${TEMPLATE_PLACE_HOLDERS.slideName}}}

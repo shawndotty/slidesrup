@@ -1,10 +1,11 @@
 import { App } from "obsidian";
 import { OBASAssistantSettings } from "../types";
+import { SLIDES_EXTENDED_PLUGIN_FOLDER } from "../constants";
 
 export class CssService {
 	private obasHslFilePath: string;
 	constructor(private app: App, private settings: OBASAssistantSettings) {
-		this.obasHslFilePath = `${this.settings.obasFrameworkFolder}/Styles/my-obas-hsl.css`;
+		this.obasHslFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/Styles/my-obas-hsl.css`;
 	}
 
 	async modifyObasHslFile() {

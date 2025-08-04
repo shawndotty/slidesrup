@@ -54,3 +54,5 @@ export const OBAS_LIST_CLASSES = [
 	"three-columns-list-2-1-1",
 	"four-columns-list",
 ];
+
+export const SLIDES_EXTENDED_PLUGIN_FOLDER = "plugins/slides-extended/dist";

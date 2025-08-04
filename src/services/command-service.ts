@@ -7,6 +7,7 @@ import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
+import { SLIDES_EXTENDED_PLUGIN_FOLDER } from "../constants";
 
 export class CommandService {
 	private slidesMaker: SlidesMaker;
@@ -117,7 +118,7 @@ export class CommandService {
 				baseID: this.settings.updateIDs.style.baseID,
 				tableID: this.settings.updateIDs.style.tableID,
 				viewID: this.settings.updateIDs.style.viewID,
-				targetFolderPath: this.settings.obasFrameworkFolder,
+				targetFolderPath: `${this.app.vault.configDir}/plugins/slides-extended/dist`,
 			}
 		);
 
@@ -164,7 +165,7 @@ export class CommandService {
 					baseID: this.settings.updateIDs.style.baseID,
 					tableID: this.settings.updateIDs.style.tableID,
 					viewID: this.settings.updateIDs.style.viewID,
-					targetFolderPath: this.settings.obasFrameworkFolder,
+					targetFolderPath: `${this.app.vault.configDir}/plugins/slides-extended/dist`,
 				});
 				new Notice(t("Styles updated."));
 
