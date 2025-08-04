@@ -118,7 +118,7 @@ export class CommandService {
 				baseID: this.settings.updateIDs.style.baseID,
 				tableID: this.settings.updateIDs.style.tableID,
 				viewID: this.settings.updateIDs.style.viewID,
-				targetFolderPath: `${this.app.vault.configDir}/plugins/slides-extended/dist`,
+				targetFolderPath: `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}`,
 			}
 		);
 
@@ -165,7 +165,7 @@ export class CommandService {
 					baseID: this.settings.updateIDs.style.baseID,
 					tableID: this.settings.updateIDs.style.tableID,
 					viewID: this.settings.updateIDs.style.viewID,
-					targetFolderPath: `${this.app.vault.configDir}/plugins/slides-extended/dist`,
+					targetFolderPath: `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}`,
 				});
 				new Notice(t("Styles updated."));
 
