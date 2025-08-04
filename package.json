@@ -1,6 +1,6 @@
 {
 	"name": "obas-assistant",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"description": "This is a plugin for assistant OBAS presentation framework",
 	"main": "main.js",
 	"scripts": {
