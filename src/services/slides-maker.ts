@@ -115,6 +115,8 @@ export class SlidesMaker {
 					this.settings.dateFormat || "YYYY-MM-DD"
 				),
 				obasPath: this.settings.obasFrameworkFolder,
+				tagline: this.settings.tagline,
+				slogan: this.settings.slogan,
 			}
 		);
 
