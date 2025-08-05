@@ -127,6 +127,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				e: "Slide Design E",
 				f: "Slide Design F",
 				g: "Slide Design G",
+				h: "Slide Design H"
 			}
 		);
 

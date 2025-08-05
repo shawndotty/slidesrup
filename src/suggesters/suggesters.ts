@@ -13,6 +13,7 @@ export class SlideDesignSuggester extends BaseSuggester {
 			{ id: "E", name: `5. ${t("Slide Design E")}`, value: "E" },
 			{ id: "F", name: `6. ${t("Slide Design F")}`, value: "F" },
 			{ id: "G", name: `7. ${t("Slide Design G")}`, value: "G" },
+			{ id: "H", name: `8. ${t("Slide Design H")}`, value: "H" },
 		]);
 	}
 }

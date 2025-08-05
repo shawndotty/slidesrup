@@ -103,6 +103,7 @@ export default {
 	"Slide Design E": "Slide Design E",
 	"Slide Design F": "Slide Design F",
 	"Slide Design G": "Slide Design G",
+	"Slide Design H": "Slide Design H",
 	"Please select a slide design": "Please select a slide design",
 	"New Slide": "New Slide",
 	"Untitled Slide": "Untitled Slide",
