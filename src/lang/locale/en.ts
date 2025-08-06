@@ -225,4 +225,7 @@ export default {
 	"Chinses Traditional": "Chinses Traditional",
 	English: "English",
 	"Reload OB": "Reload OB",
+	"Presentation Plugin": "Presentation Plugin",
+	"Please select your presentation plugin":
+		"Please select your presentation plugin",
 };

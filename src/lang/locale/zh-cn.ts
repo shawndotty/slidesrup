@@ -201,4 +201,6 @@ export default {
 	Chinese: "简体中文",
 	"Chinses Traditional": "繁体中文",
 	"Reload OB": "重新加载",
+	"Presentation Plugin": "演示插件",
+	"Please select your presentation plugin": "请选择你的演示插件",
 };

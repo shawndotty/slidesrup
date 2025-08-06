@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	enableUserTemplates: true,
 	customizeSlideFolderName: true,
 	addChapterWithSubPages: true,
+	presentationPlugin: "slidesExtended",
 	updateIDs: {
 		style: {
 			baseID: "",
@@ -43,6 +44,11 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 			viewID: "",
 		},
 		reveal: {
+			baseID: "",
+			tableID: "",
+			viewID: "",
+		},
+		revealAS: {
 			baseID: "",
 			tableID: "",
 			viewID: "",

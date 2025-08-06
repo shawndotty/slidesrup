@@ -60,6 +60,16 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderMainSettings(containerEl: HTMLElement): void {
+		this.createDropdownSetting(
+			containerEl,
+			"Presentation Plugin",
+			"Please select your presentation plugin",
+			"presentationPlugin",
+			{
+				slidesExtended: "Slides Extended",
+				advancedSlides: "Advanced Slides",
+			}
+		);
 		this.createValidatedInput({
 			containerEl,
 			name: t("OBAS Update API Key"),
@@ -127,7 +137,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				e: "Slide Design E",
 				f: "Slide Design F",
 				g: "Slide Design G",
-				h: "Slide Design H"
+				h: "Slide Design H",
 			}
 		);
 

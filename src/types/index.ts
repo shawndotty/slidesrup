@@ -46,11 +46,13 @@ export interface OBASAssistantSettings {
 	customizeSlideFolderName: boolean;
 	addChapterWithSubPages: boolean;
 	demoFolder: string;
+	presentationPlugin: string;
 	updateIDs: {
 		style: AirtableIds;
 		templates: AirtableIds;
 		demo: AirtableIds;
 		reveal: AirtableIds;
+		revealAS: AirtableIds;
 	};
 	obasHue: number;
 	obasSaturation: number;
