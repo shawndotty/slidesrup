@@ -13,6 +13,9 @@ type SettingsKeys = keyof OBASAssistant["settings"];
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
 	private apiService: ApiService;
+	private hueSlider?: HTMLInputElement;
+	private saturationSlider?: HTMLInputElement;
+	private lightnessSlider?: HTMLInputElement;
 
 	constructor(app: App, plugin: OBASAssistant) {
 		super(app, plugin);
@@ -279,32 +282,29 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			true
 		);
 
-		this.createSliderSetting(
-			containerEl,
-			"Hue",
-			"Adjust the hue of the theme",
-			"obasHue",
-			360,
-			onHslChange
-		);
+		// 创建色相选择器
+		this.createHueSlider(containerEl, (value) => {
+			this.plugin.settings.obasHue = value;
+			onHslChange();
+			// 更新饱和度和亮度滑块的渐变背景
+			this.updateSliderGradients();
+		});
 
-		this.createSliderSetting(
-			containerEl,
-			"Saturation",
-			"Adjust the saturation of the theme",
-			"obasSaturation",
-			100,
-			onHslChange
-		);
+		// 创建饱和度选择器
+		this.createSaturationSlider(containerEl, (value) => {
+			this.plugin.settings.obasSaturation = value;
+			onHslChange();
+			// 更新亮度滑块的渐变背景
+			this.updateSliderGradients();
+		});
 
-		this.createSliderSetting(
-			containerEl,
-			"Lightness",
-			"Adjust the lightness of the theme",
-			"obasLightness",
-			100,
-			onHslChange
-		);
+		// 创建亮度选择器
+		this.createLightnessSlider(containerEl, (value) => {
+			this.plugin.settings.obasLightness = value;
+			onHslChange();
+			// 更新饱和度滑块的渐变背景
+			this.updateSliderGradients();
+		});
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
@@ -621,5 +621,186 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					hasValueChanged = false;
 				});
 			});
+	}
+
+	// 创建色相选择器
+	private createHueSlider(
+		containerEl: HTMLElement,
+		onChangeCallback: (value: number) => void
+	) {
+		const setting = new Setting(containerEl)
+			.setName(t("Hue"))
+			.setDesc(t("Adjust the hue of the theme"));
+
+		const sliderContainer = setting.controlEl.createDiv({
+			cls: "obas-hue-slider-container obas-hsl-slider",
+		});
+
+		// 创建色相渐变背景
+		const hueSlider = sliderContainer.createEl("input", {
+			type: "range",
+			cls: "obas-hue-slider",
+			attr: {
+				min: "0",
+				max: "360",
+				step: "1",
+				value: this.plugin.settings.obasHue.toString(),
+			},
+		});
+
+		// 创建色相渐变背景
+		const hueGradient = this.createHueGradient();
+		hueSlider.style.background = hueGradient;
+
+		hueSlider.addEventListener("input", (e) => {
+			const value = parseInt((e.target as HTMLInputElement).value);
+			this.plugin.settings.obasHue = value;
+			onChangeCallback(value);
+		});
+
+		return setting;
+	}
+
+	// 创建饱和度选择器
+	private createSaturationSlider(
+		containerEl: HTMLElement,
+		onChangeCallback: (value: number) => void
+	) {
+		const setting = new Setting(containerEl)
+			.setName(t("Saturation"))
+			.setDesc(t("Adjust the saturation of the theme"));
+
+		const sliderContainer = setting.controlEl.createDiv({
+			cls: "obas-saturation-slider-container obas-hsl-slider",
+		});
+
+		const saturationSlider = sliderContainer.createEl("input", {
+			type: "range",
+			cls: "obas-saturation-slider",
+			attr: {
+				min: "0",
+				max: "100",
+				step: "1",
+				value: this.plugin.settings.obasSaturation.toString(),
+			},
+		});
+
+		// 更新饱和度渐变背景
+		const updateSaturationGradient = () => {
+			const hue = this.plugin.settings.obasHue;
+			const lightness = this.plugin.settings.obasLightness;
+			const saturationGradient = this.createSaturationGradient(
+				hue,
+				lightness
+			);
+			saturationSlider.style.background = saturationGradient;
+		};
+
+		updateSaturationGradient();
+
+		saturationSlider.addEventListener("input", (e) => {
+			const value = parseInt((e.target as HTMLInputElement).value);
+			this.plugin.settings.obasSaturation = value;
+			onChangeCallback(value);
+		});
+
+		// 存储滑块引用以便后续更新
+		this.saturationSlider = saturationSlider;
+
+		return setting;
+	}
+
+	// 创建亮度选择器
+	private createLightnessSlider(
+		containerEl: HTMLElement,
+		onChangeCallback: (value: number) => void
+	) {
+		const setting = new Setting(containerEl)
+			.setName(t("Lightness"))
+			.setDesc(t("Adjust the lightness of the theme"));
+
+		const sliderContainer = setting.controlEl.createDiv({
+			cls: "obas-lightness-slider-container obas-hsl-slider",
+		});
+
+		const lightnessSlider = sliderContainer.createEl("input", {
+			type: "range",
+			cls: "obas-lightness-slider",
+			attr: {
+				min: "0",
+				max: "100",
+				step: "1",
+				value: this.plugin.settings.obasLightness.toString(),
+			},
+		});
+
+		// 更新亮度渐变背景
+		const updateLightnessGradient = () => {
+			const hue = this.plugin.settings.obasHue;
+			const saturation = this.plugin.settings.obasSaturation;
+			const lightnessGradient = this.createLightnessGradient(
+				hue,
+				saturation
+			);
+			lightnessSlider.style.background = lightnessGradient;
+		};
+
+		updateLightnessGradient();
+
+		lightnessSlider.addEventListener("input", (e) => {
+			const value = parseInt((e.target as HTMLInputElement).value);
+			this.plugin.settings.obasLightness = value;
+			onChangeCallback(value);
+		});
+
+		// 存储滑块引用以便后续更新
+		this.lightnessSlider = lightnessSlider;
+
+		return setting;
+	}
+
+	// 创建色相渐变
+	private createHueGradient(): string {
+		const stops = [];
+		// 创建更平滑的色相渐变，每30度一个颜色点
+		for (let i = 0; i <= 360; i += 30) {
+			stops.push(`hsl(${i}, 100%, 50%) ${(i / 360) * 100}%`);
+		}
+		// 添加最后一个点确保渐变完整
+		stops.push(`hsl(360, 100%, 50%) 100%`);
+		return `linear-gradient(to right, ${stops.join(", ")})`;
+	}
+
+	// 创建饱和度渐变
+	private createSaturationGradient(hue: number, lightness: number): string {
+		return `linear-gradient(to right, hsl(${hue}, 0%, ${lightness}%), hsl(${hue}, 100%, ${lightness}%))`;
+	}
+
+	// 创建亮度渐变
+	private createLightnessGradient(hue: number, saturation: number): string {
+		return `linear-gradient(to right, hsl(${hue}, ${saturation}%, 0%), hsl(${hue}, ${saturation}%, 50%), hsl(${hue}, ${saturation}%, 100%))`;
+	}
+
+	// 更新所有滑块的渐变背景
+	private updateSliderGradients(): void {
+		if (this.saturationSlider) {
+			const hue = this.plugin.settings.obasHue;
+			const lightness = this.plugin.settings.obasLightness;
+			const saturationGradient = this.createSaturationGradient(
+				hue,
+				lightness
+			);
+			this.saturationSlider.style.background = saturationGradient;
+		}
+
+		if (this.lightnessSlider) {
+			const hue = this.plugin.settings.obasHue;
+			const saturation = this.plugin.settings.obasSaturation;
+			const lightnessGradient = this.createLightnessGradient(
+				hue,
+				saturation
+			);
+			this.lightnessSlider.style.background = lightnessGradient;
+		}
 	}
 }
