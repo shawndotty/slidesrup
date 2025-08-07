@@ -1,11 +1,18 @@
 import { App } from "obsidian";
 import { OBASAssistantSettings } from "../types";
-import { SLIDES_EXTENDED_PLUGIN_FOLDER } from "../constants";
+import {
+	SLIDES_EXTENDED_PLUGIN_FOLDER,
+	ADVANCED_SLIDES_PLUGIN_FOLDER,
+} from "../constants";
 
 export class CssService {
 	private obasHslFilePath: string;
 	constructor(private app: App, private settings: OBASAssistantSettings) {
-		this.obasHslFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/Styles/my-obas-hsl.css`;
+		if (this.settings.presentationPlugin === "slidesExtended") {
+			this.obasHslFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/dist/Styles/my-obas-hsl.css`;
+		} else {
+			this.obasHslFilePath = `${this.app.vault.configDir}/${ADVANCED_SLIDES_PLUGIN_FOLDER}/dist/Styles/my-obas-hsl.css`;
+		}
 	}
 
 	async modifyObasHslFile() {

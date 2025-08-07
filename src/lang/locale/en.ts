@@ -228,4 +228,6 @@ export default {
 	"Presentation Plugin": "Presentation Plugin",
 	"Please select your presentation plugin":
 		"Please select your presentation plugin",
+	"Slides Extended": "Slides Extended",
+	"Advanced Slides": "Advanced Slides",
 };

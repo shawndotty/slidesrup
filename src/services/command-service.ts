@@ -7,10 +7,15 @@ import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
-import { SLIDES_EXTENDED_PLUGIN_FOLDER } from "../constants";
+import {
+	SLIDES_EXTENDED_PLUGIN_FOLDER,
+	ADVANCED_SLIDES_PLUGIN_FOLDER,
+} from "../constants";
 
 export class CommandService {
 	private slidesMaker: SlidesMaker;
+	private presentationPluginFolder: string;
+	private revealAddOnsViewName: string;
 
 	constructor(
 		private addCommand: (command: Command) => void,
@@ -19,6 +24,13 @@ export class CommandService {
 		private templaterService: TemplaterService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
+		if (this.settings.presentationPlugin === "slidesExtended") {
+			this.presentationPluginFolder = SLIDES_EXTENDED_PLUGIN_FOLDER;
+			this.revealAddOnsViewName = "reveal";
+		} else {
+			this.presentationPluginFolder = ADVANCED_SLIDES_PLUGIN_FOLDER;
+			this.revealAddOnsViewName = "revealAS";
+		}
 	}
 
 	// 优化：抽取公共逻辑，减少重复代码
@@ -118,7 +130,7 @@ export class CommandService {
 				baseID: this.settings.updateIDs.style.baseID,
 				tableID: this.settings.updateIDs.style.tableID,
 				viewID: this.settings.updateIDs.style.viewID,
-				targetFolderPath: `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}`,
+				targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 			}
 		);
 
@@ -136,12 +148,18 @@ export class CommandService {
 		createNocoDBCommand(
 			"update-reveal-addons",
 			t("Get The Latest Version OBAS Reveal Addons"),
-			{
-				baseID: this.settings.updateIDs.reveal.baseID,
-				tableID: this.settings.updateIDs.reveal.tableID,
-				viewID: this.settings.updateIDs.reveal.viewID,
-				targetFolderPath: `${this.app.vault.configDir}`,
-			}
+			(() => {
+				const update =
+					this.settings.updateIDs[
+						this.revealAddOnsViewName as "reveal" | "revealAS"
+					];
+				return {
+					baseID: update.baseID,
+					tableID: update.tableID,
+					viewID: update.viewID,
+					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
+				};
+			})()
 		);
 
 		createNocoDBCommand(
@@ -165,7 +183,7 @@ export class CommandService {
 					baseID: this.settings.updateIDs.style.baseID,
 					tableID: this.settings.updateIDs.style.tableID,
 					viewID: this.settings.updateIDs.style.viewID,
-					targetFolderPath: `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}`,
+					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 				});
 				new Notice(t("Styles updated."));
 
@@ -177,12 +195,22 @@ export class CommandService {
 				});
 				new Notice(t("Templates updated."));
 
-				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.reveal.baseID,
-					tableID: this.settings.updateIDs.reveal.tableID,
-					viewID: this.settings.updateIDs.reveal.viewID,
-					targetFolderPath: `${this.app.vault.configDir}`,
-				});
+				await this.runNocoDBCommand(
+					(() => {
+						const update =
+							this.settings.updateIDs[
+								this.revealAddOnsViewName as
+									| "reveal"
+									| "revealAS"
+							];
+						return {
+							baseID: update.baseID,
+							tableID: update.tableID,
+							viewID: update.viewID,
+							targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
+						};
+					})()
+				);
 				new Notice(t("Reveal template updated."));
 
 				await this.runNocoDBCommand({
