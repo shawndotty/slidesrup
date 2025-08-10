@@ -7,6 +7,7 @@ import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 import { SettingConfig } from "src/types";
 import { TabbedSettings } from "./tabbed-settings";
+import { DEFAULT_SETTINGS } from "../models/default-settings";
 import { inherits } from "util";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
@@ -1330,12 +1331,32 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			value: this.plugin.settings[settingKey] as string,
 		});
 
+		// 创建“恢复默认”按钮
+		const resetIcon = setting.controlEl.createEl("span", {
+			attr: { title: "恢复默认" },
+			cls: "obas-reset-color-btn",
+		});
+		resetIcon.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:middle;"><path d="M8 2a6 6 0 1 1-6 6" stroke="currentColor" stroke-width="1.5" fill="none"/><polyline points="2 2 8 2 8 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+		// 获取默认值
+		const defaultValue =
+			(DEFAULT_SETTINGS[settingKey] as string) || "#000000";
+
+		// 监听颜色变化
 		colorInput.addEventListener("change", async (e) => {
 			const target = e.target as HTMLInputElement;
 			const value = target.value;
 			(this.plugin.settings[settingKey] as any) = value;
 			await this.plugin.saveSettings();
 			onChangeCallback(value);
+		});
+
+		// 监听“恢复默认”按钮点击
+		resetIcon.addEventListener("click", async () => {
+			(this.plugin.settings[settingKey] as any) = defaultValue;
+			colorInput.value = defaultValue;
+			await this.plugin.saveSettings();
+			onChangeCallback(defaultValue);
 		});
 
 		return setting;
