@@ -289,3 +289,11 @@ input.invalid-input {
     border-top: 1px solid var(--background-modifier-border);
     opacity: 0.5;
 }
+
+h2.obas-assistant-title{
+    font-size: 1.5em;
+}
+
+h3.obas-assistant-title{
+    font-size: 1.2em;
+}

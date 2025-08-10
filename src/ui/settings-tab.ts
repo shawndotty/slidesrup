@@ -1,4 +1,4 @@
-import { App, debounce, PluginSettingTab, Setting } from "obsidian";
+import { App, debounce, PluginSettingTab, Setting, setIcon } from "obsidian";
 import { t } from "../lang/helpers";
 import OBASAssistant from "../main";
 import { isValidApiKey, isValidEmail } from "../utils";
@@ -271,7 +271,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	private renderThemeSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Theme Colors"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		const colorPreviewBlock = this.createColorPreview(containerEl);
@@ -327,6 +327,12 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			this.updateSliderGradients();
 		});
 
+		// 标题颜色设置
+		containerEl.createEl("h2", {
+			text: t("Customize Colors"),
+			cls: "obas-assistant-title",
+		});
+
 		this.createToggleSetting(containerEl, {
 			name: "Use User Color Setting",
 			desc: "Use User Color Setting",
@@ -342,10 +348,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		});
 
-		// 标题颜色设置
-		containerEl.createEl("h2", {
+		containerEl.createEl("h3", {
 			text: t("Heading Colors"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		this.createColorSetting(
@@ -397,9 +402,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 
 		// 正文颜色设置
-		containerEl.createEl("h2", {
+		containerEl.createEl("h3", {
 			text: t("Body Colors"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		this.createColorSetting(
@@ -551,7 +556,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", {
 			text: t("Font Family"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		this.createGroupedDropdownSetting(
@@ -629,7 +634,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", {
 			text: t("Font Size"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		this.createSizeSliderSetting(
@@ -706,7 +711,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		// 标题文字变换设置
 		containerEl.createEl("h2", {
 			text: t("Text Transform"),
-			cls: "my-plugin-title",
+			cls: "obas-assistant-title",
 		});
 
 		this.createDropdownSetting(
@@ -1332,11 +1337,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 
 		// 创建“恢复默认”按钮
-		const resetIcon = setting.controlEl.createEl("span", {
-			attr: { title: "恢复默认" },
+		const resetIcon = setting.controlEl.createEl("button", {
 			cls: "obas-reset-color-btn",
+			attr: {
+				"aria-label": t("Use Default Value"),
+			},
 		});
-		resetIcon.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:middle;"><path d="M8 2a6 6 0 1 1-6 6" stroke="currentColor" stroke-width="1.5" fill="none"/><polyline points="2 2 8 2 8 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+		setIcon(resetIcon, "refresh");
 
 		// 获取默认值
 		const defaultValue =

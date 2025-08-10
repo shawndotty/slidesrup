@@ -323,4 +323,6 @@ export default {
 	Lowercase: "Lowercase",
 	"Use User Color Setting": "Use User Color Setting",
 	"Use User Typography Setting": "Use User Typography Setting",
+	"Use Default Value": "Use Default Value",
+	"Customize Colors": "Customize Colors",
 };
