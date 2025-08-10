@@ -74,4 +74,6 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasH4Size: 56,
 	obasH5Size: 48,
 	obasH6Size: 40,
+	// 标题文字变换默认值
+	obasHeadingTextTransform: "none",
 };

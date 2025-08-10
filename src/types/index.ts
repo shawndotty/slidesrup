@@ -74,6 +74,8 @@ export interface OBASAssistantSettings {
 	obasH4Size: number;
 	obasH5Size: number;
 	obasH6Size: number;
+	// 标题文字变换
+	obasHeadingTextTransform: string;
 }
 
 export interface NocoDBTable {

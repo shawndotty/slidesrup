@@ -285,5 +285,12 @@ export default {
 	"Font Family": "Font Family",
 	"Font Size": "Font Size",
 	"Body Size": "Body Size",
-	"Adjudt the font size of body": "Adjudt the font size of body",
+	"Adjust the font size of body": "Adjudt the font size of body",
+	"Text Transform": "Text Transform",
+	"Heading Text Transform": "Heading Text Transform",
+	"Set text transform for all headings":
+		"Set text transform for all headings",
+	Capitalize: "Capitalize",
+	Uppercase: "Uppercase",
+	Lowercase: "Lowercase",
 };

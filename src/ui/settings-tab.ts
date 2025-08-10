@@ -548,6 +548,26 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			36,
 			onFontChange
 		);
+
+		// 标题文字变换设置
+		containerEl.createEl("h2", {
+			text: t("Text Transform"),
+			cls: "my-plugin-title",
+		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Heading Text Transform",
+			"Set text transform for all headings",
+			"obasHeadingTextTransform",
+			{
+				none: "None",
+				capitalize: "Capitalize",
+				uppercase: "Uppercase",
+				lowercase: "Lowercase",
+			},
+			onFontChange
+		);
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {

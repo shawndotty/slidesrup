@@ -35,6 +35,7 @@ export class TypographyService {
 			obasH4Size,
 			obasH5Size,
 			obasH6Size,
+			obasHeadingTextTransform,
 		} = this.settings as OBASAssistantSettings;
 
 		// 系统字体映射表
@@ -116,26 +117,33 @@ ${imports}
     --r-heading4-size: ${obasH4Size}px;
     --r-heading5-size: ${obasH5Size}px;
     --r-heading6-size: ${obasH6Size}px;
+    --r-heading-text-transform: ${obasHeadingTextTransform};
 }
 
 /* Apply heading level specific fonts and sizes for Reveal-based slide plugins */
 .reveal h1 { 
 	font-family: var(--r-h1-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 .reveal h2 { 
 	font-family: var(--r-h2-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 .reveal h3 { 
 	font-family: var(--r-h3-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 .reveal h4 { 
 	font-family: var(--r-h4-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 .reveal h5 { 
 	font-family: var(--r-h5-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 .reveal h6 { 
 	font-family: var(--r-h6-font); 
+	text-transform: var(--r-heading-text-transform);
 }
 `;
 

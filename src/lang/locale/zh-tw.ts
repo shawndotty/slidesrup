@@ -242,5 +242,8 @@ export default {
 	"Font Family": "字體",
 	"Font Size": "字號",
 	"Body Size": "正文字號",
-	"Adjudt the font size of body": "調整正文字號",
+	"Adjust the font size of body": "調整正文字號",
+	"Text Transform": "文字變換",
+	"Heading Text Transform": "標題文字變換",
+	"Set text transform for all headings": "設定所有標題的文字變換",
 };
