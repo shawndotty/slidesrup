@@ -59,6 +59,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasLightness: 50,
 	obasHeadingFont: "sysKaiti",
 	obasMainFont: "sysKaiti",
+	obasMainFontSize: 36,
 	// 各级标题默认与 Heading 一致
 	obasH1Font: "sysKaiti",
 	obasH2Font: "sysKaiti",
@@ -66,4 +67,11 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasH4Font: "sysKaiti",
 	obasH5Font: "sysKaiti",
 	obasH6Font: "sysKaiti",
+	// 各级标题字号默认值
+	obasH1Size: 108,
+	obasH2Size: 72,
+	obasH3Size: 64,
+	obasH4Size: 56,
+	obasH5Size: 48,
+	obasH6Size: 40,
 };

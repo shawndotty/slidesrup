@@ -395,6 +395,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		];
 
+		containerEl.createEl("h2", {
+			text: t("Font Family"),
+			cls: "my-plugin-title",
+		});
+
 		this.createGroupedDropdownSetting(
 			containerEl,
 			"Main Font",
@@ -465,6 +470,82 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H6 Font",
 			"obasH6Font",
 			fontOptionsGrouped,
+			onFontChange
+		);
+
+		containerEl.createEl("h2", {
+			text: t("Font Size"),
+			cls: "my-plugin-title",
+		});
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"Body Size",
+			"Adjust the font size of body",
+			"obasMainFontSize",
+			12,
+			72,
+			onFontChange
+		);
+
+		// 各级标题字号设置（H1-H6）
+		this.createSizeSliderSetting(
+			containerEl,
+			"H1 Size",
+			"Adjust the font size of H1",
+			"obasH1Size",
+			12,
+			180,
+			onFontChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"H2 Size",
+			"Adjust the font size of H2",
+			"obasH2Size",
+			12,
+			144,
+			onFontChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"H3 Size",
+			"Adjust the font size of H3",
+			"obasH3Size",
+			12,
+			108,
+			onFontChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"H4 Size",
+			"Adjust the font size of H4",
+			"obasH4Size",
+			12,
+			72,
+			onFontChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"H5 Size",
+			"Adjust the font size of H5",
+			"obasH5Size",
+			12,
+			54,
+			onFontChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"H6 Size",
+			"Adjust the font size of H6",
+			"obasH6Size",
+			12,
+			36,
 			onFontChange
 		);
 	}
@@ -1005,5 +1086,57 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			);
 			this.lightnessSlider.style.background = lightnessGradient;
 		}
+	}
+
+	// 创建字号滑块设置
+	private createSizeSliderSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		settingKey:
+			| "obasH1Size"
+			| "obasH2Size"
+			| "obasH3Size"
+			| "obasH4Size"
+			| "obasH5Size"
+			| "obasH6Size"
+			| "obasMainFontSize",
+		min: number,
+		max: number,
+		onChangeCallback: (value: number) => void
+	) {
+		const setting = new Setting(containerEl)
+			.setName(t(nameKey as any))
+			.setDesc(t(descKey as any));
+
+		const sliderContainer = setting.controlEl.createDiv({
+			cls: "obas-size-slider-container",
+		});
+
+		const sizeSlider = sliderContainer.createEl("input", {
+			type: "range",
+			cls: "obas-size-slider",
+			attr: {
+				min: min.toString(),
+				max: max.toString(),
+				step: "1",
+				value: this.plugin.settings[settingKey].toString(),
+			},
+		});
+
+		// 添加数值显示
+		const valueDisplay = sliderContainer.createEl("span", {
+			text: `${this.plugin.settings[settingKey]}px`,
+			cls: "obas-size-value",
+		});
+
+		sizeSlider.addEventListener("input", (e) => {
+			const value = parseInt((e.target as HTMLInputElement).value);
+			this.plugin.settings[settingKey] = value;
+			valueDisplay.setText(`${value}px`);
+			onChangeCallback(value);
+		});
+
+		return setting;
 	}
 }

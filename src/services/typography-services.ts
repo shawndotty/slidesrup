@@ -22,12 +22,19 @@ export class TypographyService {
 		const {
 			obasHeadingFont,
 			obasMainFont,
+			obasMainFontSize,
 			obasH1Font,
 			obasH2Font,
 			obasH3Font,
 			obasH4Font,
 			obasH5Font,
 			obasH6Font,
+			obasH1Size,
+			obasH2Size,
+			obasH3Size,
+			obasH4Size,
+			obasH5Size,
+			obasH6Size,
 		} = this.settings as OBASAssistantSettings;
 
 		// 系统字体映射表
@@ -102,15 +109,34 @@ ${imports}
 	--r-h4-font: ${h4Font};
 	--r-h5-font: ${h5Font};
 	--r-h6-font: ${h6Font};
+    --r-main-font-size: ${obasMainFontSize}px;
+    --r-heading1-size: ${obasH1Size}px;
+    --r-heading2-size: ${obasH2Size}px;
+    --r-heading3-size: ${obasH3Size}px;
+    --r-heading4-size: ${obasH4Size}px;
+    --r-heading5-size: ${obasH5Size}px;
+    --r-heading6-size: ${obasH6Size}px;
 }
 
-/* Apply heading level specific fonts for Reveal-based slide plugins */
-.reveal h1 { font-family: var(--r-h1-font); }
-.reveal h2 { font-family: var(--r-h2-font); }
-.reveal h3 { font-family: var(--r-h3-font); }
-.reveal h4 { font-family: var(--r-h4-font); }
-.reveal h5 { font-family: var(--r-h5-font); }
-.reveal h6 { font-family: var(--r-h6-font); }
+/* Apply heading level specific fonts and sizes for Reveal-based slide plugins */
+.reveal h1 { 
+	font-family: var(--r-h1-font); 
+}
+.reveal h2 { 
+	font-family: var(--r-h2-font); 
+}
+.reveal h3 { 
+	font-family: var(--r-h3-font); 
+}
+.reveal h4 { 
+	font-family: var(--r-h4-font); 
+}
+.reveal h5 { 
+	font-family: var(--r-h5-font); 
+}
+.reveal h6 { 
+	font-family: var(--r-h6-font); 
+}
 `;
 
 		await this.app.vault.adapter.write(

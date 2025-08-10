@@ -59,6 +59,7 @@ export interface OBASAssistantSettings {
 	obasLightness: number;
 	obasHeadingFont: string;
 	obasMainFont: string;
+	obasMainFontSize: number;
 	// 各级标题字体
 	obasH1Font: string;
 	obasH2Font: string;
@@ -66,6 +67,13 @@ export interface OBASAssistantSettings {
 	obasH4Font: string;
 	obasH5Font: string;
 	obasH6Font: string;
+	// 各级标题字号
+	obasH1Size: number;
+	obasH2Size: number;
+	obasH3Size: number;
+	obasH4Size: number;
+	obasH5Size: number;
+	obasH6Size: number;
 }
 
 export interface NocoDBTable {
