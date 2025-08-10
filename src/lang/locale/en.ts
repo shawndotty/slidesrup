@@ -293,4 +293,5 @@ export default {
 	Capitalize: "Capitalize",
 	Uppercase: "Uppercase",
 	Lowercase: "Lowercase",
+	Initial: "Initial",
 };

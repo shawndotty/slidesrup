@@ -7,6 +7,7 @@ import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 import { SettingConfig } from "src/types";
 import { TabbedSettings } from "./tabbed-settings";
+import { inherits } from "util";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
@@ -565,6 +566,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				capitalize: "Capitalize",
 				uppercase: "Uppercase",
 				lowercase: "Lowercase",
+				initial: "Initial",
 			},
 			onFontChange
 		);
