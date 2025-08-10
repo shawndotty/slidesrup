@@ -57,4 +57,13 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasHue: 225,
 	obasSaturation: 100,
 	obasLightness: 50,
+	obasHeadingFont: "sysKaiti",
+	obasMainFont: "sysKaiti",
+	// 各级标题默认与 Heading 一致
+	obasH1Font: "sysKaiti",
+	obasH2Font: "sysKaiti",
+	obasH3Font: "sysKaiti",
+	obasH4Font: "sysKaiti",
+	obasH5Font: "sysKaiti",
+	obasH6Font: "sysKaiti",
 };

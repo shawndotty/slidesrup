@@ -50,6 +50,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					this.renderThemeSettings(content),
 			},
 			{
+				title: "Font Setting",
+				renderMethod: (content: HTMLElement) =>
+					this.renderFontSettings(content),
+			},
+			{
 				title: "Slide Settings",
 				renderMethod: (content: HTMLElement) =>
 					this.renderSlideSettings(content),
@@ -305,6 +310,163 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			// 更新饱和度滑块的渐变背景
 			this.updateSliderGradients();
 		});
+	}
+
+	private renderFontSettings(containerEl: HTMLElement): void {
+		const onFontChange = debounce(
+			async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.services.typographyService.modifyObasTypographyFile();
+			},
+			200,
+			true
+		);
+
+		// Obsidian 的 Setting API（即 addDropdown）本身并不支持原生的分组（optgroup）功能。
+		// 如果需要分组效果，需要自定义实现，或者直接操作 DOM。
+		// 下面是一个简单的实现方式，直接操作 dropdown 的 select 元素，插入 optgroup。
+
+		const fontOptionsGrouped: Array<{
+			label: string;
+			options: Record<string, string>;
+		}> = [
+			{
+				label: "系统字体",
+				options: {
+					sysKaiti: "楷体",
+					sysHeiti: "黑体",
+					sysSongTi: "宋体",
+					sysFangSongTi: "仿宋",
+				},
+			},
+			{
+				label: "黑体",
+				options: {
+					opsa: t("opsa"),
+					dyzgt: t("dyzgt"),
+					hzpyt: t("hzpyt"),
+					xwmh: t("xwmh"),
+				},
+			},
+			{
+				label: "宋体",
+				options: {
+					opsa: t("systcn"),
+					xwxzs: t("xwxzs"),
+					pxzs: t("pxzs"),
+					nswt: t("nswt"),
+					mspyt: t("mspyt"),
+				},
+			},
+			{
+				label: "楷体",
+				options: {
+					xwwk: t("xwwk"),
+					jxzk: t("jxzk"),
+				},
+			},
+			{
+				label: "硬笔手写体",
+				options: {
+					qssxt: t("qssxt"),
+					prsxt: t("prsxt"),
+				},
+			},
+			{
+				label: "毛笔手写体",
+				options: {
+					qtbfsxt: t("qtbfsxt"),
+					pmzdzgkt: t("pmzdzgkt"),
+					pmzdcsd: t("pmzdcsd"),
+				},
+			},
+			{
+				label: "英文字体",
+				options: {
+					sysEnglishSans: "Arial",
+					sysEnglishSerif: "Times New Roman",
+					sysEnglishMono: "Courier New",
+					sysRoboto: "Roboto",
+					sysOpenSans: "Open Sans",
+					sysLato: "Lato",
+					sysMontserrat: "Montserrat",
+					sysSourceSansPro: "Source Sans Pro",
+				},
+			},
+		];
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"Main Font",
+			"Set Main Font",
+			"obasMainFont",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"Heading Font",
+			"Set Heading Font",
+			"obasHeadingFont",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		// 各级标题字体（H1-H6）
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H1 Font",
+			"Set H1 Font",
+			"obasH1Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H2 Font",
+			"Set H2 Font",
+			"obasH2Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H3 Font",
+			"Set H3 Font",
+			"obasH3Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H4 Font",
+			"Set H4 Font",
+			"obasH4Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H5 Font",
+			"Set H5 Font",
+			"obasH5Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"H6 Font",
+			"Set H6 Font",
+			"obasH6Font",
+			fontOptionsGrouped,
+			onFontChange
+		);
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
@@ -659,6 +821,47 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 
 		return setting;
+	}
+
+	private createGroupedDropdownSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		settingKey: SettingsKeys,
+		optionsGrouped: Array<{
+			label: string;
+			options: Record<string, string>;
+		}>,
+		onChangeCallback?: (value: string) => void
+	): Setting {
+		return this.createBaseSetting(
+			containerEl,
+			nameKey,
+			descKey
+		).addDropdown((dropdown) => {
+			// 先清空默认选项
+			dropdown.selectEl.innerHTML = "";
+
+			optionsGrouped.forEach((group) => {
+				const optgroup = document.createElement("optgroup");
+				optgroup.label = group.label;
+				for (const [key, value] of Object.entries(group.options)) {
+					const option = document.createElement("option");
+					option.value = key;
+					option.text = value;
+					optgroup.appendChild(option);
+				}
+				dropdown.selectEl.appendChild(optgroup);
+			});
+
+			dropdown
+				.setValue(this.plugin.settings[settingKey] as string)
+				.onChange(async (value) => {
+					(this.plugin.settings[settingKey] as any) = value;
+					await this.plugin.saveSettings();
+					await onChangeCallback?.(value);
+				});
+		});
 	}
 
 	// 创建饱和度选择器

@@ -57,6 +57,15 @@ export interface OBASAssistantSettings {
 	obasHue: number;
 	obasSaturation: number;
 	obasLightness: number;
+	obasHeadingFont: string;
+	obasMainFont: string;
+	// 各级标题字体
+	obasH1Font: string;
+	obasH2Font: string;
+	obasH3Font: string;
+	obasH4Font: string;
+	obasH5Font: string;
+	obasH6Font: string;
 }
 
 export interface NocoDBTable {
