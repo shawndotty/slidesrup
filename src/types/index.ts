@@ -76,6 +76,22 @@ export interface OBASAssistantSettings {
 	obasH6Size: number;
 	// 标题文字变换
 	obasHeadingTextTransform: string;
+	// 各级标题颜色
+	obasH1Color: string;
+	obasH2Color: string;
+	obasH3Color: string;
+	obasH4Color: string;
+	obasH5Color: string;
+	obasH6Color: string;
+	// 正文颜色
+	obasBodyColor: string;
+	obasParagraphColor: string;
+	obasListColor: string;
+	obasStrongColor: string;
+	obasEmColor: string;
+	obasLinkColor: string;
+	enableObasTypographyUserSetting: boolean;
+	enableObasColorUserSetting: boolean;
 }
 
 export interface NocoDBTable {

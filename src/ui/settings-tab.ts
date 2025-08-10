@@ -268,6 +268,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderThemeSettings(containerEl: HTMLElement): void {
+		containerEl.createEl("h2", {
+			text: t("Theme Colors"),
+			cls: "my-plugin-title",
+		});
+
 		const colorPreviewBlock = this.createColorPreview(containerEl);
 
 		const setPreviewColor = () => {
@@ -281,8 +286,17 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onHslChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.cssService.modifyObasHslFile();
+				await this.plugin.services.obasStyleService.modifyObasHslFile();
 				setPreviewColor();
+			},
+			200,
+			true
+		);
+
+		const onColorChange = debounce(
+			async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.services.obasStyleService.modifyObasColorFile();
 			},
 			200,
 			true
@@ -311,13 +325,136 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			// 更新饱和度滑块的渐变背景
 			this.updateSliderGradients();
 		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Use User Color Setting",
+			desc: "Use User Color Setting",
+			value: this.plugin.settings.enableObasColorUserSetting,
+			onChange: async (value) => {
+				this.plugin.settings.enableObasColorUserSetting = value;
+				await this.plugin.saveSettings();
+				if (value) {
+					await this.plugin.services.obasStyleService.modifyObasColorFile();
+				} else {
+					await this.plugin.services.obasStyleService.clearObasColorFile();
+				}
+			},
+		});
+
+		// 标题颜色设置
+		containerEl.createEl("h2", {
+			text: t("Heading Colors"),
+			cls: "my-plugin-title",
+		});
+
+		this.createColorSetting(
+			containerEl,
+			"H1 Color",
+			"Set the color for H1 headings",
+			"obasH1Color",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"H2 Color",
+			"Set the color for H2 headings",
+			"obasH2Color",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"H3 Color",
+			"Set the color for H3 headings",
+			"obasH3Color",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"H4 Color",
+			"Set the color for H4 headings",
+			"obasH4Color",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"H5 Color",
+			"Set the color for H5 headings",
+			"obasH5Color",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"H6 Color",
+			"Set the color for H6 headings",
+			"obasH6Color",
+			onColorChange
+		);
+
+		// 正文颜色设置
+		containerEl.createEl("h2", {
+			text: t("Body Colors"),
+			cls: "my-plugin-title",
+		});
+
+		this.createColorSetting(
+			containerEl,
+			"Body Color",
+			"Set the color for body text",
+			"obasBodyColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Paragraph Color",
+			"Set the color for paragraphs",
+			"obasParagraphColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"List Color",
+			"Set the color for lists",
+			"obasListColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Strong Color",
+			"Set the color for strong/bold text",
+			"obasStrongColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Emphasis Color",
+			"Set the color for emphasis/italic text",
+			"obasEmColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Link Color",
+			"Set the color for links",
+			"obasLinkColor",
+			onColorChange
+		);
 	}
 
 	private renderFontSettings(containerEl: HTMLElement): void {
 		const onFontChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.typographyService.modifyObasTypographyFile();
+				await this.plugin.services.obasStyleService.modifyObasTypographyFile();
 			},
 			200,
 			true
@@ -395,6 +532,21 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				},
 			},
 		];
+
+		this.createToggleSetting(containerEl, {
+			name: "Use User Typography Setting",
+			desc: "",
+			value: this.plugin.settings.enableObasTypographyUserSetting,
+			onChange: async (value) => {
+				this.plugin.settings.enableObasTypographyUserSetting = value;
+				await this.plugin.saveSettings();
+				if (value) {
+					await this.plugin.services.obasStyleService.modifyObasTypographyFile();
+				} else {
+					await this.plugin.services.obasStyleService.clearObasTypographyFile();
+				}
+			},
+		});
 
 		containerEl.createEl("h2", {
 			text: t("Font Family"),
@@ -566,7 +718,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				capitalize: "Capitalize",
 				uppercase: "Uppercase",
 				lowercase: "Lowercase",
-				initial: "Initial",
 			},
 			onFontChange
 		);
@@ -1156,6 +1307,34 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			const value = parseInt((e.target as HTMLInputElement).value);
 			this.plugin.settings[settingKey] = value;
 			valueDisplay.setText(`${value}px`);
+			onChangeCallback(value);
+		});
+
+		return setting;
+	}
+
+	// 创建颜色设置
+	private createColorSetting(
+		containerEl: HTMLElement,
+		nameKey: string,
+		descKey: string,
+		settingKey: SettingsKeys,
+		onChangeCallback: (value: string) => void
+	) {
+		const setting = new Setting(containerEl)
+			.setName(t(nameKey as any))
+			.setDesc(t(descKey as any));
+
+		const colorInput = setting.controlEl.createEl("input", {
+			type: "color",
+			value: this.plugin.settings[settingKey] as string,
+		});
+
+		colorInput.addEventListener("change", async (e) => {
+			const target = e.target as HTMLInputElement;
+			const value = target.value;
+			(this.plugin.settings[settingKey] as any) = value;
+			await this.plugin.saveSettings();
 			onChangeCallback(value);
 		});
 

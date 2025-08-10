@@ -76,4 +76,20 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasH6Size: 40,
 	// 标题文字变换默认值
 	obasHeadingTextTransform: "none",
+	// 各级标题颜色默认值
+	obasH1Color: "#2c3e50",
+	obasH2Color: "#34495e",
+	obasH3Color: "#7f8c8d",
+	obasH4Color: "#95a5a6",
+	obasH5Color: "#bdc3c7",
+	obasH6Color: "#ecf0f1",
+	// 正文颜色默认值
+	obasBodyColor: "#2c3e50",
+	obasParagraphColor: "#34495e",
+	obasListColor: "#34495e",
+	obasStrongColor: "#e74c3c",
+	obasEmColor: "#3498db",
+	obasLinkColor: "#9b59b6",
+	enableObasTypographyUserSetting: false,
+	enableObasColorUserSetting: false,
 };
