@@ -17,6 +17,7 @@ import {
 	CompletionResult,
 	CompletionSource,
 } from "@codemirror/autocomplete";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
@@ -815,6 +816,12 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 
 		// 初始化 CodeMirror 编辑器
+		// 推荐一个在暗色模式和亮色模式下都适配性很好的主题：One Dark 主题（由 Atom 编辑器流行的 One Dark 主题移植而来，兼容性和可读性都非常好）。
+		// 你可以在 CodeMirror 编辑器中引入 one-dark 主题扩展，代码如下：
+
+		// 首先需要安装 @codemirror/theme-one-dark 依赖包
+		// npm install @codemirror/theme-one-dark
+
 		const view = new EditorView({
 			state: EditorState.create({
 				doc: this.plugin.settings.customCss || "",
@@ -822,6 +829,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					basicSetup, // 启用基础功能，如行号、括号匹配等
 					css(), // 启用CSS语言高亮
 					autocompletion(), // 添加自动补全功能
+					oneDark, // 适配暗色和亮色模式的主题
 					EditorView.updateListener.of((update) => {
 						// 监听编辑器内容的变化
 						if (update.docChanged) {
@@ -834,6 +842,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			}),
 			parent: editorContainer,
 		});
+
+		// 如果你希望根据 Obsidian 当前的主题自动切换，可以进一步判断 document.body 的 class（比如 "theme-dark"），
+		// 并动态切换 oneDark 或默认主题。
 
 		// 保存设置的方法（防抖处理）
 		const saveCssSetting = debounce(
