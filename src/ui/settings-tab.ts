@@ -8,15 +8,9 @@ import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
 import { SettingConfig } from "src/types";
 import { TabbedSettings } from "./tabbed-settings";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
-import { inherits } from "util";
 import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
-import {
-	autocompletion,
-	CompletionContext,
-	CompletionResult,
-	CompletionSource,
-} from "@codemirror/autocomplete";
+import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
