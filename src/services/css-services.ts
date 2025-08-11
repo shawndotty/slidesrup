@@ -7,9 +7,11 @@ import {
 
 export class ObasStyleService {
 	private obasHslFilePath: string;
-	private obasTypographyFilePath: string;
+	private obasFontFamilyFilePath: string;
+	private obasFontSizeFilePath: string;
 	private obasColorFilePath: string;
 	private obasUserCssFilePath: string;
+	private obasHeadingTransformFilePath: string;
 
 	constructor(private app: App, private settings: OBASAssistantSettings) {
 		const pluginFolder =
@@ -19,9 +21,11 @@ export class ObasStyleService {
 		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
 
 		this.obasHslFilePath = `${basePath}/my-obas-hsl.css`;
-		this.obasTypographyFilePath = `${basePath}/my-obas-typography.css`;
+		this.obasFontFamilyFilePath = `${basePath}/my-obas-font-family.css`;
+		this.obasFontSizeFilePath = `${basePath}/my-obas-font-size.css`;
 		this.obasColorFilePath = `${basePath}/my-obas-color.css`;
 		this.obasUserCssFilePath = `${basePath}/my-obas-style.css`;
+		this.obasHeadingTransformFilePath = `${basePath}/my-obas-heading-transform.css`;
 	}
 
 	async modifyObasHslFile() {
@@ -45,6 +49,24 @@ export class ObasStyleService {
 		await this.app.vault.adapter.write(this.obasHslFilePath, hslSettings);
 	}
 
+	async modifyObasHeadingTransformFile() {
+		const { obasHeadingTextTransform } = this.settings;
+		const settings = `
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+text-transform: ${obasHeadingTextTransform};
+}
+`;
+
+		await this.app.vault.adapter.write(
+			this.obasHeadingTransformFilePath,
+			settings
+		);
+	}
 	/**
 	 * 颜色设置文件生成方法
 	 */
@@ -139,9 +161,14 @@ export class ObasStyleService {
 	/**
 	 * 清空颜色设置文件内容
 	 */
-	async clearObasTypographyFile() {
+	async clearObasFontFamilyFile() {
 		// 将文件内容设置为空字符串，实现清空效果
-		await this.app.vault.adapter.write(this.obasTypographyFilePath, "");
+		await this.app.vault.adapter.write(this.obasFontFamilyFilePath, "");
+	}
+
+	async clearObasFontSizeFile() {
+		// 将文件内容设置为空字符串，实现清空效果
+		await this.app.vault.adapter.write(this.obasFontSizeFilePath, "");
 	}
 
 	/**
@@ -155,24 +182,16 @@ export class ObasStyleService {
 	/**
 	 * 优化后的字体样式文件生成方法
 	 */
-	async modifyObasTypographyFile() {
+	async modifyObasFontFamilyFile() {
 		const {
 			obasHeadingFont,
 			obasMainFont,
-			obasMainFontSize,
 			obasH1Font,
 			obasH2Font,
 			obasH3Font,
 			obasH4Font,
 			obasH5Font,
 			obasH6Font,
-			obasH1Size,
-			obasH2Size,
-			obasH3Size,
-			obasH4Size,
-			obasH5Size,
-			obasH6Size,
-			obasHeadingTextTransform,
 		} = this.settings as OBASAssistantSettings;
 
 		// 系统字体映射表
@@ -247,6 +266,48 @@ ${imports}
 	--r-h4-font: ${h4Font};
 	--r-h5-font: ${h5Font};
 	--r-h6-font: ${h6Font};
+}
+
+/* Apply heading level specific fonts and sizes for Reveal-based slide plugins */
+.reveal h1 { 
+	font-family: var(--r-h1-font); 
+}
+.reveal h2 { 
+	font-family: var(--r-h2-font); 
+}
+.reveal h3 { 
+	font-family: var(--r-h3-font); 
+}
+.reveal h4 { 
+	font-family: var(--r-h4-font); 
+}
+.reveal h5 { 
+	font-family: var(--r-h5-font); 
+}
+.reveal h6 { 
+	font-family: var(--r-h6-font); 
+}
+`;
+
+		await this.app.vault.adapter.write(
+			this.obasFontFamilyFilePath,
+			typographySettings
+		);
+	}
+
+	async modifyObasFontSizeFile() {
+		const {
+			obasMainFontSize,
+			obasH1Size,
+			obasH2Size,
+			obasH3Size,
+			obasH4Size,
+			obasH5Size,
+			obasH6Size,
+		} = this.settings as OBASAssistantSettings;
+
+		const typographySettings = `
+:root {
     --r-main-font-size: ${obasMainFontSize}px;
     --r-heading1-size: ${obasH1Size}px;
     --r-heading2-size: ${obasH2Size}px;
@@ -254,38 +315,11 @@ ${imports}
     --r-heading4-size: ${obasH4Size}px;
     --r-heading5-size: ${obasH5Size}px;
     --r-heading6-size: ${obasH6Size}px;
-    --r-heading-text-transform: ${obasHeadingTextTransform};
-}
-
-/* Apply heading level specific fonts and sizes for Reveal-based slide plugins */
-.reveal h1 { 
-	font-family: var(--r-h1-font); 
-	text-transform: var(--r-heading-text-transform);
-}
-.reveal h2 { 
-	font-family: var(--r-h2-font); 
-	text-transform: var(--r-heading-text-transform);
-}
-.reveal h3 { 
-	font-family: var(--r-h3-font); 
-	text-transform: var(--r-heading-text-transform);
-}
-.reveal h4 { 
-	font-family: var(--r-h4-font); 
-	text-transform: var(--r-heading-text-transform);
-}
-.reveal h5 { 
-	font-family: var(--r-h5-font); 
-	text-transform: var(--r-heading-text-transform);
-}
-.reveal h6 { 
-	font-family: var(--r-h6-font); 
-	text-transform: var(--r-heading-text-transform);
 }
 `;
 
 		await this.app.vault.adapter.write(
-			this.obasTypographyFilePath,
+			this.obasFontSizeFilePath,
 			typographySettings
 		);
 	}

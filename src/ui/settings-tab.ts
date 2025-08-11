@@ -465,15 +465,32 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderFontSettings(containerEl: HTMLElement): void {
-		const onFontChange = debounce(
+		const onFontFamilyChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasTypographyFile();
+				await this.plugin.services.obasStyleService.modifyObasFontFamilyFile();
 			},
 			200,
 			true
 		);
 
+		const onFontSizeChange = debounce(
+			async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.services.obasStyleService.modifyObasFontSizeFile();
+			},
+			200,
+			true
+		);
+
+		const onHeadingTextTransformChange = debounce(
+			async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.services.obasStyleService.modifyObasHeadingTransformFile();
+			},
+			200,
+			true
+		);
 		// Obsidian 的 Setting API（即 addDropdown）本身并不支持原生的分组（optgroup）功能。
 		// 如果需要分组效果，需要自定义实现，或者直接操作 DOM。
 		// 下面是一个简单的实现方式，直接操作 dropdown 的 select 元素，插入 optgroup。
@@ -547,24 +564,24 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		];
 
-		this.createToggleSetting(containerEl, {
-			name: "Use User Typography Setting",
-			desc: "Enable User Typography Setting",
-			value: this.plugin.settings.enableObasTypographyUserSetting,
-			onChange: async (value) => {
-				this.plugin.settings.enableObasTypographyUserSetting = value;
-				await this.plugin.saveSettings();
-				if (value) {
-					await this.plugin.services.obasStyleService.modifyObasTypographyFile();
-				} else {
-					await this.plugin.services.obasStyleService.clearObasTypographyFile();
-				}
-			},
-		});
-
 		containerEl.createEl("h2", {
 			text: t("Font Family"),
 			cls: "obas-assistant-title",
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Use User Font Family Setting",
+			desc: "Enable User Font Family Setting",
+			value: this.plugin.settings.enableObasFontFamilyUserSetting,
+			onChange: async (value) => {
+				this.plugin.settings.enableObasFontFamilyUserSetting = value;
+				await this.plugin.saveSettings();
+				if (value) {
+					await this.plugin.services.obasStyleService.modifyObasFontFamilyFile();
+				} else {
+					await this.plugin.services.obasStyleService.clearObasFontFamilyFile();
+				}
+			},
 		});
 
 		this.createGroupedDropdownSetting(
@@ -573,7 +590,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set Main Font",
 			"obasMainFont",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -582,7 +599,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set Heading Font",
 			"obasHeadingFont",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		// 各级标题字体（H1-H6）
@@ -592,7 +609,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H1 Font",
 			"obasH1Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -601,7 +618,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H2 Font",
 			"obasH2Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -610,7 +627,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H3 Font",
 			"obasH3Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -619,7 +636,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H4 Font",
 			"obasH4Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -628,7 +645,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H5 Font",
 			"obasH5Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		this.createGroupedDropdownSetting(
@@ -637,12 +654,27 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"Set H6 Font",
 			"obasH6Font",
 			fontOptionsGrouped,
-			onFontChange
+			onFontFamilyChange
 		);
 
 		containerEl.createEl("h2", {
 			text: t("Font Size"),
 			cls: "obas-assistant-title",
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Use User Font Size Setting",
+			desc: "Enable User Font Size Setting",
+			value: this.plugin.settings.enableObasFontSizeUserSetting,
+			onChange: async (value) => {
+				this.plugin.settings.enableObasFontSizeUserSetting = value;
+				await this.plugin.saveSettings();
+				if (value) {
+					await this.plugin.services.obasStyleService.modifyObasFontSizeFile();
+				} else {
+					await this.plugin.services.obasStyleService.clearObasFontSizeFile();
+				}
+			},
 		});
 
 		this.createSizeSliderSetting(
@@ -652,7 +684,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasMainFontSize",
 			12,
 			72,
-			onFontChange
+			onFontSizeChange
 		);
 
 		// 各级标题字号设置（H1-H6）
@@ -663,7 +695,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH1Size",
 			12,
 			180,
-			onFontChange
+			onFontSizeChange
 		);
 
 		this.createSizeSliderSetting(
@@ -673,7 +705,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH2Size",
 			12,
 			144,
-			onFontChange
+			onFontSizeChange
 		);
 
 		this.createSizeSliderSetting(
@@ -683,7 +715,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH3Size",
 			12,
 			108,
-			onFontChange
+			onFontSizeChange
 		);
 
 		this.createSizeSliderSetting(
@@ -693,7 +725,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH4Size",
 			12,
 			72,
-			onFontChange
+			onFontSizeChange
 		);
 
 		this.createSizeSliderSetting(
@@ -703,7 +735,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH5Size",
 			12,
 			54,
-			onFontChange
+			onFontSizeChange
 		);
 
 		this.createSizeSliderSetting(
@@ -713,7 +745,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasH6Size",
 			12,
 			36,
-			onFontChange
+			onFontSizeChange
 		);
 
 		// 标题文字变换设置
@@ -733,7 +765,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				uppercase: "Uppercase",
 				lowercase: "Lowercase",
 			},
-			onFontChange
+			onHeadingTextTransformChange
 		);
 	}
 

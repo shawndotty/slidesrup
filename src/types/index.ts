@@ -90,7 +90,8 @@ export interface OBASAssistantSettings {
 	obasStrongColor: string;
 	obasEmColor: string;
 	obasLinkColor: string;
-	enableObasTypographyUserSetting: boolean;
+	enableObasFontFamilyUserSetting: boolean;
+	enableObasFontSizeUserSetting: boolean;
 	enableObasColorUserSetting: boolean;
 
 	customCss: string;
