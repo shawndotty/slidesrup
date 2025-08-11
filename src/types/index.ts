@@ -92,6 +92,9 @@ export interface OBASAssistantSettings {
 	obasLinkColor: string;
 	enableObasTypographyUserSetting: boolean;
 	enableObasColorUserSetting: boolean;
+
+	customCss: string;
+	enableCustomCss: boolean;
 }
 
 export interface NocoDBTable {

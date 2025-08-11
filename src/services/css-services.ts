@@ -9,17 +9,19 @@ export class ObasStyleService {
 	private obasHslFilePath: string;
 	private obasTypographyFilePath: string;
 	private obasColorFilePath: string;
+	private obasUserCssFilePath: string;
 
 	constructor(private app: App, private settings: OBASAssistantSettings) {
-		if (this.settings.presentationPlugin === "slidesExtended") {
-			this.obasHslFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/dist/Styles/my-obas-hsl.css`;
-			this.obasTypographyFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/dist/Styles/my-obas-typography.css`;
-			this.obasColorFilePath = `${this.app.vault.configDir}/${SLIDES_EXTENDED_PLUGIN_FOLDER}/dist/Styles/my-obas-color.css`;
-		} else {
-			this.obasHslFilePath = `${this.app.vault.configDir}/${ADVANCED_SLIDES_PLUGIN_FOLDER}/dist/Styles/my-obas-hsl.css`;
-			this.obasTypographyFilePath = `${this.app.vault.configDir}/${ADVANCED_SLIDES_PLUGIN_FOLDER}/dist/Styles/my-obas-typography.css`;
-			this.obasColorFilePath = `${this.app.vault.configDir}/${ADVANCED_SLIDES_PLUGIN_FOLDER}/dist/Styles/my-obas-color.css`;
-		}
+		const pluginFolder =
+			this.settings.presentationPlugin === "slidesExtended"
+				? SLIDES_EXTENDED_PLUGIN_FOLDER
+				: ADVANCED_SLIDES_PLUGIN_FOLDER;
+		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
+
+		this.obasHslFilePath = `${basePath}/my-obas-hsl.css`;
+		this.obasTypographyFilePath = `${basePath}/my-obas-typography.css`;
+		this.obasColorFilePath = `${basePath}/my-obas-color.css`;
+		this.obasUserCssFilePath = `${basePath}/my-obas-style.css`;
 	}
 
 	async modifyObasHslFile() {
@@ -286,5 +288,15 @@ ${imports}
 			this.obasTypographyFilePath,
 			typographySettings
 		);
+	}
+
+	async modifyObasUserStyleFile() {
+		const { customCss } = this.settings as OBASAssistantSettings;
+		await this.app.vault.adapter.write(this.obasUserCssFilePath, customCss);
+	}
+
+	async clearObasUserStyleFile() {
+		// 将文件内容设置为空字符串，实现清空效果
+		await this.app.vault.adapter.write(this.obasUserCssFilePath, "");
 	}
 }

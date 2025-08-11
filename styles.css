@@ -297,3 +297,11 @@ h2.obas-assistant-title{
 h3.obas-assistant-title{
     font-size: 1.2em;
 }
+
+.setting-item.obas-custom-css{
+    display: block;
+}
+
+.obas-assistant-css-editor {
+    border: 1px solid lightgray;
+}

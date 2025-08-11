@@ -92,4 +92,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasLinkColor: "#9b59b6",
 	enableObasTypographyUserSetting: false,
 	enableObasColorUserSetting: false,
+
+	customCss: "",
+	enableCustomCss: false,
 };

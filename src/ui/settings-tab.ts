@@ -9,6 +9,14 @@ import { SettingConfig } from "src/types";
 import { TabbedSettings } from "./tabbed-settings";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
 import { inherits } from "util";
+import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
+import { css } from "@codemirror/lang-css";
+import {
+	autocompletion,
+	CompletionContext,
+	CompletionResult,
+	CompletionSource,
+} from "@codemirror/autocomplete";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
@@ -60,6 +68,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				title: "Slide Settings",
 				renderMethod: (content: HTMLElement) =>
 					this.renderSlideSettings(content),
+			},
+			{
+				title: "Advanced Settings",
+				renderMethod: (content: HTMLElement) =>
+					this.renderAdvancedSettings(content),
 			},
 		];
 
@@ -335,7 +348,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		this.createToggleSetting(containerEl, {
 			name: "Use User Color Setting",
-			desc: "Use User Color Setting",
+			desc: "Enable User Color Setting",
 			value: this.plugin.settings.enableObasColorUserSetting,
 			onChange: async (value) => {
 				this.plugin.settings.enableObasColorUserSetting = value;
@@ -541,7 +554,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		this.createToggleSetting(containerEl, {
 			name: "Use User Typography Setting",
-			desc: "",
+			desc: "Enable User Typography Setting",
 			value: this.plugin.settings.enableObasTypographyUserSetting,
 			onChange: async (value) => {
 				this.plugin.settings.enableObasTypographyUserSetting = value;
@@ -773,6 +786,65 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+	}
+
+	private renderAdvancedSettings(containerEl: HTMLElement): void {
+		this.createToggleSetting(containerEl, {
+			name: "Use User Customized CSS",
+			desc: "Enable User Customized CSS",
+			value: this.plugin.settings.enableCustomCss,
+			onChange: async (value) => {
+				this.plugin.settings.enableCustomCss = value;
+				await this.plugin.saveSettings();
+				if (value) {
+					await this.plugin.services.obasStyleService.modifyObasUserStyleFile();
+				} else {
+					await this.plugin.services.obasStyleService.clearObasUserStyleFile();
+				}
+			},
+		});
+
+		const setting = new Setting(containerEl)
+			.setName("自定义 CSS")
+			.setDesc("在此输入自定义 CSS 代码，将应用于演示文稿。")
+			.setClass("obas-custom-css");
+
+		// 创建一个 div 元素作为 CodeMirror 的容器
+		const editorContainer = containerEl.createDiv(
+			"obas-assistant-css-editor"
+		);
+
+		// 初始化 CodeMirror 编辑器
+		const view = new EditorView({
+			state: EditorState.create({
+				doc: this.plugin.settings.customCss || "",
+				extensions: [
+					basicSetup, // 启用基础功能，如行号、括号匹配等
+					css(), // 启用CSS语言高亮
+					autocompletion(), // 添加自动补全功能
+					EditorView.updateListener.of((update) => {
+						// 监听编辑器内容的变化
+						if (update.docChanged) {
+							const newCss = update.state.doc.toString();
+							// 使用 debounce 来防止频繁保存，提升性能
+							saveCssSetting(newCss);
+						}
+					}),
+				],
+			}),
+			parent: editorContainer,
+		});
+
+		// 保存设置的方法（防抖处理）
+		const saveCssSetting = debounce(
+			(newCss: string) => {
+				this.plugin.settings.customCss = newCss;
+				this.plugin.saveSettings();
+				this.plugin.services.obasStyleService.modifyObasUserStyleFile();
+			},
+			500,
+			true
+		);
 	}
 
 	private createColorPreview(containerEl: HTMLElement): HTMLElement {

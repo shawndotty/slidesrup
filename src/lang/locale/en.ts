@@ -325,4 +325,9 @@ export default {
 	"Use User Typography Setting": "Use User Typography Setting",
 	"Use Default Value": "Use Default Value",
 	"Customize Colors": "Customize Colors",
+	"Advanced Settings": "Advanced Settings",
+	"Use User Customized CSS": "Use User Customized CSS",
+	"Enable User Customized CSS": "Enable User Customized CSS",
+	"Enable User Typography Setting": "Enable User Typography Setting",
+	"Enable User Color Setting": "Enable User Color Setting",
 };
