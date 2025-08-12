@@ -371,21 +371,6 @@ ${
 	 * 生成字体导入语句
 	 */
 	private generateFontImports(fonts: string[]): string {
-		const systemFonts: Record<string, string> = {
-			sysKaiti: "楷体, KaiTi, STKaiti, serif",
-			sysHeiti: "黑体, SimHei, STHeiti, sans-serif",
-			sysSongTi: "宋体, SimSun, STSong, serif",
-			sysFangSongTi: "仿宋, FangSong, STFangsong, serif",
-			sysEnglishSans: "Arial, Helvetica, sans-serif",
-			sysEnglishSerif: "Times New Roman, Times, serif",
-			sysEnglishMono: "Courier New, Courier, monospace",
-			sysRoboto: "'Roboto', Arial, Helvetica, sans-serif",
-			sysOpenSans: "'Open Sans', Arial, Helvetica, sans-serif",
-			sysLato: "'Lato', Arial, Helvetica, sans-serif",
-			sysMontserrat: "'Montserrat', Arial, Helvetica, sans-serif",
-			sysSourceSansPro: "'Source Sans Pro', Arial, Helvetica, sans-serif",
-		};
-
 		// 只导入一次相同的字体，过滤掉系统字体
 		const uniqueFonts = fonts
 			.filter(
