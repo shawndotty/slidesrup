@@ -170,7 +170,7 @@ export default {
 		"Please choose your personal base layout template",
 	"Choose your personal base layout template":
 		"Choose your personal base layout template",
-	"Theme Setting": "Theme Setting",
+	"Color Setting": "Color Setting",
 	Hue: "Hue",
 	Saturation: "Saturation",
 	Lightness: "Lightness",
@@ -325,7 +325,7 @@ export default {
 	"Use User Font Family Setting": "Use User Font Family Setting",
 	"Use User Font Size Setting": "Use User Font Size Setting",
 	"Use Default Value": "Use Default Value",
-	"Customize Colors": "Customize Colors",
+	"Customize Text Colors": "Customize Text Colors",
 	"Advanced Settings": "Advanced Settings",
 	"Use User Customized CSS": "Use User Customized CSS",
 	"Enable User Customized CSS": "Enable User Customized CSS",

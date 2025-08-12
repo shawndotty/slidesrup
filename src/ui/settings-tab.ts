@@ -50,9 +50,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					this.renderUserSettings(content),
 			},
 			{
-				title: "Theme Setting",
+				title: "Color Setting",
 				renderMethod: (content: HTMLElement) =>
-					this.renderThemeSettings(content),
+					this.renderColorSettings(content),
 			},
 			{
 				title: "Font Setting",
@@ -276,7 +276,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 	}
 
-	private renderThemeSettings(containerEl: HTMLElement): void {
+	private renderColorSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Theme Colors"),
 			cls: "obas-assistant-title",
@@ -337,7 +337,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		// 标题颜色设置
 		containerEl.createEl("h2", {
-			text: t("Customize Colors"),
+			text: t("Customize Text Colors"),
 			cls: "obas-assistant-title",
 		});
 
