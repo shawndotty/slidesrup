@@ -502,6 +502,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			{
 				label: "系统字体",
 				options: {
+					inherit: "无指定",
 					sysKaiti: "楷体",
 					sysHeiti: "黑体",
 					sysSongTi: "宋体",

@@ -203,7 +203,7 @@ export default {
 	"Reload OB": "重新加載",
 	"Presentation Plugin": "演示插件",
 	"Please select your presentation plugin": "請選擇你的演示插件",
-	"Font Setting": "字體設定",
+	"Font Setting": "字體字號設定",
 	"Heading Font": "標題字體",
 	"Set Heading Font": "設定標題字體",
 	"Main Font": "正文字體",

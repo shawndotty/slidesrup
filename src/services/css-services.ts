@@ -291,12 +291,24 @@ ${
 
 		const headingFont = this.getFontFamily(obasHeadingFont);
 		const mainFont = this.getFontFamily(obasMainFont);
-		const h1Font = this.getFontFamily(obasH1Font || obasHeadingFont);
-		const h2Font = this.getFontFamily(obasH2Font || obasHeadingFont);
-		const h3Font = this.getFontFamily(obasH3Font || obasHeadingFont);
-		const h4Font = this.getFontFamily(obasH4Font || obasHeadingFont);
-		const h5Font = this.getFontFamily(obasH5Font || obasHeadingFont);
-		const h6Font = this.getFontFamily(obasH6Font || obasHeadingFont);
+		const h1Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH1Font, obasHeadingFont)
+		);
+		const h2Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH2Font, obasHeadingFont)
+		);
+		const h3Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH3Font, obasHeadingFont)
+		);
+		const h4Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH4Font, obasHeadingFont)
+		);
+		const h5Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH5Font, obasHeadingFont)
+		);
+		const h6Font = this.getFontFamily(
+			this.getHeadingFontOption(obasH6Font, obasHeadingFont)
+		);
 
 		return `:root {
     /* 字体族变量 */
@@ -320,6 +332,17 @@ ${
 
 /* 主体字体 */
 .reveal { font-family: var(--r-main-font); }`;
+	}
+
+	private getHeadingFontOption(
+		levelFont: string | undefined,
+		headingfont: string
+	): string {
+		return levelFont && levelFont.trim() !== "" && levelFont !== "inherit"
+			? levelFont
+			: headingfont === "inherit"
+			? this.settings.obasMainFont
+			: headingfont;
 	}
 
 	/**
