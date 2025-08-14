@@ -458,4 +458,252 @@ export class SlidesMaker {
 			await this.app.workspace.getLeaf().openFile(newFile);
 		}
 	}
+
+	async convertMDToSlide() {
+		// 1. 获取新幻灯片存放位置
+		const newSlideContainer = await this._determineNewSlideLocation();
+		if (newSlideContainer === null) {
+			new Notice(t("Operation cancelled by user"));
+			return;
+		}
+
+		// 2. 获取当前激活文件
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			new Notice("当前没有打开的笔记。");
+			return;
+		}
+
+		// 3. 获取子文件夹名
+		let subFolder = this.settings.customizeSlideFolderName
+			? await new InputModal(
+					this.app,
+					t("Please input slide folder name"),
+					"",
+					true,
+					newSlideContainer
+			  ).openAndGetValue()
+			: undefined;
+		if (!subFolder?.trim()) subFolder = t("Slide");
+
+		const newSlideLocation =
+			newSlideContainer === "/"
+				? subFolder
+				: `${newSlideContainer}/${subFolder}`;
+		await createPathIfNeeded(newSlideLocation);
+
+		// 4. 生成文件名
+		const { slideName, baseLayoutName, tocName } =
+			this._generateNewSlideFilesNames();
+
+		// 5. 检查元数据
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		if (!fileCache || !fileCache.sections) {
+			new Notice("无法获取当前笔记的结构信息。");
+			return;
+		}
+
+		// 6. 读取并处理内容，去除 frontmatter
+		const fullContent = await this.app.vault.read(activeFile);
+		let content = "";
+		if (/^---\s*\n/.test(fullContent)) {
+			const frontmatterEnd = fullContent.indexOf("\n---", 3);
+			if (frontmatterEnd !== -1) {
+				content = fullContent
+					.slice(frontmatterEnd + 4)
+					.replace(/^\s*\n/, "");
+			}
+		} else {
+			content = fullContent;
+		}
+
+		const lines = content.split("\n");
+
+		// 7. 提取所有二号标题，生成 TOC
+		const h2List = lines
+			.map((line) => {
+				const match = line.match(/^##\s+(.*)/);
+				return match ? match[1].trim() : null;
+			})
+			.filter(Boolean) as string[];
+
+		const toc = h2List.length
+			? h2List.map((item, idx) => `+ [${item}](#c-${idx + 1})`).join("\n")
+			: "";
+
+		await this._createAndOpenSlide(newSlideLocation, tocName, toc, false);
+
+		// 8. 生成 BaseLayout 模板
+		const baseLayoutTemplate = await this.getFinalTemplate(
+			this.settings.userBaseLayoutTemplate,
+			baseLayoutWithSteps(),
+			{
+				toc: tocName,
+				tagline: this.settings.tagline,
+				slogan: this.settings.slogan,
+			}
+		);
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			baseLayoutName,
+			baseLayoutTemplate,
+			false
+		);
+
+		// 9. 处理内容，插入分隔符和 slide 注释
+		let headingCount = 0;
+		const newLines: string[] = [];
+		for (const line of lines) {
+			if (/^#{1,6}\s/.test(line)) {
+				headingCount++;
+				if (headingCount > 1) newLines.push("---");
+			}
+			newLines.push(line);
+		}
+		const newContent = newLines.join("\n");
+
+		// 10. 在二号标题前插入章节 slide 注释
+		let h2Index = 0;
+		const modifiedLines: string[] = [];
+		for (const line of newContent.split("\n")) {
+			if (/^##\s+/.test(line)) {
+				h2Index++;
+				modifiedLines.push(
+					`<!-- slide id="c-${h2Index}" template="[[章节-H]]"  class="order-list-with-border" -->\n`
+				);
+			}
+			modifiedLines.push(line);
+		}
+		const modifiedContent = modifiedLines.join("\n");
+
+		// 重新实现：遍历 modifiedContent，提取每个二号标题下的三号标题，并将其以列表形式插入到对应二号标题后面，且三号标题及其内容顺序不变
+		const linesForH2H3 = modifiedContent.split("\n");
+		const resultLines: string[] = [];
+		let currentH2Index = 0; // 当前二号标题序号
+		let h3List: string[] = [];
+		let h3TitleList: {
+			title: string;
+			h2: number;
+			h3: number;
+			lineIdx: number;
+		}[] = [];
+		let h3Index = 0;
+		let inH2 = false;
+
+		// 第一步：收集每个h2下的h3标题及其行号
+		for (let i = 0; i < linesForH2H3.length; i++) {
+			const line = linesForH2H3[i];
+			if (/^##\s+/.test(line)) {
+				currentH2Index++;
+				h3Index = 0;
+				inH2 = true;
+			} else if (/^###\s+/.test(line) && inH2) {
+				h3Index++;
+				const h3Title = line.replace(/^###\s+/, "").trim();
+				h3TitleList.push({
+					title: h3Title,
+					h2: currentH2Index,
+					h3: h3Index,
+					lineIdx: i,
+				});
+			} else if (
+				/^##\s+/.test(line) === false &&
+				/^###\s+/.test(line) === false
+			) {
+				// 其他内容不影响h2/h3状态
+			}
+		}
+
+		// 第二步：遍历，遇到h2时插入h3目录，紧跟在h2标题后
+		currentH2Index = 0;
+		let h3TitleIdx = 0;
+		for (let i = 0; i < linesForH2H3.length; i++) {
+			const line = linesForH2H3[i];
+			if (/^##\s+/.test(line)) {
+				currentH2Index++;
+				resultLines.push(line);
+				// 收集属于当前h2的所有h3
+				const h3s = [];
+				let tempIdx = h3TitleIdx;
+				while (
+					tempIdx < h3TitleList.length &&
+					h3TitleList[tempIdx].h2 === currentH2Index
+				) {
+					const h3 = h3TitleList[tempIdx];
+					h3s.push(`+ [${h3.title}](#c-${h3.h2}-p-${h3.h3})`);
+					tempIdx++;
+				}
+				if (h3s.length > 0) {
+					resultLines.push(...h3s);
+				}
+			} else if (/^###\s+/.test(line)) {
+				// 只推进h3TitleIdx，不在此处插入h3目录
+				h3TitleIdx++;
+				resultLines.push(line);
+			} else {
+				resultLines.push(line);
+			}
+		}
+
+		// 第三步：无需再做h3内容插入，因为原始内容顺序未变，只是在h2后插入了h3目录
+		const finalResultLines = resultLines;
+
+		const ContentWithChapterLink = resultLines.join("\n");
+
+		// 11. 在三号标题前插入页面 slide 注释
+		const linesForH3 = ContentWithChapterLink.split("\n");
+		let currentChapterIndex = 0;
+		let pageIndexInChapter = 0;
+		const finalLines: string[] = [];
+		for (const line of linesForH3) {
+			if (/^##\s+/.test(line)) {
+				currentChapterIndex++;
+				pageIndexInChapter = 0;
+			}
+			if (/^###\s+/.test(line)) {
+				pageIndexInChapter++;
+				finalLines.push(
+					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row" -->\n`
+				);
+			}
+			finalLines.push(line);
+		}
+		const finalContent = finalLines.join("\n");
+
+		// 12. 在第一个 '---' 前插入 TOC
+		const tocEmbed = `---\n\n<!-- slide template="[[目录-H]]"  class="order-list-with-border" -->\n\n## TOC\n\n![[${tocName}]]\n`;
+		const newContentLines = finalContent.split("\n");
+		const tocIndex = newContentLines.findIndex(
+			(line) => line.trim() === "---"
+		);
+		if (tocIndex !== -1) {
+			newContentLines.splice(tocIndex, 0, tocEmbed);
+		} else {
+			newContentLines.unshift(tocEmbed);
+		}
+		const finalContentWithToc = newContentLines.join("\n");
+
+		// 13. 生成最终 frontmatter 和首页
+		const fm = `---
+css: dist/Styles/main.css
+enableLinks: true
+height: 1080
+margin: 0
+defaultTemplate: "[[${baseLayoutName}]]"
+pdfSeparateFragments: false
+theme: moon
+transition: none
+width: 1920
+---`;
+		const home = `<!-- slide id="home" template="[[封面-H]]" -->`;
+
+		const finalContent1 = `${fm.trim()}\n${home}\n\n${finalContentWithToc}`;
+
+		// 14. 创建最终幻灯片
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			slideName,
+			finalContent1
+		);
+	}
 }

@@ -254,5 +254,13 @@ export class CommandService {
 				);
 			},
 		});
+
+		this.addCommand({
+			id: "obas-assistant:covert-to-slide",
+			name: "Convert To Slide",
+			callback: async () => {
+				await this.slidesMaker.convertMDToSlide();
+			},
+		});
 	}
 }
