@@ -276,4 +276,11 @@ export default {
 	"Enable User Font Family Setting": "啟用用戶字體設置",
 	"Enable User Font Size Setting": "啟用用戶字號設置",
 	"Enable User Color Setting": "啟用用戶顏色設置",
+	"Invalid Format: No headings found": "無效格式：未找到標題",
+	"Invalid Format: Document must contain H1, H2, and H3 headings":
+		"無效格式：文件必須包含 H1、H2 和 H3 標題",
+	"No active editor, can't excute this command.":
+		"沒有活動編輯器，無法執行此命令。",
+	"Invalid Format: Document must contain only one H1 heading":
+		"無效格式：文件必須只包含一個一级標題",
 };
