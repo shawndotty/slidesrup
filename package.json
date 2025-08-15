@@ -1,7 +1,7 @@
 {
 	"name": "obas-assistant",
-	"version": "1.4.3",
-	"description": "This is a plugin for assistant OBAS presentation framework",
+	"version": "1.4.4",
+	"description": "This is a assistant plugin for OBAS presentation framework",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
