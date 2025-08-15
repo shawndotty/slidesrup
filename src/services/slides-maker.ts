@@ -470,7 +470,9 @@ export class SlidesMaker {
 		// 2. 获取当前激活文件
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) {
-			new Notice("当前没有打开的笔记。");
+			new Notice(
+				t("No active editor. Please open a file to add a slide.")
+			);
 			return;
 		}
 
@@ -492,30 +494,26 @@ export class SlidesMaker {
 				: `${newSlideContainer}/${subFolder}`;
 		await createPathIfNeeded(newSlideLocation);
 
+		// 确定Design
+
+		let design = this.settings.defaultDesign;
+		if (!design || design === "none") {
+			design = (await this._selectSlideDesign())?.value || "H";
+		}
+		design = design.toUpperCase?.();
+
 		// 4. 生成文件名
 		const { slideName, baseLayoutName, tocName } =
 			this._generateNewSlideFilesNames();
 
-		// 5. 检查元数据
-		const fileCache = this.app.metadataCache.getFileCache(activeFile);
-		if (!fileCache || !fileCache.sections) {
-			new Notice("无法获取当前笔记的结构信息。");
-			return;
+		// 6. 读取并处理内容，去除 frontmatter（优化版）
+		const originalContent = await this.app.vault.read(activeFile);
+		let content = originalContent;
+		const fmMatch = originalContent.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+		if (fmMatch) {
+			content = originalContent.slice(fmMatch[0].length);
 		}
-
-		// 6. 读取并处理内容，去除 frontmatter
-		const fullContent = await this.app.vault.read(activeFile);
-		let content = "";
-		if (/^---\s*\n/.test(fullContent)) {
-			const frontmatterEnd = fullContent.indexOf("\n---", 3);
-			if (frontmatterEnd !== -1) {
-				content = fullContent
-					.slice(frontmatterEnd + 4)
-					.replace(/^\s*\n/, "");
-			}
-		} else {
-			content = fullContent;
-		}
+		content = content.replace(/^\s*\n/, "");
 
 		const lines = content.split("\n");
 
@@ -560,24 +558,26 @@ export class SlidesMaker {
 			}
 			newLines.push(line);
 		}
-		const newContent = newLines.join("\n");
+		const contentWithPageSeparator = newLines.join("\n");
 
 		// 10. 在二号标题前插入章节 slide 注释
 		let h2Index = 0;
 		const modifiedLines: string[] = [];
-		for (const line of newContent.split("\n")) {
+		for (const line of contentWithPageSeparator.split("\n")) {
 			if (/^##\s+/.test(line)) {
 				h2Index++;
 				modifiedLines.push(
-					`<!-- slide id="c-${h2Index}" template="[[章节-H]]"  class="order-list-with-border" -->\n`
+					`<!-- slide id="c-${h2Index}" template="[[${t(
+						"Chapter"
+					)}-${design}]]"  class="order-list-with-border" -->\n`
 				);
 			}
 			modifiedLines.push(line);
 		}
-		const modifiedContent = modifiedLines.join("\n");
+		const contentWithSlideInfo = modifiedLines.join("\n");
 
 		// 重新实现：遍历 modifiedContent，提取每个二号标题下的三号标题，并将其以列表形式插入到对应二号标题后面，且三号标题及其内容顺序不变
-		const linesForH2H3 = modifiedContent.split("\n");
+		const linesForH2H3 = contentWithSlideInfo.split("\n");
 		const resultLines: string[] = [];
 		let currentH2Index = 0; // 当前二号标题序号
 		let h3List: string[] = [];
@@ -606,11 +606,6 @@ export class SlidesMaker {
 					h3: h3Index,
 					lineIdx: i,
 				});
-			} else if (
-				/^##\s+/.test(line) === false &&
-				/^###\s+/.test(line) === false
-			) {
-				// 其他内容不影响h2/h3状态
 			}
 		}
 
@@ -646,7 +641,6 @@ export class SlidesMaker {
 		}
 
 		// 第三步：无需再做h3内容插入，因为原始内容顺序未变，只是在h2后插入了h3目录
-		const finalResultLines = resultLines;
 
 		const ContentWithChapterLink = resultLines.join("\n");
 
@@ -668,11 +662,15 @@ export class SlidesMaker {
 			}
 			finalLines.push(line);
 		}
-		const finalContent = finalLines.join("\n");
+		const contentWithPageId = finalLines.join("\n");
 
 		// 12. 在第一个 '---' 前插入 TOC
-		const tocEmbed = `---\n\n<!-- slide template="[[目录-H]]"  class="order-list-with-border" -->\n\n## TOC\n\n![[${tocName}]]\n`;
-		const newContentLines = finalContent.split("\n");
+		const tocEmbed = `---\n\n<!-- slide template="[[${t(
+			"TOC"
+		)}-${design}]]"  class="order-list-with-border" -->\n\n## ${t(
+			"TOC"
+		)}\n\n![[${tocName}]]\n`;
+		const newContentLines = contentWithPageId.split("\n");
 		const tocIndex = newContentLines.findIndex(
 			(line) => line.trim() === "---"
 		);
@@ -689,21 +687,34 @@ css: dist/Styles/main.css
 enableLinks: true
 height: 1080
 margin: 0
+aliases:
+ - ${activeFile.basename}
 defaultTemplate: "[[${baseLayoutName}]]"
 pdfSeparateFragments: false
 theme: moon
 transition: none
 width: 1920
 ---`;
-		const home = `<!-- slide id="home" template="[[封面-H]]" -->`;
+		const home = `<!-- slide id="home" template="[[${t(
+			"Cover"
+		)}-${design}]]" -->`;
 
-		const finalContent1 = `${fm.trim()}\n${home}\n\n${finalContentWithToc}`;
+		const backPage = `---
+
+<!-- slide template="[[${t(
+			"BackCover"
+		)}-${design}]]" class="order-list-with-border" -->
+
+# ${t("Farewell")}
+`;
+
+		const finalContent = `${fm.trim()}\n${home}\n\n${finalContentWithToc}\n${backPage}`;
 
 		// 14. 创建最终幻灯片
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
-			finalContent1
+			finalContent
 		);
 	}
 }
