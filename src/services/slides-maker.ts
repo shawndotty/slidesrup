@@ -503,6 +503,12 @@ export class SlidesMaker {
 			return;
 		}
 
+		// Check if content already contains slide annotations
+		if (content.includes("<!-- slide")) {
+			new Notice(t("This file is already a slide presentation"));
+			return;
+		}
+
 		// 1. Setup slide location and get active file
 		const { newSlideContainer, newSlideLocation, design } =
 			await this._setupSlideConversion();

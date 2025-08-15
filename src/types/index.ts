@@ -54,6 +54,7 @@ export interface OBASAssistantSettings {
 		reveal: AirtableIds;
 		revealAS: AirtableIds;
 	};
+	obasThemeColor: string;
 	obasHue: number;
 	obasSaturation: number;
 	obasLightness: number;

@@ -257,7 +257,7 @@ export class CommandService {
 
 		this.addCommand({
 			id: "obas-assistant:covert-to-slide",
-			name: "Convert To Slide",
+			name: t("Convert to Slide"),
 			callback: async () => {
 				await this.slidesMaker.convertMDToSlide();
 			},

@@ -54,6 +54,7 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 			viewID: "",
 		},
 	},
+	obasThemeColor: "#0044FF",
 	obasHue: 225,
 	obasSaturation: 100,
 	obasLightness: 50,

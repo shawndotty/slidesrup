@@ -18,7 +18,6 @@ type SettingsKeys = keyof OBASAssistant["settings"];
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
 	private apiService: ApiService;
-	private hueSlider?: HTMLInputElement;
 	private saturationSlider?: HTMLInputElement;
 	private lightnessSlider?: HTMLInputElement;
 
@@ -282,21 +281,10 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			cls: "obas-assistant-title",
 		});
 
-		const colorPreviewBlock = this.createColorPreview(containerEl);
-
-		const setPreviewColor = () => {
-			const { obasHue, obasSaturation, obasLightness } =
-				this.plugin.settings;
-			colorPreviewBlock.style.backgroundColor = `hsl(${obasHue}, ${obasSaturation}%, ${obasLightness}%)`;
-		};
-
-		setPreviewColor(); // Set initial color
-
-		const onHslChange = debounce(
+		const onThemeColorChanges = debounce(
 			async () => {
 				await this.plugin.saveSettings();
 				await this.plugin.services.obasStyleService.modifyObasHslFile();
-				setPreviewColor();
 			},
 			200,
 			true
@@ -311,29 +299,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			true
 		);
 
-		// 创建色相选择器
-		this.createHueSlider(containerEl, (value) => {
-			this.plugin.settings.obasHue = value;
-			onHslChange();
-			// 更新饱和度和亮度滑块的渐变背景
-			this.updateSliderGradients();
-		});
-
-		// 创建饱和度选择器
-		this.createSaturationSlider(containerEl, (value) => {
-			this.plugin.settings.obasSaturation = value;
-			onHslChange();
-			// 更新亮度滑块的渐变背景
-			this.updateSliderGradients();
-		});
-
-		// 创建亮度选择器
-		this.createLightnessSlider(containerEl, (value) => {
-			this.plugin.settings.obasLightness = value;
-			onHslChange();
-			// 更新饱和度滑块的渐变背景
-			this.updateSliderGradients();
-		});
+		this.createColorSetting(
+			containerEl,
+			"Theme Color",
+			"Set the theme color",
+			"obasThemeColor",
+			onThemeColorChanges
+		);
 
 		// 标题颜色设置
 		containerEl.createEl("h2", {

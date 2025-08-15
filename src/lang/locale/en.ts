@@ -339,4 +339,9 @@ export default {
 		"Invalid Format: Document must contain H1, H2, and H3 headings",
 	"Invalid Format: Document must contain only one H1 heading":
 		"Invalid Format: Document must contain only one level 1 heading",
+	"Convert to Slide": "Convert Current File to Slide",
+	"This file is already a slide presentation":
+		"This file is already a slide presentation",
+	"Theme Color": "Theme Color",
+	"Set the theme color": "Set the theme color for the slide presentation",
 };

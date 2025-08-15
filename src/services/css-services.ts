@@ -496,15 +496,57 @@ ${
 
 	// 保留原有方法以保持向后兼容性，但现在提供更精细的控制
 	async modifyObasHslFile() {
-		const {
-			obasHue: hue,
-			obasSaturation: saturation,
-			obasLightness: lightness,
-		} = this.settings;
+		const { obasThemeColor } = this.settings;
+		const hsl = this.colorToHsl(obasThemeColor);
 		await this.updateStyleSection(
 			"hsl",
-			this.generateHslSection(hue, saturation, lightness)
+			this.generateHslSection(hsl.h, hsl.s, hsl.l)
 		);
+	}
+
+	/**
+	 * Convert hex color to HSL color values
+	 * @param hex - Hex color string (e.g. "#ff0000" or "#f00")
+	 * @returns Object containing h, s, l values
+	 */
+	private colorToHsl(hex: string): { h: number; s: number; l: number } {
+		// Convert hex to RGB first
+		const r = parseInt(hex.slice(1, 3), 16) / 255;
+		const g = parseInt(hex.slice(3, 5), 16) / 255;
+		const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+		// Find min and max RGB values
+		const max = Math.max(r, g, b);
+		const min = Math.min(r, g, b);
+
+		// Calculate HSL values
+		let h = 0;
+		let s = 0;
+		const l = (max + min) / 2;
+
+		if (max !== min) {
+			const d = max - min;
+			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+			switch (max) {
+				case r:
+					h = (g - b) / d + (g < b ? 6 : 0);
+					break;
+				case g:
+					h = (b - r) / d + 2;
+					break;
+				case b:
+					h = (r - g) / d + 4;
+					break;
+			}
+			h /= 6;
+		}
+
+		return {
+			h: Math.round(h * 360),
+			s: Math.round(s * 100),
+			l: Math.round(l * 100),
+		};
 	}
 
 	async modifyObasHeadingTransformFile() {

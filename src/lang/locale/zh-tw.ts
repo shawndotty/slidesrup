@@ -283,4 +283,8 @@ export default {
 		"沒有活動編輯器，無法執行此命令。",
 	"Invalid Format: Document must contain only one H1 heading":
 		"無效格式：文件必須只包含一個一级標題",
+	"Convert to Slide": "把當前筆記轉換為幻燈片",
+	"This file is already a slide presentation": "此文件已經是幻燈片演示",
+	"Theme Color": "主題顏色",
+	"Set the theme color": "設定幻燈片演示的主題顏色",
 };

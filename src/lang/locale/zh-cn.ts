@@ -294,4 +294,8 @@ export default {
 		"没有活动编辑器，无法执行此命令。",
 	"Invalid Format: Document must contain only one H1 heading":
 		"无效格式：文档必须只包含一个一级标题",
+	"Convert to Slide": "把当前笔记转换为幻灯片",
+	"This file is already a slide presentation": "此文件已经是幻灯片演示",
+	"Theme Color": "主题颜色",
+	"Set the theme color": "设置幻灯片演示的主题颜色",
 };
