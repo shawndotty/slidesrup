@@ -73,6 +73,12 @@ export class SlidesMaker {
 
 		await createPathIfNeeded(newSlideLocation);
 
+		let slideMode = this.settings.obasSlideMode;
+		if (!slideMode || slideMode === "none") {
+			slideMode = (await this._selectSlideMode())?.value || "light";
+		}
+		slideMode = slideMode.toLowerCase?.() || "light";
+
 		const { slideName, baseLayoutName, tocName } =
 			this._generateNewSlideFilesNames();
 
@@ -107,7 +113,7 @@ export class SlidesMaker {
 
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userSlideTemplate,
-			slideTemplate(),
+			slideTemplate(slideMode),
 			{
 				baseLayout: baseLayoutName,
 				toc: tocName,

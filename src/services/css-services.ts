@@ -400,6 +400,7 @@ ${
 				(font, idx, arr) =>
 					!font.startsWith("sys") && arr.indexOf(font) === idx
 			)
+			.filter((font) => font !== "inherit")
 			.map(
 				(font) =>
 					`@import url('https://cn.windfonts.com/wenfeng/fonts/${font}/regular/web/index.css');`

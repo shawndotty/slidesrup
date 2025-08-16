@@ -86,12 +86,12 @@ ${pages}
 `;
 }
 
-export function getSlideTemplate() {
+export function getSlideTemplate(slideMode: string) {
 	const chaptersAndPages = getChaptersAndPagesTemplate();
 
 	return `
 ---
-css: dist/Styles/main.css
+css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
 defaultTemplate: "[[{{${TEMPLATE_PLACE_HOLDERS.baseLayout}}}]]"
 aliases:
   - {{${TEMPLATE_PLACE_HOLDERS.slideName}}}
