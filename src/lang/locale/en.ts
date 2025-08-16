@@ -344,4 +344,8 @@ export default {
 		"This file is already a slide presentation",
 	"Theme Color": "Theme Color",
 	"Set the theme color": "Set the theme color for the slide presentation",
+	"Slide Mode": "Slide Color Mode",
+	"Set the slide mode": "Set the color mode for the slide presentation",
+	"Light Mode": "Light Mode",
+	"Dark Mode": "Dark Mode",
 };

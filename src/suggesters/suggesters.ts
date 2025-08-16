@@ -35,3 +35,21 @@ export class SlideLocationSuggester extends BaseSuggester {
 		]);
 	}
 }
+
+export class SlideModeSuggester extends BaseSuggester {
+	constructor(app: App) {
+		super(app);
+		this.setOptions([
+			{
+				id: "light",
+				name: t("Light Mode"),
+				value: "light",
+			},
+			{
+				id: "dark",
+				name: t("Dark Mode"),
+				value: "dark",
+			},
+		]);
+	}
+}

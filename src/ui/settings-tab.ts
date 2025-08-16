@@ -307,6 +307,18 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			onThemeColorChanges
 		);
 
+		this.createDropdownSetting(
+			containerEl,
+			"Slide Mode",
+			"Set the slide mode",
+			"obasSlideMode",
+			{
+				none: "Decide At Creation",
+				light: "Light Mode",
+				dark: "Dark Mode",
+			}
+		);
+
 		// 标题颜色设置
 		containerEl.createEl("h2", {
 			text: t("Customize Text Colors"),

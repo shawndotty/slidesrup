@@ -12,6 +12,7 @@ import { SuggesterOption } from "../suggesters/base-suggester";
 import {
 	SlideLocationSuggester,
 	SlideDesignSuggester,
+	SlideModeSuggester,
 } from "../suggesters/suggesters";
 import { OBASAssistantSettings, ReplaceConfig } from "../types";
 import {
@@ -394,6 +395,17 @@ export class SlidesMaker {
 		});
 	}
 
+	private async _selectSlideMode(): Promise<SuggesterOption | null> {
+		const suggester = new SlideModeSuggester(this.app);
+		return new Promise((resolve) => {
+			suggester.onChooseItem = (item: SuggesterOption) => {
+				resolve(item);
+				return item;
+			};
+			suggester.open();
+		});
+	}
+
 	private _getSlideFiles() {
 		const currentFolderPath = get_active_note_folder_path(this.app);
 		return currentFolderPath
@@ -510,7 +522,7 @@ export class SlidesMaker {
 		}
 
 		// 1. Setup slide location and get active file
-		const { newSlideContainer, newSlideLocation, design } =
+		const { newSlideContainer, newSlideLocation, design, slideMode } =
 			await this._setupSlideConversion();
 		if (!newSlideContainer) return;
 
@@ -535,7 +547,8 @@ export class SlidesMaker {
 			design,
 			tocName,
 			baseLayoutName,
-			activeFile
+			activeFile,
+			slideMode
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -551,6 +564,7 @@ export class SlidesMaker {
 		newSlideContainer: string | null;
 		newSlideLocation: string;
 		design: string;
+		slideMode: string;
 	}> {
 		// Get slide location
 		const newSlideContainer = await this._determineNewSlideLocation();
@@ -560,6 +574,7 @@ export class SlidesMaker {
 				newSlideContainer: null,
 				newSlideLocation: "",
 				design: "",
+				slideMode: "",
 			};
 		}
 
@@ -589,7 +604,13 @@ export class SlidesMaker {
 		}
 		design = design.toUpperCase?.() || "";
 
-		return { newSlideContainer, newSlideLocation, design };
+		let slideMode = this.settings.obasSlideMode;
+		if (!slideMode || slideMode === "none") {
+			slideMode = (await this._selectSlideMode())?.value || "light";
+		}
+		slideMode = slideMode.toLowerCase?.() || "light";
+
+		return { newSlideContainer, newSlideLocation, design, slideMode };
 	}
 
 	/**
@@ -691,7 +712,8 @@ export class SlidesMaker {
 		design: string,
 		tocName: string,
 		baseLayoutName: string,
-		activeFile: TFile
+		activeFile: TFile,
+		slideMode: string
 	): Promise<string> {
 		// 1. Add page separators at headings
 		const contentWithSeparators = this._addPageSeparators(lines);
@@ -723,7 +745,8 @@ export class SlidesMaker {
 			contentWithToc,
 			baseLayoutName,
 			design,
-			activeFile
+			activeFile,
+			slideMode
 		);
 	}
 
@@ -900,11 +923,12 @@ export class SlidesMaker {
 		content: string,
 		baseLayoutName: string,
 		design: string,
-		activeFile: TFile
+		activeFile: TFile,
+		slideMode: string
 	): string {
 		// Generate frontmatter
 		const frontmatter = `---
-css: dist/Styles/main.css
+css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
 enableLinks: true
 height: 1080
 margin: 0

@@ -298,4 +298,8 @@ export default {
 	"This file is already a slide presentation": "此文件已经是幻灯片演示",
 	"Theme Color": "主题颜色",
 	"Set the theme color": "设置幻灯片演示的主题颜色",
+	"Slide Mode": "幻灯片颜色模式",
+	"Set the slide mode": "设置幻灯片演示的颜色模式",
+	"Light Mode": "亮色模式",
+	"Dark Mode": "暗色模式",
 };
