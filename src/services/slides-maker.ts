@@ -746,13 +746,32 @@ export class SlidesMaker {
 			design
 		);
 
+		// Convert WikiLink to data-preview-link
+
+		const finalContent =
+			this._convertMarkdownLinksToPreviewLinks(contentWithToc);
+
 		// 6. Generate final content with frontmatter, cover and back pages
 		return this._generateFinalSlideContent(
-			contentWithToc,
+			finalContent,
 			baseLayoutName,
 			design,
 			activeFile,
 			slideMode
+		);
+	}
+
+	/**
+	 * 将文本中的 [name](link) 格式全部转换为 <a href="link" data-preview-link>name</a>
+	 * 其中 name 可以是任意字符，link 必须是 http 或 https 开头的链接
+	 */
+	private _convertMarkdownLinksToPreviewLinks(text: string): string {
+		// 使用正则匹配 [name](link) 形式，link 以 http 或 https 开头
+		return text.replace(
+			/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+			(match, name, link) => {
+				return `<a href="${link}" data-preview-link>${name}</a>`;
+			}
 		);
 	}
 
