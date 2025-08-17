@@ -1,7 +1,7 @@
 {
 	"id": "obas-assistant",
 	"name": "OBAS Assistant",
-	"version": "1.4.4",
+	"version": "1.4.6",
 	"minAppVersion": "0.15.0",
 	"description": "This is a plugin for assistant OBAS presentation framework",
 	"author": "Obsidian",
