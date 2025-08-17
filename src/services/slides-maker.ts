@@ -449,19 +449,26 @@ export class SlidesMaker {
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
-	private _generateNewSlideFilesNames(): {
+	/**
+	 * 优化生成新幻灯片相关文件名的方法，避免重复代码
+	 */
+	private _generateNewSlideFilesNames(targetSlide: string = ""): {
 		slideName: string;
 		baseLayoutName: string;
 		tocName: string;
 	} {
-		const timestamp = getTimeStamp();
+		const base = targetSlide || `${getTimeStamp()}-${t("Slide")}`;
 		return {
-			slideName: `${timestamp}-${t("Slide")}`,
-			baseLayoutName: `${timestamp}-${t("BaseLayout")}`,
-			tocName: `${timestamp}-${t("TOC")}`,
+			slideName: base,
+			baseLayoutName: `${base}-${t("BaseLayout")}`,
+			tocName: `${base}-${t("TOC")}`,
 		};
 	}
 
+	/**
+	 * 创建或更新幻灯片文件，并根据需要打开
+	 * 优化：减少重复判断，简化逻辑
+	 */
 	private async _createAndOpenSlide(
 		location: string,
 		fileName: string,
@@ -469,11 +476,16 @@ export class SlidesMaker {
 		open: boolean = true
 	): Promise<void> {
 		const filePath = `${location}/${fileName}.md`;
+		let file = this.app.vault.getAbstractFileByPath(filePath);
 
-		const newFile = await this.app.vault.create(filePath, content);
+		if (file instanceof TFile) {
+			await this.app.vault.modify(file, content);
+		} else {
+			file = await this.app.vault.create(filePath, content);
+		}
 
-		if (open && newFile instanceof TFile) {
-			await this.app.workspace.getLeaf().openFile(newFile);
+		if (open && file instanceof TFile) {
+			await this.app.workspace.getLeaf().openFile(file);
 		}
 	}
 
@@ -489,7 +501,7 @@ export class SlidesMaker {
 		}
 
 		// 3. Process markdown content
-		const { content, lines, headingsInfo } =
+		const { content, lines, headingsInfo, targetSlide } =
 			await this._extractContentFromFile(activeFile);
 
 		// Validate document structure
@@ -534,7 +546,7 @@ export class SlidesMaker {
 
 		// 2. Generate file names for slide components
 		const { slideName, baseLayoutName, tocName } =
-			this._generateNewSlideFilesNames();
+			this._generateNewSlideFilesNames(targetSlide);
 
 		// 4. Create TOC file
 		await this._createTocFile(newSlideLocation, tocName, lines);
@@ -633,13 +645,15 @@ export class SlidesMaker {
 				end: { line: number; col: number; offset: number };
 			};
 		}>;
+		targetSlide: string;
 	}> {
 		const originalContent = await this.app.vault.read(file);
 		let content = originalContent;
 
 		// Remove frontmatter if present
 		const fileCache = this.app.metadataCache.getFileCache(file);
-		const frontmatterPosition = fileCache?.frontmatter?.position;
+		const frontmatterPosition =
+			fileCache?.frontmatterPosition || fileCache?.frontmatter?.position;
 
 		if (frontmatterPosition) {
 			content = originalContent.slice(frontmatterPosition.end.offset + 1);
@@ -658,7 +672,9 @@ export class SlidesMaker {
 		content = content.replace(/^\s*\n/, "");
 
 		const lines = content.split("\n");
-		return { content, lines, headingsInfo };
+
+		const targetSlide = fileCache?.frontmatter?.targetSlide || "";
+		return { content, lines, headingsInfo, targetSlide };
 	}
 
 	/**
