@@ -98,6 +98,7 @@ export interface OBASAssistantSettings {
 	customCss: string;
 	enableCustomCss: boolean;
 	obasSlideMode: string;
+	obasUserDesigns: string;
 }
 
 export interface NocoDBTable {

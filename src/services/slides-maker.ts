@@ -296,7 +296,8 @@ export class SlidesMaker {
 		const config: ReplaceConfig = { ...replaceConfig };
 
 		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
-			let design = this.settings.defaultDesign;
+			let design =
+				this.settings.obasUserDesigns || this.settings.defaultDesign;
 			if (!design || design === "none") {
 				const designOption = await this._selectSlideDesign();
 				if (!designOption) {
@@ -616,7 +617,8 @@ export class SlidesMaker {
 		await createPathIfNeeded(newSlideLocation);
 
 		// Determine design
-		let design = this.settings.defaultDesign;
+		let design =
+			this.settings.obasUserDesigns || this.settings.defaultDesign;
 		if (!design || design === "none") {
 			design = (await this._selectSlideDesign())?.value || "H";
 		}
@@ -767,6 +769,8 @@ export class SlidesMaker {
 		const finalContent =
 			this._convertMarkdownLinksToPreviewLinks(contentWithToc);
 
+		// const finalContent = contentWithToc;
+
 		// 6. Generate final content with frontmatter, cover and back pages
 		return this._generateFinalSlideContent(
 			finalContent,
@@ -783,12 +787,20 @@ export class SlidesMaker {
 	 */
 	private _convertMarkdownLinksToPreviewLinks(text: string): string {
 		// 使用正则匹配 [name](link) 形式，link 以 http 或 https 开头
-		return text.replace(
-			/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-			(match, name, link) => {
-				return `<a href="${link}" data-preview-link>${name}</a>`;
-			}
-		);
+		// 排除 ![ 开头的图片嵌入语法
+		return text
+			.replace(
+				/!\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<img alt="${name}" src="${link}" data-preview-image />`;
+				}
+			)
+			.replace(
+				/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<a href="${link}" data-preview-link>${name}</a>`;
+				}
+			);
 	}
 
 	/**

@@ -158,6 +158,16 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			}
 		);
 
+		this.createTextSetting(containerEl, {
+			name: "User Designs",
+			desc: "Please enter your user design name",
+			value: this.plugin.settings.obasUserDesigns,
+			onChange: async (value) => {
+				this.plugin.settings.obasUserDesigns = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		const toggleDefaultLocation = (value: string) => {
 			defaultLocationSetting.settingEl.style.display =
 				value === "assigned" ? "" : "none";

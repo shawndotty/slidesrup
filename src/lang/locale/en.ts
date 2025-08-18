@@ -348,4 +348,7 @@ export default {
 	"Set the slide mode": "Set the color mode for the slide presentation",
 	"Light Mode": "Light Mode",
 	"Dark Mode": "Dark Mode",
+	"User Designs": "User Designs",
+	"Please enter your user design name":
+		"Please enter the name of your design",
 };

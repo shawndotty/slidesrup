@@ -291,4 +291,6 @@ export default {
 	"Set the slide mode": "設定幻燈片演示的顏色模式",
 	"Light Mode": "亮色模式",
 	"Dark Mode": "暗色模式",
+	"User Designs": "用戶設計",
+	"Please enter your user design name": "請輸入您的用戶設計名稱",
 };
