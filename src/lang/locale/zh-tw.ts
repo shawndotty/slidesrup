@@ -95,6 +95,7 @@ export default {
 	"Slide Design F": "簡報設計F",
 	"Slide Design G": "簡報設計G",
 	"Slide Design H": "簡報設計H",
+	"Slide Design": "簡報設計",
 	"Please select a slide design": "請選擇簡報設計",
 	"New Slide": "新簡報",
 	"Untitled Slide": "無題簡報",

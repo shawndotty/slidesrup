@@ -1,4 +1,11 @@
-import { App, debounce, PluginSettingTab, Setting, setIcon } from "obsidian";
+import {
+	App,
+	debounce,
+	PluginSettingTab,
+	Setting,
+	setIcon,
+	TFolder,
+} from "obsidian";
 import { t } from "../lang/helpers";
 import OBASAssistant from "../main";
 import { isValidApiKey, isValidEmail } from "../utils";
@@ -12,14 +19,13 @@ import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
 import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { DEFAULT_DESIGNS } from "../constants";
 
 type SettingsKeys = keyof OBASAssistant["settings"];
 
 export class OBASAssistantSettingTab extends PluginSettingTab {
 	plugin: OBASAssistant;
 	private apiService: ApiService;
-	private saturationSlider?: HTMLInputElement;
-	private lightnessSlider?: HTMLInputElement;
 
 	constructor(app: App, plugin: OBASAssistant) {
 		super(app, plugin);
@@ -142,31 +148,21 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		this.createDropdownSetting(
 			containerEl,
+			"User Designs",
+			"Please enter your user design name",
+			"obasUserDesigns",
+			this.getUserDesignOptions(),
+			undefined,
+			false
+		);
+
+		this.createDropdownSetting(
+			containerEl,
 			"Default Design",
 			"Please select your default design",
 			"defaultDesign",
-			{
-				none: "None",
-				a: "Slide Design A",
-				b: "Slide Design B",
-				c: "Slide Design C",
-				d: "Slide Design D",
-				e: "Slide Design E",
-				f: "Slide Design F",
-				g: "Slide Design G",
-				h: "Slide Design H",
-			}
+			this.getDefaultDesignOptions()
 		);
-
-		this.createTextSetting(containerEl, {
-			name: "User Designs",
-			desc: "Please enter your user design name",
-			value: this.plugin.settings.obasUserDesigns,
-			onChange: async (value) => {
-				this.plugin.settings.obasUserDesigns = value;
-				await this.plugin.saveSettings();
-			},
-		});
 
 		const toggleDefaultLocation = (value: string) => {
 			defaultLocationSetting.settingEl.style.display =
@@ -215,6 +211,22 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+	}
+
+	/**
+	 * 获取默认设计选项
+	 * @returns 包含None选项和所有默认设计的选项对象
+	 */
+	private getDefaultDesignOptions(): Record<string, string> {
+		return {
+			none: "None",
+			...Object.fromEntries(
+				DEFAULT_DESIGNS.map((letter) => [
+					letter,
+					`Slide Design ${letter.toUpperCase()}`,
+				])
+			),
+		};
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {
@@ -826,7 +838,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		});
 
-		const setting = new Setting(containerEl)
+		new Setting(containerEl)
 			.setName("自定义 CSS")
 			.setDesc("在此输入自定义 CSS 代码，将应用于演示文稿。")
 			.setClass("obas-custom-css");
@@ -836,7 +848,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obas-assistant-css-editor"
 		);
 
-		const view = new EditorView({
+		new EditorView({
 			state: EditorState.create({
 				doc: this.plugin.settings.customCss || "",
 				extensions: [
@@ -872,50 +884,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			500,
 			true
 		);
-	}
-
-	private createColorPreview(containerEl: HTMLElement): HTMLElement {
-		const previewContainer = containerEl.createDiv({
-			cls: "setting-item",
-		});
-		const settingItemInfo = previewContainer.createDiv({
-			cls: "setting-item-info",
-		});
-		settingItemInfo.createDiv({
-			text: t("Preview Your Slide Theme Color"),
-			cls: "setting-item-name",
-		});
-
-		const settingItemControl = previewContainer.createDiv({
-			cls: "setting-item-control",
-		});
-		const colorBlock = settingItemControl.createDiv({
-			cls: "obas-color-preview-block",
-		});
-		return colorBlock;
-	}
-
-	private createSliderSetting(
-		containerEl: HTMLElement,
-		name: string,
-		desc: string,
-		settingKey: "obasHue" | "obasSaturation" | "obasLightness",
-		max: number,
-		onChangeCallback: (value: number) => void
-	) {
-		new Setting(containerEl)
-			.setName(t(name as any))
-			.setDesc(t(desc as any))
-			.addSlider((slider) =>
-				slider
-					.setLimits(0, max, 1)
-					.setValue(this.plugin.settings[settingKey])
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings[settingKey] = value;
-						onChangeCallback(value);
-					})
-			);
 	}
 
 	// 通用方法：创建切换设置项
@@ -1003,15 +971,15 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		descKey: string,
 		settingKey: SettingsKeys,
 		options: Record<string, string>,
-		onChangeCallback?: (value: string) => void
+		onChangeCallback?: (value: string) => void,
+		translateOptions: boolean = true
 	): Setting {
-		const translatedOptions = Object.entries(options).reduce(
-			(acc, [key, valueKey]) => {
+		if (translateOptions) {
+			options = Object.entries(options).reduce((acc, [key, valueKey]) => {
 				acc[key] = t(valueKey as any);
 				return acc;
-			},
-			{} as Record<string, string>
-		);
+			}, {} as Record<string, string>);
+		}
 
 		return this.createBaseSetting(
 			containerEl,
@@ -1019,7 +987,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			descKey
 		).addDropdown((dropdown) => {
 			dropdown
-				.addOptions(translatedOptions)
+				.addOptions(options)
 				.setValue(this.plugin.settings[settingKey] as string)
 				.onChange(async (value) => {
 					(this.plugin.settings[settingKey] as any) = value;
@@ -1144,44 +1112,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			});
 	}
 
-	// 创建色相选择器
-	private createHueSlider(
-		containerEl: HTMLElement,
-		onChangeCallback: (value: number) => void
-	) {
-		const setting = new Setting(containerEl)
-			.setName(t("Hue"))
-			.setDesc(t("Adjust the hue of the theme"));
-
-		const sliderContainer = setting.controlEl.createDiv({
-			cls: "obas-hue-slider-container obas-hsl-slider",
-		});
-
-		// 创建色相渐变背景
-		const hueSlider = sliderContainer.createEl("input", {
-			type: "range",
-			cls: "obas-hue-slider",
-			attr: {
-				min: "0",
-				max: "360",
-				step: "1",
-				value: this.plugin.settings.obasHue.toString(),
-			},
-		});
-
-		// 创建色相渐变背景
-		const hueGradient = this.createHueGradient();
-		hueSlider.style.background = hueGradient;
-
-		hueSlider.addEventListener("input", (e) => {
-			const value = parseInt((e.target as HTMLInputElement).value);
-			this.plugin.settings.obasHue = value;
-			onChangeCallback(value);
-		});
-
-		return setting;
-	}
-
 	private createGroupedDropdownSetting(
 		containerEl: HTMLElement,
 		nameKey: string,
@@ -1221,149 +1151,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					await onChangeCallback?.(value);
 				});
 		});
-	}
-
-	// 创建饱和度选择器
-	private createSaturationSlider(
-		containerEl: HTMLElement,
-		onChangeCallback: (value: number) => void
-	) {
-		const setting = new Setting(containerEl)
-			.setName(t("Saturation"))
-			.setDesc(t("Adjust the saturation of the theme"));
-
-		const sliderContainer = setting.controlEl.createDiv({
-			cls: "obas-saturation-slider-container obas-hsl-slider",
-		});
-
-		const saturationSlider = sliderContainer.createEl("input", {
-			type: "range",
-			cls: "obas-saturation-slider",
-			attr: {
-				min: "0",
-				max: "100",
-				step: "1",
-				value: this.plugin.settings.obasSaturation.toString(),
-			},
-		});
-
-		// 更新饱和度渐变背景
-		const updateSaturationGradient = () => {
-			const hue = this.plugin.settings.obasHue;
-			const lightness = this.plugin.settings.obasLightness;
-			const saturationGradient = this.createSaturationGradient(
-				hue,
-				lightness
-			);
-			saturationSlider.style.background = saturationGradient;
-		};
-
-		updateSaturationGradient();
-
-		saturationSlider.addEventListener("input", (e) => {
-			const value = parseInt((e.target as HTMLInputElement).value);
-			this.plugin.settings.obasSaturation = value;
-			onChangeCallback(value);
-		});
-
-		// 存储滑块引用以便后续更新
-		this.saturationSlider = saturationSlider;
-
-		return setting;
-	}
-
-	// 创建亮度选择器
-	private createLightnessSlider(
-		containerEl: HTMLElement,
-		onChangeCallback: (value: number) => void
-	) {
-		const setting = new Setting(containerEl)
-			.setName(t("Lightness"))
-			.setDesc(t("Adjust the lightness of the theme"));
-
-		const sliderContainer = setting.controlEl.createDiv({
-			cls: "obas-lightness-slider-container obas-hsl-slider",
-		});
-
-		const lightnessSlider = sliderContainer.createEl("input", {
-			type: "range",
-			cls: "obas-lightness-slider",
-			attr: {
-				min: "0",
-				max: "100",
-				step: "1",
-				value: this.plugin.settings.obasLightness.toString(),
-			},
-		});
-
-		// 更新亮度渐变背景
-		const updateLightnessGradient = () => {
-			const hue = this.plugin.settings.obasHue;
-			const saturation = this.plugin.settings.obasSaturation;
-			const lightnessGradient = this.createLightnessGradient(
-				hue,
-				saturation
-			);
-			lightnessSlider.style.background = lightnessGradient;
-		};
-
-		updateLightnessGradient();
-
-		lightnessSlider.addEventListener("input", (e) => {
-			const value = parseInt((e.target as HTMLInputElement).value);
-			this.plugin.settings.obasLightness = value;
-			onChangeCallback(value);
-		});
-
-		// 存储滑块引用以便后续更新
-		this.lightnessSlider = lightnessSlider;
-
-		return setting;
-	}
-
-	// 创建色相渐变
-	private createHueGradient(): string {
-		const stops = [];
-		// 创建更平滑的色相渐变，每30度一个颜色点
-		for (let i = 0; i <= 360; i += 30) {
-			stops.push(`hsl(${i}, 100%, 50%) ${(i / 360) * 100}%`);
-		}
-		// 添加最后一个点确保渐变完整
-		stops.push(`hsl(360, 100%, 50%) 100%`);
-		return `linear-gradient(to right, ${stops.join(", ")})`;
-	}
-
-	// 创建饱和度渐变
-	private createSaturationGradient(hue: number, lightness: number): string {
-		return `linear-gradient(to right, hsl(${hue}, 0%, ${lightness}%), hsl(${hue}, 100%, ${lightness}%))`;
-	}
-
-	// 创建亮度渐变
-	private createLightnessGradient(hue: number, saturation: number): string {
-		return `linear-gradient(to right, hsl(${hue}, ${saturation}%, 0%), hsl(${hue}, ${saturation}%, 50%), hsl(${hue}, ${saturation}%, 100%))`;
-	}
-
-	// 更新所有滑块的渐变背景
-	private updateSliderGradients(): void {
-		if (this.saturationSlider) {
-			const hue = this.plugin.settings.obasHue;
-			const lightness = this.plugin.settings.obasLightness;
-			const saturationGradient = this.createSaturationGradient(
-				hue,
-				lightness
-			);
-			this.saturationSlider.style.background = saturationGradient;
-		}
-
-		if (this.lightnessSlider) {
-			const hue = this.plugin.settings.obasHue;
-			const saturation = this.plugin.settings.obasSaturation;
-			const lightnessGradient = this.createLightnessGradient(
-				hue,
-				saturation
-			);
-			this.lightnessSlider.style.background = lightnessGradient;
-		}
 	}
 
 	// 创建字号滑块设置
@@ -1416,6 +1203,33 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 
 		return setting;
+	}
+
+	private getUserDesignOptions() {
+		const obasFrameworkPath = this.plugin.settings.obasFrameworkFolder;
+		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		const options = {
+			none: t("None"),
+		};
+
+		// 获取框架文件夹
+		const obasUserDesignsFolder =
+			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+
+		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+			// 获取所有子文件夹
+			const subFolders = obasUserDesignsFolder.children
+				.filter((file) => file instanceof TFolder)
+				.map((folder) => folder.name.split("-").last() as string);
+
+			// 将子文件夹添加到选项中
+			for (const folderName of subFolders) {
+				// 使用类型断言确保 options 可以接受字符串索引
+				(options as { [key: string]: string })[folderName] = folderName;
+			}
+		}
+
+		return options;
 	}
 
 	// 创建颜色设置

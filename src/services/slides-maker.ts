@@ -1,4 +1,4 @@
-import { App, Editor, Notice, TFile, moment } from "obsidian";
+import { App, Editor, Notice, TFile, moment, TFolder } from "obsidian";
 import { t } from "../lang/helpers";
 import {
 	slideChapterTemplate,
@@ -23,11 +23,14 @@ import {
 	get_list_items_from_note,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
-import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
+import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
+	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
+	private userDesigns: Array<string> = [];
+	private designOptions: Array<SuggesterOption> = [];
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -39,6 +42,32 @@ export class SlidesMaker {
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
 		this.settings = settings;
+		this.userDesigns = this.getUserDesigns();
+		this.designOptions = this.userDesigns
+			.concat(this.defaultDesigns)
+			.map((design, index) => ({
+				id: `"${design}"`,
+				name: `${index + 1}. ${t("Slide Design")} ${design}`,
+				value: design,
+			}));
+	}
+
+	private getUserDesigns() {
+		const obasFrameworkPath = this.settings.obasFrameworkFolder;
+		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		// 获取框架文件夹
+		const obasUserDesignsFolder =
+			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+		let userDesigns: Array<string> = [];
+		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+			// 获取所有子文件夹
+			const subFolders = obasUserDesignsFolder.children
+				.filter((file) => file instanceof TFolder)
+				.map((folder) => folder.name.split("-").last() as string);
+			userDesigns = subFolders;
+		}
+
+		return userDesigns;
 	}
 
 	async createSlides(): Promise<void> {
@@ -297,9 +326,13 @@ export class SlidesMaker {
 
 		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
 			let design =
-				this.settings.obasUserDesigns || this.settings.defaultDesign;
+				this.settings.obasUserDesigns !== "none"
+					? this.settings.obasUserDesigns
+					: this.settings.defaultDesign;
 			if (!design || design === "none") {
-				const designOption = await this._selectSlideDesign();
+				const designOption = await this._selectSlideDesign(
+					this.designOptions
+				);
 				if (!designOption) {
 					new Notice(t("Please select a slide design"));
 					return replaceConfig;
@@ -391,8 +424,10 @@ export class SlidesMaker {
 		}
 	}
 
-	private async _selectSlideDesign(): Promise<SuggesterOption | null> {
-		const suggester = new SlideDesignSuggester(this.app);
+	private async _selectSlideDesign(
+		options: SuggesterOption[]
+	): Promise<SuggesterOption | null> {
+		const suggester = new SlideDesignSuggester(this.app, options);
 		return new Promise((resolve) => {
 			suggester.onChooseItem = (item: SuggesterOption) => {
 				resolve(item);
@@ -618,9 +653,13 @@ export class SlidesMaker {
 
 		// Determine design
 		let design =
-			this.settings.obasUserDesigns || this.settings.defaultDesign;
+			this.settings.obasUserDesigns !== "none"
+				? this.settings.obasUserDesigns
+				: this.settings.defaultDesign;
 		if (!design || design === "none") {
-			design = (await this._selectSlideDesign())?.value || "H";
+			design =
+				(await this._selectSlideDesign(this.designOptions))?.value ||
+				"H";
 		}
 		design = design.toUpperCase?.() || "";
 

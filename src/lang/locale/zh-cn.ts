@@ -94,6 +94,7 @@ export default {
 	"Slide Design F": "演示设计F",
 	"Slide Design G": "演示设计G",
 	"Slide Design H": "演示设计H",
+	"Slide Design": "演示设计",
 	"Please select a slide design": "请选择演示设计",
 	"New Slide": "新演示",
 	"Untitled Slide": "未命名演示",
