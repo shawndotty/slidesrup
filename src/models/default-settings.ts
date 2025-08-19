@@ -98,6 +98,6 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	customCss: "",
 	enableCustomCss: false,
 	obasSlideMode: "light",
-	obasUserDesigns: "",
+	obasUserDesigns: "none",
 	obasUserDesignsCss: [],
 };

@@ -33,6 +33,14 @@ export class ObasStyleService {
 		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
 
 		this.obasMainStyleFilePath = `${basePath}/my-obas-user-style.css`;
+
+		// 构造函数不能直接使用 await，这里仅声明变量，实际调用应在异步方法中处理
+		let userDesignCssFiles: string[] = [];
+		this.getUserDesignCssFiles().then((files) => {
+			userDesignCssFiles = files;
+			// 可以在这里进行后续处理
+			console.dir(userDesignCssFiles);
+		});
 	}
 
 	/**
@@ -652,5 +660,49 @@ ${
 			this.styleSections[key as keyof StyleSection] = "";
 		});
 		await this.writeStyleFile();
+	}
+
+	async getUserDesignCssFiles() {
+		const obasFrameworkPath = this.settings.obasFrameworkFolder;
+		const userDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		let cssFiles: string[] = [];
+		// 使用 Obsidian 的 adapter API 递归获取 userDesignsPath 下所有子文件夹的 css 文件
+		cssFiles = await this.getAllCssFilesInFolder(userDesignsPath);
+		return cssFiles;
+	}
+
+	async getAllCssFilesInFolder(folderPath: string): Promise<string[]> {
+		let result: string[] = [];
+		const adapter = this.app.vault.adapter;
+		try {
+			const files = await adapter.list(folderPath);
+			// 处理文件
+			if (files.files && files.files.length > 0) {
+				const cssFiles = files.files.filter((file: string) =>
+					file.endsWith(".css")
+				);
+				result.push(
+					...cssFiles.map(
+						(f) => `${folderPath}/${f.split("/").pop()}`
+					)
+				);
+			}
+			// 递归处理子文件夹
+			if (files.folders && files.folders.length > 0) {
+				for (const subFolder of files.folders) {
+					const subFolderPath = `${folderPath}/${subFolder
+						.split("/")
+						.pop()}`;
+					const subFiles = await this.getAllCssFilesInFolder(
+						subFolderPath
+					);
+					result.push(...subFiles);
+				}
+			}
+		} catch (e) {
+			// 如果文件夹不存在，直接返回空数组
+			return [];
+		}
+		return result;
 	}
 }
