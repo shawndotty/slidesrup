@@ -211,7 +211,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		this.createDropdownSetting(
 			containerEl,
 			"User Designs",
-			"Please enter your user design name",
+			"Please select your user design",
 			"obasUserDesigns",
 			this.getUserDesignOptions(),
 			undefined,

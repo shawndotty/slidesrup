@@ -350,8 +350,7 @@ export default {
 	"Light Mode": "Light Mode",
 	"Dark Mode": "Dark Mode",
 	"User Designs": "User Designs",
-	"Please enter your user design name":
-		"Please enter the name of your design",
+	"Please select your user design": "Please select your design",
 	"Customized CSS": "Customized CSS",
 	"User Designs CSS": "User Designs CSS",
 	"Enable CSS:": "Enable CSS:",

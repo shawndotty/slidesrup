@@ -293,7 +293,7 @@ export default {
 	"Light Mode": "亮色模式",
 	"Dark Mode": "暗色模式",
 	"User Designs": "用戶設計",
-	"Please enter your user design name": "請輸入您的用戶設計名稱",
+	"Please select your user design": "請選擇你的個人設計",
 	"Customized CSS": "自訂 CSS",
 	"User Designs CSS": "用戶設計 CSS",
 	"Enable CSS:": "啟用 CSS:",

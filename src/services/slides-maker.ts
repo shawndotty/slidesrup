@@ -652,16 +652,13 @@ export class SlidesMaker {
 		await createPathIfNeeded(newSlideLocation);
 
 		// Determine design
-		let design =
-			this.settings.obasUserDesigns !== "none"
-				? this.settings.obasUserDesigns
-				: this.settings.defaultDesign;
+		let design = this._getSlideDesign();
 		if (!design || design === "none") {
 			design =
 				(await this._selectSlideDesign(this.designOptions))?.value ||
 				"H";
 		}
-		design = design.toUpperCase?.() || "";
+		// design = design.toUpperCase?.() || "";
 
 		let slideMode = this.settings.obasSlideMode;
 		if (!slideMode || slideMode === "none") {
@@ -1050,5 +1047,18 @@ width: 1920
 
 		// Combine all parts
 		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n${backCoverSlide}`;
+	}
+
+	private _getSlideDesign() {
+		const activeFile = this.app.workspace.getActiveFile();
+		const fileDesign = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideDesign
+			: "";
+		return fileDesign
+			? fileDesign
+			: this.settings.obasUserDesigns !== "none"
+			? this.settings.obasUserDesigns
+			: this.settings.defaultDesign;
 	}
 }
