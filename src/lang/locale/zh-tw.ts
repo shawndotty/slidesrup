@@ -297,4 +297,6 @@ export default {
 	"Customized CSS": "自訂 CSS",
 	"User Designs CSS": "用戶設計 CSS",
 	"Enable CSS:": "啟用 CSS:",
+	"User Templates": "用戶模板",
+	"Design and Templates": "設計與模板",
 };

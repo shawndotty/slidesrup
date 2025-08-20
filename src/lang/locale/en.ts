@@ -355,4 +355,6 @@ export default {
 	"Customized CSS": "Customized CSS",
 	"User Designs CSS": "User Designs CSS",
 	"Enable CSS:": "Enable CSS:",
+	"User Templates": "User Templates",
+	"Design and Templates": "Design and Templates",
 };

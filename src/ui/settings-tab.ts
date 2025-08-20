@@ -50,7 +50,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 					this.renderMainSettings(content),
 			},
 			{
-				title: "User Templates Setting",
+				title: "Design and Templates",
 				renderMethod: (content: HTMLElement) =>
 					this.renderUserSettings(content),
 			},
@@ -146,24 +146,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			"obasFrameworkFolder"
 		);
 
-		this.createDropdownSetting(
-			containerEl,
-			"User Designs",
-			"Please enter your user design name",
-			"obasUserDesigns",
-			this.getUserDesignOptions(),
-			undefined,
-			false
-		);
-
-		this.createDropdownSetting(
-			containerEl,
-			"Default Design",
-			"Please select your default design",
-			"defaultDesign",
-			this.getDefaultDesignOptions()
-		);
-
 		const toggleDefaultLocation = (value: string) => {
 			defaultLocationSetting.settingEl.style.display =
 				value === "assigned" ? "" : "none";
@@ -213,23 +195,68 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 	}
 
-	/**
-	 * 获取默认设计选项
-	 * @returns 包含None选项和所有默认设计的选项对象
-	 */
-	private getDefaultDesignOptions(): Record<string, string> {
-		return {
-			none: "None",
-			...Object.fromEntries(
-				DEFAULT_DESIGNS.map((letter) => [
-					letter,
-					`Slide Design ${letter.toUpperCase()}`,
-				])
-			),
-		};
-	}
-
 	private renderUserSettings(containerEl: HTMLElement): void {
+		containerEl.createEl("h2", {
+			text: t("Slide Design"),
+			cls: "obas-assistant-title",
+		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Design",
+			"Please select your default design",
+			"defaultDesign",
+			this.getDefaultDesignOptions()
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"User Designs",
+			"Please enter your user design name",
+			"obasUserDesigns",
+			this.getUserDesignOptions(),
+			undefined,
+			false
+		);
+
+		if (
+			this.plugin.settings.obasUserDesignsCss &&
+			Array.isArray(this.plugin.settings.obasUserDesignsCss) &&
+			this.plugin.settings.obasUserDesignsCss.length > 0
+		) {
+			containerEl.createEl("h3", {
+				text: t("User Designs CSS"),
+				cls: "obas-assistant-title",
+			});
+			this.plugin.settings.obasUserDesignsCss.forEach((item, index) => {
+				const name = item.name || `Design CSS ${index + 1}`;
+				const path = item.filePath || "";
+				new Setting(containerEl)
+					.setName(name)
+					.setDesc(`${t("Enable CSS:")} ${path}`)
+					.addToggle((toggle) => {
+						toggle
+							.setValue(item.enabled)
+							.onChange(async (value) => {
+								// 更新对应item的enable值
+								this.plugin.settings.obasUserDesignsCss[
+									index
+								].enabled = value;
+								await this.plugin.saveSettings();
+
+								await this.plugin.services.obasStyleService.modifyStyleSection(
+									"userCss"
+								);
+							});
+					});
+			});
+		}
+
+		containerEl.createEl("h2", {
+			text: t("User Templates"),
+			cls: "obas-assistant-title",
+		});
+
 		this.createToggleSetting(containerEl, {
 			name: "Enable User Templates",
 			desc: "Enable User Templates",
@@ -846,38 +873,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 	private renderAdvancedSettings(containerEl: HTMLElement): void {
 		// 根据用户设计CSS配置创建动态toggle设置
-		if (
-			this.plugin.settings.obasUserDesignsCss &&
-			Array.isArray(this.plugin.settings.obasUserDesignsCss) &&
-			this.plugin.settings.obasUserDesignsCss.length > 0
-		) {
-			containerEl.createEl("h2", {
-				text: t("User Designs CSS"),
-				cls: "obas-assistant-title",
-			});
-			this.plugin.settings.obasUserDesignsCss.forEach((item, index) => {
-				const name = item.name || `Design CSS ${index + 1}`;
-				const path = item.filePath || "";
-				new Setting(containerEl)
-					.setName(name)
-					.setDesc(`${t("Enable CSS:")} ${path}`)
-					.addToggle((toggle) => {
-						toggle
-							.setValue(item.enabled)
-							.onChange(async (value) => {
-								// 更新对应item的enable值
-								this.plugin.settings.obasUserDesignsCss[
-									index
-								].enabled = value;
-								await this.plugin.saveSettings();
-
-								await this.plugin.services.obasStyleService.modifyStyleSection(
-									"userCss"
-								);
-							});
-					});
-			});
-		}
 
 		containerEl.createEl("h2", {
 			text: t("Customized CSS"),
@@ -1348,5 +1343,20 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		});
 
 		return setting;
+	}
+	/**
+	 * 获取默认设计选项
+	 * @returns 包含None选项和所有默认设计的选项对象
+	 */
+	private getDefaultDesignOptions(): Record<string, string> {
+		return {
+			none: "None",
+			...Object.fromEntries(
+				DEFAULT_DESIGNS.map((letter) => [
+					letter,
+					`Slide Design ${letter.toUpperCase()}`,
+				])
+			),
+		};
 	}
 }

@@ -308,4 +308,6 @@ export default {
 	"Customized CSS": "自定义 CSS",
 	"User Designs CSS": "用户设计 CSS",
 	"Enable CSS:": "启用 CSS:",
+	"User Templates": "用户模板",
+	"Design and Templates": "设计与模版",
 };
