@@ -352,4 +352,7 @@ export default {
 	"User Designs": "User Designs",
 	"Please enter your user design name":
 		"Please enter the name of your design",
+	"Customized CSS": "Customized CSS",
+	"User Designs CSS": "User Designs CSS",
+	"Enable CSS:": "Enable CSS:",
 };

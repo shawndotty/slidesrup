@@ -306,7 +306,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onThemeColorChanges = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasHslFile();
+				await this.plugin.services.obasStyleService.modifyStyleSection(
+					"hsl"
+				);
 			},
 			200,
 			true
@@ -315,7 +317,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onColorChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasColorFile();
+				await this.plugin.services.obasStyleService.modifyStyleSection(
+					"color"
+				);
 			},
 			200,
 			true
@@ -355,9 +359,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				this.plugin.settings.enableObasColorUserSetting = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyObasColorFile();
+					await this.plugin.services.obasStyleService.modifyStyleSection(
+						"color"
+					);
 				} else {
-					await this.plugin.services.obasStyleService.clearObasColorFile();
+					await this.plugin.services.obasStyleService.clearStyleSection(
+						"color"
+					);
 				}
 			},
 		});
@@ -474,7 +482,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onFontFamilyChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasFontFamilyFile();
+				await this.plugin.services.obasStyleService.modifyStyleSection(
+					"fontFamily"
+				);
 			},
 			200,
 			true
@@ -483,7 +493,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onFontSizeChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasFontSizeFile();
+				await this.plugin.services.obasStyleService.modifyStyleSection(
+					"fontSize"
+				);
 			},
 			200,
 			true
@@ -492,7 +504,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onHeadingTextTransformChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyObasHeadingTransformFile();
+				await this.plugin.services.obasStyleService.modifyStyleSection(
+					"headingTransform"
+				);
 			},
 			200,
 			true
@@ -584,9 +598,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				this.plugin.settings.enableObasFontFamilyUserSetting = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyObasFontFamilyFile();
+					await this.plugin.services.obasStyleService.modifyStyleSection(
+						"fontFamily"
+					);
 				} else {
-					await this.plugin.services.obasStyleService.clearObasFontFamilyFile();
+					await this.plugin.services.obasStyleService.clearStyleSection(
+						"fontFamily"
+					);
 				}
 			},
 		});
@@ -677,9 +695,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				this.plugin.settings.enableObasFontSizeUserSetting = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyObasFontSizeFile();
+					await this.plugin.services.obasStyleService.modifyStyleSection(
+						"fontSize"
+					);
 				} else {
-					await this.plugin.services.obasStyleService.clearObasFontSizeFile();
+					await this.plugin.services.obasStyleService.clearStyleSection(
+						"fontSize"
+					);
 				}
 			},
 		});
@@ -823,6 +845,45 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderAdvancedSettings(containerEl: HTMLElement): void {
+		// 根据用户设计CSS配置创建动态toggle设置
+		if (
+			this.plugin.settings.obasUserDesignsCss &&
+			Array.isArray(this.plugin.settings.obasUserDesignsCss) &&
+			this.plugin.settings.obasUserDesignsCss.length > 0
+		) {
+			containerEl.createEl("h2", {
+				text: t("User Designs CSS"),
+				cls: "obas-assistant-title",
+			});
+			this.plugin.settings.obasUserDesignsCss.forEach((item, index) => {
+				const name = item.name || `Design CSS ${index + 1}`;
+				const path = item.filePath || "";
+				new Setting(containerEl)
+					.setName(name)
+					.setDesc(`${t("Enable CSS:")} ${path}`)
+					.addToggle((toggle) => {
+						toggle
+							.setValue(item.enabled)
+							.onChange(async (value) => {
+								// 更新对应item的enable值
+								this.plugin.settings.obasUserDesignsCss[
+									index
+								].enabled = value;
+								await this.plugin.saveSettings();
+
+								await this.plugin.services.obasStyleService.modifyStyleSection(
+									"userCss"
+								);
+							});
+					});
+			});
+		}
+
+		containerEl.createEl("h2", {
+			text: t("Customized CSS"),
+			cls: "obas-assistant-title",
+		});
+
 		this.createToggleSetting(containerEl, {
 			name: "Use User Customized CSS",
 			desc: "Enable User Customized CSS",
@@ -831,9 +892,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				this.plugin.settings.enableCustomCss = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyObasUserStyleFile();
+					await this.plugin.services.obasStyleService.modifyStyleSection(
+						"userStyle"
+					);
 				} else {
-					await this.plugin.services.obasStyleService.clearObasUserStyleFile();
+					await this.plugin.services.obasStyleService.clearStyleSection(
+						"userStyle"
+					);
 				}
 			},
 		});
@@ -879,7 +944,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			(newCss: string) => {
 				this.plugin.settings.customCss = newCss;
 				this.plugin.saveSettings();
-				this.plugin.services.obasStyleService.modifyObasUserStyleFile();
+				this.plugin.services.obasStyleService.modifyStyleSection(
+					"userStyle"
+				);
 			},
 			500,
 			true
