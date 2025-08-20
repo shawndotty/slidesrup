@@ -42,7 +42,6 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		const tabbedSettings = new TabbedSettings(containerEl);
 
-		// 定义标签页配置
 		const tabConfigs = [
 			{
 				title: "Main Setting",
