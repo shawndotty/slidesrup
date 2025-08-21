@@ -325,10 +325,7 @@ export class SlidesMaker {
 		const config: ReplaceConfig = { ...replaceConfig };
 
 		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
-			let design =
-				this.settings.obasUserDesigns !== "none"
-					? this.settings.obasUserDesigns
-					: this.settings.defaultDesign;
+			let design = this._getSlideDesign();
 			if (!design || design === "none") {
 				const designOption = await this._selectSlideDesign(
 					this.designOptions
@@ -652,7 +649,8 @@ export class SlidesMaker {
 		await createPathIfNeeded(newSlideLocation);
 
 		// Determine design
-		let design = this._getSlideDesign();
+		const activeFile = this.app.workspace.getActiveFile();
+		let design = this._getSlideDesign(activeFile);
 		if (!design || design === "none") {
 			design =
 				(await this._selectSlideDesign(this.designOptions))?.value ||
@@ -1049,16 +1047,51 @@ width: 1920
 		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n${backCoverSlide}`;
 	}
 
-	private _getSlideDesign() {
-		const activeFile = this.app.workspace.getActiveFile();
-		const fileDesign = activeFile
-			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
-					?.slideDesign
-			: "";
-		return fileDesign
-			? fileDesign
-			: this.settings.obasUserDesigns !== "none"
-			? this.settings.obasUserDesigns
-			: this.settings.defaultDesign;
+	/**
+	 * Gets the slide design to use for the current context.
+	 * Priority order: frontmatter.slideDesign → settings.obasUserDesigns → settings.defaultDesign
+	 *
+	 * @param activeFile - Optional file to check, defaults to current active file
+	 * @returns The design string to use
+	 */
+	private _getSlideDesign(activeFile?: TFile | null): string {
+		if (!activeFile) {
+			return this._getFallbackDesign();
+		}
+
+		// Get file cache (this is already cached by Obsidian)
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const frontmatterDesign = fileCache?.frontmatter?.slideDesign;
+
+		// Return frontmatter design if it exists and is valid
+		if (
+			frontmatterDesign &&
+			typeof frontmatterDesign === "string" &&
+			frontmatterDesign.trim()
+		) {
+			return frontmatterDesign.trim();
+		}
+
+		// Fallback to settings-based design
+		return this._getFallbackDesign();
+	}
+
+	/**
+	 * Gets the fallback design from settings
+	 * @private
+	 */
+	private _getFallbackDesign(): string {
+		const userDesign = this.settings.obasUserDesigns;
+		const defaultDesign = this.settings.defaultDesign;
+
+		// Check if user design is set and not 'none'
+		if (userDesign && userDesign !== "none" && userDesign.trim()) {
+			return userDesign.trim();
+		}
+
+		// Return default design, ensuring it's not empty
+		return defaultDesign && defaultDesign.trim()
+			? defaultDesign.trim()
+			: "A";
 	}
 }
