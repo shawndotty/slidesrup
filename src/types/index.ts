@@ -108,6 +108,7 @@ export interface OBASAssistantSettings {
 
 	// 用户自定义的CSS设计列表，每个元素包含设计名称、文件路径和启用状态
 	obasUserDesignsCss: UserDesignCss[];
+	obasAutoConvertLinks: boolean;
 }
 
 export interface NocoDBTable {

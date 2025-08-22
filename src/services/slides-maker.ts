@@ -800,8 +800,9 @@ export class SlidesMaker {
 
 		// Convert WikiLink to data-preview-link
 
-		const finalContent =
-			this._convertMarkdownLinksToPreviewLinks(contentWithToc);
+		const finalContent = this._getAutoConvertLinks(activeFile)
+			? this._convertMarkdownLinksToPreviewLinks(contentWithToc)
+			: contentWithToc;
 
 		// const finalContent = contentWithToc;
 
@@ -1074,6 +1075,27 @@ width: 1920
 
 		// Fallback to settings-based design
 		return this._getFallbackDesign();
+	}
+
+	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {
+		if (!activeFile) {
+			return this.settings.obasAutoConvertLinks;
+		}
+
+		// Get file cache (this is already cached by Obsidian)
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const frontmatterAutoConvertLinks =
+			fileCache?.frontmatter?.autoConvertLinks;
+
+		// Return frontmatter autoConvertLinks if it exists and is valid
+		if (
+			frontmatterAutoConvertLinks &&
+			typeof frontmatterAutoConvertLinks === "boolean"
+		) {
+			return frontmatterAutoConvertLinks;
+		}
+
+		return this.settings.obasAutoConvertLinks;
 	}
 
 	/**

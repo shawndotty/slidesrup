@@ -310,4 +310,6 @@ export default {
 	"Enable CSS:": "启用 CSS:",
 	"User Templates": "用户模板",
 	"Design and Templates": "设计与模版",
+	"Auto Convert Links": "自动转换链接",
+	ACLD: "自动转换链接为支持Lightbox的链接",
 };

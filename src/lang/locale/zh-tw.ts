@@ -299,4 +299,6 @@ export default {
 	"Enable CSS:": "啟用 CSS:",
 	"User Templates": "用戶模板",
 	"Design and Templates": "設計與模板",
+	"Auto Convert Links": "自動轉換連結",
+	ACLD: "自動轉換連結為支持 Lightbox 的連結",
 };

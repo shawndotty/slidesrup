@@ -192,6 +192,16 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Auto Convert Links",
+			desc: "ACLD",
+			value: this.plugin.settings.obasAutoConvertLinks,
+			onChange: async (value) => {
+				this.plugin.settings.obasAutoConvertLinks = value;
+				await this.plugin.saveSettings();
+			},
+		});
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {

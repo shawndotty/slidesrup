@@ -356,4 +356,6 @@ export default {
 	"Enable CSS:": "Enable CSS:",
 	"User Templates": "User Templates",
 	"Design and Templates": "Design and Templates",
+	"Auto Convert Links": "Auto Convert Links",
+	ACLD: "Convert Links To Support Lightbox",
 };
