@@ -1087,9 +1087,9 @@ width: 1920
 		const frontmatterAutoConvertLinks =
 			fileCache?.frontmatter?.autoConvertLinks;
 
-		// Return frontmatter autoConvertLinks if it exists and is valid
+		// Return frontmatter autoConvertLinks if it exists
 		if (
-			frontmatterAutoConvertLinks &&
+			frontmatterAutoConvertLinks !== undefined &&
 			typeof frontmatterAutoConvertLinks === "boolean"
 		) {
 			return frontmatterAutoConvertLinks;
