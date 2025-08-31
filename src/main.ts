@@ -26,6 +26,8 @@ export default class OBASAssistant extends Plugin {
 		// Register all commands
 		this.services.commandService.registerCommands();
 
+		await this.services.obasStyleService.updateUserDesignCssSettings();
+
 		// Add settings tab
 		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
 

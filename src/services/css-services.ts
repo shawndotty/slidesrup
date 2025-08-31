@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { OBASAssistantSettings } from "../types";
+import { OBASAssistantSettings, UserDesignCss } from "../types";
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
@@ -11,6 +11,7 @@ interface StyleSection {
 	color: string;
 	fontFamily: string;
 	fontSize: string;
+	userCss: string;
 	userStyle: string;
 }
 
@@ -22,6 +23,7 @@ export class ObasStyleService {
 		color: "",
 		fontFamily: "",
 		fontSize: "",
+		userCss: "",
 		userStyle: "",
 	};
 
@@ -35,137 +37,43 @@ export class ObasStyleService {
 		this.obasMainStyleFilePath = `${basePath}/my-obas-user-style.css`;
 	}
 
-	/**
-	 * 生成并写入所有样式到一个文件
-	 * 这个方法用于初始化或完全重新生成样式
-	 */
-	async generateAllStyles() {
-		const allStyles = this.generateCompleteStyleSheet();
-		await this.app.vault.adapter.write(
-			this.obasMainStyleFilePath,
-			allStyles
+	async updateUserDesignCssSettings() {
+		const userDesignCssFiles = await this.getUserDesignCssFiles();
+		const userDesignCss: UserDesignCss[] = userDesignCssFiles.map(
+			(file) => {
+				return {
+					name: file.split("/").last() as string,
+					filePath: file,
+					enabled: false,
+				};
+			}
 		);
+		// 过滤出不在当前设置中的新CSS文件
+		const existingPaths = new Set(
+			this.settings.obasUserDesignsCss?.map((item) => item.filePath) || []
+		);
+
+		const newUserDesignCss = userDesignCss.filter(
+			(item) => !existingPaths.has(item.filePath)
+		);
+
+		this.settings.obasUserDesignsCss.push(...newUserDesignCss);
 	}
 
 	/**
-	 * 生成完整的样式表
+	 * 生成用户自定义CSS
 	 */
-	private generateCompleteStyleSheet(): string {
-		const {
-			// HSL 设置
-			obasHue: hue,
-			obasSaturation: saturation,
-			obasLightness: lightness,
-			// 标题变换设置
-			obasHeadingTextTransform,
-			// 颜色设置
-			obasH1Color,
-			obasH2Color,
-			obasH3Color,
-			obasH4Color,
-			obasH5Color,
-			obasH6Color,
-			obasBodyColor,
-			obasParagraphColor,
-			obasListColor,
-			obasStrongColor,
-			obasEmColor,
-			obasLinkColor,
-			// 字体设置
-			obasHeadingFont,
-			obasMainFont,
-			obasH1Font,
-			obasH2Font,
-			obasH3Font,
-			obasH4Font,
-			obasH5Font,
-			obasH6Font,
-			// 字体大小设置
-			obasMainFontSize,
-			obasH1Size,
-			obasH2Size,
-			obasH3Size,
-			obasH4Size,
-			obasH5Size,
-			obasH6Size,
-			// 自定义CSS
-			customCss,
-		} = this.settings as OBASAssistantSettings;
-
-		// 更新样式部分
-		this.styleSections.hsl = this.generateHslSection(
-			hue,
-			saturation,
-			lightness
+	private async generateUserCss() {
+		const userCss = await Promise.all(
+			this.settings.obasUserDesignsCss
+				.filter((item) => item.enabled)
+				.map(async (item) => {
+					return `/* ${
+						item.name
+					} */\n${await this.app.vault.adapter.read(item.filePath)}`;
+				})
 		);
-		this.styleSections.headingTransform =
-			this.generateHeadingTransformSection(obasHeadingTextTransform);
-		this.styleSections.color = this.generateColorSection({
-			obasH1Color,
-			obasH2Color,
-			obasH3Color,
-			obasH4Color,
-			obasH5Color,
-			obasH6Color,
-			obasBodyColor,
-			obasParagraphColor,
-			obasListColor,
-			obasStrongColor,
-			obasEmColor,
-			obasLinkColor,
-		});
-		this.styleSections.fontFamily = this.generateFontFamilySection({
-			obasHeadingFont,
-			obasMainFont,
-			obasH1Font,
-			obasH2Font,
-			obasH3Font,
-			obasH4Font,
-			obasH5Font,
-			obasH6Font,
-		});
-		this.styleSections.fontSize = this.generateFontSizeSection({
-			obasMainFontSize,
-			obasH1Size,
-			obasH2Size,
-			obasH3Size,
-			obasH4Size,
-			obasH5Size,
-			obasH6Size,
-		});
-		this.styleSections.userStyle = customCss || "";
-
-		// 生成字体导入语句
-		const fontImports = this.generateFontImports([
-			obasHeadingFont,
-			obasMainFont,
-			obasH1Font || obasHeadingFont,
-			obasH2Font || obasHeadingFont,
-			obasH3Font || obasHeadingFont,
-			obasH4Font || obasHeadingFont,
-			obasH5Font || obasHeadingFont,
-			obasH6Font || obasHeadingFont,
-		]);
-
-		return `
-${fontImports}
-
-${this.styleSections.hsl}
-
-${this.styleSections.headingTransform}
-
-${this.styleSections.color}
-
-${this.styleSections.fontFamily}
-
-${this.styleSections.fontSize}
-
-${
-	this.styleSections.userStyle
-		? `/* 自定义CSS */\n${this.styleSections.userStyle}`
-		: ""
-}
-`;
+		return userCss.join("\n\n");
 	}
 
 	/**
@@ -488,6 +396,12 @@ ${this.styleSections.fontFamily}
 ${this.styleSections.fontSize}
 
 ${
+	this.styleSections.userCss
+		? `/* Design CSS */\n${this.styleSections.userCss}`
+		: ""
+}
+
+${
 	this.styleSections.userStyle
 		? `/* 自定义CSS */\n${this.styleSections.userStyle}`
 		: ""
@@ -495,14 +409,137 @@ ${
 `;
 	}
 
-	// 保留原有方法以保持向后兼容性，但现在提供更精细的控制
-	async modifyObasHslFile() {
-		const { obasThemeColor } = this.settings;
-		const hsl = this.colorToHsl(obasThemeColor);
-		await this.updateStyleSection(
-			"hsl",
-			this.generateHslSection(hsl.h, hsl.s, hsl.l)
-		);
+	async clearStyleSection(section: keyof StyleSection | "all") {
+		if (section === "all") {
+			return this.clearAllStyles();
+		}
+		await this.updateStyleSection(section, "");
+	}
+
+	async modifyStyleSection(section: keyof StyleSection) {
+		switch (section) {
+			case "hsl":
+				const { obasThemeColor } = this.settings;
+				const hsl = this.colorToHsl(obasThemeColor);
+				this.styleSections.hsl = this.generateHslSection(
+					hsl.h,
+					hsl.s,
+					hsl.l
+				);
+				break;
+			case "headingTransform":
+				this.styleSections.headingTransform =
+					this.generateHeadingTransformSection(
+						this.settings.obasHeadingTextTransform
+					);
+				break;
+			case "color":
+				const colors = {
+					obasH1Color: this.settings.obasH1Color,
+					obasH2Color: this.settings.obasH2Color,
+					obasH3Color: this.settings.obasH3Color,
+					obasH4Color: this.settings.obasH4Color,
+					obasH5Color: this.settings.obasH5Color,
+					obasH6Color: this.settings.obasH6Color,
+					obasBodyColor: this.settings.obasBodyColor,
+					obasParagraphColor: this.settings.obasParagraphColor,
+					obasListColor: this.settings.obasListColor,
+					obasStrongColor: this.settings.obasStrongColor,
+					obasEmColor: this.settings.obasEmColor,
+					obasLinkColor: this.settings.obasLinkColor,
+				};
+				this.styleSections.color = this.generateColorSection(colors);
+				break;
+			case "fontFamily":
+				const fonts = {
+					obasHeadingFont: this.settings.obasHeadingFont,
+					obasMainFont: this.settings.obasMainFont,
+					obasH1Font: this.settings.obasH1Font,
+					obasH2Font: this.settings.obasH2Font,
+					obasH3Font: this.settings.obasH3Font,
+					obasH4Font: this.settings.obasH4Font,
+					obasH5Font: this.settings.obasH5Font,
+					obasH6Font: this.settings.obasH6Font,
+				};
+				this.styleSections.fontFamily =
+					this.generateFontFamilySection(fonts);
+				break;
+			case "fontSize":
+				const sizes = {
+					obasMainFontSize: this.settings.obasMainFontSize,
+					obasH1Size: this.settings.obasH1Size,
+					obasH2Size: this.settings.obasH2Size,
+					obasH3Size: this.settings.obasH3Size,
+					obasH4Size: this.settings.obasH4Size,
+					obasH5Size: this.settings.obasH5Size,
+					obasH6Size: this.settings.obasH6Size,
+				};
+				this.styleSections.fontSize =
+					this.generateFontSizeSection(sizes);
+				break;
+			case "userStyle":
+				this.styleSections.userStyle = this.settings.customCss || "";
+				break;
+			case "userCss":
+				this.styleSections.userCss = await this.generateUserCss();
+				break;
+			// 其他样式部分的处理...
+		}
+		await this.writeStyleFile();
+	}
+
+	/**
+	 * 清空所有样式
+	 */
+	async clearAllStyles() {
+		Object.keys(this.styleSections).forEach((key) => {
+			this.styleSections[key as keyof StyleSection] = "";
+		});
+		await this.writeStyleFile();
+	}
+
+	async getUserDesignCssFiles() {
+		const obasFrameworkPath = this.settings.obasFrameworkFolder;
+		const userDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		let cssFiles: string[] = [];
+		// 使用 Obsidian 的 adapter API 递归获取 userDesignsPath 下所有子文件夹的 css 文件
+		cssFiles = await this.getAllCssFilesInFolder(userDesignsPath);
+		return cssFiles;
+	}
+
+	async getAllCssFilesInFolder(folderPath: string): Promise<string[]> {
+		let result: string[] = [];
+		const adapter = this.app.vault.adapter;
+		try {
+			const files = await adapter.list(folderPath);
+			// 处理文件
+			if (files.files && files.files.length > 0) {
+				const cssFiles = files.files.filter((file: string) =>
+					file.endsWith(".css")
+				);
+				result.push(
+					...cssFiles.map(
+						(f) => `${folderPath}/${f.split("/").pop()}`
+					)
+				);
+			}
+			// 递归处理子文件夹
+			if (files.folders && files.folders.length > 0) {
+				for (const subFolder of files.folders) {
+					const subFolderPath = `${folderPath}/${subFolder
+						.split("/")
+						.pop()}`;
+					const subFiles = await this.getAllCssFilesInFolder(
+						subFolderPath
+					);
+					result.push(...subFiles);
+				}
+			}
+		} catch (e) {
+			// 如果文件夹不存在，直接返回空数组
+			return [];
+		}
+		return result;
 	}
 
 	/**
@@ -548,109 +585,5 @@ ${
 			s: Math.round(s * 100),
 			l: Math.round(l * 100),
 		};
-	}
-
-	async modifyObasHeadingTransformFile() {
-		const { obasHeadingTextTransform } = this.settings;
-		await this.updateStyleSection(
-			"headingTransform",
-			this.generateHeadingTransformSection(obasHeadingTextTransform)
-		);
-	}
-
-	async modifyObasColorFile() {
-		const colors = {
-			obasH1Color: this.settings.obasH1Color,
-			obasH2Color: this.settings.obasH2Color,
-			obasH3Color: this.settings.obasH3Color,
-			obasH4Color: this.settings.obasH4Color,
-			obasH5Color: this.settings.obasH5Color,
-			obasH6Color: this.settings.obasH6Color,
-			obasBodyColor: this.settings.obasBodyColor,
-			obasParagraphColor: this.settings.obasParagraphColor,
-			obasListColor: this.settings.obasListColor,
-			obasStrongColor: this.settings.obasStrongColor,
-			obasEmColor: this.settings.obasEmColor,
-			obasLinkColor: this.settings.obasLinkColor,
-		};
-		await this.updateStyleSection(
-			"color",
-			this.generateColorSection(colors)
-		);
-	}
-
-	async modifyObasFontFamilyFile() {
-		const fonts = {
-			obasHeadingFont: this.settings.obasHeadingFont,
-			obasMainFont: this.settings.obasMainFont,
-			obasH1Font: this.settings.obasH1Font,
-			obasH2Font: this.settings.obasH2Font,
-			obasH3Font: this.settings.obasH3Font,
-			obasH4Font: this.settings.obasH4Font,
-			obasH5Font: this.settings.obasH5Font,
-			obasH6Font: this.settings.obasH6Font,
-		};
-		await this.updateStyleSection(
-			"fontFamily",
-			this.generateFontFamilySection(fonts)
-		);
-	}
-
-	async modifyObasFontSizeFile() {
-		const sizes = {
-			obasMainFontSize: this.settings.obasMainFontSize,
-			obasH1Size: this.settings.obasH1Size,
-			obasH2Size: this.settings.obasH2Size,
-			obasH3Size: this.settings.obasH3Size,
-			obasH4Size: this.settings.obasH4Size,
-			obasH5Size: this.settings.obasH5Size,
-			obasH6Size: this.settings.obasH6Size,
-		};
-		await this.updateStyleSection(
-			"fontSize",
-			this.generateFontSizeSection(sizes)
-		);
-	}
-
-	async modifyObasUserStyleFile() {
-		await this.updateStyleSection(
-			"userStyle",
-			this.settings.customCss || ""
-		);
-	}
-
-	// 清空特定样式部分
-	async clearObasHslFile() {
-		await this.updateStyleSection("hsl", "");
-	}
-
-	async clearObasHeadingTransformFile() {
-		await this.updateStyleSection("headingTransform", "");
-	}
-
-	async clearObasColorFile() {
-		await this.updateStyleSection("color", "");
-	}
-
-	async clearObasFontFamilyFile() {
-		await this.updateStyleSection("fontFamily", "");
-	}
-
-	async clearObasFontSizeFile() {
-		await this.updateStyleSection("fontSize", "");
-	}
-
-	async clearObasUserStyleFile() {
-		await this.updateStyleSection("userStyle", "");
-	}
-
-	/**
-	 * 清空所有样式
-	 */
-	async clearAllStyles() {
-		Object.keys(this.styleSections).forEach((key) => {
-			this.styleSections[key as keyof StyleSection] = "";
-		});
-		await this.writeStyleFile();
 	}
 }

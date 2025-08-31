@@ -98,4 +98,8 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	customCss: "",
 	enableCustomCss: false,
 	obasSlideMode: "light",
+	obasUserDesigns: "none",
+	obasUserDesignsCss: [],
+	obasAutoConvertLinks: true,
+	obasEnableParagraphFragments: true,
 };

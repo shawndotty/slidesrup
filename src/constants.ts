@@ -36,6 +36,17 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	slideName: "SLIDE_NAME",
 };
 
+export const DEFAULT_DESIGNS = [
+	"A",
+	"B",
+	"C",
+	"D",
+	"E",
+	"F",
+	"G",
+	"H",
+] as const;
+
 export const OBAS_LIST_CLASSES = [
 	"box-list",
 	"fancy-list",
