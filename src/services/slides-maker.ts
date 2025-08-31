@@ -1,4 +1,4 @@
-import { App, Editor, Notice, TFile, moment } from "obsidian";
+import { App, Editor, Notice, TFile, moment, TFolder } from "obsidian";
 import { t } from "../lang/helpers";
 import {
 	slideChapterTemplate,
@@ -23,11 +23,14 @@ import {
 	get_list_items_from_note,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
-import { TEMPLATE_PLACE_HOLDERS } from "src/constants";
+import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 
 export class SlidesMaker {
 	private app: App;
 	private settings: OBASAssistantSettings;
+	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
+	private userDesigns: Array<string> = [];
+	private designOptions: Array<SuggesterOption> = [];
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -39,6 +42,32 @@ export class SlidesMaker {
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
 		this.settings = settings;
+		this.userDesigns = this.getUserDesigns();
+		this.designOptions = this.userDesigns
+			.concat(this.defaultDesigns)
+			.map((design, index) => ({
+				id: `"${design}"`,
+				name: `${index + 1}. ${t("Slide Design")} ${design}`,
+				value: design,
+			}));
+	}
+
+	private getUserDesigns() {
+		const obasFrameworkPath = this.settings.obasFrameworkFolder;
+		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		// 获取框架文件夹
+		const obasUserDesignsFolder =
+			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+		let userDesigns: Array<string> = [];
+		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+			// 获取所有子文件夹
+			const subFolders = obasUserDesignsFolder.children
+				.filter((file) => file instanceof TFolder)
+				.map((folder) => folder.name.split("-").last() as string);
+			userDesigns = subFolders;
+		}
+
+		return userDesigns;
 	}
 
 	async createSlides(): Promise<void> {
@@ -296,9 +325,11 @@ export class SlidesMaker {
 		const config: ReplaceConfig = { ...replaceConfig };
 
 		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
-			let design = this.settings.defaultDesign;
+			let design = this._getSlideDesign();
 			if (!design || design === "none") {
-				const designOption = await this._selectSlideDesign();
+				const designOption = await this._selectSlideDesign(
+					this.designOptions
+				);
 				if (!designOption) {
 					new Notice(t("Please select a slide design"));
 					return replaceConfig;
@@ -390,8 +421,10 @@ export class SlidesMaker {
 		}
 	}
 
-	private async _selectSlideDesign(): Promise<SuggesterOption | null> {
-		const suggester = new SlideDesignSuggester(this.app);
+	private async _selectSlideDesign(
+		options: SuggesterOption[]
+	): Promise<SuggesterOption | null> {
+		const suggester = new SlideDesignSuggester(this.app, options);
 		return new Promise((resolve) => {
 			suggester.onChooseItem = (item: SuggesterOption) => {
 				resolve(item);
@@ -449,19 +482,26 @@ export class SlidesMaker {
 		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
-	private _generateNewSlideFilesNames(): {
+	/**
+	 * 优化生成新幻灯片相关文件名的方法，避免重复代码
+	 */
+	private _generateNewSlideFilesNames(targetSlide: string = ""): {
 		slideName: string;
 		baseLayoutName: string;
 		tocName: string;
 	} {
-		const timestamp = getTimeStamp();
+		const base = targetSlide || `${getTimeStamp()}-${t("Slide")}`;
 		return {
-			slideName: `${timestamp}-${t("Slide")}`,
-			baseLayoutName: `${timestamp}-${t("BaseLayout")}`,
-			tocName: `${timestamp}-${t("TOC")}`,
+			slideName: base,
+			baseLayoutName: `${base}-${t("BaseLayout")}`,
+			tocName: `${base}-${t("TOC")}`,
 		};
 	}
 
+	/**
+	 * 创建或更新幻灯片文件，并根据需要打开
+	 * 优化：减少重复判断，简化逻辑
+	 */
 	private async _createAndOpenSlide(
 		location: string,
 		fileName: string,
@@ -469,11 +509,16 @@ export class SlidesMaker {
 		open: boolean = true
 	): Promise<void> {
 		const filePath = `${location}/${fileName}.md`;
+		let file = this.app.vault.getAbstractFileByPath(filePath);
 
-		const newFile = await this.app.vault.create(filePath, content);
+		if (file instanceof TFile) {
+			await this.app.vault.modify(file, content);
+		} else {
+			file = await this.app.vault.create(filePath, content);
+		}
 
-		if (open && newFile instanceof TFile) {
-			await this.app.workspace.getLeaf().openFile(newFile);
+		if (open && file instanceof TFile) {
+			await this.app.workspace.getLeaf().openFile(file);
 		}
 	}
 
@@ -489,7 +534,7 @@ export class SlidesMaker {
 		}
 
 		// 3. Process markdown content
-		const { content, lines, headingsInfo } =
+		const { content, lines, headingsInfo, targetSlide } =
 			await this._extractContentFromFile(activeFile);
 
 		// Validate document structure
@@ -534,7 +579,7 @@ export class SlidesMaker {
 
 		// 2. Generate file names for slide components
 		const { slideName, baseLayoutName, tocName } =
-			this._generateNewSlideFilesNames();
+			this._generateNewSlideFilesNames(targetSlide);
 
 		// 4. Create TOC file
 		await this._createTocFile(newSlideLocation, tocName, lines);
@@ -604,11 +649,14 @@ export class SlidesMaker {
 		await createPathIfNeeded(newSlideLocation);
 
 		// Determine design
-		let design = this.settings.defaultDesign;
+		const activeFile = this.app.workspace.getActiveFile();
+		let design = this._getSlideDesign(activeFile);
 		if (!design || design === "none") {
-			design = (await this._selectSlideDesign())?.value || "H";
+			design =
+				(await this._selectSlideDesign(this.designOptions))?.value ||
+				"H";
 		}
-		design = design.toUpperCase?.() || "";
+		// design = design.toUpperCase?.() || "";
 
 		let slideMode = this.settings.obasSlideMode;
 		if (!slideMode || slideMode === "none") {
@@ -633,13 +681,15 @@ export class SlidesMaker {
 				end: { line: number; col: number; offset: number };
 			};
 		}>;
+		targetSlide: string;
 	}> {
 		const originalContent = await this.app.vault.read(file);
 		let content = originalContent;
 
 		// Remove frontmatter if present
 		const fileCache = this.app.metadataCache.getFileCache(file);
-		const frontmatterPosition = fileCache?.frontmatter?.position;
+		const frontmatterPosition =
+			fileCache?.frontmatterPosition || fileCache?.frontmatter?.position;
 
 		if (frontmatterPosition) {
 			content = originalContent.slice(frontmatterPosition.end.offset + 1);
@@ -658,7 +708,9 @@ export class SlidesMaker {
 		content = content.replace(/^\s*\n/, "");
 
 		const lines = content.split("\n");
-		return { content, lines, headingsInfo };
+
+		const targetSlide = fileCache?.frontmatter?.targetSlide || "";
+		return { content, lines, headingsInfo, targetSlide };
 	}
 
 	/**
@@ -746,14 +798,44 @@ export class SlidesMaker {
 			design
 		);
 
+		// Convert WikiLink to data-preview-link
+
+		const finalContent = this._getAutoConvertLinks(activeFile)
+			? this._convertMarkdownLinksToPreviewLinks(contentWithToc)
+			: contentWithToc;
+
+		// const finalContent = contentWithToc;
+
 		// 6. Generate final content with frontmatter, cover and back pages
 		return this._generateFinalSlideContent(
-			contentWithToc,
+			finalContent,
 			baseLayoutName,
 			design,
 			activeFile,
 			slideMode
 		);
+	}
+
+	/**
+	 * 将文本中的 [name](link) 格式全部转换为 <a href="link" data-preview-link>name</a>
+	 * 其中 name 可以是任意字符，link 必须是 http 或 https 开头的链接
+	 */
+	private _convertMarkdownLinksToPreviewLinks(text: string): string {
+		// 使用正则匹配 [name](link) 形式，link 以 http 或 https 开头
+		// 排除 ![ 开头的图片嵌入语法
+		return text
+			.replace(
+				/!\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<img alt="${name}" src="${link}" data-preview-image />`;
+				}
+			)
+			.replace(
+				/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<a href="${link}" data-preview-link>${name}</a>`;
+				}
+			);
 	}
 
 	/**
@@ -964,5 +1046,74 @@ width: 1920
 
 		// Combine all parts
 		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n${backCoverSlide}`;
+	}
+
+	/**
+	 * Gets the slide design to use for the current context.
+	 * Priority order: frontmatter.slideDesign → settings.obasUserDesigns → settings.defaultDesign
+	 *
+	 * @param activeFile - Optional file to check, defaults to current active file
+	 * @returns The design string to use
+	 */
+	private _getSlideDesign(activeFile?: TFile | null): string {
+		if (!activeFile) {
+			return this._getFallbackDesign();
+		}
+
+		// Get file cache (this is already cached by Obsidian)
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const frontmatterDesign = fileCache?.frontmatter?.slideDesign;
+
+		// Return frontmatter design if it exists and is valid
+		if (
+			frontmatterDesign &&
+			typeof frontmatterDesign === "string" &&
+			frontmatterDesign.trim()
+		) {
+			return frontmatterDesign.trim();
+		}
+
+		// Fallback to settings-based design
+		return this._getFallbackDesign();
+	}
+
+	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {
+		if (!activeFile) {
+			return this.settings.obasAutoConvertLinks;
+		}
+
+		// Get file cache (this is already cached by Obsidian)
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const frontmatterAutoConvertLinks =
+			fileCache?.frontmatter?.autoConvertLinks;
+
+		// Return frontmatter autoConvertLinks if it exists
+		if (
+			frontmatterAutoConvertLinks !== undefined &&
+			typeof frontmatterAutoConvertLinks === "boolean"
+		) {
+			return frontmatterAutoConvertLinks;
+		}
+
+		return this.settings.obasAutoConvertLinks;
+	}
+
+	/**
+	 * Gets the fallback design from settings
+	 * @private
+	 */
+	private _getFallbackDesign(): string {
+		const userDesign = this.settings.obasUserDesigns;
+		const defaultDesign = this.settings.defaultDesign;
+
+		// Check if user design is set and not 'none'
+		if (userDesign && userDesign !== "none" && userDesign.trim()) {
+			return userDesign.trim();
+		}
+
+		// Return default design, ensuring it's not empty
+		return defaultDesign && defaultDesign.trim()
+			? defaultDesign.trim()
+			: "A";
 	}
 }

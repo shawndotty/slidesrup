@@ -21,6 +21,12 @@ export interface AirtableIds {
 	viewID: string;
 }
 
+export interface UserDesignCss {
+	name: string;
+	filePath: string;
+	enabled: boolean;
+}
+
 export interface OBASAssistantSettings {
 	updateAPIKey: string;
 	updateAPIKeyIsValid: boolean;
@@ -98,6 +104,11 @@ export interface OBASAssistantSettings {
 	customCss: string;
 	enableCustomCss: boolean;
 	obasSlideMode: string;
+	obasUserDesigns: string;
+
+	// 用户自定义的CSS设计列表，每个元素包含设计名称、文件路径和启用状态
+	obasUserDesignsCss: UserDesignCss[];
+	obasAutoConvertLinks: boolean;
 }
 
 export interface NocoDBTable {
