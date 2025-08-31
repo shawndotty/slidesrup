@@ -718,7 +718,7 @@ export class SlidesMaker {
 
 		const lines = content.split("\n");
 
-		const targetSlide = fileCache?.frontmatter?.targetSlide || "";
+		const targetSlide = fileCache?.frontmatter?.slideName || "";
 		return { content, lines, headingsInfo, targetSlide };
 	}
 
