@@ -301,4 +301,6 @@ export default {
 	"Design and Templates": "設計與模板",
 	"Auto Convert Links": "自動轉換連結",
 	ACLD: "自動轉換連結為支持 Lightbox 的連結",
+	"Enable Paragraph Fragments": "啟用段落碎片效果",
+	EPF: "為段落使用碎片動畫效果",
 };

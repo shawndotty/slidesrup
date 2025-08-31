@@ -202,6 +202,16 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Enable Paragraph Fragments",
+			desc: "EPF",
+			value: this.plugin.settings.obasEnableParagraphFragments,
+			onChange: async (value) => {
+				this.plugin.settings.obasEnableParagraphFragments = value;
+				await this.plugin.saveSettings();
+			},
+		});
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {

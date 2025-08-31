@@ -101,4 +101,5 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasUserDesigns: "none",
 	obasUserDesignsCss: [],
 	obasAutoConvertLinks: true,
+	obasEnableParagraphFragments: true,
 };
