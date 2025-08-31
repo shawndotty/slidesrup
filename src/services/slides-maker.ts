@@ -809,11 +809,17 @@ export class SlidesMaker {
 
 		// Convert WikiLink to data-preview-link
 
-		const finalContent = this._getAutoConvertLinks(activeFile)
+		const contentWithConvertedLinks = this._getAutoConvertLinks(activeFile)
 			? this._convertMarkdownLinksToPreviewLinks(contentWithToc)
 			: contentWithToc;
 
-		// const finalContent = contentWithToc;
+		const contentWithParagrahFragments = this._getEnableParagraphFragments(
+			activeFile
+		)
+			? this._addFragmentsToParagraph(contentWithConvertedLinks)
+			: contentWithConvertedLinks;
+
+		const finalContent = contentWithParagrahFragments;
 
 		// 6. Generate final content with frontmatter, cover and back pages
 		return this._generateFinalSlideContent(
@@ -845,6 +851,23 @@ export class SlidesMaker {
 					return `<a href="${link}" data-preview-link>${name}</a>`;
 				}
 			);
+	}
+
+	private _addFragmentsToParagraph(text: string): string {
+		// 匹配Markdown中的段落（非标题、非列表、非代码块、非空行）
+		return text.replace(
+			/(^|\n)(?!\s*[-*+>]|#{1,6}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
+			(match, p1, p2) => {
+				// 跳过空行和以![[开头的段落
+				if (
+					!p2.trim() ||
+					p2.trim().startsWith("![[") ||
+					p2.trim().startsWith("<!--")
+				)
+					return match;
+				return `${p1}<span class="fragment">${p2}</span>`;
+			}
+		);
 	}
 
 	/**
@@ -1106,6 +1129,26 @@ width: 1920
 		return this.settings.obasAutoConvertLinks;
 	}
 
+	private _getEnableParagraphFragments(activeFile?: TFile | null): boolean {
+		if (!activeFile) {
+			return this.settings.obasEnableParagraphFragments;
+		}
+
+		// Get file cache (this is already cached by Obsidian)
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const frontmatterEnableParagraphFragments =
+			fileCache?.frontmatter?.enableParagraphFragments;
+
+		// Return frontmatter autoConvertLinks if it exists
+		if (
+			frontmatterEnableParagraphFragments !== undefined &&
+			typeof frontmatterEnableParagraphFragments === "boolean"
+		) {
+			return frontmatterEnableParagraphFragments;
+		}
+
+		return this.settings.obasEnableParagraphFragments;
+	}
 	/**
 	 * Gets the fallback design from settings
 	 * @private

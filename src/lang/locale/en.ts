@@ -358,4 +358,6 @@ export default {
 	"Design and Templates": "Design and Templates",
 	"Auto Convert Links": "Auto Convert Links",
 	ACLD: "Convert Links To Support Lightbox",
+	"Enable Paragraph Fragments": "Enable Paragraph Fragments",
+	EPF: "Use Fragments Effect for Paragraph",
 };
