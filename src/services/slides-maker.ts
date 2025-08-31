@@ -575,7 +575,7 @@ export class SlidesMaker {
 		// 1. Setup slide location and get active file
 		const { newSlideContainer, newSlideLocation, design, slideMode } =
 			await this._setupSlideConversion();
-		if (!newSlideContainer) return;
+		if (newSlideContainer === null) return;
 
 		// 2. Generate file names for slide components
 		const { slideName, baseLayoutName, tocName } =
@@ -617,39 +617,48 @@ export class SlidesMaker {
 		design: string;
 		slideMode: string;
 	}> {
-		// Get slide location
-		const newSlideContainer = await this._determineNewSlideLocation();
-		if (newSlideContainer === null) {
-			new Notice(t("Operation cancelled by user"));
-			return {
-				newSlideContainer: null,
-				newSlideLocation: "",
-				design: "",
-				slideMode: "",
-			};
+		const activeFile = this.app.workspace.getActiveFile();
+		let newSlideLocation = "";
+		let newSlideContainer = "";
+		const slideFMLocation = this._getSlideLocation(activeFile);
+
+		if (slideFMLocation) {
+			newSlideLocation = slideFMLocation;
+		} else {
+			// Get slide location
+			const slideContainer = await this._determineNewSlideLocation();
+			if (slideContainer === null) {
+				new Notice(t("Operation cancelled by user"));
+				return {
+					newSlideContainer: null,
+					newSlideLocation: "",
+					design: "",
+					slideMode: "",
+				};
+			}
+
+			// Get subfolder name
+			let subFolder = this.settings.customizeSlideFolderName
+				? await new InputModal(
+						this.app,
+						t("Please input slide folder name"),
+						"",
+						true,
+						slideContainer
+				  ).openAndGetValue()
+				: undefined;
+			if (!subFolder?.trim()) subFolder = t("Slide");
+
+			// Create slide location path
+			newSlideLocation =
+				slideContainer === "/"
+					? subFolder
+					: `${slideContainer}/${subFolder}`;
 		}
 
-		// Get subfolder name
-		let subFolder = this.settings.customizeSlideFolderName
-			? await new InputModal(
-					this.app,
-					t("Please input slide folder name"),
-					"",
-					true,
-					newSlideContainer
-			  ).openAndGetValue()
-			: undefined;
-		if (!subFolder?.trim()) subFolder = t("Slide");
-
-		// Create slide location path
-		const newSlideLocation =
-			newSlideContainer === "/"
-				? subFolder
-				: `${newSlideContainer}/${subFolder}`;
 		await createPathIfNeeded(newSlideLocation);
 
 		// Determine design
-		const activeFile = this.app.workspace.getActiveFile();
 		let design = this._getSlideDesign(activeFile);
 		if (!design || design === "none") {
 			design =
@@ -1056,25 +1065,24 @@ width: 1920
 	 * @returns The design string to use
 	 */
 	private _getSlideDesign(activeFile?: TFile | null): string {
-		if (!activeFile) {
-			return this._getFallbackDesign();
-		}
+		const design =
+			activeFile &&
+			typeof this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+				?.slideDesign === "string"
+				? // 这里的!是TypeScript的非空断言（Non-null Assertion Operator），用于告诉编译器在此处对象不会为null或undefined，跳过类型检查。
+				  this.app.metadataCache
+						.getFileCache(activeFile)!
+						.frontmatter!.slideDesign!.trim()
+				: "";
+		return design ? design : this._getFallbackDesign();
+	}
 
-		// Get file cache (this is already cached by Obsidian)
-		const fileCache = this.app.metadataCache.getFileCache(activeFile);
-		const frontmatterDesign = fileCache?.frontmatter?.slideDesign;
-
-		// Return frontmatter design if it exists and is valid
-		if (
-			frontmatterDesign &&
-			typeof frontmatterDesign === "string" &&
-			frontmatterDesign.trim()
-		) {
-			return frontmatterDesign.trim();
-		}
-
-		// Fallback to settings-based design
-		return this._getFallbackDesign();
+	private _getSlideLocation(activeFile?: TFile | null): string {
+		const loc = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideLocation
+			: "";
+		return typeof loc === "string" && loc.trim() ? loc.trim() : "";
 	}
 
 	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {
