@@ -38,6 +38,8 @@ export class SlidesMaker {
 			new RegExp(`{{${value}}}`, "g"),
 		])
 	);
+	// 优化：定义常用的正则表达式常量，避免重复定义
+	private static readonly COMMENT_BLOCK_REGEX = /%%(.*?)%%/g;
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -881,7 +883,10 @@ export class SlidesMaker {
 		for (const line of lines) {
 			if (/^#{1,6}\s/.test(line)) {
 				headingCount++;
-				if (headingCount > 1) newLines.push("---");
+				// 优化：只在标题前插入分隔符，无需插入空行
+				if (headingCount > 1) {
+					newLines.push("---");
+				}
 			}
 			newLines.push(line);
 		}
@@ -902,13 +907,31 @@ export class SlidesMaker {
 		for (const line of content.split("\n")) {
 			if (/^##\s+/.test(line)) {
 				h2Index++;
+				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+				let extracted: string[] = [];
+				let merged = "";
+
+				if (matches) {
+					extracted = matches.map((m) => m.slice(2, -2));
+				}
+				// INSERT_YOUR_CODE
+				if (extracted.length > 0) {
+					merged = extracted.join(" ");
+					// 你可以在这里使用 merged 变量
+				}
 				modifiedLines.push(
 					`<!-- slide id="c-${h2Index}" template="[[${t(
 						"Chapter"
-					)}-${design}]]" class="order-list-with-border" -->\n`
+					)}-${design}]]" class="order-list-with-border${
+						merged ? ` ${merged}` : ""
+					}" -->\n`
 				);
+				modifiedLines.push(
+					line.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "").trim()
+				);
+			} else {
+				modifiedLines.push(line);
 			}
-			modifiedLines.push(line);
 		}
 
 		return modifiedLines.join("\n");
@@ -1001,7 +1024,7 @@ export class SlidesMaker {
 			if (/^###\s+/.test(line)) {
 				pageIndexInChapter++;
 				// INSERT_YOUR_CODE
-				const matches = line.match(/%%(.*?)%%/g);
+				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
 				let extracted: string[] = [];
 				let merged = "";
 
@@ -1014,10 +1037,16 @@ export class SlidesMaker {
 					// 你可以在这里使用 merged 变量
 				}
 				finalLines.push(
-					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row ${merged}" -->\n`
+					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row${
+						merged ? ` ${merged}` : ""
+					}" -->\n`
 				);
+				finalLines.push(
+					line.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "").trim()
+				);
+			} else {
+				finalLines.push(line);
 			}
-			finalLines.push(line.replace(/%%(.*?)%%/g, ""));
 		}
 
 		return finalLines.join("\n");
