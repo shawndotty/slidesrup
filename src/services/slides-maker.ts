@@ -862,7 +862,8 @@ export class SlidesMaker {
 				if (
 					!p2.trim() ||
 					p2.trim().startsWith("![[") ||
-					p2.trim().startsWith("<!--")
+					p2.trim().startsWith("<!--") ||
+					p2.trim().startsWith("|")
 				)
 					return match;
 				return `${p1}<span class="fragment">${p2}</span>`;
