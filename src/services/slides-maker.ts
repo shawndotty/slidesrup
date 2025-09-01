@@ -1056,7 +1056,7 @@ aliases:
  - ${activeFile.basename}
 defaultTemplate: "[[${baseLayoutName}]]"
 pdfSeparateFragments: false
-theme: moon
+theme: white
 transition: none
 width: 1920
 ---`;
