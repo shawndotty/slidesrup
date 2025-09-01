@@ -1000,11 +1000,24 @@ export class SlidesMaker {
 			}
 			if (/^###\s+/.test(line)) {
 				pageIndexInChapter++;
+				// INSERT_YOUR_CODE
+				const matches = line.match(/%%(.*?)%%/g);
+				let extracted: string[] = [];
+				let merged = "";
+
+				if (matches) {
+					extracted = matches.map((m) => m.slice(2, -2));
+				}
+				// INSERT_YOUR_CODE
+				if (extracted.length > 0) {
+					merged = extracted.join(" ");
+					// 你可以在这里使用 merged 变量
+				}
 				finalLines.push(
-					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row" -->\n`
+					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row ${merged}" -->\n`
 				);
 			}
-			finalLines.push(line);
+			finalLines.push(line.replace(/%%(.*?)%%/g, ""));
 		}
 
 		return finalLines.join("\n");
