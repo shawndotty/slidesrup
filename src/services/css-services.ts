@@ -48,6 +48,10 @@ export class ObasStyleService {
 				};
 			}
 		);
+
+		// 创建当前文件路径的集合
+		const currentFilePaths = new Set(userDesignCssFiles);
+
 		// 过滤出不在当前设置中的新CSS文件
 		const existingPaths = new Set(
 			this.settings.obasUserDesignsCss?.map((item) => item.filePath) || []
@@ -57,6 +61,13 @@ export class ObasStyleService {
 			(item) => !existingPaths.has(item.filePath)
 		);
 
+		// 移除已经被删除的CSS文件，保留新添加的文件
+		this.settings.obasUserDesignsCss =
+			this.settings.obasUserDesignsCss.filter((item) =>
+				currentFilePaths.has(item.filePath)
+			);
+
+		// 添加新的CSS文件
 		this.settings.obasUserDesignsCss.push(...newUserDesignCss);
 	}
 
