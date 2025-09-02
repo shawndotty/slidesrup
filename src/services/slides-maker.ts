@@ -861,49 +861,82 @@ export class SlidesMaker {
 
 	private _addFragmentsToParagraph(text: string): string {
 		// 优化：先保护代码块，然后处理普通段落
-		return this._processTextWithCodeBlockProtection(text);
+		return this._processTextWithBlockProtection(text);
 	}
 
-	private _processTextWithCodeBlockProtection(text: string): string {
-		// 第一步：标记代码块区域，防止被修改
-		const codeBlockMarkers: {
+	private _processTextWithBlockProtection(text: string): string {
+		// 第一步：标记代码块和数学块区域，防止被修改
+		const blockMarkers: {
 			start: number;
 			end: number;
 			content: string;
+			type: "code" | "math";
 		}[] = [];
 		let processedText = text;
 
 		// 匹配代码块并保存位置信息
 		const codeBlockRegex = /```[\s\S]*?```/g;
 		let match;
-		let offset = 0;
 
 		while ((match = codeBlockRegex.exec(text)) !== null) {
-			codeBlockMarkers.push({
-				start: match.index + offset,
-				end: match.index + match[0].length + offset,
+			blockMarkers.push({
+				start: match.index,
+				end: match.index + match[0].length,
 				content: match[0],
+				type: "code",
 			});
-			// 用占位符替换代码块
-			const placeholder = `__CODE_BLOCK_${codeBlockMarkers.length - 1}__`;
-			processedText = processedText.replace(match[0], placeholder);
-			offset += placeholder.length - match[0].length;
 		}
 
-		// 第二步：在非代码块区域添加 fragment
+		// 匹配数学块并保存位置信息
+		const mathBlockRegex = /\$\$[\s\S]*?\$\$/g;
+
+		while ((match = mathBlockRegex.exec(text)) !== null) {
+			blockMarkers.push({
+				start: match.index,
+				end: match.index + match[0].length,
+				content: match[0],
+				type: "math",
+			});
+		}
+
+		// 按位置排序，确保按顺序处理
+		blockMarkers.sort((a, b) => a.start - b.start);
+
+		// 从后往前替换，避免位置偏移问题
+		for (let i = blockMarkers.length - 1; i >= 0; i--) {
+			const marker = blockMarkers[i];
+			const placeholder =
+				marker.type === "code"
+					? `__CODE_BLOCK_${i}__`
+					: `__MATH_BLOCK_${i}__`;
+
+			processedText =
+				processedText.substring(0, marker.start) +
+				placeholder +
+				processedText.substring(marker.end);
+		}
+
+		// 第二步：在非代码块和数学块区域添加 fragment
 		processedText = this._addFragmentsToNonCodeBlocks(processedText);
 
-		// 第三步：恢复代码块内容
-		codeBlockMarkers.forEach((marker, index) => {
-			const placeholder = `__CODE_BLOCK_${index}__`;
-			processedText = processedText.replace(placeholder, marker.content);
+		// 第三步：恢复代码块和数学块内容
+		blockMarkers.forEach((marker, index) => {
+			const placeholder =
+				marker.type === "code"
+					? `__CODE_BLOCK_${index}__`
+					: `__MATH_BLOCK_${index}__`;
+
+			processedText = processedText.replace(
+				placeholder,
+				() => marker.content
+			);
 		});
 
 		return processedText;
 	}
 
 	private _addFragmentsToNonCodeBlocks(text: string): string {
-		// 匹配Markdown中的段落（非标题、非列表、非代码块、非空行）
+		// 匹配Markdown中的段落（非标题、非列表、非代码块、非数学块、非空行）
 		return text.replace(
 			/(^|\n)(?!\s*[-*+>]|#{1,6}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
 			(match, p1, p2) => {
@@ -913,7 +946,8 @@ export class SlidesMaker {
 					p2.trim().startsWith("![[") ||
 					p2.trim().startsWith("<!--") ||
 					p2.trim().startsWith("|") ||
-					p2.trim().startsWith("__CODE_BLOCK_")
+					p2.trim().startsWith("__CODE_BLOCK_") ||
+					p2.trim().startsWith("__MATH_BLOCK_")
 				)
 					return match;
 				return `${p1}<span class="fragment">${p2}</span>`;
