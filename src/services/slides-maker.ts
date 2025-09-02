@@ -539,6 +539,12 @@ export class SlidesMaker {
 		const { content, lines, headingsInfo, targetSlide } =
 			await this._extractContentFromFile(activeFile);
 
+		// Check if content already contains slide annotations
+		if (content.includes("<!-- slide")) {
+			new Notice(t("This file is already a slide presentation"));
+			return;
+		}
+
 		// Validate document structure
 		if (!headingsInfo.length) {
 			new Notice(t("Invalid Format: No headings found"));
@@ -565,12 +571,6 @@ export class SlidesMaker {
 			new Notice(
 				t("Invalid Format: Document must contain only one H1 heading")
 			);
-			return;
-		}
-
-		// Check if content already contains slide annotations
-		if (content.includes("<!-- slide")) {
-			new Notice(t("This file is already a slide presentation"));
 			return;
 		}
 
@@ -741,7 +741,7 @@ export class SlidesMaker {
 			.filter(Boolean) as string[];
 
 		const tocContent = h2List.length
-			? h2List.map((item, idx) => `+ [${item}](#c-${idx + 1})`).join("\n")
+			? h2List.map((item, idx) => `+ [${item}](#c${idx + 1})`).join("\n")
 			: "";
 
 		await this._createAndOpenSlide(location, tocName, tocContent, false);
@@ -784,8 +784,12 @@ export class SlidesMaker {
 		activeFile: TFile,
 		slideMode: string
 	): Promise<string> {
+		// Add Empty Page Annotation
+
+		const newLines = this._addEmptyPageAnnotation(lines, design);
+
 		// 1. Add page separators at headings
-		const contentWithSeparators = this._addPageSeparators(lines);
+		const contentWithSeparators = this._addPageSeparators(newLines);
 
 		// 2. Add slide annotations for chapters (H2)
 		const contentWithChapterSlides = this._addChapterSlideAnnotations(
@@ -856,6 +860,49 @@ export class SlidesMaker {
 	}
 
 	private _addFragmentsToParagraph(text: string): string {
+		// 优化：先保护代码块，然后处理普通段落
+		return this._processTextWithCodeBlockProtection(text);
+	}
+
+	private _processTextWithCodeBlockProtection(text: string): string {
+		// 第一步：标记代码块区域，防止被修改
+		const codeBlockMarkers: {
+			start: number;
+			end: number;
+			content: string;
+		}[] = [];
+		let processedText = text;
+
+		// 匹配代码块并保存位置信息
+		const codeBlockRegex = /```[\s\S]*?```/g;
+		let match;
+		let offset = 0;
+
+		while ((match = codeBlockRegex.exec(text)) !== null) {
+			codeBlockMarkers.push({
+				start: match.index + offset,
+				end: match.index + match[0].length + offset,
+				content: match[0],
+			});
+			// 用占位符替换代码块
+			const placeholder = `__CODE_BLOCK_${codeBlockMarkers.length - 1}__`;
+			processedText = processedText.replace(match[0], placeholder);
+			offset += placeholder.length - match[0].length;
+		}
+
+		// 第二步：在非代码块区域添加 fragment
+		processedText = this._addFragmentsToNonCodeBlocks(processedText);
+
+		// 第三步：恢复代码块内容
+		codeBlockMarkers.forEach((marker, index) => {
+			const placeholder = `__CODE_BLOCK_${index}__`;
+			processedText = processedText.replace(placeholder, marker.content);
+		});
+
+		return processedText;
+	}
+
+	private _addFragmentsToNonCodeBlocks(text: string): string {
 		// 匹配Markdown中的段落（非标题、非列表、非代码块、非空行）
 		return text.replace(
 			/(^|\n)(?!\s*[-*+>]|#{1,6}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
@@ -865,12 +912,30 @@ export class SlidesMaker {
 					!p2.trim() ||
 					p2.trim().startsWith("![[") ||
 					p2.trim().startsWith("<!--") ||
-					p2.trim().startsWith("|")
+					p2.trim().startsWith("|") ||
+					p2.trim().startsWith("__CODE_BLOCK_")
 				)
 					return match;
 				return `${p1}<span class="fragment">${p2}</span>`;
 			}
 		);
+	}
+
+	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
+		const newLines: string[] = [];
+		for (const line of lines) {
+			if (/^-{3,}$/.test(line)) {
+				newLines.push(line);
+				newLines.push(
+					`\n<!-- slide template="[[${t(
+						"BlankPage"
+					)}-${design}]]" -->`
+				);
+			} else {
+				newLines.push(line);
+			}
+		}
+		return newLines;
 	}
 
 	/**
@@ -920,7 +985,7 @@ export class SlidesMaker {
 					// 你可以在这里使用 merged 变量
 				}
 				modifiedLines.push(
-					`<!-- slide id="c-${h2Index}" template="[[${t(
+					`\n<!-- slide id="c${h2Index}" template="[[${t(
 						"Chapter"
 					)}-${design}]]" class="order-list-with-border${
 						merged ? ` ${merged}` : ""
@@ -989,7 +1054,7 @@ export class SlidesMaker {
 					h3TitleList[tempIdx].h2 === currentH2Index
 				) {
 					const h3 = h3TitleList[tempIdx];
-					h3s.push(`+ [${h3.title}](#c-${h3.h2}-p-${h3.h3})`);
+					h3s.push(`+ [${h3.title}](#c${h3.h2}p${h3.h3})`);
 					tempIdx++;
 				}
 
@@ -1037,7 +1102,7 @@ export class SlidesMaker {
 					// 你可以在这里使用 merged 变量
 				}
 				finalLines.push(
-					`<!-- slide id="c-${currentChapterIndex}-p-${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row${
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row${
 						merged ? ` ${merged}` : ""
 					}" -->\n`
 				);
@@ -1120,7 +1185,7 @@ width: 1920
 `;
 
 		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n${backCoverSlide}`;
+		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n\n${backCoverSlide}`;
 	}
 
 	/**

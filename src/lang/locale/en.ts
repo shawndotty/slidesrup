@@ -360,4 +360,5 @@ export default {
 	ACLD: "Convert Links To Support Lightbox",
 	"Enable Paragraph Fragments": "Enable Paragraph Fragments",
 	EPF: "Use Fragments Effect for Paragraph",
+	BlankPage: "Blank",
 };
