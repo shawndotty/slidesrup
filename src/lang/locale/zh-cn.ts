@@ -314,4 +314,5 @@ export default {
 	ACLD: "自动转换链接为支持Lightbox的链接",
 	"Enable Paragraph Fragments": "启用段落碎片效果",
 	EPF: "为段落使用碎片动画效果",
+	BlankPage: "空白",
 };
