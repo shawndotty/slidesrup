@@ -304,4 +304,5 @@ export default {
 	"Enable Paragraph Fragments": "啟用段落碎片效果",
 	EPF: "為段落使用碎片動畫效果",
 	BlankPage: "空白",
+	ContentPage: "內容",
 };

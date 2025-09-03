@@ -6,7 +6,7 @@ export function getPageTemplate() {
 	return `
 ---
 
-<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
+<!-- slide id="c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p{{${
 		TEMPLATE_PLACE_HOLDERS.pIndex
 	}}}" class="chapter-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}} fancy-list-row" -->
 
@@ -36,7 +36,7 @@ export function getChapterAndPagesTemplate() {
 	return `
 ---
 
-<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
+<!-- slide id="c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
 		"Chapter"
 	)}-{{${
 		TEMPLATE_PLACE_HOLDERS.design
@@ -44,10 +44,10 @@ export function getChapterAndPagesTemplate() {
 
 ## ${t("Chapter")} {{${TEMPLATE_PLACE_HOLDERS.cIndex}}}
 
-+ [${t("SubSlide")} 1](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-1)
-+ [${t("SubSlide")} 2](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-2)
-+ [${t("SubSlide")} 3](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-3)
-+ [${t("SubSlide")} 4](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-4)
++ [${t("SubSlide")} 1](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p1)
++ [${t("SubSlide")} 2](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p2)
++ [${t("SubSlide")} 3](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p3)
++ [${t("SubSlide")} 4](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p4)
 
 ${pages}
 `;
@@ -69,7 +69,7 @@ export function getChapterAndPagesTemplateWithCustomName() {
 	return `
 ---
 
-<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
+<!-- slide id="c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}" template="[[${t(
 		"Chapter"
 	)}-{{${
 		TEMPLATE_PLACE_HOLDERS.design
@@ -77,10 +77,10 @@ export function getChapterAndPagesTemplateWithCustomName() {
 
 ## {{${TEMPLATE_PLACE_HOLDERS.cName}}}
 
-+ [${t("SubSlide")} 1](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-1)
-+ [${t("SubSlide")} 2](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-2)
-+ [${t("SubSlide")} 3](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-3)
-+ [${t("SubSlide")} 4](#c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-4)
++ [${t("SubSlide")} 1](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p1)
++ [${t("SubSlide")} 2](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p2)
++ [${t("SubSlide")} 3](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p3)
++ [${t("SubSlide")} 4](#c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p4)
 
 ${pages}
 `;
@@ -160,7 +160,7 @@ export function getSlidePageTemplate() {
 	return `
 ---
 
-<!-- slide id="c-{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}-p-{{${
+<!-- slide id="c{{${TEMPLATE_PLACE_HOLDERS.cIndex}}}p{{${
 		TEMPLATE_PLACE_HOLDERS.pIndex
 	}}}"  class="chapter-{{${
 		TEMPLATE_PLACE_HOLDERS.cIndex
@@ -207,11 +207,11 @@ export function getBaseLayoutWithSteps() {
 
 export function getToc() {
 	return `
-+ [${t("Chapter")} 1](#c-1)
-+ [${t("Chapter")} 2](#c-2)
-+ [${t("Chapter")} 3](#c-3)
-+ [${t("Chapter")} 4](#c-4)
-+ [${t("Chapter")} 5](#c-5)
++ [${t("Chapter")} 1](#c1)
++ [${t("Chapter")} 2](#c2)
++ [${t("Chapter")} 3](#c3)
++ [${t("Chapter")} 4](#c4)
++ [${t("Chapter")} 5](#c5)
 `;
 }
 

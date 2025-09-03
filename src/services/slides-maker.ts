@@ -216,17 +216,35 @@ export class SlidesMaker {
 	async getFinalTemplate(
 		userTemplate: string,
 		defaultTemplate: string | (() => string),
-		replaceConfig: ReplaceConfig = {}
+		replaceConfig: ReplaceConfig = {},
+		isContentPage: boolean = false,
+		design: string = ""
 	) {
+		// 优化后的代码，减少重复、提升可读性
+		const getTemplate = async (tpl: string) =>
+			await this.getUserTemplate(tpl, replaceConfig);
+
 		if (this.settings.enableUserTemplates && userTemplate) {
-			return await this.getUserTemplate(userTemplate, replaceConfig);
-		} else {
-			const template =
-				typeof defaultTemplate === "function"
-					? defaultTemplate()
-					: defaultTemplate;
-			return await this.getDefaultTemplate(template, replaceConfig);
+			return getTemplate(userTemplate);
 		}
+
+		const template =
+			typeof defaultTemplate === "function"
+				? defaultTemplate()
+				: defaultTemplate;
+
+		if (isContentPage) {
+			const contentTemplateName = `${t("ContentPage")}-${design}.md`;
+			const contentTemplateFile = this.app.vault
+				.getMarkdownFiles()
+				.find((f) => f.name === contentTemplateName);
+
+			if (contentTemplateFile?.path) {
+				return getTemplate(contentTemplateFile.path);
+			}
+		}
+
+		return await this.getDefaultTemplate(template, replaceConfig);
 	}
 
 	async addSlideChapter(): Promise<void> {
@@ -236,7 +254,7 @@ export class SlidesMaker {
 			this._getChapterIndex(),
 		]);
 
-		const tocItem = `+ [${cName}](#c-${cIndex})`;
+		const tocItem = `+ [${cName}](#c${cIndex})`;
 		await this._appendItemToTocFile(tocItem);
 
 		const templateConfig = { cIndex, cName };
@@ -590,7 +608,8 @@ export class SlidesMaker {
 		await this._createBaseLayoutFile(
 			newSlideLocation,
 			baseLayoutName,
-			tocName
+			tocName,
+			design
 		);
 
 		// 6. Process content and create final slide
@@ -753,7 +772,8 @@ export class SlidesMaker {
 	private async _createBaseLayoutFile(
 		location: string,
 		baseLayoutName: string,
-		tocName: string
+		tocName: string,
+		design: string
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
@@ -762,7 +782,9 @@ export class SlidesMaker {
 				toc: tocName,
 				tagline: this.settings.tagline,
 				slogan: this.settings.slogan,
-			}
+			},
+			true,
+			design
 		);
 		await this._createAndOpenSlide(
 			location,
@@ -861,61 +883,134 @@ export class SlidesMaker {
 
 	private _addFragmentsToParagraph(text: string): string {
 		// 优化：先保护代码块，然后处理普通段落
-		return this._processTextWithCodeBlockProtection(text);
+		return this._processTextWithBlockProtection(text);
 	}
 
-	private _processTextWithCodeBlockProtection(text: string): string {
-		// 第一步：标记代码块区域，防止被修改
-		const codeBlockMarkers: {
+	private _processTextWithBlockProtection(text: string): string {
+		// 第一步：标记代码块、数学块和 HTML 块区域，防止被修改
+		const blockMarkers: {
 			start: number;
 			end: number;
 			content: string;
+			type: "code" | "math" | "html";
 		}[] = [];
 		let processedText = text;
 
 		// 匹配代码块并保存位置信息
 		const codeBlockRegex = /```[\s\S]*?```/g;
 		let match;
-		let offset = 0;
 
 		while ((match = codeBlockRegex.exec(text)) !== null) {
-			codeBlockMarkers.push({
-				start: match.index + offset,
-				end: match.index + match[0].length + offset,
+			blockMarkers.push({
+				start: match.index,
+				end: match.index + match[0].length,
 				content: match[0],
+				type: "code",
 			});
-			// 用占位符替换代码块
-			const placeholder = `__CODE_BLOCK_${codeBlockMarkers.length - 1}__`;
-			processedText = processedText.replace(match[0], placeholder);
-			offset += placeholder.length - match[0].length;
 		}
 
-		// 第二步：在非代码块区域添加 fragment
+		// 匹配数学块并保存位置信息
+		const mathBlockRegex = /\$\$[\s\S]*?\$\$/g;
+
+		while ((match = mathBlockRegex.exec(text)) !== null) {
+			blockMarkers.push({
+				start: match.index,
+				end: match.index + match[0].length,
+				content: match[0],
+				type: "math",
+			});
+		}
+
+		// 匹配 HTML 块并保存位置信息（成对标签）
+		// 仅添加与已有代码/数学块不重叠的 HTML 块
+		const htmlBlockRegex = /<([A-Za-z][\w:-]*)\b[^>]*>[\s\S]*?<\/\1>/g;
+		while ((match = htmlBlockRegex.exec(text)) !== null) {
+			const start = match.index;
+			const end = match.index + match[0].length;
+			let overlapsExisting = false;
+			for (const m of blockMarkers) {
+				if (!(end <= m.start || start >= m.end)) {
+					overlapsExisting = true;
+					break;
+				}
+			}
+			if (!overlapsExisting) {
+				blockMarkers.push({
+					start,
+					end,
+					content: match[0],
+					type: "html",
+				});
+			}
+		}
+
+		// 按位置排序，确保按顺序处理
+		blockMarkers.sort((a, b) => a.start - b.start);
+
+		// 从后往前替换，避免位置偏移问题
+		for (let i = blockMarkers.length - 1; i >= 0; i--) {
+			const marker = blockMarkers[i];
+			const placeholder =
+				marker.type === "code"
+					? `__CODE_BLOCK_${i}__`
+					: marker.type === "math"
+					? `__MATH_BLOCK_${i}__`
+					: `__HTML_BLOCK_${i}__`;
+
+			processedText =
+				processedText.substring(0, marker.start) +
+				placeholder +
+				processedText.substring(marker.end);
+		}
+
+		// 第二步：在非代码块、数学块和 HTML 块区域添加 fragment
 		processedText = this._addFragmentsToNonCodeBlocks(processedText);
 
-		// 第三步：恢复代码块内容
-		codeBlockMarkers.forEach((marker, index) => {
-			const placeholder = `__CODE_BLOCK_${index}__`;
-			processedText = processedText.replace(placeholder, marker.content);
+		// 第三步：恢复代码块、数学块和 HTML 块内容
+		blockMarkers.forEach((marker, index) => {
+			const placeholder =
+				marker.type === "code"
+					? `__CODE_BLOCK_${index}__`
+					: marker.type === "math"
+					? `__MATH_BLOCK_${index}__`
+					: `__HTML_BLOCK_${index}__`;
+
+			processedText = processedText.replace(
+				placeholder,
+				() => marker.content
+			);
 		});
 
 		return processedText;
 	}
 
 	private _addFragmentsToNonCodeBlocks(text: string): string {
-		// 匹配Markdown中的段落（非标题、非列表、非代码块、非空行）
+		// 匹配Markdown中的段落（非标题、非列表、非代码块、非数学块、非空行）
 		return text.replace(
-			/(^|\n)(?!\s*[-*+>]|#{1,6}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
+			/(^|\n)(?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
 			(match, p1, p2) => {
+				console.log(match);
 				// 跳过空行和以![[开头的段落
 				if (
 					!p2.trim() ||
 					p2.trim().startsWith("![[") ||
 					p2.trim().startsWith("<!--") ||
 					p2.trim().startsWith("|") ||
-					p2.trim().startsWith("__CODE_BLOCK_")
+					p2.trim().startsWith("---") ||
+					p2.trim().startsWith(":::") ||
+					p2.trim().startsWith("__CODE_BLOCK_") ||
+					p2.trim().startsWith("__MATH_BLOCK_") ||
+					p2.trim().startsWith("__HTML_BLOCK_")
 				)
 					return match;
+				// 如果是 Markdown 4~6 级标题，只包裹标题文本，不包含 #
+				const hMatch = p2.match(/^(#{4,6})\s+(.*)$/);
+				if (hMatch) {
+					const hashes = hMatch[1];
+					const title = hMatch[2];
+					if (title.trim().length === 0) return match;
+					return `${p1}${hashes} <span class="fragment">${title}</span>`;
+				}
 				return `${p1}<span class="fragment">${p2}</span>`;
 			}
 		);
@@ -946,9 +1041,9 @@ export class SlidesMaker {
 		const newLines: string[] = [];
 
 		for (const line of lines) {
-			if (/^#{1,6}\s/.test(line)) {
+			if (/^#{1,3}\s/.test(line)) {
 				headingCount++;
-				// 优化：只在标题前插入分隔符，无需插入空行
+				// 优化：只在3级标题前插入分隔符，无需插入空行
 				if (headingCount > 1) {
 					newLines.push("---");
 				}
