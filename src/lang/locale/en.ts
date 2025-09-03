@@ -361,4 +361,5 @@ export default {
 	"Enable Paragraph Fragments": "Enable Paragraph Fragments",
 	EPF: "Use Fragments Effect for Paragraph",
 	BlankPage: "Blank",
+	ContentPage: "Content",
 };
