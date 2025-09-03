@@ -39,7 +39,9 @@ export class SlidesMaker {
 		])
 	);
 	// 优化：定义常用的正则表达式常量，避免重复定义
-	private static readonly COMMENT_BLOCK_REGEX = /%%(.*?)%%/g;
+	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
+	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!)([\s\S]*?)%%/g;
+	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
@@ -1068,27 +1070,41 @@ export class SlidesMaker {
 			if (/^##\s+/.test(line)) {
 				h2Index++;
 				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+				const replaceMatches = line.match(
+					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+				);
 				let extracted: string[] = [];
 				let merged = "";
+				let classValue = "order-list-with-border";
 
-				if (matches) {
-					extracted = matches.map((m) => m.slice(2, -2));
+				if (replaceMatches && replaceMatches.length > 0) {
+					// 如果匹配到 %%! ... %%，则用其内容覆盖 class
+					const replaceContent = replaceMatches
+						.map((m) => m.slice(3, -2).trim())
+						.join(" ");
+					if (replaceContent) {
+						classValue = replaceContent;
+					}
+				} else if (matches) {
+					// 否则，提取普通注释内容，追加到默认 class 后面
+					extracted = matches.map((m) => m.slice(2, -2).trim());
+					if (extracted.length > 0) {
+						merged = extracted.join(" ");
+						classValue += merged ? ` ${merged}` : "";
+					}
 				}
-				// INSERT_YOUR_CODE
-				if (extracted.length > 0) {
-					merged = extracted.join(" ");
-					// 你可以在这里使用 merged 变量
-				}
+
 				modifiedLines.push(
 					`\n<!-- slide id="c${h2Index}" template="[[${t(
 						"Chapter"
-					)}-${design}]]" class="order-list-with-border${
-						merged ? ` ${merged}` : ""
-					}" -->\n`
+					)}-${design}]]" class="${classValue}" -->\n`
 				);
-				modifiedLines.push(
-					line.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "").trim()
-				);
+				// 去除所有注释块
+				let cleanedLine = line
+					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
+					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+					.trim();
+				modifiedLines.push(cleanedLine);
 			} else {
 				modifiedLines.push(line);
 			}
@@ -1184,26 +1200,42 @@ export class SlidesMaker {
 			if (/^###\s+/.test(line)) {
 				pageIndexInChapter++;
 				// INSERT_YOUR_CODE
+				// 先尝试匹配 %%!xxx%%，如果有则覆盖 class，否则追加
+				const replaceMatches = line.match(
+					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+				);
 				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
 				let extracted: string[] = [];
 				let merged = "";
+				const chapterClass = `chapter-${currentChapterIndex}`;
+				let classValue = "fancy-list-row";
 
-				if (matches) {
-					extracted = matches.map((m) => m.slice(2, -2));
+				if (replaceMatches && replaceMatches.length > 0) {
+					// 如果有 %%!xxx%%，则用其内容覆盖 class
+					const replaceContent = replaceMatches
+						.map((m) => m.slice(3, -2).trim())
+						.join(" ");
+					if (replaceContent) {
+						classValue = replaceContent;
+					}
+				} else if (matches && matches.length > 0) {
+					// 否则，追加 %%xxx%% 的内容
+					extracted = matches.map((m) => m.slice(2, -2).trim());
+					if (extracted.length > 0) {
+						merged = extracted.join(" ");
+						classValue += ` ${merged}`;
+					}
 				}
-				// INSERT_YOUR_CODE
-				if (extracted.length > 0) {
-					merged = extracted.join(" ");
-					// 你可以在这里使用 merged 变量
-				}
+
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="chapter-${currentChapterIndex} fancy-list-row${
-						merged ? ` ${merged}` : ""
-					}" -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="${chapterClass} ${classValue}" -->\n`
 				);
-				finalLines.push(
-					line.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "").trim()
-				);
+				// 去除所有 %%xxx%% 和 %%!xxx%% 注释块
+				let cleanedLine = line
+					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
+					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+					.trim();
+				finalLines.push(cleanedLine);
 			} else {
 				finalLines.push(line);
 			}
