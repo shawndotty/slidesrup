@@ -1301,6 +1301,8 @@ width: 1920
 			"Cover"
 		)}-${design}]]" -->`;
 
+		const newContent = this._addAuthorAndDate(content);
+
 		// Generate back cover slide
 		const backCoverSlide = `---
 
@@ -1312,7 +1314,28 @@ width: 1920
 `;
 
 		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n\n${backCoverSlide}`;
+		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+	}
+
+	private _addAuthorAndDate(content: string): string {
+		const authorTemplate = `::: author\nJohnny\n:::`;
+		const dateTemplate = `::: date\n2025年9月5日\n`;
+
+		const contentLines = content.split("\n");
+		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
+		const firstSeparatorLineIndex = contentLines.findIndex(
+			(line) => line.trim() === "---"
+		);
+		if (firstSeparatorLineIndex !== -1) {
+			const before = contentLines.slice(0, firstSeparatorLineIndex);
+			const after = contentLines.slice(firstSeparatorLineIndex);
+			return [...before, authorTemplate, dateTemplate, ...after].join(
+				"\n"
+			);
+		} else {
+			// 如果没有找到 '---'，则直接在内容最前面插入
+			return `${authorTemplate}\n${dateTemplate}\n${content}`;
+		}
 	}
 
 	/**
