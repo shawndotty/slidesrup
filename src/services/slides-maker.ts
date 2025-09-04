@@ -1301,18 +1301,52 @@ width: 1920
 			"Cover"
 		)}-${design}]]" -->`;
 
+		const newContent = this._addAuthorAndDate(content);
+
 		// Generate back cover slide
+		const lbnl = this._getLastButNotLeast(activeFile);
 		const backCoverSlide = `---
 
 <!-- slide template="[[${t(
 			"BackCover"
 		)}-${design}]]" class="order-list-with-border" -->
 
-# ${t("Farewell")}
+${lbnl}
 `;
 
 		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${content}\n\n${backCoverSlide}`;
+		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+	}
+
+	private _getLastButNotLeast(activeFile: TFile): string {
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const lbnl =
+			(fileCache?.frontmatter?.lastButNotLeast as string) ||
+			`# ${t("Farewell")}`;
+		return lbnl;
+	}
+
+	private _addAuthorAndDate(content: string): string {
+		const author = this.settings.presenter || "";
+		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
+		const authorTemplate = `::: author\n${author}\n:::\n`;
+		const dateTemplate = `::: date\n${date}\n:::\n`;
+
+		const contentLines = content.split("\n");
+		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
+		const firstSeparatorLineIndex = contentLines.findIndex(
+			(line) => line.trim() === "---"
+		);
+		if (firstSeparatorLineIndex !== -1) {
+			const before = contentLines.slice(0, firstSeparatorLineIndex);
+			const after = contentLines.slice(firstSeparatorLineIndex);
+			return [...before, authorTemplate, dateTemplate, ...after].join(
+				"\n"
+			);
+		} else {
+			// 如果没有找到 '---'，则直接在内容最前面插入
+			return `${authorTemplate}\n${dateTemplate}\n${content}`;
+		}
 	}
 
 	/**
