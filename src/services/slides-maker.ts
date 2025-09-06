@@ -830,9 +830,13 @@ export class SlidesMaker {
 		const contentWithPageSlides =
 			this._addPageSlideAnnotations(contentWithH3Links);
 
+		const contentWithSubPageSlides = this._addSubPageAnnotation(
+			contentWithPageSlides.split("\n")
+		).join("\n");
+
 		// 5. Add TOC slide
 		const contentWithToc = this._addTocSlide(
-			contentWithPageSlides,
+			contentWithSubPageSlides,
 			tocName,
 			design
 		);
@@ -1033,6 +1037,39 @@ export class SlidesMaker {
 			}
 		}
 		return newLines;
+	}
+
+	private _addSubPageAnnotation(lines: string[]): string[] {
+		let currentChapterIndex = 0;
+		let pageIndexInChapter = 0;
+		let subPageIndex = 0;
+		const finalLines: string[] = [];
+		const classValue = "fancy-list-row";
+
+		for (const line of lines) {
+			if (/^##\s+/.test(line)) {
+				currentChapterIndex++;
+				pageIndexInChapter = 0;
+			}
+			if (/^###\s+/.test(line)) {
+				pageIndexInChapter++;
+				subPageIndex = 0;
+			}
+			if (/^\*{3,}$/.test(line)) {
+				subPageIndex++;
+				const chapterClass = `chapter-${currentChapterIndex}`;
+
+				finalLines.push("---");
+				finalLines.push(
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" class="${chapterClass} ${classValue}" -->\n`
+				);
+				// 去除所有 %%xxx%% 和 %%!xxx%% 注释块
+			} else {
+				finalLines.push(line);
+			}
+		}
+
+		return finalLines;
 	}
 
 	/**
