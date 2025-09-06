@@ -1138,7 +1138,7 @@ export class SlidesMaker {
 				inH2 = true;
 			} else if (/^###\s+/.test(line) && inH2) {
 				h3Index++;
-				const h3Title = line.replace(/^###\s+/, "").trim();
+				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
 				h3TitleList.push({
 					title: h3Title,
 					h2: currentH2Index,
