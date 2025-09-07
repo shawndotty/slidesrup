@@ -362,4 +362,8 @@ export default {
 	EPF: "Use Fragments Effect for Paragraph",
 	BlankPage: "Blank",
 	ContentPage: "Content",
+	"Create New Design From Blank": "Create New Design From Blank",
+	"Create New Design From Current Design":
+		"Create New Design From Current Design",
+	"Please input your design name": "Please input your design name",
 };

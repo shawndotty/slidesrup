@@ -21,6 +21,8 @@ import {
 	get_active_note_folder_path,
 	get_tfiles_from_folder,
 	get_list_items_from_note,
+	getUserDesigns,
+	getAllDesignsOptions,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
 import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
@@ -46,32 +48,14 @@ export class SlidesMaker {
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
 		this.settings = settings;
-		this.userDesigns = this.getUserDesigns();
-		this.designOptions = this.userDesigns
-			.concat(this.defaultDesigns)
-			.map((design, index) => ({
-				id: `"${design}"`,
-				name: `${index + 1}. ${t("Slide Design")} ${design}`,
-				value: design,
-			}));
-	}
-
-	private getUserDesigns() {
-		const obasFrameworkPath = this.settings.obasFrameworkFolder;
-		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
-		// 获取框架文件夹
-		const obasUserDesignsFolder =
-			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
-		let userDesigns: Array<string> = [];
-		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
-			// 获取所有子文件夹
-			const subFolders = obasUserDesignsFolder.children
-				.filter((file) => file instanceof TFolder)
-				.map((folder) => folder.name.split("-").last() as string);
-			userDesigns = subFolders;
-		}
-
-		return userDesigns;
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.obasFrameworkFolder
+		);
+		this.designOptions = getAllDesignsOptions(
+			this.userDesigns,
+			this.defaultDesigns
+		);
 	}
 
 	async createSlides(): Promise<void> {

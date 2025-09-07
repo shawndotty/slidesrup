@@ -3,6 +3,7 @@ import { t } from "../lang/helpers";
 import { OBASAssistantSettings, NocoDBSettings } from "../types";
 import { buildFieldNames } from "../utils";
 import { SlidesMaker } from "./slides-maker";
+import { DesignMaker } from "./design-maker";
 import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
@@ -14,6 +15,7 @@ import {
 
 export class CommandService {
 	private slidesMaker: SlidesMaker;
+	private designMaker: DesignMaker;
 	private presentationPluginFolder: string;
 	private revealAddOnsViewName: string;
 
@@ -24,6 +26,7 @@ export class CommandService {
 		private templaterService: TemplaterService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
+		this.designMaker = new DesignMaker(this.app, this.settings);
 		if (this.settings.presentationPlugin === "slidesExtended") {
 			this.presentationPluginFolder = SLIDES_EXTENDED_PLUGIN_FOLDER;
 			this.revealAddOnsViewName = "reveal";
@@ -260,6 +263,22 @@ export class CommandService {
 			name: t("Convert to Slide"),
 			callback: async () => {
 				await this.slidesMaker.convertMDToSlide();
+			},
+		});
+
+		this.addCommand({
+			id: "obas-assistant:crete-new-design",
+			name: t("Create New Design From Blank"),
+			callback: async () => {
+				await this.designMaker.makeNewBlankDesign();
+			},
+		});
+
+		this.addCommand({
+			id: "obas-assistant:crete-new-design-from-current-design",
+			name: t("Create New Design From Current Design"),
+			callback: async () => {
+				await this.designMaker.makeNewDesignFromCurrentDesign();
 			},
 		});
 	}

@@ -8,6 +8,8 @@ import {
 	moment,
 } from "obsidian";
 
+import { t } from "../lang/helpers";
+
 /**
  * 验证API密钥是否有效
  * @param apiKey - 要验证的API密钥
@@ -199,4 +201,32 @@ export async function createPathIfNeeded(folderPath: string): Promise<void> {
 	if (!directoryExists) {
 		await vault.createFolder(normalizePath(folderPath));
 	}
+}
+
+export function getUserDesigns(app: App, obasPath: string) {
+	const obasUserDesignsPath = `${obasPath}/MyDesigns`;
+	// 获取框架文件夹
+	const obasUserDesignsFolder =
+		this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+	let userDesigns: Array<string> = [];
+	if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+		// 获取所有子文件夹
+		const subFolders = obasUserDesignsFolder.children
+			.filter((file) => file instanceof TFolder)
+			.map((folder) => folder.name.split("-").last() as string);
+		userDesigns = subFolders;
+	}
+
+	return userDesigns;
+}
+
+export function getAllDesignsOptions(
+	defaultDesigns: string[],
+	userDesigns: string[]
+) {
+	return userDesigns.concat(defaultDesigns).map((design, index) => ({
+		id: `"${design}"`,
+		name: `${index + 1}. ${t("Slide Design")} ${design}`,
+		value: design,
+	}));
 }

@@ -1,0 +1,133 @@
+import { App, Editor, Notice, TFile, moment, TFolder } from "obsidian";
+import { t } from "../lang/helpers";
+import { OBASAssistantSettings } from "src/types";
+import { SuggesterOption } from "../suggesters/base-suggester";
+import { InputModal } from "src/ui/modals/input-modal";
+import {
+	createPathIfNeeded,
+	get_tfiles_from_folder,
+	getUserDesigns,
+	getAllDesignsOptions,
+} from "src/utils";
+import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import { SlideDesignSuggester } from "../suggesters/suggesters";
+
+export class DesignMaker {
+	private app: App;
+	private settings: OBASAssistantSettings;
+	private static readonly MY_DESIGN_FOLDER = "MyDesigns";
+	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
+	private userDesignPath: string = "";
+	private userDesigns: Array<string> = [];
+	private designOptions: Array<SuggesterOption> = [];
+
+	constructor(app: App, settings: OBASAssistantSettings) {
+		this.app = app;
+		this.settings = settings;
+		this.userDesignPath = `${this.settings.obasFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.obasFrameworkFolder
+		);
+		this.designOptions = getAllDesignsOptions(
+			this.defaultDesigns,
+			this.userDesigns
+		);
+	}
+
+	async makeNewBlankDesign() {
+		const designName = await this._getDesignName();
+		if (!designName) return;
+
+		const trimedDesignName = designName.trim();
+		console.log("test");
+		const newDesignFolderName = `Design-${trimedDesignName}`;
+		const newDesignPath = `${this.userDesignPath}/${newDesignFolderName}`;
+
+		await createPathIfNeeded(newDesignPath);
+
+		const newDesignFiles = [
+			`${t("Cover")}-${trimedDesignName}`,
+			`${t("BackCover")}-${trimedDesignName}`,
+			`${t("TOC")}-${trimedDesignName}`,
+			`${t("Chapter")}-${trimedDesignName}`,
+			`${t("ContentPage")}-${trimedDesignName}`,
+			`${t("BlankPage")}-${trimedDesignName}`,
+		];
+		// 使用 Obsidian API 创建所有 newDesignFiles 文件于 newDesignPath 下
+		for (const fileName of newDesignFiles) {
+			const filePath = `${newDesignPath}/${fileName}.md`;
+			try {
+				await this.app.vault.create(filePath, `# ${fileName}\n`);
+			} catch (error) {
+				new Notice(`无法创建文件：${filePath}，错误信息：${error}`);
+			}
+		}
+	}
+
+	async makeNewDesignFromCurrentDesign() {
+		const design = await this._selectSlideDesign(this.designOptions);
+		if (!design) return;
+
+		const designName = design.value;
+		const isDefaultDesign = this.defaultDesigns.includes(designName);
+		const originalDesignPath = `${this.settings.obasFrameworkFolder}/${
+			isDefaultDesign ? "Designs" : "MyDesigns"
+		}/Design-${designName}`;
+
+		const newDesignName = await this._getDesignName();
+
+		if (!newDesignName) return;
+		const newDesignPath = `${this.settings.obasFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
+		await createPathIfNeeded(newDesignPath);
+
+		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName
+		const originalFolder =
+			this.app.vault.getAbstractFileByPath(originalDesignPath);
+		if (!originalFolder || !(originalFolder instanceof TFolder)) {
+			new Notice(`未找到原始设计文件夹：${originalDesignPath}`);
+			return;
+		}
+		const filesToCopy = originalFolder.children.filter(
+			(f) => f instanceof TFile
+		) as TFile[];
+		for (const file of filesToCopy) {
+			const originalFileName = file.name;
+			const newFileName = originalFileName.replace(
+				`-${designName}`,
+				`-${newDesignName}`
+			);
+			const newFilePath = `${newDesignPath}/${newFileName}`;
+			try {
+				const content = await this.app.vault.read(file);
+				await this.app.vault.create(newFilePath, content);
+			} catch (error) {
+				new Notice(
+					`无法复制文件：${originalFileName}，错误信息：${error}`
+				);
+			}
+		}
+	}
+
+	private async _getDesignName(): Promise<string> {
+		const modal = new InputModal(
+			this.app,
+			t("Please input your design name"),
+			""
+		);
+		return (await modal.openAndGetValue()) || "";
+	}
+
+	private async _selectSlideDesign(
+		options: SuggesterOption[]
+	): Promise<SuggesterOption | null> {
+		const suggester = new SlideDesignSuggester(this.app, options);
+		return new Promise((resolve) => {
+			suggester.onChooseItem = (item: SuggesterOption) => {
+				resolve(item);
+				return item;
+			};
+			suggester.open();
+		});
+	}
+}
