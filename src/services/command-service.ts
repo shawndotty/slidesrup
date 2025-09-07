@@ -270,7 +270,9 @@ export class CommandService {
 			id: "obas-assistant:crete-new-design",
 			name: t("Create New Design From Blank"),
 			callback: async () => {
-				await this.designMaker.makeNewBlankDesign();
+				await this._templaterTriggerSwitch(() =>
+					this.designMaker.makeNewBlankDesign()
+				);
 			},
 		});
 
@@ -278,7 +280,9 @@ export class CommandService {
 			id: "obas-assistant:crete-new-design-from-current-design",
 			name: t("Create New Design From Current Design"),
 			callback: async () => {
-				await this.designMaker.makeNewDesignFromCurrentDesign();
+				await this._templaterTriggerSwitch(() =>
+					this.designMaker.makeNewDesignFromCurrentDesign()
+				);
 			},
 		});
 	}

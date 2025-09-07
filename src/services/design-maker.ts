@@ -25,14 +25,6 @@ export class DesignMaker {
 		this.app = app;
 		this.settings = settings;
 		this.userDesignPath = `${this.settings.obasFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
-		this.userDesigns = getUserDesigns(
-			this.app,
-			this.settings.obasFrameworkFolder
-		);
-		this.designOptions = getAllDesignsOptions(
-			this.defaultDesigns,
-			this.userDesigns
-		);
 	}
 
 	async makeNewBlankDesign() {
@@ -58,14 +50,28 @@ export class DesignMaker {
 		for (const fileName of newDesignFiles) {
 			const filePath = `${newDesignPath}/${fileName}.md`;
 			try {
-				await this.app.vault.create(filePath, `# ${fileName}\n`);
+				await this.app.vault.create(filePath, `<% content %>`);
 			} catch (error) {
-				new Notice(`无法创建文件：${filePath}，错误信息：${error}`);
+				new Notice(
+					`${t("Cann't create file")}${filePath}\n${t(
+						"Error Info"
+					)}${error}`
+				);
 			}
 		}
+
+		await this._revealNewDesign(newDesignPath);
 	}
 
 	async makeNewDesignFromCurrentDesign() {
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.obasFrameworkFolder
+		);
+		this.designOptions = getAllDesignsOptions(
+			this.defaultDesigns,
+			this.userDesigns
+		);
 		const design = await this._selectSlideDesign(this.designOptions);
 		if (!design) return;
 
@@ -85,7 +91,9 @@ export class DesignMaker {
 		const originalFolder =
 			this.app.vault.getAbstractFileByPath(originalDesignPath);
 		if (!originalFolder || !(originalFolder instanceof TFolder)) {
-			new Notice(`未找到原始设计文件夹：${originalDesignPath}`);
+			new Notice(
+				`${t("Cann't find the source folder")}${originalDesignPath}`
+			);
 			return;
 		}
 		const filesToCopy = originalFolder.children.filter(
@@ -103,9 +111,36 @@ export class DesignMaker {
 				await this.app.vault.create(newFilePath, content);
 			} catch (error) {
 				new Notice(
-					`无法复制文件：${originalFileName}，错误信息：${error}`
+					`${t(
+						"Cann't copy the source file"
+					)}${originalFileName}\n${t("Error Info")}${error}`
 				);
 			}
+		}
+		await this._revealNewDesign(newDesignPath);
+	}
+
+	private async _revealNewDesign(path: string) {
+		// 创建成功后高亮新建的设计文件夹（使用 Obsidian API 打开新建文件夹并选中第一个文件）
+		const folder = this.app.vault.getAbstractFileByPath(path);
+		if (folder && folder instanceof TFolder) {
+			// 获取文件浏览器
+			const fileExplorerLeaves =
+				this.app.workspace.getLeavesOfType("file-explorer");
+			// 检查是否存在可用叶子节点
+			if (fileExplorerLeaves.length === 0) {
+				// 若不存在，创建新的文件浏览器标签
+				const leaf = this.app.workspace.getLeaf("tab");
+				await leaf.setViewState({ type: "file-explorer" });
+				fileExplorerLeaves.push(leaf);
+			}
+			// 获取首个文件浏览器视图实例
+			const fileExplorerView = fileExplorerLeaves[0].view as any;
+
+			// 强制激活文件浏览器标签（确保视图可见）
+			this.app.workspace.revealLeaf(fileExplorerLeaves[0]);
+
+			fileExplorerView.revealInFolder(folder);
 		}
 	}
 

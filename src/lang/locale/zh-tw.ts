@@ -305,4 +305,11 @@ export default {
 	EPF: "為段落使用碎片動畫效果",
 	BlankPage: "空白",
 	ContentPage: "內容",
+	"Create New Design From Blank": "從空白建立新設計",
+	"Create New Design From Current Design": "從現有設計建立新設計",
+	"Please input your design name": "請輸入您的設計名稱",
+	"Cann't find the source folder": "無法找到來源資料夾：",
+	"Cann't copy the source file": "無法複製來源檔案：",
+	"Error Info": "錯誤資訊：",
+	"Cann't create file": "無法建立檔案：",
 };

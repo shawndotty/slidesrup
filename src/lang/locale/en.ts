@@ -366,4 +366,8 @@ export default {
 	"Create New Design From Current Design":
 		"Create New Design From Current Design",
 	"Please input your design name": "Please input your design name",
+	"Cann't find the source folder": "Cann't find the source folder: ",
+	"Cann't copy the source file": "Cann't copy the source file: ",
+	"Error Info": "Error Info: ",
+	"Cann't create file": "Cann't create file: ",
 };
