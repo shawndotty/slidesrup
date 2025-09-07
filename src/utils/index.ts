@@ -195,11 +195,15 @@ export function getTimeStamp() {
 	return moment().format("YYYYMMDDHHmmSS");
 }
 
-export async function createPathIfNeeded(folderPath: string): Promise<void> {
-	const { vault } = this.app;
-	const directoryExists = await vault.exists(folderPath);
+export async function createPathIfNeeded(
+	app: App,
+	folderPath: string
+): Promise<void> {
+	const { vault } = app;
+	const normalized = normalizePath(folderPath);
+	const directoryExists = await vault.adapter.exists(normalized);
 	if (!directoryExists) {
-		await vault.createFolder(normalizePath(folderPath));
+		await vault.createFolder(normalized);
 	}
 }
 
@@ -207,7 +211,7 @@ export function getUserDesigns(app: App, obasPath: string) {
 	const obasUserDesignsPath = `${obasPath}/MyDesigns`;
 	// 获取框架文件夹
 	const obasUserDesignsFolder =
-		this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+		app.vault.getAbstractFileByPath(obasUserDesignsPath);
 	let userDesigns: Array<string> = [];
 	if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
 		// 获取所有子文件夹

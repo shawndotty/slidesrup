@@ -32,11 +32,11 @@ export class DesignMaker {
 		if (!designName) return;
 
 		const trimedDesignName = designName.trim();
-		console.log("test");
+
 		const newDesignFolderName = `Design-${trimedDesignName}`;
 		const newDesignPath = `${this.userDesignPath}/${newDesignFolderName}`;
 
-		await createPathIfNeeded(newDesignPath);
+		await createPathIfNeeded(this.app, newDesignPath);
 
 		const newDesignFiles = [
 			`${t("Cover")}-${trimedDesignName}`,
@@ -46,19 +46,23 @@ export class DesignMaker {
 			`${t("ContentPage")}-${trimedDesignName}`,
 			`${t("BlankPage")}-${trimedDesignName}`,
 		];
-		// 使用 Obsidian API 创建所有 newDesignFiles 文件于 newDesignPath 下
-		for (const fileName of newDesignFiles) {
+
+		// Optimized approach:
+		const fileCreationPromises = newDesignFiles.map(async (fileName) => {
 			const filePath = `${newDesignPath}/${fileName}.md`;
 			try {
-				await this.app.vault.create(filePath, `<% content %>`);
+				return await this.app.vault.create(filePath, `<% content %>`);
 			} catch (error) {
 				new Notice(
 					`${t("Cann't create file")}${filePath}\n${t(
 						"Error Info"
 					)}${error}`
 				);
+				return null;
 			}
-		}
+		});
+
+		await Promise.allSettled(fileCreationPromises);
 
 		await this._revealNewDesign(newDesignPath);
 	}
@@ -85,7 +89,7 @@ export class DesignMaker {
 
 		if (!newDesignName) return;
 		const newDesignPath = `${this.settings.obasFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
-		await createPathIfNeeded(newDesignPath);
+		await createPathIfNeeded(this.app, newDesignPath);
 
 		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName
 		const originalFolder =
@@ -108,7 +112,8 @@ export class DesignMaker {
 			const newFilePath = `${newDesignPath}/${newFileName}`;
 			try {
 				const content = await this.app.vault.read(file);
-				await this.app.vault.create(newFilePath, content);
+				const newContent = content.replace(designName, newDesignName);
+				await this.app.vault.create(newFilePath, newContent);
 			} catch (error) {
 				new Notice(
 					`${t(
