@@ -110,6 +110,13 @@ export interface OBASAssistantSettings {
 	obasUserDesignsCss: UserDesignCss[];
 	obasAutoConvertLinks: boolean;
 	obasEnableParagraphFragments: boolean;
+
+	// Default Slide List Class
+	obasDefaultTOCListClass: string;
+	obasDefaultChapterListClass: string;
+	obasDefaultContentListClass: string;
+	obasDefaultBlankListClass: string;
+	obasDefaultBackCoverListClass: string;
 }
 
 export interface NocoDBTable {

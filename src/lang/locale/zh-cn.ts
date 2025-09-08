@@ -323,4 +323,29 @@ export default {
 	"Cann't copy the source file": "无法复制源文件：",
 	"Error Info": "错误信息：",
 	"Cann't create file": "无法创建文件：",
+	"Slide Default List": "演示中的默认列表",
+	"Fancy List": "精美列表",
+	"Fancy List Row": "精美列表整行显示",
+	"Fancy List With Order": "带序号的精美列表",
+	"Fancy List With Order Row": "带序号的精美列表整行显示",
+	"Grid List": "网格列表",
+	"Grid Step List": "网格步骤列表",
+	"Grid Step List Vertical": "垂直网格步骤列表",
+	"Box List": "方框列表",
+	"Order List With Border": "带边框的有序列表",
+	"Default TOC Page List Class": "目录页默认列表样式",
+	"Please select the default list class for TOC pages":
+		"请选择目录页的默认列表样式",
+	"Default Chapter Page List Class": "章节页默认列表样式",
+	"Please select the default list class for chapter pages":
+		"请选择章节页的默认列表样式",
+	"Default Content Page List Class": "内容页默认列表样式",
+	"Please select the default list class for content pages":
+		"请选择内容页的默认列表样式",
+	"Default Blank Page List Class": "空白页默认列表样式",
+	"Please select the default list class for blank pages":
+		"请选择空白页的默认列表样式",
+	"Default BackCover Page List Class": "封底页默认列表样式",
+	"Please select the default list class for backcover page":
+		"请选择封底页的默认列表样式",
 };

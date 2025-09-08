@@ -212,6 +212,63 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+
+		const defaultListClassOptions = {
+			"fancy-list": "Fancy List",
+			"fancy-list-row": "Fancy List Row",
+			"fancy-list-with-order": "Fancy List With Order",
+			"fancy-list-with-order-row": "Fancy List With Order Row",
+			"grid-list": "Grid List",
+			"grid-step-list": "Grid Step List",
+			"grid-step-list-v": "Grid Step List Vertical",
+			"box-list": "Box List",
+			"order-list-with-border": "Order List With Border",
+		};
+
+		containerEl.createEl("h3", {
+			text: t("Slide Default List"),
+			cls: "obas-assistant-title",
+		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default TOC Page List Class",
+			"Please select the default list class for TOC pages",
+			"obasDefaultTOCListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Chapter Page List Class",
+			"Please select the default list class for chapter pages",
+			"obasDefaultChapterListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Content Page List Class",
+			"Please select the default list class for content pages",
+			"obasDefaultContentListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Blank Page List Class",
+			"Please select the default list class for blank pages",
+			"obasDefaultBlankListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default BackCover Page List Class",
+			"Please select the default list class for backcover page",
+			"obasDefaultBackCoverListClass",
+			defaultListClassOptions
+		);
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {

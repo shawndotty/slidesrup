@@ -88,7 +88,7 @@ export class SlidesMaker {
 				? subFolder
 				: `${newSlideContainer}/${subFolder}`;
 
-		await createPathIfNeeded(newSlideLocation);
+		await createPathIfNeeded(this.app, newSlideLocation);
 
 		let slideMode = this.settings.obasSlideMode;
 		if (!slideMode || slideMode === "none") {
@@ -663,7 +663,7 @@ export class SlidesMaker {
 					: `${slideContainer}/${subFolder}`;
 		}
 
-		await createPathIfNeeded(newSlideLocation);
+		await createPathIfNeeded(this.app, newSlideLocation);
 
 		// Determine design
 		let design = this._getSlideDesign(activeFile);
@@ -1009,12 +1009,14 @@ export class SlidesMaker {
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
 		const newLines: string[] = [];
 		for (const line of lines) {
-			if (/^-{3,}$/.test(line)) {
+			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
 				newLines.push(
 					`\n<!-- slide template="[[${t(
 						"BlankPage"
-					)}-${design}]]" -->`
+					)}-${design}]]" class="${
+						this.settings.obasDefaultBlankListClass
+					}" -->`
 				);
 			} else {
 				newLines.push(line);
@@ -1028,7 +1030,6 @@ export class SlidesMaker {
 		let pageIndexInChapter = 0;
 		let subPageIndex = 0;
 		const finalLines: string[] = [];
-		const classValue = "fancy-list-row";
 
 		for (const line of lines) {
 			if (/^##\s+/.test(line)) {
@@ -1039,15 +1040,19 @@ export class SlidesMaker {
 				pageIndexInChapter++;
 				subPageIndex = 0;
 			}
-			if (/^\*{3,}$/.test(line)) {
+			if (/^#{4,6}\s+/.test(line) && /%%/.test(line)) {
 				subPageIndex++;
 				const chapterClass = `chapter-${currentChapterIndex}`;
+				const classValue = this._modidySlideClassList(
+					line,
+					this.settings.obasDefaultContentListClass
+				);
 
 				finalLines.push("---");
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" class="${chapterClass} ${classValue}" -->\n`
 				);
-				// 去除所有 %%xxx%% 和 %%!xxx%% 注释块
+				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
 			}
@@ -1090,30 +1095,10 @@ export class SlidesMaker {
 		for (const line of content.split("\n")) {
 			if (/^##\s+/.test(line)) {
 				h2Index++;
-				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
-				const replaceMatches = line.match(
-					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+				const classValue = this._modidySlideClassList(
+					line,
+					this.settings.obasDefaultChapterListClass
 				);
-				let extracted: string[] = [];
-				let merged = "";
-				let classValue = "order-list-with-border";
-
-				if (replaceMatches && replaceMatches.length > 0) {
-					// 如果匹配到 %%! ... %%，则用其内容覆盖 class
-					const replaceContent = replaceMatches
-						.map((m) => m.slice(3, -2).trim())
-						.join(" ");
-					if (replaceContent) {
-						classValue = replaceContent;
-					}
-				} else if (matches) {
-					// 否则，提取普通注释内容，追加到默认 class 后面
-					extracted = matches.map((m) => m.slice(2, -2).trim());
-					if (extracted.length > 0) {
-						merged = extracted.join(" ");
-						classValue += merged ? ` ${merged}` : "";
-					}
-				}
 
 				modifiedLines.push(
 					`\n<!-- slide id="c${h2Index}" template="[[${t(
@@ -1121,11 +1106,7 @@ export class SlidesMaker {
 					)}-${design}]]" class="${classValue}" -->\n`
 				);
 				// 去除所有注释块
-				let cleanedLine = line
-					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
-					.trim();
-				modifiedLines.push(cleanedLine);
+				modifiedLines.push(this._cleanLine(line));
 			} else {
 				modifiedLines.push(line);
 			}
@@ -1220,43 +1201,16 @@ export class SlidesMaker {
 			}
 			if (/^###\s+/.test(line)) {
 				pageIndexInChapter++;
-				// INSERT_YOUR_CODE
-				// 先尝试匹配 %%!xxx%%，如果有则覆盖 class，否则追加
-				const replaceMatches = line.match(
-					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
-				);
-				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
-				let extracted: string[] = [];
-				let merged = "";
 				const chapterClass = `chapter-${currentChapterIndex}`;
-				let classValue = "fancy-list-row";
-
-				if (replaceMatches && replaceMatches.length > 0) {
-					// 如果有 %%!xxx%%，则用其内容覆盖 class
-					const replaceContent = replaceMatches
-						.map((m) => m.slice(3, -2).trim())
-						.join(" ");
-					if (replaceContent) {
-						classValue = replaceContent;
-					}
-				} else if (matches && matches.length > 0) {
-					// 否则，追加 %%xxx%% 的内容
-					extracted = matches.map((m) => m.slice(2, -2).trim());
-					if (extracted.length > 0) {
-						merged = extracted.join(" ");
-						classValue += ` ${merged}`;
-					}
-				}
+				let classValue = this._modidySlideClassList(
+					line,
+					this.settings.obasDefaultContentListClass
+				);
 
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="${chapterClass} ${classValue}" -->\n`
 				);
-				// 去除所有 %%xxx%% 和 %%!xxx%% 注释块
-				let cleanedLine = line
-					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
-					.trim();
-				finalLines.push(cleanedLine);
+				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
 			}
@@ -1275,9 +1229,9 @@ export class SlidesMaker {
 	): string {
 		const tocEmbed = `---\n\n<!-- slide template="[[${t(
 			"TOC"
-		)}-${design}]]" class="order-list-with-border" -->\n\n## ${t(
-			"TOC"
-		)}\n\n![[${tocName}]]\n`;
+		)}-${design}]]" class="${
+			this.settings.obasDefaultTOCListClass
+		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
 
 		const tocIndex = contentLines.findIndex(
@@ -1312,6 +1266,7 @@ aliases:
  - ${activeFile.basename}
 defaultTemplate: "[[${baseLayoutName}]]"
 pdfSeparateFragments: false
+verticalSeparator: \\*\\*\\*
 theme: white
 transition: none
 width: 1920
@@ -1328,9 +1283,9 @@ width: 1920
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const backCoverSlide = `---
 
-<!-- slide template="[[${t(
-			"BackCover"
-		)}-${design}]]" class="order-list-with-border" -->
+<!-- slide template="[[${t("BackCover")}-${design}]]" class="${
+			this.settings.obasDefaultBackCoverListClass
+		}" -->
 
 ${lbnl}
 `;
@@ -1456,5 +1411,40 @@ ${lbnl}
 		return defaultDesign && defaultDesign.trim()
 			? defaultDesign.trim()
 			: "A";
+	}
+
+	private _modidySlideClassList(line: string, listClass: string): string {
+		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+		const replaceMatches = line.match(
+			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+		);
+		let extracted: string[] = [];
+		let merged = "";
+
+		if (replaceMatches && replaceMatches.length > 0) {
+			// 如果匹配到 %%! ... %%，则用其内容覆盖 class
+			const replaceContent = replaceMatches
+				.map((m) => m.slice(3, -2).trim())
+				.join(" ");
+			if (replaceContent) {
+				listClass = replaceContent;
+			}
+		} else if (matches && matches.length > 0) {
+			// 否则，提取普通注释内容，追加到默认 class 后面
+			extracted = matches.map((m) => m.slice(2, -2).trim());
+			if (extracted.length > 0) {
+				merged = extracted.join(" ");
+				listClass += merged ? ` ${merged}` : "";
+			}
+		}
+
+		return listClass;
+	}
+
+	private _cleanLine(line: string): string {
+		return line
+			.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
+			.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+			.trim();
 	}
 }

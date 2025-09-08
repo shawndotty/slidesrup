@@ -99,6 +99,7 @@ enableLinks: true
 height: 1080
 margin: 0
 pdfSeparateFragments: false
+verticalSeparator: \\*\\*\\*
 theme: white
 transition: none
 width: 1920

@@ -370,4 +370,29 @@ export default {
 	"Cann't copy the source file": "Cann't copy the source file: ",
 	"Error Info": "Error Info: ",
 	"Cann't create file": "Cann't create file: ",
+	"Slide Default List": "Slide Default List",
+	"Fancy List": "Fancy List",
+	"Fancy List Row": "Fancy List Row",
+	"Fancy List With Order": "Fancy List With Order",
+	"Fancy List With Order Row": "Fancy List With Order Row",
+	"Grid List": "Grid List",
+	"Grid Step List": "Grid Step List",
+	"Grid Step List Vertical": "Grid Step List Vertical",
+	"Box List": "Box List",
+	"Order List With Border": "Order List With Border",
+	"Default TOC Page List Class": "Default TOC Page List Class",
+	"Please select the default list class for TOC pages":
+		"Please select the default list class for TOC pages",
+	"Default Chapter Page List Class": "Default Chapter Page List Class",
+	"Please select the default list class for chapter pages":
+		"Please select the default list class for chapter pages",
+	"Default Content Page List Class": "Default Content Page List Class",
+	"Please select the default list class for content pages":
+		"Please select the default list class for content pages",
+	"Default Blank Page List Class": "Default Blank Page List Class",
+	"Please select the default list class for blank pages":
+		"Please select the default list class for blank pages",
+	"Default BackCover Page List Class": "Default BackCover Page List Class",
+	"Please select the default list class for backcover page":
+		"Please select the default list class for backcover page",
 };

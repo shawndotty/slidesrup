@@ -201,7 +201,7 @@ export async function createPathIfNeeded(
 ): Promise<void> {
 	const { vault } = app;
 	const normalized = normalizePath(folderPath);
-	const directoryExists = await vault.adapter.exists(normalized);
+	const directoryExists = await vault.adapter.exists(folderPath);
 	if (!directoryExists) {
 		await vault.createFolder(normalized);
 	}

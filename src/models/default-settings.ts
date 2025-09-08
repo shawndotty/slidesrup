@@ -102,4 +102,10 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasUserDesignsCss: [],
 	obasAutoConvertLinks: true,
 	obasEnableParagraphFragments: true,
+
+	obasDefaultTOCListClass: "order-list-with-border",
+	obasDefaultChapterListClass: "order-list-with-border",
+	obasDefaultContentListClass: "fancy-list-row",
+	obasDefaultBlankListClass: "fancy-list-row",
+	obasDefaultBackCoverListClass: "order-list-with-border",
 };
