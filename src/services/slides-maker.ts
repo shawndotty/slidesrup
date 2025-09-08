@@ -1277,7 +1277,11 @@ width: 1920
 			"Cover"
 		)}-${design}]]" -->`;
 
-		const newContent = this._addAuthorAndDate(content);
+		const oburi = this._getOBURI(activeFile);
+
+		const newContent = this._addAuthorAndDate(
+			this._addLinkToH1(content, oburi)
+		);
 
 		// Generate back cover slide
 		const lbnl = this._getLastButNotLeast(activeFile);
@@ -1292,6 +1296,37 @@ ${lbnl}
 
 		// Combine all parts
 		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+	}
+
+	/**
+	 * 获取指定文件的OBURI链接
+	 * @param file - 目标文件
+	 * @returns OBURI链接字符串
+	 */
+	private _getOBURI(file: TFile): string {
+		// 获取当前 vault 名称
+		const vaultName = this.app.vault.getName();
+		// 对文件路径进行编码
+		const encodedPath = encodeURIComponent(file.path);
+		// 构建 Obsidian URI
+		const uri = `obsidian://open?vault=${encodeURIComponent(
+			vaultName
+		)}&file=${encodedPath}`;
+		return uri;
+	}
+
+	private _addLinkToH1(content: string, oburi: string): string {
+		const h1Regex = /^#\s+(.+)$/m;
+		const match = content.match(h1Regex);
+
+		if (match) {
+			const h1Text = match[1];
+			// 将标题一的内容替换为带链接的形式
+			const linkedH1 = `# [${h1Text}](${oburi})`;
+			return content.replace(h1Regex, linkedH1);
+		}
+
+		return content;
 	}
 
 	private _getLastButNotLeast(activeFile: TFile): string {
