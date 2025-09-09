@@ -14,7 +14,14 @@ declare module "obsidian" {
 		};
 	}
 }
-
+// 修复：将类型声明改为实际的初始值
+export interface UserSpecificListClassType {
+	TOCPageListClass: string;
+	ChapterPageListClass: string;
+	ContentPageListClass: string;
+	BlankPageListClass: string;
+	BackCoverPageListClass: string;
+}
 export interface AirtableIds {
 	baseID: string;
 	tableID: string;

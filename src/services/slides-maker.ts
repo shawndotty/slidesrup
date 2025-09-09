@@ -14,7 +14,11 @@ import {
 	SlideDesignSuggester,
 	SlideModeSuggester,
 } from "../suggesters/suggesters";
-import { OBASAssistantSettings, ReplaceConfig } from "../types";
+import {
+	OBASAssistantSettings,
+	ReplaceConfig,
+	UserSpecificListClassType,
+} from "../types";
 import {
 	getTimeStamp,
 	createPathIfNeeded,
@@ -45,8 +49,7 @@ export class SlidesMaker {
 	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 
-	// 修复：将类型声明改为实际的初始值
-	private userSpecificListClass = {
+	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
 		ChapterPageListClass: "",
 		ContentPageListClass: "",
@@ -634,10 +637,10 @@ export class SlidesMaker {
 
 	/**
 	 * 优化：重置 userSpecificListClass，根据 frontmatter 批量设置各类 ListClass。
-	 * 通过遍历 keys，减少重复代码，提升可维护性。
+	 * 进一步优化：减少对象创建次数，提升可读性和性能。
 	 */
 	private async _resetUserSpecificListClass(file: TFile) {
-		const keys = [
+		const keys: Array<keyof UserSpecificListClassType> = [
 			"TOCPageListClass",
 			"ChapterPageListClass",
 			"ContentPageListClass",
@@ -645,39 +648,38 @@ export class SlidesMaker {
 			"BackCoverPageListClass",
 		];
 
-		// 默认值对象
-		const defaultListClass = Object.fromEntries(
-			keys.map((k) => [
-				k,
-				this.settings[`obasUser${k}` as keyof OBASAssistantSettings],
-			])
-		) as typeof this.userSpecificListClass;
+		// 统一获取默认值
+		const getDefault = (key: keyof UserSpecificListClassType): string => {
+			const settingKey = `obasUser${key}` as keyof OBASAssistantSettings;
+			const value = this.settings[settingKey];
+			return typeof value === "string" ? value : "";
+		};
 
+		// 如果没有文件，直接用默认值
 		if (!file) {
-			this.userSpecificListClass = { ...defaultListClass };
+			this.userSpecificListClass = keys.reduce((acc, key) => {
+				acc[key] = getDefault(key);
+				return acc;
+			}, {} as UserSpecificListClassType);
 			return;
 		}
 
 		const fm = (await this.app.metadataCache.getFileCache(file))
 			?.frontmatter;
+		// 没有 frontmatter 也用默认值
 		if (!fm) {
-			this.userSpecificListClass = { ...defaultListClass };
+			this.userSpecificListClass = keys.reduce((acc, key) => {
+				acc[key] = getDefault(key);
+				return acc;
+			}, {} as UserSpecificListClassType);
 			return;
 		}
 
-		// 批量生成结果对象
-		const result = Object.fromEntries(
-			keys.map((k) => [
-				k,
-				fm[k] ??
-					this.settings[
-						`obasUser${k}` as keyof OBASAssistantSettings
-					],
-			])
-		);
-
-		this.userSpecificListClass =
-			result as typeof this.userSpecificListClass;
+		// 优先 frontmatter，其次默认值
+		this.userSpecificListClass = keys.reduce((acc, key) => {
+			acc[key] = fm[key] ?? getDefault(key);
+			return acc;
+		}, {} as UserSpecificListClassType);
 	}
 
 	/**
@@ -1067,7 +1069,6 @@ export class SlidesMaker {
 		return text.replace(
 			/(^|\n)(?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
 			(match, p1, p2) => {
-				console.log(match);
 				// 跳过空行和以![[开头的段落
 				if (
 					!p2.trim() ||
