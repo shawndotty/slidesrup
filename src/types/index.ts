@@ -117,6 +117,8 @@ export interface OBASAssistantSettings {
 	obasDefaultContentListClass: string;
 	obasDefaultBlankListClass: string;
 	obasDefaultBackCoverListClass: string;
+
+	obasDefaultSlideSize: string;
 }
 
 export interface NocoDBTable {

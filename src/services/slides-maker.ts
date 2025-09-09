@@ -45,6 +45,15 @@ export class SlidesMaker {
 	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 
+	// 修复：将类型声明改为实际的初始值
+	private userSpecificListClass = {
+		TOCPageListClass: "",
+		ChapterPageListClass: "",
+		ContentPageListClass: "",
+		BlankPageListClass: "",
+		BackCoverPageListClass: "",
+	};
+
 	constructor(app: App, settings: OBASAssistantSettings) {
 		this.app = app;
 		this.settings = settings;
@@ -569,6 +578,8 @@ export class SlidesMaker {
 			return;
 		}
 
+		await this._resetUserSpecificListClass(activeFile);
+
 		// Check for multiple H1 headings
 		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
 		if (h1Count > 1) {
@@ -579,8 +590,13 @@ export class SlidesMaker {
 		}
 
 		// 1. Setup slide location and get active file
-		const { newSlideContainer, newSlideLocation, design, slideMode } =
-			await this._setupSlideConversion();
+		const {
+			newSlideContainer,
+			newSlideLocation,
+			design,
+			slideMode,
+			slideSize,
+		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
 		// 2. Generate file names for slide components
@@ -606,13 +622,51 @@ export class SlidesMaker {
 			tocName,
 			baseLayoutName,
 			activeFile,
-			slideMode
+			slideMode,
+			slideSize
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
 			processedContent
 		);
+	}
+
+	/**
+	 * 优化：重置 userSpecificListClass，根据 frontmatter 批量设置各类 ListClass。
+	 * 通过遍历 keys，减少重复代码，提升可维护性。
+	 */
+	private async _resetUserSpecificListClass(file: TFile) {
+		const keys = [
+			"TOCPageListClass",
+			"ChapterPageListClass",
+			"ContentPageListClass",
+			"BlankPageListClass",
+			"BackCoverPageListClass",
+		];
+
+		// 默认值对象
+		const defaultListClass = Object.fromEntries(
+			keys.map((k) => [k, ""])
+		) as typeof this.userSpecificListClass;
+
+		if (!file) {
+			this.userSpecificListClass = { ...defaultListClass };
+			return;
+		}
+
+		const fm = (await this.app.metadataCache.getFileCache(file))
+			?.frontmatter;
+		if (!fm) {
+			this.userSpecificListClass = { ...defaultListClass };
+			return;
+		}
+
+		// 批量生成结果对象
+		const result = Object.fromEntries(keys.map((k) => [k, fm[k] ?? ""]));
+
+		this.userSpecificListClass =
+			result as typeof this.userSpecificListClass;
 	}
 
 	/**
@@ -623,16 +677,31 @@ export class SlidesMaker {
 		newSlideLocation: string;
 		design: string;
 		slideMode: string;
+		slideSize: { w: number; h: number };
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
+
+		// 优先使用 frontmatter 指定的幻灯片路径和尺寸，否则使用默认设置
+		const slideFMLocation = this._getSlideLocation(activeFile);
+		const userSlideSize = this._getSlideSize(activeFile);
+
+		const slideSizeMap: Record<string, { w: number; h: number }> = {
+			"p16-9": { w: 1920, h: 1080 },
+			"p9-16": { w: 1080, h: 1920 },
+			a4v: { w: 1240, h: 1754 },
+			a4h: { w: 1754, h: 1240 },
+		};
+		const slideSize =
+			userSlideSize ||
+			slideSizeMap[this.settings.obasDefaultSlideSize] ||
+			slideSizeMap["p16-9"];
+
 		let newSlideLocation = "";
 		let newSlideContainer = "";
-		const slideFMLocation = this._getSlideLocation(activeFile);
 
 		if (slideFMLocation) {
 			newSlideLocation = slideFMLocation;
 		} else {
-			// Get slide location
 			const slideContainer = await this._determineNewSlideLocation();
 			if (slideContainer === null) {
 				new Notice(t("Operation cancelled by user"));
@@ -641,10 +710,9 @@ export class SlidesMaker {
 					newSlideLocation: "",
 					design: "",
 					slideMode: "",
+					slideSize: { w: 1920, h: 1080 },
 				};
 			}
-
-			// Get subfolder name
 			let subFolder = this.settings.customizeSlideFolderName
 				? await new InputModal(
 						this.app,
@@ -655,24 +723,22 @@ export class SlidesMaker {
 				  ).openAndGetValue()
 				: undefined;
 			if (!subFolder?.trim()) subFolder = t("Slide");
-
-			// Create slide location path
 			newSlideLocation =
 				slideContainer === "/"
 					? subFolder
 					: `${slideContainer}/${subFolder}`;
+			newSlideContainer = slideContainer;
 		}
 
 		await createPathIfNeeded(this.app, newSlideLocation);
 
-		// Determine design
+		// 优先级：frontmatter > 用户选择 > 默认
 		let design = this._getSlideDesign(activeFile);
 		if (!design || design === "none") {
 			design =
 				(await this._selectSlideDesign(this.designOptions))?.value ||
 				"H";
 		}
-		// design = design.toUpperCase?.() || "";
 
 		let slideMode = this.settings.obasSlideMode;
 		if (!slideMode || slideMode === "none") {
@@ -680,7 +746,13 @@ export class SlidesMaker {
 		}
 		slideMode = slideMode.toLowerCase?.() || "light";
 
-		return { newSlideContainer, newSlideLocation, design, slideMode };
+		return {
+			newSlideContainer,
+			newSlideLocation,
+			design,
+			slideMode,
+			slideSize,
+		};
 	}
 
 	/**
@@ -790,7 +862,11 @@ export class SlidesMaker {
 		tocName: string,
 		baseLayoutName: string,
 		activeFile: TFile,
-		slideMode: string
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
 	): Promise<string> {
 		// Add Empty Page Annotation
 
@@ -845,7 +921,8 @@ export class SlidesMaker {
 			baseLayoutName,
 			design,
 			activeFile,
-			slideMode
+			slideMode,
+			slideSize
 		);
 	}
 
@@ -1015,6 +1092,7 @@ export class SlidesMaker {
 					`\n<!-- slide template="[[${t(
 						"BlankPage"
 					)}-${design}]]" class="${
+						this.userSpecificListClass.BlankPageListClass ||
 						this.settings.obasDefaultBlankListClass
 					}" -->`
 				);
@@ -1045,7 +1123,8 @@ export class SlidesMaker {
 				const chapterClass = `chapter-${currentChapterIndex}`;
 				const classValue = this._modidySlideClassList(
 					line,
-					this.settings.obasDefaultContentListClass
+					this.userSpecificListClass.ContentPageListClass ||
+						this.settings.obasDefaultContentListClass
 				);
 
 				finalLines.push("---");
@@ -1097,7 +1176,8 @@ export class SlidesMaker {
 				h2Index++;
 				const classValue = this._modidySlideClassList(
 					line,
-					this.settings.obasDefaultChapterListClass
+					this.userSpecificListClass.ChapterPageListClass ||
+						this.settings.obasDefaultChapterListClass
 				);
 
 				modifiedLines.push(
@@ -1204,7 +1284,8 @@ export class SlidesMaker {
 				const chapterClass = `chapter-${currentChapterIndex}`;
 				let classValue = this._modidySlideClassList(
 					line,
-					this.settings.obasDefaultContentListClass
+					this.userSpecificListClass.ContentPageListClass ||
+						this.settings.obasDefaultContentListClass
 				);
 
 				finalLines.push(
@@ -1230,6 +1311,7 @@ export class SlidesMaker {
 		const tocEmbed = `---\n\n<!-- slide template="[[${t(
 			"TOC"
 		)}-${design}]]" class="${
+			this.userSpecificListClass.TOCPageListClass ||
 			this.settings.obasDefaultTOCListClass
 		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
@@ -1254,13 +1336,18 @@ export class SlidesMaker {
 		baseLayoutName: string,
 		design: string,
 		activeFile: TFile,
-		slideMode: string
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
 	): string {
 		// Generate frontmatter
 		const frontmatter = `---
 css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
 enableLinks: true
-height: 1080
+width: ${slideSize.w}
+height: ${slideSize.h}
 margin: 0
 aliases:
  - ${activeFile.basename}
@@ -1269,7 +1356,6 @@ pdfSeparateFragments: false
 verticalSeparator: \\*\\*\\*
 theme: white
 transition: none
-width: 1920
 ---`;
 
 		// Generate cover slide
@@ -1288,6 +1374,7 @@ width: 1920
 		const backCoverSlide = `---
 
 <!-- slide template="[[${t("BackCover")}-${design}]]" class="${
+			this.userSpecificListClass.BackCoverPageListClass ||
 			this.settings.obasDefaultBackCoverListClass
 		}" -->
 
@@ -1386,6 +1473,25 @@ ${lbnl}
 					?.slideLocation
 			: "";
 		return typeof loc === "string" && loc.trim() ? loc.trim() : "";
+	}
+
+	private _getSlideSize(
+		activeFile?: TFile | null
+	): { w: number; h: number } | null {
+		if (!activeFile) return null;
+		const frontmatter =
+			this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+		const width = frontmatter?.slideWidth;
+		const height = frontmatter?.slideHeight;
+		if (
+			typeof width === "number" &&
+			typeof height === "number" &&
+			width > 0 &&
+			height > 0
+		) {
+			return { w: width, h: height };
+		}
+		return null;
 	}
 
 	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {

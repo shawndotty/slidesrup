@@ -213,6 +213,19 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createDropdownSetting(
+			containerEl,
+			"Default Slide Size",
+			"Please select your default slide size",
+			"obasDefaultSlideSize",
+			{
+				"p16-9": "Presentation 16:9",
+				"p9-16": "Presentation 9:16",
+				a4v: "A4 Vertical",
+				a4h: "A4 Horizontal",
+			}
+		);
+
 		const defaultListClassOptions = {
 			"fancy-list": "Fancy List",
 			"fancy-list-row": "Fancy List Row",

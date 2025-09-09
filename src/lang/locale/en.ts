@@ -395,4 +395,11 @@ export default {
 	"Default BackCover Page List Class": "Default BackCover Page List Class",
 	"Please select the default list class for backcover page":
 		"Please select the default list class for backcover page",
+	"Default Slide Size": "Default Slide Size",
+	"Please select your default slide size":
+		"Please select your default slide size",
+	"Presentation 16:9": "Presentation 16:9",
+	"Presentation 9:16": "Presentation 9:16",
+	"A4 Vertical": "A4 Vertical",
+	"A4 Horizontal": "A4 Horizontal",
 };

@@ -108,4 +108,6 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasDefaultContentListClass: "fancy-list-row",
 	obasDefaultBlankListClass: "fancy-list-row",
 	obasDefaultBackCoverListClass: "order-list-with-border",
+
+	obasDefaultSlideSize: "p16-9",
 };
