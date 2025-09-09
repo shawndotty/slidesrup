@@ -12,7 +12,7 @@ export const AIRTABLE_CONFIG = {
 	// 检查API密钥的配置
 	CHECK_API_KEY: {
 		WEBHOOK_URL:
-			"https://hooks.airtable.com/workflows/v1/genericWebhook/appq9k6KwHV3lEIJZ/wfl2uT25IPEljno9w/wtrFUIEC8SXlDsdIu",
+			"https://hooks.airtable.com/workflows/v1/genericWebhook/appq9k6KwHV3lEIJZ/wflX4FmaEzKQNUnjr/wtrAuuYH4C3Q7ZcSp",
 		BASE_ID: "appq9k6KwHV3lEIJZ",
 		TABLE_ID: "UpdateLogs",
 		VIEW_ID: "viweTQ2YarquoqZUT",
