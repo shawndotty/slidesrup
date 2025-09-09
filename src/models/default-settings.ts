@@ -109,5 +109,11 @@ export const DEFAULT_SETTINGS: OBASAssistantSettings = {
 	obasDefaultBlankListClass: "fancy-list-row",
 	obasDefaultBackCoverListClass: "order-list-with-border",
 
+	obasUserTOCPageListClass: "",
+	obasUserChapterPageListClass: "",
+	obasUserContentPageListClass: "",
+	obasUserBlankPageListClass: "",
+	obasUserBackCoverPageListClass: "",
+
 	obasDefaultSlideSize: "p16-9",
 };

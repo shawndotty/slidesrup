@@ -647,7 +647,10 @@ export class SlidesMaker {
 
 		// 默认值对象
 		const defaultListClass = Object.fromEntries(
-			keys.map((k) => [k, ""])
+			keys.map((k) => [
+				k,
+				this.settings[`obasUser${k}` as keyof OBASAssistantSettings],
+			])
 		) as typeof this.userSpecificListClass;
 
 		if (!file) {
@@ -663,7 +666,15 @@ export class SlidesMaker {
 		}
 
 		// 批量生成结果对象
-		const result = Object.fromEntries(keys.map((k) => [k, fm[k] ?? ""]));
+		const result = Object.fromEntries(
+			keys.map((k) => [
+				k,
+				fm[k] ??
+					this.settings[
+						`obasUser${k}` as keyof OBASAssistantSettings
+					],
+			])
+		);
 
 		this.userSpecificListClass =
 			result as typeof this.userSpecificListClass;

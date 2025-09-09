@@ -337,4 +337,18 @@ export default {
 	"Default BackCover Page List Class": "封底頁預設列表樣式",
 	"Please select the default list class for backcover page":
 		"請選擇封底頁的預設列表樣式",
+	"Presentation 16:9": "演示 16:9",
+	"Presentation 9:16": "演示 9:16",
+	"A4 Vertical": "A4 縱向",
+	"A4 Horizontal": "A4 橫向",
+	"User TOC Page List Class": "使用者自建目錄頁列表樣式",
+	"User Chapter Page List Class": "使用者自建章節頁列表樣式",
+	"User Content Page List Class": "使用者自建內容頁列表樣式",
+	"User Blank Page List Class": "使用者自建空白頁列表樣式",
+	"User BackCover Page List Class": "使用者自建封底頁列表樣式",
+	"Set User TOC Page List Class": "設定使用者自建目錄頁列表樣式",
+	"Set User Chapter Page List Class": "設定使用者自建章節頁列表樣式",
+	"Set User Content Page List Class": "設定使用者自建內容頁列表樣式",
+	"Set User Blank Page List Class": "設定使用者自建空白頁列表樣式",
+	"Set User BackCover Page List Class": "設定使用者自建封底頁列表樣式",
 };

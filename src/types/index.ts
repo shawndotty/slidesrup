@@ -118,6 +118,12 @@ export interface OBASAssistantSettings {
 	obasDefaultBlankListClass: string;
 	obasDefaultBackCoverListClass: string;
 
+	obasUserTOCPageListClass: string;
+	obasUserChapterPageListClass: string;
+	obasUserContentPageListClass: string;
+	obasUserBlankPageListClass: string;
+	obasUserBackCoverPageListClass: string;
+
 	obasDefaultSlideSize: string;
 }
 
