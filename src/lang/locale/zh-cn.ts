@@ -348,6 +348,8 @@ export default {
 	"Default BackCover Page List Class": "封底页默认列表样式",
 	"Please select the default list class for backcover page":
 		"请选择封底页的默认列表样式",
+	"Default Slide Size": "默认幻灯片尺寸",
+	"Please select your default slide size": "请选择您的默认幻灯片尺寸",
 	"Presentation 16:9": "演示 16:9",
 	"Presentation 9:16": "演示 9:16",
 	"A4 Vertical": "A4 纵向",
@@ -362,4 +364,5 @@ export default {
 	"Set User Content Page List Class": "设置用户自建内容页列表样式",
 	"Set User Blank Page List Class": "设置用户自建空白页列表样式",
 	"Set User BackCover Page List Class": "设置用户自建封底页列表样式",
+	"This Action is only available for Paid Users": "此功能仅供付费用户使用",
 };

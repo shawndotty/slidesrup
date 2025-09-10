@@ -413,4 +413,6 @@ export default {
 	"Set User Content Page List Class": "Set User Content Page List Class",
 	"Set User Blank Page List Class": "Set User Blank Page List Class",
 	"Set User BackCover Page List Class": "Set User BackCover Page List Class",
+	"This Action is only available for Paid Users":
+		"This Action is only available for Paid Users",
 };

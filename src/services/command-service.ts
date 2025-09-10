@@ -36,6 +36,20 @@ export class CommandService {
 		}
 	}
 
+	private _checkUserType(): boolean {
+		if (
+			!this.settings.userChecked ||
+			!this.settings.updateAPIKeyIsValid ||
+			!this.settings.userEmail ||
+			!this.settings.updateAPIKey ||
+			!this.settings.updateAPIKey.includes("patquQB1Cd93hSAlC")
+		) {
+			new Notice(t("This Action is only available for Paid Users"));
+			return false;
+		}
+		return true;
+	}
+
 	// 优化：抽取公共逻辑，减少重复代码
 	private async _templaterTriggerSwitch(
 		action: () => Promise<void>
@@ -262,9 +276,11 @@ export class CommandService {
 			id: "slides-rup:covert-to-slide",
 			name: t("Convert to Slide"),
 			callback: async () => {
-				await this._templaterTriggerSwitch(() =>
-					this.slidesMaker.convertMDToSlide()
-				);
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.slidesMaker.convertMDToSlide()
+					);
+				}
 			},
 		});
 
@@ -272,9 +288,11 @@ export class CommandService {
 			id: "slides-rup:crete-new-design",
 			name: t("Create New Design From Blank"),
 			callback: async () => {
-				await this._templaterTriggerSwitch(() =>
-					this.designMaker.makeNewBlankDesign()
-				);
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.designMaker.makeNewBlankDesign()
+					);
+				}
 			},
 		});
 
@@ -282,9 +300,11 @@ export class CommandService {
 			id: "slides-rup:crete-new-design-from-current-design",
 			name: t("Create New Design From Current Design"),
 			callback: async () => {
-				await this._templaterTriggerSwitch(() =>
-					this.designMaker.makeNewDesignFromCurrentDesign()
-				);
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.designMaker.makeNewDesignFromCurrentDesign()
+					);
+				}
 			},
 		});
 	}

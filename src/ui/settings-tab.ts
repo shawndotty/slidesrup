@@ -49,6 +49,11 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 					this.renderMainSettings(content),
 			},
 			{
+				title: "Slide Settings",
+				renderMethod: (content: HTMLElement) =>
+					this.renderSlideSettings(content),
+			},
+			{
 				title: "Design and Templates",
 				renderMethod: (content: HTMLElement) =>
 					this.renderUserSettings(content),
@@ -62,11 +67,6 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 				title: "Font Setting",
 				renderMethod: (content: HTMLElement) =>
 					this.renderFontSettings(content),
-			},
-			{
-				title: "Slide Settings",
-				renderMethod: (content: HTMLElement) =>
-					this.renderSlideSettings(content),
 			},
 			{
 				title: "Advanced Settings",
@@ -212,19 +212,6 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
-
-		this.createDropdownSetting(
-			containerEl,
-			"Default Slide Size",
-			"Please select your default slide size",
-			"slidesRupDefaultSlideSize",
-			{
-				"p16-9": "Presentation 16:9",
-				"p9-16": "Presentation 9:16",
-				a4v: "A4 Vertical",
-				a4h: "A4 Horizontal",
-			}
-		);
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {
@@ -861,6 +848,19 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
+		this.createDropdownSetting(
+			containerEl,
+			"Default Slide Size",
+			"Please select your default slide size",
+			"slidesRupDefaultSlideSize",
+			{
+				"p16-9": "Presentation 16:9",
+				"p9-16": "Presentation 9:16",
+				a4v: "A4 Vertical",
+				a4h: "A4 Horizontal",
+			}
+		);
+
 		this.createTextSetting(containerEl, {
 			name: "Tagline",
 			desc: "Set Tagline",
