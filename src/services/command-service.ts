@@ -262,7 +262,9 @@ export class CommandService {
 			id: "obas-assistant:covert-to-slide",
 			name: t("Convert to Slide"),
 			callback: async () => {
-				await this.slidesMaker.convertMDToSlide();
+				await this._templaterTriggerSwitch(() =>
+					this.slidesMaker.convertMDToSlide()
+				);
 			},
 		});
 
