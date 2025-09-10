@@ -7,7 +7,7 @@ import {
 	TFolder,
 } from "obsidian";
 import { t } from "../lang/helpers";
-import OBASAssistant from "../main";
+import SlidesRupAssistant from "../main";
 import { isValidApiKey, isValidEmail } from "../utils";
 import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
@@ -21,13 +21,13 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { DEFAULT_DESIGNS } from "../constants";
 
-type SettingsKeys = keyof OBASAssistant["settings"];
+type SettingsKeys = keyof SlidesRupAssistant["settings"];
 
-export class OBASAssistantSettingTab extends PluginSettingTab {
-	plugin: OBASAssistant;
+export class SlidesRupAssistantSettingTab extends PluginSettingTab {
+	plugin: SlidesRupAssistant;
 	private apiService: ApiService;
 
-	constructor(app: App, plugin: OBASAssistant) {
+	constructor(app: App, plugin: SlidesRupAssistant) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.apiService = new ApiService(this.plugin.settings);
@@ -37,7 +37,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		containerEl.createEl("h2", {
-			text: t("OBAS_Assistant_Settings_Heading"),
+			text: t("SlidesRup_Settings_Heading"),
 		});
 
 		const tabbedSettings = new TabbedSettings(containerEl);
@@ -94,7 +94,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		);
 		this.createValidatedInput({
 			containerEl,
-			name: t("OBAS Update API Key"),
+			name: t("SlidesRup Update API Key"),
 			description: t("Please enter a valid update API Key"),
 			placeholder: t("Enter the API Key"),
 			reload: false,
@@ -126,9 +126,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		this.createDropdownSetting(
 			containerEl,
-			"OBAS Running Language",
-			"Please select your obas framework running language",
-			"obasRunningLanguage",
+			"SlidesRup Running Language",
+			"Please select your slidesRup framework running language",
+			"slidesRupRunningLanguage",
 			{
 				ob: "Auto (Follow System Language)",
 				"zh-cn": "Chinese",
@@ -139,10 +139,10 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		this.createFolderSetting(
 			containerEl,
-			"OBAS Framework Folder",
-			"Please enter the path to the OBAS Framework Folder",
-			"Enter the full path to the OBAS Framework folder",
-			"obasFrameworkFolder"
+			"SlidesRup Framework Folder",
+			"Please enter the path to the SlidesRup Framework Folder",
+			"Enter the full path to the SlidesRup Framework folder",
+			"slidesRupFrameworkFolder"
 		);
 
 		const toggleDefaultLocation = (value: string) => {
@@ -196,9 +196,9 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		this.createToggleSetting(containerEl, {
 			name: "Auto Convert Links",
 			desc: "ACLD",
-			value: this.plugin.settings.obasAutoConvertLinks,
+			value: this.plugin.settings.slidesRupAutoConvertLinks,
 			onChange: async (value) => {
-				this.plugin.settings.obasAutoConvertLinks = value;
+				this.plugin.settings.slidesRupAutoConvertLinks = value;
 				await this.plugin.saveSettings();
 			},
 		});
@@ -206,18 +206,31 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		this.createToggleSetting(containerEl, {
 			name: "Enable Paragraph Fragments",
 			desc: "EPF",
-			value: this.plugin.settings.obasEnableParagraphFragments,
+			value: this.plugin.settings.slidesRupEnableParagraphFragments,
 			onChange: async (value) => {
-				this.plugin.settings.obasEnableParagraphFragments = value;
+				this.plugin.settings.slidesRupEnableParagraphFragments = value;
 				await this.plugin.saveSettings();
 			},
 		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Slide Size",
+			"Please select your default slide size",
+			"slidesRupDefaultSlideSize",
+			{
+				"p16-9": "Presentation 16:9",
+				"p9-16": "Presentation 9:16",
+				a4v: "A4 Vertical",
+				a4h: "A4 Horizontal",
+			}
+		);
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Slide Design"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createDropdownSetting(
@@ -232,48 +245,50 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"User Designs",
 			"Please select your user design",
-			"obasUserDesigns",
+			"slidesRupUserDesigns",
 			this.getUserDesignOptions(),
 			undefined,
 			false
 		);
 
 		if (
-			this.plugin.settings.obasUserDesignsCss &&
-			Array.isArray(this.plugin.settings.obasUserDesignsCss) &&
-			this.plugin.settings.obasUserDesignsCss.length > 0
+			this.plugin.settings.slidesRupUserDesignsCss &&
+			Array.isArray(this.plugin.settings.slidesRupUserDesignsCss) &&
+			this.plugin.settings.slidesRupUserDesignsCss.length > 0
 		) {
 			containerEl.createEl("h3", {
 				text: t("User Designs CSS"),
-				cls: "obas-assistant-title",
+				cls: "slides-rup-title",
 			});
-			this.plugin.settings.obasUserDesignsCss.forEach((item, index) => {
-				const name = item.name || `Design CSS ${index + 1}`;
-				const path = item.filePath || "";
-				new Setting(containerEl)
-					.setName(name)
-					.setDesc(`${t("Enable CSS:")} ${path}`)
-					.addToggle((toggle) => {
-						toggle
-							.setValue(item.enabled)
-							.onChange(async (value) => {
-								// 更新对应item的enable值
-								this.plugin.settings.obasUserDesignsCss[
-									index
-								].enabled = value;
-								await this.plugin.saveSettings();
+			this.plugin.settings.slidesRupUserDesignsCss.forEach(
+				(item, index) => {
+					const name = item.name || `Design CSS ${index + 1}`;
+					const path = item.filePath || "";
+					new Setting(containerEl)
+						.setName(name)
+						.setDesc(`${t("Enable CSS:")} ${path}`)
+						.addToggle((toggle) => {
+							toggle
+								.setValue(item.enabled)
+								.onChange(async (value) => {
+									// 更新对应item的enable值
+									this.plugin.settings.slidesRupUserDesignsCss[
+										index
+									].enabled = value;
+									await this.plugin.saveSettings();
 
-								await this.plugin.services.obasStyleService.modifyStyleSection(
-									"userCss"
-								);
-							});
-					});
-			});
+									await this.plugin.services.slidesRupStyleService.modifyStyleSection(
+										"userCss"
+									);
+								});
+						});
+				}
+			);
 		}
 
 		containerEl.createEl("h2", {
 			text: t("User Templates"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createToggleSetting(containerEl, {
@@ -346,13 +361,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	private renderColorSettings(containerEl: HTMLElement): void {
 		containerEl.createEl("h2", {
 			text: t("Theme Colors"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		const onThemeColorChanges = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyStyleSection(
+				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"hsl"
 				);
 			},
@@ -363,7 +378,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onColorChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyStyleSection(
+				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"color"
 				);
 			},
@@ -375,7 +390,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Theme Color",
 			"Set the theme color",
-			"obasThemeColor",
+			"slidesRupThemeColor",
 			onThemeColorChanges
 		);
 
@@ -383,7 +398,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Slide Mode",
 			"Set the slide mode",
-			"obasSlideMode",
+			"slidesRupSlideMode",
 			{
 				none: "Decide At Creation",
 				light: "Light Mode",
@@ -394,22 +409,22 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		// 标题颜色设置
 		containerEl.createEl("h2", {
 			text: t("Customize Text Colors"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createToggleSetting(containerEl, {
 			name: "Use User Color Setting",
 			desc: "Enable User Color Setting",
-			value: this.plugin.settings.enableObasColorUserSetting,
+			value: this.plugin.settings.enableSlidesRupColorUserSetting,
 			onChange: async (value) => {
-				this.plugin.settings.enableObasColorUserSetting = value;
+				this.plugin.settings.enableSlidesRupColorUserSetting = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyStyleSection(
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 						"color"
 					);
 				} else {
-					await this.plugin.services.obasStyleService.clearStyleSection(
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"color"
 					);
 				}
@@ -418,14 +433,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h3", {
 			text: t("Heading Colors"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createColorSetting(
 			containerEl,
 			"H1 Color",
 			"Set the color for H1 headings",
-			"obasH1Color",
+			"slidesRupH1Color",
 			onColorChange
 		);
 
@@ -433,7 +448,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H2 Color",
 			"Set the color for H2 headings",
-			"obasH2Color",
+			"slidesRupH2Color",
 			onColorChange
 		);
 
@@ -441,7 +456,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H3 Color",
 			"Set the color for H3 headings",
-			"obasH3Color",
+			"slidesRupH3Color",
 			onColorChange
 		);
 
@@ -449,7 +464,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H4 Color",
 			"Set the color for H4 headings",
-			"obasH4Color",
+			"slidesRupH4Color",
 			onColorChange
 		);
 
@@ -457,7 +472,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H5 Color",
 			"Set the color for H5 headings",
-			"obasH5Color",
+			"slidesRupH5Color",
 			onColorChange
 		);
 
@@ -465,21 +480,21 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H6 Color",
 			"Set the color for H6 headings",
-			"obasH6Color",
+			"slidesRupH6Color",
 			onColorChange
 		);
 
 		// 正文颜色设置
 		containerEl.createEl("h3", {
 			text: t("Body Colors"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createColorSetting(
 			containerEl,
 			"Body Color",
 			"Set the color for body text",
-			"obasBodyColor",
+			"slidesRupBodyColor",
 			onColorChange
 		);
 
@@ -487,7 +502,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Paragraph Color",
 			"Set the color for paragraphs",
-			"obasParagraphColor",
+			"slidesRupParagraphColor",
 			onColorChange
 		);
 
@@ -495,7 +510,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"List Color",
 			"Set the color for lists",
-			"obasListColor",
+			"slidesRupListColor",
 			onColorChange
 		);
 
@@ -503,7 +518,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Strong Color",
 			"Set the color for strong/bold text",
-			"obasStrongColor",
+			"slidesRupStrongColor",
 			onColorChange
 		);
 
@@ -511,7 +526,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Emphasis Color",
 			"Set the color for emphasis/italic text",
-			"obasEmColor",
+			"slidesRupEmColor",
 			onColorChange
 		);
 
@@ -519,7 +534,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Link Color",
 			"Set the color for links",
-			"obasLinkColor",
+			"slidesRupLinkColor",
 			onColorChange
 		);
 	}
@@ -528,7 +543,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onFontFamilyChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyStyleSection(
+				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"fontFamily"
 				);
 			},
@@ -539,7 +554,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onFontSizeChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyStyleSection(
+				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"fontSize"
 				);
 			},
@@ -550,7 +565,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		const onHeadingTextTransformChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.obasStyleService.modifyStyleSection(
+				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"headingTransform"
 				);
 			},
@@ -633,22 +648,23 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", {
 			text: t("Font Family"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createToggleSetting(containerEl, {
 			name: "Use User Font Family Setting",
 			desc: "Enable User Font Family Setting",
-			value: this.plugin.settings.enableObasFontFamilyUserSetting,
+			value: this.plugin.settings.enableSlidesRupFontFamilyUserSetting,
 			onChange: async (value) => {
-				this.plugin.settings.enableObasFontFamilyUserSetting = value;
+				this.plugin.settings.enableSlidesRupFontFamilyUserSetting =
+					value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyStyleSection(
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 						"fontFamily"
 					);
 				} else {
-					await this.plugin.services.obasStyleService.clearStyleSection(
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"fontFamily"
 					);
 				}
@@ -659,7 +675,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Main Font",
 			"Set Main Font",
-			"obasMainFont",
+			"slidesRupMainFont",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -668,7 +684,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Heading Font",
 			"Set Heading Font",
-			"obasHeadingFont",
+			"slidesRupHeadingFont",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -678,7 +694,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H1 Font",
 			"Set H1 Font",
-			"obasH1Font",
+			"slidesRupH1Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -687,7 +703,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H2 Font",
 			"Set H2 Font",
-			"obasH2Font",
+			"slidesRupH2Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -696,7 +712,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H3 Font",
 			"Set H3 Font",
-			"obasH3Font",
+			"slidesRupH3Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -705,7 +721,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H4 Font",
 			"Set H4 Font",
-			"obasH4Font",
+			"slidesRupH4Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -714,7 +730,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H5 Font",
 			"Set H5 Font",
-			"obasH5Font",
+			"slidesRupH5Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
@@ -723,29 +739,29 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H6 Font",
 			"Set H6 Font",
-			"obasH6Font",
+			"slidesRupH6Font",
 			fontOptionsGrouped,
 			onFontFamilyChange
 		);
 
 		containerEl.createEl("h2", {
 			text: t("Font Size"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createToggleSetting(containerEl, {
 			name: "Use User Font Size Setting",
 			desc: "Enable User Font Size Setting",
-			value: this.plugin.settings.enableObasFontSizeUserSetting,
+			value: this.plugin.settings.enableSlidesRupFontSizeUserSetting,
 			onChange: async (value) => {
-				this.plugin.settings.enableObasFontSizeUserSetting = value;
+				this.plugin.settings.enableSlidesRupFontSizeUserSetting = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyStyleSection(
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 						"fontSize"
 					);
 				} else {
-					await this.plugin.services.obasStyleService.clearStyleSection(
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"fontSize"
 					);
 				}
@@ -756,7 +772,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"Body Size",
 			"Adjust the font size of body",
-			"obasMainFontSize",
+			"slidesRupMainFontSize",
 			12,
 			72,
 			onFontSizeChange
@@ -767,7 +783,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H1 Size",
 			"Adjust the font size of H1",
-			"obasH1Size",
+			"slidesRupH1Size",
 			12,
 			180,
 			onFontSizeChange
@@ -777,7 +793,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H2 Size",
 			"Adjust the font size of H2",
-			"obasH2Size",
+			"slidesRupH2Size",
 			12,
 			144,
 			onFontSizeChange
@@ -787,7 +803,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H3 Size",
 			"Adjust the font size of H3",
-			"obasH3Size",
+			"slidesRupH3Size",
 			12,
 			108,
 			onFontSizeChange
@@ -797,7 +813,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H4 Size",
 			"Adjust the font size of H4",
-			"obasH4Size",
+			"slidesRupH4Size",
 			12,
 			72,
 			onFontSizeChange
@@ -807,7 +823,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H5 Size",
 			"Adjust the font size of H5",
-			"obasH5Size",
+			"slidesRupH5Size",
 			12,
 			54,
 			onFontSizeChange
@@ -817,7 +833,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			containerEl,
 			"H6 Size",
 			"Adjust the font size of H6",
-			"obasH6Size",
+			"slidesRupH6Size",
 			12,
 			36,
 			onFontSizeChange
@@ -826,14 +842,14 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		// 标题文字变换设置
 		containerEl.createEl("h2", {
 			text: t("Text Transform"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createDropdownSetting(
 			containerEl,
 			"Heading Text Transform",
 			"Set text transform for all headings",
-			"obasHeadingTextTransform",
+			"slidesRupHeadingTextTransform",
 			{
 				none: "None",
 				capitalize: "Capitalize",
@@ -888,6 +904,119 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
+
+		const defaultListClassOptions = {
+			"fancy-list": "Fancy List",
+			"fancy-list-row": "Fancy List Row",
+			"fancy-list-with-order": "Fancy List With Order",
+			"fancy-list-with-order-row": "Fancy List With Order Row",
+			"grid-list": "Grid List",
+			"grid-step-list": "Grid Step List",
+			"grid-step-list-v": "Grid Step List Vertical",
+			"box-list": "Box List",
+			"order-list-with-border": "Order List With Border",
+		};
+
+		containerEl.createEl("h3", {
+			text: t("Slide Default List"),
+			cls: "slides-rup-title",
+		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default TOC Page List Class",
+			"Please select the default list class for TOC pages",
+			"slidesRupDefaultTOCListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Chapter Page List Class",
+			"Please select the default list class for chapter pages",
+			"slidesRupDefaultChapterListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Content Page List Class",
+			"Please select the default list class for content pages",
+			"slidesRupDefaultContentListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Blank Page List Class",
+			"Please select the default list class for blank pages",
+			"slidesRupDefaultBlankListClass",
+			defaultListClassOptions
+		);
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default BackCover Page List Class",
+			"Please select the default list class for backcover page",
+			"slidesRupDefaultBackCoverListClass",
+			defaultListClassOptions
+		);
+
+		this.createTextSetting(containerEl, {
+			name: "User TOC Page List Class",
+			desc: "Set User TOC Page List Class",
+			placeholder: "User TOC Page List Class",
+			value: this.plugin.settings.slidesRupUserTOCPageListClass,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupUserTOCPageListClass = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "User Chapter Page List Class",
+			desc: "Set User Chapter Page List Class",
+			placeholder: "User Chapter Page List Class",
+			value: this.plugin.settings.slidesRupUserChapterPageListClass,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupUserChapterPageListClass = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "User Content Page List Class",
+			desc: "Set User Content Page List Class",
+			placeholder: "User Content Page List Class",
+			value: this.plugin.settings.slidesRupUserContentPageListClass,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupUserContentPageListClass = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "User Blank Page List Class",
+			desc: "Set User Blank Page List Class",
+			placeholder: "User Blank Page List Class",
+			value: this.plugin.settings.slidesRupUserBlankPageListClass,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupUserBlankPageListClass = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "User BackCover Page List Class",
+			desc: "Set User BackCover Page List Class",
+			placeholder: "User BackCover Page List Class",
+			value: this.plugin.settings.slidesRupUserBackCoverPageListClass,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupUserBackCoverPageListClass =
+					value;
+				await this.plugin.saveSettings();
+			},
+		});
 	}
 
 	private renderAdvancedSettings(containerEl: HTMLElement): void {
@@ -895,7 +1024,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", {
 			text: t("Customized CSS"),
-			cls: "obas-assistant-title",
+			cls: "slides-rup-title",
 		});
 
 		this.createToggleSetting(containerEl, {
@@ -906,11 +1035,11 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 				this.plugin.settings.enableCustomCss = value;
 				await this.plugin.saveSettings();
 				if (value) {
-					await this.plugin.services.obasStyleService.modifyStyleSection(
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
 						"userStyle"
 					);
 				} else {
-					await this.plugin.services.obasStyleService.clearStyleSection(
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"userStyle"
 					);
 				}
@@ -920,12 +1049,10 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("自定义 CSS")
 			.setDesc("在此输入自定义 CSS 代码，将应用于演示文稿。")
-			.setClass("obas-custom-css");
+			.setClass("slides-rup-custom-css");
 
 		// 创建一个 div 元素作为 CodeMirror 的容器
-		const editorContainer = containerEl.createDiv(
-			"obas-assistant-css-editor"
-		);
+		const editorContainer = containerEl.createDiv("slides-rup-css-editor");
 
 		new EditorView({
 			state: EditorState.create({
@@ -958,7 +1085,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			(newCss: string) => {
 				this.plugin.settings.customCss = newCss;
 				this.plugin.saveSettings();
-				this.plugin.services.obasStyleService.modifyStyleSection(
+				this.plugin.services.slidesRupStyleService.modifyStyleSection(
 					"userStyle"
 				);
 			},
@@ -1240,13 +1367,13 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		nameKey: string,
 		descKey: string,
 		settingKey:
-			| "obasH1Size"
-			| "obasH2Size"
-			| "obasH3Size"
-			| "obasH4Size"
-			| "obasH5Size"
-			| "obasH6Size"
-			| "obasMainFontSize",
+			| "slidesRupH1Size"
+			| "slidesRupH2Size"
+			| "slidesRupH3Size"
+			| "slidesRupH4Size"
+			| "slidesRupH5Size"
+			| "slidesRupH6Size"
+			| "slidesRupMainFontSize",
 		min: number,
 		max: number,
 		onChangeCallback: (value: number) => void
@@ -1256,12 +1383,12 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 			.setDesc(t(descKey as any));
 
 		const sliderContainer = setting.controlEl.createDiv({
-			cls: "obas-size-slider-container",
+			cls: "slides-rup-size-slider-container",
 		});
 
 		const sizeSlider = sliderContainer.createEl("input", {
 			type: "range",
-			cls: "obas-size-slider",
+			cls: "slides-rup-size-slider",
 			attr: {
 				min: min.toString(),
 				max: max.toString(),
@@ -1273,7 +1400,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 		// 添加数值显示
 		const valueDisplay = sliderContainer.createEl("span", {
 			text: `${this.plugin.settings[settingKey]}px`,
-			cls: "obas-size-value",
+			cls: "slides-rup-size-value",
 		});
 
 		sizeSlider.addEventListener("input", (e) => {
@@ -1287,19 +1414,24 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 	}
 
 	private getUserDesignOptions() {
-		const obasFrameworkPath = this.plugin.settings.obasFrameworkFolder;
-		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		const slidesRupFrameworkPath =
+			this.plugin.settings.slidesRupFrameworkFolder;
+		const slidesRupUserDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
 		const options = {
 			none: t("None"),
 		};
 
 		// 获取框架文件夹
-		const obasUserDesignsFolder =
-			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
+		const slidesRupUserDesignsFolder = this.app.vault.getAbstractFileByPath(
+			slidesRupUserDesignsPath
+		);
 
-		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+		if (
+			slidesRupUserDesignsFolder &&
+			slidesRupUserDesignsFolder instanceof TFolder
+		) {
 			// 获取所有子文件夹
-			const subFolders = obasUserDesignsFolder.children
+			const subFolders = slidesRupUserDesignsFolder.children
 				.filter((file) => file instanceof TFolder)
 				.map((folder) => folder.name.split("-").last() as string);
 
@@ -1332,7 +1464,7 @@ export class OBASAssistantSettingTab extends PluginSettingTab {
 
 		// 创建“恢复默认”按钮
 		const resetIcon = setting.controlEl.createEl("button", {
-			cls: "obas-reset-color-btn",
+			cls: "slides-rup-reset-color-btn",
 			attr: {
 				"aria-label": t("Use Default Value"),
 			},

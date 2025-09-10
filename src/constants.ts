@@ -4,15 +4,15 @@ export const AIRTABLE_CONFIG = {
 	GET_UPDATE_IDS: {
 		BASE_ID: "appxQqkHaEkjUQnBf",
 		TABLE_ID: "EmailSync",
-		VIEW_ID: "OBAS",
-		FIELD_NAME: "OBASUpdateIDs",
+		VIEW_ID: "SlidesRup",
+		FIELD_NAME: "SlidesRupUpdateIDs",
 		TOKEN: "patCw7AoXaktNgHNM.bf8eb50a33da820fde56b1f5d4cf5899bc8c508096baf36b700e94cd13570000",
 	},
 
 	// 检查API密钥的配置
 	CHECK_API_KEY: {
 		WEBHOOK_URL:
-			"https://hooks.airtable.com/workflows/v1/genericWebhook/appq9k6KwHV3lEIJZ/wfl2uT25IPEljno9w/wtrFUIEC8SXlDsdIu",
+			"https://hooks.airtable.com/workflows/v1/genericWebhook/appq9k6KwHV3lEIJZ/wflX4FmaEzKQNUnjr/wtrAuuYH4C3Q7ZcSp",
 		BASE_ID: "appq9k6KwHV3lEIJZ",
 		TABLE_ID: "UpdateLogs",
 		VIEW_ID: "viweTQ2YarquoqZUT",
@@ -32,22 +32,13 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	cIndex: "CHAPTER_INDEX",
 	cName: "CHAPTER_NAME",
 	baseLayout: "BASE_LAYOUT",
-	obasPath: "OBAS_PATH",
+	slidesRupPath: "SLIDESRUP_PATH",
 	slideName: "SLIDE_NAME",
 };
 
-export const DEFAULT_DESIGNS = [
-	"A",
-	"B",
-	"C",
-	"D",
-	"E",
-	"F",
-	"G",
-	"H",
-] as const;
+export const DEFAULT_DESIGNS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export const OBAS_LIST_CLASSES = [
+export const SLIDESRUP_LIST_CLASSES = [
 	"box-list",
 	"fancy-list",
 	"fancy-list-row",

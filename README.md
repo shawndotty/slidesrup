@@ -1,4 +1,4 @@
-# OBAS Assistant
+# SlidesRup
 
 一个强大的 Obsidian 演示助手插件，提供丰富的演示模板和自定义功能。
 
@@ -33,7 +33,7 @@
 
 1. 在 Obsidian 中打开设置
 2. 进入社区插件
-3. 搜索 "OBAS Assistant"
+3. 搜索 "SlidesRup Assistant"
 4. 安装并启用插件
 
 ## 使用说明

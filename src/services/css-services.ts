@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { OBASAssistantSettings, UserDesignCss } from "../types";
+import { SlidesRupSettings, UserDesignCss } from "../types";
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
@@ -15,8 +15,8 @@ interface StyleSection {
 	userStyle: string;
 }
 
-export class ObasStyleService {
-	private obasMainStyleFilePath: string;
+export class SlidesRupStyleService {
+	private slidesRupMainStyleFilePath: string;
 	private styleSections: StyleSection = {
 		hsl: "",
 		headingTransform: "",
@@ -27,14 +27,14 @@ export class ObasStyleService {
 		userStyle: "",
 	};
 
-	constructor(private app: App, private settings: OBASAssistantSettings) {
+	constructor(private app: App, private settings: SlidesRupSettings) {
 		const pluginFolder =
 			this.settings.presentationPlugin === "slidesExtended"
 				? SLIDES_EXTENDED_PLUGIN_FOLDER
 				: ADVANCED_SLIDES_PLUGIN_FOLDER;
 		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
 
-		this.obasMainStyleFilePath = `${basePath}/my-obas-user-style.css`;
+		this.slidesRupMainStyleFilePath = `${basePath}/my-slides-rup-user-style.css`;
 	}
 
 	async updateUserDesignCssSettings() {
@@ -54,7 +54,9 @@ export class ObasStyleService {
 
 		// 过滤出不在当前设置中的新CSS文件
 		const existingPaths = new Set(
-			this.settings.obasUserDesignsCss?.map((item) => item.filePath) || []
+			this.settings.slidesRupUserDesignsCss?.map(
+				(item) => item.filePath
+			) || []
 		);
 
 		const newUserDesignCss = userDesignCss.filter(
@@ -62,13 +64,13 @@ export class ObasStyleService {
 		);
 
 		// 移除已经被删除的CSS文件，保留新添加的文件
-		this.settings.obasUserDesignsCss =
-			this.settings.obasUserDesignsCss.filter((item) =>
+		this.settings.slidesRupUserDesignsCss =
+			this.settings.slidesRupUserDesignsCss.filter((item) =>
 				currentFilePaths.has(item.filePath)
 			);
 
 		// 添加新的CSS文件
-		this.settings.obasUserDesignsCss.push(...newUserDesignCss);
+		this.settings.slidesRupUserDesignsCss.push(...newUserDesignCss);
 	}
 
 	/**
@@ -76,7 +78,7 @@ export class ObasStyleService {
 	 */
 	private async generateUserCss() {
 		const userCss = await Promise.all(
-			this.settings.obasUserDesignsCss
+			this.settings.slidesRupUserDesignsCss
 				.filter((item) => item.enabled)
 				.map(async (item) => {
 					return `/* ${
@@ -97,10 +99,10 @@ export class ObasStyleService {
 	): string {
 		return `:root {
     /* HSL 基础颜色变量 */
-    --obas-base-color: hsl(${hue}, ${saturation}%, ${lightness}%);
-    --obas-hue: ${hue};
-    --obas-saturation: ${saturation}%;
-    --obas-lightness: ${lightness}%;
+    --slides-rup-base-color: hsl(${hue}, ${saturation}%, ${lightness}%);
+    --slides-rup-hue: ${hue};
+    --slides-rup-saturation: ${saturation}%;
+    --slides-rup-lightness: ${lightness}%;
 }`;
 	}
 
@@ -122,48 +124,48 @@ export class ObasStyleService {
 	 * 生成颜色样式部分
 	 */
 	private generateColorSection(colors: {
-		obasH1Color: string;
-		obasH2Color: string;
-		obasH3Color: string;
-		obasH4Color: string;
-		obasH5Color: string;
-		obasH6Color: string;
-		obasBodyColor: string;
-		obasParagraphColor: string;
-		obasListColor: string;
-		obasStrongColor: string;
-		obasEmColor: string;
-		obasLinkColor: string;
+		slidesRupH1Color: string;
+		slidesRupH2Color: string;
+		slidesRupH3Color: string;
+		slidesRupH4Color: string;
+		slidesRupH5Color: string;
+		slidesRupH6Color: string;
+		slidesRupBodyColor: string;
+		slidesRupParagraphColor: string;
+		slidesRupListColor: string;
+		slidesRupStrongColor: string;
+		slidesRupEmColor: string;
+		slidesRupLinkColor: string;
 	}): string {
 		const {
-			obasH1Color,
-			obasH2Color,
-			obasH3Color,
-			obasH4Color,
-			obasH5Color,
-			obasH6Color,
-			obasBodyColor,
-			obasParagraphColor,
-			obasListColor,
-			obasStrongColor,
-			obasEmColor,
-			obasLinkColor,
+			slidesRupH1Color,
+			slidesRupH2Color,
+			slidesRupH3Color,
+			slidesRupH4Color,
+			slidesRupH5Color,
+			slidesRupH6Color,
+			slidesRupBodyColor,
+			slidesRupParagraphColor,
+			slidesRupListColor,
+			slidesRupStrongColor,
+			slidesRupEmColor,
+			slidesRupLinkColor,
 		} = colors;
 
 		return `:root {
     /* 颜色变量 */
-    --r-h1-color: ${obasH1Color};
-    --r-h2-color: ${obasH2Color};
-    --r-h3-color: ${obasH3Color};
-    --r-h4-color: ${obasH4Color};
-    --r-h5-color: ${obasH5Color};
-    --r-h6-color: ${obasH6Color};
-    --r-body-color: ${obasBodyColor};
-    --r-paragraph-color: ${obasParagraphColor};
-    --r-list-color: ${obasListColor};
-    --r-strong-color: ${obasStrongColor};
-    --r-em-color: ${obasEmColor};
-    --r-link-color: ${obasLinkColor};
+    --r-h1-color: ${slidesRupH1Color};
+    --r-h2-color: ${slidesRupH2Color};
+    --r-h3-color: ${slidesRupH3Color};
+    --r-h4-color: ${slidesRupH4Color};
+    --r-h5-color: ${slidesRupH5Color};
+    --r-h6-color: ${slidesRupH6Color};
+    --r-body-color: ${slidesRupBodyColor};
+    --r-paragraph-color: ${slidesRupParagraphColor};
+    --r-list-color: ${slidesRupListColor};
+    --r-strong-color: ${slidesRupStrongColor};
+    --r-em-color: ${slidesRupEmColor};
+    --r-link-color: ${slidesRupLinkColor};
 }
 
 /* 标题颜色应用 */
@@ -188,45 +190,45 @@ export class ObasStyleService {
 	 * 生成字体族样式部分
 	 */
 	private generateFontFamilySection(fonts: {
-		obasHeadingFont: string;
-		obasMainFont: string;
-		obasH1Font?: string;
-		obasH2Font?: string;
-		obasH3Font?: string;
-		obasH4Font?: string;
-		obasH5Font?: string;
-		obasH6Font?: string;
+		slidesRupHeadingFont: string;
+		slidesRupMainFont: string;
+		slidesRupH1Font?: string;
+		slidesRupH2Font?: string;
+		slidesRupH3Font?: string;
+		slidesRupH4Font?: string;
+		slidesRupH5Font?: string;
+		slidesRupH6Font?: string;
 	}): string {
 		const {
-			obasHeadingFont,
-			obasMainFont,
-			obasH1Font,
-			obasH2Font,
-			obasH3Font,
-			obasH4Font,
-			obasH5Font,
-			obasH6Font,
+			slidesRupHeadingFont,
+			slidesRupMainFont,
+			slidesRupH1Font,
+			slidesRupH2Font,
+			slidesRupH3Font,
+			slidesRupH4Font,
+			slidesRupH5Font,
+			slidesRupH6Font,
 		} = fonts;
 
-		const headingFont = this.getFontFamily(obasHeadingFont);
-		const mainFont = this.getFontFamily(obasMainFont);
+		const headingFont = this.getFontFamily(slidesRupHeadingFont);
+		const mainFont = this.getFontFamily(slidesRupMainFont);
 		const h1Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH1Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH1Font, slidesRupHeadingFont)
 		);
 		const h2Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH2Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH2Font, slidesRupHeadingFont)
 		);
 		const h3Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH3Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH3Font, slidesRupHeadingFont)
 		);
 		const h4Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH4Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH4Font, slidesRupHeadingFont)
 		);
 		const h5Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH5Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH5Font, slidesRupHeadingFont)
 		);
 		const h6Font = this.getFontFamily(
-			this.getHeadingFontOption(obasH6Font, obasHeadingFont)
+			this.getHeadingFontOption(slidesRupH6Font, slidesRupHeadingFont)
 		);
 
 		return `:root {
@@ -260,7 +262,7 @@ export class ObasStyleService {
 		return levelFont && levelFont.trim() !== "" && levelFont !== "inherit"
 			? levelFont
 			: headingfont === "inherit"
-			? this.settings.obasMainFont
+			? this.settings.slidesRupMainFont
 			: headingfont;
 	}
 
@@ -268,33 +270,33 @@ export class ObasStyleService {
 	 * 生成字体大小样式部分
 	 */
 	private generateFontSizeSection(sizes: {
-		obasMainFontSize: number;
-		obasH1Size: number;
-		obasH2Size: number;
-		obasH3Size: number;
-		obasH4Size: number;
-		obasH5Size: number;
-		obasH6Size: number;
+		slidesRupMainFontSize: number;
+		slidesRupH1Size: number;
+		slidesRupH2Size: number;
+		slidesRupH3Size: number;
+		slidesRupH4Size: number;
+		slidesRupH5Size: number;
+		slidesRupH6Size: number;
 	}): string {
 		const {
-			obasMainFontSize,
-			obasH1Size,
-			obasH2Size,
-			obasH3Size,
-			obasH4Size,
-			obasH5Size,
-			obasH6Size,
+			slidesRupMainFontSize,
+			slidesRupH1Size,
+			slidesRupH2Size,
+			slidesRupH3Size,
+			slidesRupH4Size,
+			slidesRupH5Size,
+			slidesRupH6Size,
 		} = sizes;
 
 		return `:root {
     /* 字体大小变量 */
-    --r-main-font-size: ${obasMainFontSize}px;
-    --r-heading1-size: ${obasH1Size}px;
-    --r-heading2-size: ${obasH2Size}px;
-    --r-heading3-size: ${obasH3Size}px;
-    --r-heading4-size: ${obasH4Size}px;
-    --r-heading5-size: ${obasH5Size}px;
-    --r-heading6-size: ${obasH6Size}px;
+    --r-main-font-size: ${slidesRupMainFontSize}px;
+    --r-heading1-size: ${slidesRupH1Size}px;
+    --r-heading2-size: ${slidesRupH2Size}px;
+    --r-heading3-size: ${slidesRupH3Size}px;
+    --r-heading4-size: ${slidesRupH4Size}px;
+    --r-heading5-size: ${slidesRupH5Size}px;
+    --r-heading6-size: ${slidesRupH6Size}px;
 }
 
 /* 标题字体大小应用 */
@@ -372,7 +374,7 @@ export class ObasStyleService {
 	private async writeStyleFile() {
 		const allStyles = this.generateStyleSheetFromSections();
 		await this.app.vault.adapter.write(
-			this.obasMainStyleFilePath,
+			this.slidesRupMainStyleFilePath,
 			allStyles
 		);
 	}
@@ -383,14 +385,14 @@ export class ObasStyleService {
 	private generateStyleSheetFromSections(): string {
 		// 生成字体导入语句（需要从当前设置获取字体信息）
 		const fontImports = this.generateFontImports([
-			this.settings.obasHeadingFont,
-			this.settings.obasMainFont,
-			this.settings.obasH1Font || this.settings.obasHeadingFont,
-			this.settings.obasH2Font || this.settings.obasHeadingFont,
-			this.settings.obasH3Font || this.settings.obasHeadingFont,
-			this.settings.obasH4Font || this.settings.obasHeadingFont,
-			this.settings.obasH5Font || this.settings.obasHeadingFont,
-			this.settings.obasH6Font || this.settings.obasHeadingFont,
+			this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupMainFont,
+			this.settings.slidesRupH1Font || this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupH2Font || this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupH3Font || this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupH4Font || this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupH5Font || this.settings.slidesRupHeadingFont,
+			this.settings.slidesRupH6Font || this.settings.slidesRupHeadingFont,
 		]);
 
 		return `
@@ -430,8 +432,8 @@ ${
 	async modifyStyleSection(section: keyof StyleSection) {
 		switch (section) {
 			case "hsl":
-				const { obasThemeColor } = this.settings;
-				const hsl = this.colorToHsl(obasThemeColor);
+				const { slidesRupThemeColor } = this.settings;
+				const hsl = this.colorToHsl(slidesRupThemeColor);
 				this.styleSections.hsl = this.generateHslSection(
 					hsl.h,
 					hsl.s,
@@ -441,49 +443,50 @@ ${
 			case "headingTransform":
 				this.styleSections.headingTransform =
 					this.generateHeadingTransformSection(
-						this.settings.obasHeadingTextTransform
+						this.settings.slidesRupHeadingTextTransform
 					);
 				break;
 			case "color":
 				const colors = {
-					obasH1Color: this.settings.obasH1Color,
-					obasH2Color: this.settings.obasH2Color,
-					obasH3Color: this.settings.obasH3Color,
-					obasH4Color: this.settings.obasH4Color,
-					obasH5Color: this.settings.obasH5Color,
-					obasH6Color: this.settings.obasH6Color,
-					obasBodyColor: this.settings.obasBodyColor,
-					obasParagraphColor: this.settings.obasParagraphColor,
-					obasListColor: this.settings.obasListColor,
-					obasStrongColor: this.settings.obasStrongColor,
-					obasEmColor: this.settings.obasEmColor,
-					obasLinkColor: this.settings.obasLinkColor,
+					slidesRupH1Color: this.settings.slidesRupH1Color,
+					slidesRupH2Color: this.settings.slidesRupH2Color,
+					slidesRupH3Color: this.settings.slidesRupH3Color,
+					slidesRupH4Color: this.settings.slidesRupH4Color,
+					slidesRupH5Color: this.settings.slidesRupH5Color,
+					slidesRupH6Color: this.settings.slidesRupH6Color,
+					slidesRupBodyColor: this.settings.slidesRupBodyColor,
+					slidesRupParagraphColor:
+						this.settings.slidesRupParagraphColor,
+					slidesRupListColor: this.settings.slidesRupListColor,
+					slidesRupStrongColor: this.settings.slidesRupStrongColor,
+					slidesRupEmColor: this.settings.slidesRupEmColor,
+					slidesRupLinkColor: this.settings.slidesRupLinkColor,
 				};
 				this.styleSections.color = this.generateColorSection(colors);
 				break;
 			case "fontFamily":
 				const fonts = {
-					obasHeadingFont: this.settings.obasHeadingFont,
-					obasMainFont: this.settings.obasMainFont,
-					obasH1Font: this.settings.obasH1Font,
-					obasH2Font: this.settings.obasH2Font,
-					obasH3Font: this.settings.obasH3Font,
-					obasH4Font: this.settings.obasH4Font,
-					obasH5Font: this.settings.obasH5Font,
-					obasH6Font: this.settings.obasH6Font,
+					slidesRupHeadingFont: this.settings.slidesRupHeadingFont,
+					slidesRupMainFont: this.settings.slidesRupMainFont,
+					slidesRupH1Font: this.settings.slidesRupH1Font,
+					slidesRupH2Font: this.settings.slidesRupH2Font,
+					slidesRupH3Font: this.settings.slidesRupH3Font,
+					slidesRupH4Font: this.settings.slidesRupH4Font,
+					slidesRupH5Font: this.settings.slidesRupH5Font,
+					slidesRupH6Font: this.settings.slidesRupH6Font,
 				};
 				this.styleSections.fontFamily =
 					this.generateFontFamilySection(fonts);
 				break;
 			case "fontSize":
 				const sizes = {
-					obasMainFontSize: this.settings.obasMainFontSize,
-					obasH1Size: this.settings.obasH1Size,
-					obasH2Size: this.settings.obasH2Size,
-					obasH3Size: this.settings.obasH3Size,
-					obasH4Size: this.settings.obasH4Size,
-					obasH5Size: this.settings.obasH5Size,
-					obasH6Size: this.settings.obasH6Size,
+					slidesRupMainFontSize: this.settings.slidesRupMainFontSize,
+					slidesRupH1Size: this.settings.slidesRupH1Size,
+					slidesRupH2Size: this.settings.slidesRupH2Size,
+					slidesRupH3Size: this.settings.slidesRupH3Size,
+					slidesRupH4Size: this.settings.slidesRupH4Size,
+					slidesRupH5Size: this.settings.slidesRupH5Size,
+					slidesRupH6Size: this.settings.slidesRupH6Size,
 				};
 				this.styleSections.fontSize =
 					this.generateFontSizeSection(sizes);
@@ -510,8 +513,8 @@ ${
 	}
 
 	async getUserDesignCssFiles() {
-		const obasFrameworkPath = this.settings.obasFrameworkFolder;
-		const userDesignsPath = `${obasFrameworkPath}/MyDesigns`;
+		const slidesRupFrameworkPath = this.settings.slidesRupFrameworkFolder;
+		const userDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
 		let cssFiles: string[] = [];
 		// 使用 Obsidian 的 adapter API 递归获取 userDesignsPath 下所有子文件夹的 css 文件
 		cssFiles = await this.getAllCssFilesInFolder(userDesignsPath);

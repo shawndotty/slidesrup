@@ -1,10 +1,10 @@
 import { requestUrl } from "obsidian";
 import { AIRTABLE_CONFIG } from "../constants";
-import { OBASAssistantSettings } from "../types";
+import { SlidesRupSettings } from "../types";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
 
 export class ApiService {
-	constructor(private settings: OBASAssistantSettings) {}
+	constructor(private settings: SlidesRupSettings) {}
 
 	async getUpdateIDs(): Promise<void> {
 		const userEmail = this.settings.userEmail.trim();

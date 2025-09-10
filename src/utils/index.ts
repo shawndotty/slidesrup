@@ -8,6 +8,8 @@ import {
 	moment,
 } from "obsidian";
 
+import { t } from "../lang/helpers";
+
 /**
  * 验证API密钥是否有效
  * @param apiKey - 要验证的API密钥
@@ -65,7 +67,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function buildFieldNames(
 	forceDefaultFetchFields: boolean = false,
-	obasRunningLanguage = "ob"
+	slidesRupRunningLanguage = "ob"
 ) {
 	if (forceDefaultFetchFields) {
 		return {
@@ -92,10 +94,10 @@ export function buildFieldNames(
 		},
 	};
 
-	if (obasRunningLanguage === "ob") {
+	if (slidesRupRunningLanguage === "ob") {
 		return fieldNamesMap[locale] || fieldNamesMap["en"];
 	} else {
-		return fieldNamesMap[obasRunningLanguage] || fieldNamesMap["en"];
+		return fieldNamesMap[slidesRupRunningLanguage] || fieldNamesMap["en"];
 	}
 }
 
@@ -193,10 +195,46 @@ export function getTimeStamp() {
 	return moment().format("YYYYMMDDHHmmSS");
 }
 
-export async function createPathIfNeeded(folderPath: string): Promise<void> {
-	const { vault } = this.app;
-	const directoryExists = await vault.exists(folderPath);
+export async function createPathIfNeeded(
+	app: App,
+	folderPath: string
+): Promise<void> {
+	const { vault } = app;
+	const normalized = normalizePath(folderPath);
+	const directoryExists = await vault.adapter.exists(folderPath);
 	if (!directoryExists) {
-		await vault.createFolder(normalizePath(folderPath));
+		await vault.createFolder(normalized);
 	}
+}
+
+export function getUserDesigns(app: App, slidesRupPath: string) {
+	const slidesRupUserDesignsPath = `${slidesRupPath}/MyDesigns`;
+	// 获取框架文件夹
+	const slidesRupUserDesignsFolder = app.vault.getAbstractFileByPath(
+		slidesRupUserDesignsPath
+	);
+	let userDesigns: Array<string> = [];
+	if (
+		slidesRupUserDesignsFolder &&
+		slidesRupUserDesignsFolder instanceof TFolder
+	) {
+		// 获取所有子文件夹
+		const subFolders = slidesRupUserDesignsFolder.children
+			.filter((file) => file instanceof TFolder)
+			.map((folder) => folder.name.split("-").last() as string);
+		userDesigns = subFolders;
+	}
+
+	return userDesigns;
+}
+
+export function getAllDesignsOptions(
+	defaultDesigns: string[],
+	userDesigns: string[]
+) {
+	return userDesigns.concat(defaultDesigns).map((design, index) => ({
+		id: `"${design}"`,
+		name: `${index + 1}. ${t("Slide Design")} ${design}`,
+		value: design,
+	}));
 }

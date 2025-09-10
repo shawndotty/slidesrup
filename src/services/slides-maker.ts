@@ -14,20 +14,26 @@ import {
 	SlideDesignSuggester,
 	SlideModeSuggester,
 } from "../suggesters/suggesters";
-import { OBASAssistantSettings, ReplaceConfig } from "../types";
+import {
+	SlidesRupSettings,
+	ReplaceConfig,
+	UserSpecificListClassType,
+} from "../types";
 import {
 	getTimeStamp,
 	createPathIfNeeded,
 	get_active_note_folder_path,
 	get_tfiles_from_folder,
 	get_list_items_from_note,
+	getUserDesigns,
+	getAllDesignsOptions,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
 import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 
 export class SlidesMaker {
 	private app: App;
-	private settings: OBASAssistantSettings;
+	private settings: SlidesRupSettings;
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
@@ -43,35 +49,25 @@ export class SlidesMaker {
 	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 
-	constructor(app: App, settings: OBASAssistantSettings) {
+	private userSpecificListClass: UserSpecificListClassType = {
+		TOCPageListClass: "",
+		ChapterPageListClass: "",
+		ContentPageListClass: "",
+		BlankPageListClass: "",
+		BackCoverPageListClass: "",
+	};
+
+	constructor(app: App, settings: SlidesRupSettings) {
 		this.app = app;
 		this.settings = settings;
-		this.userDesigns = this.getUserDesigns();
-		this.designOptions = this.userDesigns
-			.concat(this.defaultDesigns)
-			.map((design, index) => ({
-				id: `"${design}"`,
-				name: `${index + 1}. ${t("Slide Design")} ${design}`,
-				value: design,
-			}));
-	}
-
-	private getUserDesigns() {
-		const obasFrameworkPath = this.settings.obasFrameworkFolder;
-		const obasUserDesignsPath = `${obasFrameworkPath}/MyDesigns`;
-		// 获取框架文件夹
-		const obasUserDesignsFolder =
-			this.app.vault.getAbstractFileByPath(obasUserDesignsPath);
-		let userDesigns: Array<string> = [];
-		if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
-			// 获取所有子文件夹
-			const subFolders = obasUserDesignsFolder.children
-				.filter((file) => file instanceof TFolder)
-				.map((folder) => folder.name.split("-").last() as string);
-			userDesigns = subFolders;
-		}
-
-		return userDesigns;
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.slidesRupFrameworkFolder
+		);
+		this.designOptions = getAllDesignsOptions(
+			this.userDesigns,
+			this.defaultDesigns
+		);
 	}
 
 	async createSlides(): Promise<void> {
@@ -104,9 +100,9 @@ export class SlidesMaker {
 				? subFolder
 				: `${newSlideContainer}/${subFolder}`;
 
-		await createPathIfNeeded(newSlideLocation);
+		await createPathIfNeeded(this.app, newSlideLocation);
 
-		let slideMode = this.settings.obasSlideMode;
+		let slideMode = this.settings.slidesRupSlideMode;
 		if (!slideMode || slideMode === "none") {
 			slideMode = (await this._selectSlideMode())?.value || "light";
 		}
@@ -154,7 +150,7 @@ export class SlidesMaker {
 				presentDate: moment().format(
 					this.settings.dateFormat || "YYYY-MM-DD"
 				),
-				obasPath: this.settings.obasFrameworkFolder,
+				slidesRupPath: this.settings.slidesRupFrameworkFolder,
 				tagline: this.settings.tagline,
 				slogan: this.settings.slogan,
 			}
@@ -585,6 +581,8 @@ export class SlidesMaker {
 			return;
 		}
 
+		await this._resetUserSpecificListClass(activeFile);
+
 		// Check for multiple H1 headings
 		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
 		if (h1Count > 1) {
@@ -595,8 +593,13 @@ export class SlidesMaker {
 		}
 
 		// 1. Setup slide location and get active file
-		const { newSlideContainer, newSlideLocation, design, slideMode } =
-			await this._setupSlideConversion();
+		const {
+			newSlideContainer,
+			newSlideLocation,
+			design,
+			slideMode,
+			slideSize,
+		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
 		// 2. Generate file names for slide components
@@ -622,13 +625,61 @@ export class SlidesMaker {
 			tocName,
 			baseLayoutName,
 			activeFile,
-			slideMode
+			slideMode,
+			slideSize
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
 			processedContent
 		);
+	}
+
+	/**
+	 * 优化：重置 userSpecificListClass，根据 frontmatter 批量设置各类 ListClass。
+	 * 进一步优化：减少对象创建次数，提升可读性和性能。
+	 */
+	private async _resetUserSpecificListClass(file: TFile) {
+		const keys: Array<keyof UserSpecificListClassType> = [
+			"TOCPageListClass",
+			"ChapterPageListClass",
+			"ContentPageListClass",
+			"BlankPageListClass",
+			"BackCoverPageListClass",
+		];
+
+		// 统一获取默认值
+		const getDefault = (key: keyof UserSpecificListClassType): string => {
+			const settingKey = `slidesRupUser${key}` as keyof SlidesRupSettings;
+			const value = this.settings[settingKey];
+			return typeof value === "string" ? value : "";
+		};
+
+		// 如果没有文件，直接用默认值
+		if (!file) {
+			this.userSpecificListClass = keys.reduce((acc, key) => {
+				acc[key] = getDefault(key);
+				return acc;
+			}, {} as UserSpecificListClassType);
+			return;
+		}
+
+		const fm = (await this.app.metadataCache.getFileCache(file))
+			?.frontmatter;
+		// 没有 frontmatter 也用默认值
+		if (!fm) {
+			this.userSpecificListClass = keys.reduce((acc, key) => {
+				acc[key] = getDefault(key);
+				return acc;
+			}, {} as UserSpecificListClassType);
+			return;
+		}
+
+		// 优先 frontmatter，其次默认值
+		this.userSpecificListClass = keys.reduce((acc, key) => {
+			acc[key] = fm[key] ?? getDefault(key);
+			return acc;
+		}, {} as UserSpecificListClassType);
 	}
 
 	/**
@@ -639,16 +690,31 @@ export class SlidesMaker {
 		newSlideLocation: string;
 		design: string;
 		slideMode: string;
+		slideSize: { w: number; h: number };
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
+
+		// 优先使用 frontmatter 指定的幻灯片路径和尺寸，否则使用默认设置
+		const slideFMLocation = this._getSlideLocation(activeFile);
+		const userSlideSize = this._getSlideSize(activeFile);
+
+		const slideSizeMap: Record<string, { w: number; h: number }> = {
+			"p16-9": { w: 1920, h: 1080 },
+			"p9-16": { w: 1080, h: 1920 },
+			a4v: { w: 1240, h: 1754 },
+			a4h: { w: 1754, h: 1240 },
+		};
+		const slideSize =
+			userSlideSize ||
+			slideSizeMap[this.settings.slidesRupDefaultSlideSize] ||
+			slideSizeMap["p16-9"];
+
 		let newSlideLocation = "";
 		let newSlideContainer = "";
-		const slideFMLocation = this._getSlideLocation(activeFile);
 
 		if (slideFMLocation) {
 			newSlideLocation = slideFMLocation;
 		} else {
-			// Get slide location
 			const slideContainer = await this._determineNewSlideLocation();
 			if (slideContainer === null) {
 				new Notice(t("Operation cancelled by user"));
@@ -657,10 +723,9 @@ export class SlidesMaker {
 					newSlideLocation: "",
 					design: "",
 					slideMode: "",
+					slideSize: { w: 1920, h: 1080 },
 				};
 			}
-
-			// Get subfolder name
 			let subFolder = this.settings.customizeSlideFolderName
 				? await new InputModal(
 						this.app,
@@ -671,32 +736,36 @@ export class SlidesMaker {
 				  ).openAndGetValue()
 				: undefined;
 			if (!subFolder?.trim()) subFolder = t("Slide");
-
-			// Create slide location path
 			newSlideLocation =
 				slideContainer === "/"
 					? subFolder
 					: `${slideContainer}/${subFolder}`;
+			newSlideContainer = slideContainer;
 		}
 
-		await createPathIfNeeded(newSlideLocation);
+		await createPathIfNeeded(this.app, newSlideLocation);
 
-		// Determine design
+		// 优先级：frontmatter > 用户选择 > 默认
 		let design = this._getSlideDesign(activeFile);
 		if (!design || design === "none") {
 			design =
 				(await this._selectSlideDesign(this.designOptions))?.value ||
 				"H";
 		}
-		// design = design.toUpperCase?.() || "";
 
-		let slideMode = this.settings.obasSlideMode;
+		let slideMode = this.settings.slidesRupSlideMode;
 		if (!slideMode || slideMode === "none") {
 			slideMode = (await this._selectSlideMode())?.value || "light";
 		}
 		slideMode = slideMode.toLowerCase?.() || "light";
 
-		return { newSlideContainer, newSlideLocation, design, slideMode };
+		return {
+			newSlideContainer,
+			newSlideLocation,
+			design,
+			slideMode,
+			slideSize,
+		};
 	}
 
 	/**
@@ -806,7 +875,11 @@ export class SlidesMaker {
 		tocName: string,
 		baseLayoutName: string,
 		activeFile: TFile,
-		slideMode: string
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
 	): Promise<string> {
 		// Add Empty Page Annotation
 
@@ -830,9 +903,13 @@ export class SlidesMaker {
 		const contentWithPageSlides =
 			this._addPageSlideAnnotations(contentWithH3Links);
 
+		const contentWithSubPageSlides = this._addSubPageAnnotation(
+			contentWithPageSlides.split("\n")
+		).join("\n");
+
 		// 5. Add TOC slide
 		const contentWithToc = this._addTocSlide(
-			contentWithPageSlides,
+			contentWithSubPageSlides,
 			tocName,
 			design
 		);
@@ -857,7 +934,8 @@ export class SlidesMaker {
 			baseLayoutName,
 			design,
 			activeFile,
-			slideMode
+			slideMode,
+			slideSize
 		);
 	}
 
@@ -991,7 +1069,6 @@ export class SlidesMaker {
 		return text.replace(
 			/(^|\n)(?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
 			(match, p1, p2) => {
-				console.log(match);
 				// 跳过空行和以![[开头的段落
 				if (
 					!p2.trim() ||
@@ -1021,18 +1098,58 @@ export class SlidesMaker {
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
 		const newLines: string[] = [];
 		for (const line of lines) {
-			if (/^-{3,}$/.test(line)) {
+			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
 				newLines.push(
 					`\n<!-- slide template="[[${t(
 						"BlankPage"
-					)}-${design}]]" -->`
+					)}-${design}]]" class="${
+						this.userSpecificListClass.BlankPageListClass ||
+						this.settings.slidesRupDefaultBlankListClass
+					}" -->`
 				);
 			} else {
 				newLines.push(line);
 			}
 		}
 		return newLines;
+	}
+
+	private _addSubPageAnnotation(lines: string[]): string[] {
+		let currentChapterIndex = 0;
+		let pageIndexInChapter = 0;
+		let subPageIndex = 0;
+		const finalLines: string[] = [];
+
+		for (const line of lines) {
+			if (/^##\s+/.test(line)) {
+				currentChapterIndex++;
+				pageIndexInChapter = 0;
+			}
+			if (/^###\s+/.test(line)) {
+				pageIndexInChapter++;
+				subPageIndex = 0;
+			}
+			if (/^#{4,6}\s+/.test(line) && /%%/.test(line)) {
+				subPageIndex++;
+				const chapterClass = `chapter-${currentChapterIndex}`;
+				const classValue = this._modidySlideClassList(
+					line,
+					this.userSpecificListClass.ContentPageListClass ||
+						this.settings.slidesRupDefaultContentListClass
+				);
+
+				finalLines.push("---");
+				finalLines.push(
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" class="${chapterClass} ${classValue}" -->\n`
+				);
+				finalLines.push(this._cleanLine(line));
+			} else {
+				finalLines.push(line);
+			}
+		}
+
+		return finalLines;
 	}
 
 	/**
@@ -1069,30 +1186,11 @@ export class SlidesMaker {
 		for (const line of content.split("\n")) {
 			if (/^##\s+/.test(line)) {
 				h2Index++;
-				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
-				const replaceMatches = line.match(
-					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+				const classValue = this._modidySlideClassList(
+					line,
+					this.userSpecificListClass.ChapterPageListClass ||
+						this.settings.slidesRupDefaultChapterListClass
 				);
-				let extracted: string[] = [];
-				let merged = "";
-				let classValue = "order-list-with-border";
-
-				if (replaceMatches && replaceMatches.length > 0) {
-					// 如果匹配到 %%! ... %%，则用其内容覆盖 class
-					const replaceContent = replaceMatches
-						.map((m) => m.slice(3, -2).trim())
-						.join(" ");
-					if (replaceContent) {
-						classValue = replaceContent;
-					}
-				} else if (matches) {
-					// 否则，提取普通注释内容，追加到默认 class 后面
-					extracted = matches.map((m) => m.slice(2, -2).trim());
-					if (extracted.length > 0) {
-						merged = extracted.join(" ");
-						classValue += merged ? ` ${merged}` : "";
-					}
-				}
 
 				modifiedLines.push(
 					`\n<!-- slide id="c${h2Index}" template="[[${t(
@@ -1100,11 +1198,7 @@ export class SlidesMaker {
 					)}-${design}]]" class="${classValue}" -->\n`
 				);
 				// 去除所有注释块
-				let cleanedLine = line
-					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
-					.trim();
-				modifiedLines.push(cleanedLine);
+				modifiedLines.push(this._cleanLine(line));
 			} else {
 				modifiedLines.push(line);
 			}
@@ -1138,7 +1232,7 @@ export class SlidesMaker {
 				inH2 = true;
 			} else if (/^###\s+/.test(line) && inH2) {
 				h3Index++;
-				const h3Title = line.replace(/^###\s+/, "").trim();
+				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
 				h3TitleList.push({
 					title: h3Title,
 					h2: currentH2Index,
@@ -1199,43 +1293,17 @@ export class SlidesMaker {
 			}
 			if (/^###\s+/.test(line)) {
 				pageIndexInChapter++;
-				// INSERT_YOUR_CODE
-				// 先尝试匹配 %%!xxx%%，如果有则覆盖 class，否则追加
-				const replaceMatches = line.match(
-					SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
-				);
-				const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
-				let extracted: string[] = [];
-				let merged = "";
 				const chapterClass = `chapter-${currentChapterIndex}`;
-				let classValue = "fancy-list-row";
-
-				if (replaceMatches && replaceMatches.length > 0) {
-					// 如果有 %%!xxx%%，则用其内容覆盖 class
-					const replaceContent = replaceMatches
-						.map((m) => m.slice(3, -2).trim())
-						.join(" ");
-					if (replaceContent) {
-						classValue = replaceContent;
-					}
-				} else if (matches && matches.length > 0) {
-					// 否则，追加 %%xxx%% 的内容
-					extracted = matches.map((m) => m.slice(2, -2).trim());
-					if (extracted.length > 0) {
-						merged = extracted.join(" ");
-						classValue += ` ${merged}`;
-					}
-				}
+				let classValue = this._modidySlideClassList(
+					line,
+					this.userSpecificListClass.ContentPageListClass ||
+						this.settings.slidesRupDefaultContentListClass
+				);
 
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="${chapterClass} ${classValue}" -->\n`
 				);
-				// 去除所有 %%xxx%% 和 %%!xxx%% 注释块
-				let cleanedLine = line
-					.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-					.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
-					.trim();
-				finalLines.push(cleanedLine);
+				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
 			}
@@ -1254,9 +1322,10 @@ export class SlidesMaker {
 	): string {
 		const tocEmbed = `---\n\n<!-- slide template="[[${t(
 			"TOC"
-		)}-${design}]]" class="order-list-with-border" -->\n\n## ${t(
-			"TOC"
-		)}\n\n![[${tocName}]]\n`;
+		)}-${design}]]" class="${
+			this.userSpecificListClass.TOCPageListClass ||
+			this.settings.slidesRupDefaultTOCListClass
+		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
 
 		const tocIndex = contentLines.findIndex(
@@ -1279,21 +1348,26 @@ export class SlidesMaker {
 		baseLayoutName: string,
 		design: string,
 		activeFile: TFile,
-		slideMode: string
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
 	): string {
 		// Generate frontmatter
 		const frontmatter = `---
 css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
 enableLinks: true
-height: 1080
+width: ${slideSize.w}
+height: ${slideSize.h}
 margin: 0
 aliases:
  - ${activeFile.basename}
 defaultTemplate: "[[${baseLayoutName}]]"
 pdfSeparateFragments: false
+verticalSeparator: \\*\\*\\*
 theme: white
 transition: none
-width: 1920
 ---`;
 
 		// Generate cover slide
@@ -1301,21 +1375,57 @@ width: 1920
 			"Cover"
 		)}-${design}]]" -->`;
 
-		const newContent = this._addAuthorAndDate(content);
+		const oburi = this._getOBURI(activeFile);
+
+		const newContent = this._addAuthorAndDate(
+			this._addLinkToH1(content, oburi)
+		);
 
 		// Generate back cover slide
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const backCoverSlide = `---
 
-<!-- slide template="[[${t(
-			"BackCover"
-		)}-${design}]]" class="order-list-with-border" -->
+<!-- slide template="[[${t("BackCover")}-${design}]]" class="${
+			this.userSpecificListClass.BackCoverPageListClass ||
+			this.settings.slidesRupDefaultBackCoverListClass
+		}" -->
 
 ${lbnl}
 `;
 
 		// Combine all parts
 		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+	}
+
+	/**
+	 * 获取指定文件的OBURI链接
+	 * @param file - 目标文件
+	 * @returns OBURI链接字符串
+	 */
+	private _getOBURI(file: TFile): string {
+		// 获取当前 vault 名称
+		const vaultName = this.app.vault.getName();
+		// 对文件路径进行编码
+		const encodedPath = encodeURIComponent(file.path);
+		// 构建 Obsidian URI
+		const uri = `obsidian://open?vault=${encodeURIComponent(
+			vaultName
+		)}&file=${encodedPath}`;
+		return uri;
+	}
+
+	private _addLinkToH1(content: string, oburi: string): string {
+		const h1Regex = /^#\s+(.+)$/m;
+		const match = content.match(h1Regex);
+
+		if (match) {
+			const h1Text = match[1];
+			// 将标题一的内容替换为带链接的形式
+			const linkedH1 = `# [${h1Text}](${oburi})`;
+			return content.replace(h1Regex, linkedH1);
+		}
+
+		return content;
 	}
 
 	private _getLastButNotLeast(activeFile: TFile): string {
@@ -1351,7 +1461,7 @@ ${lbnl}
 
 	/**
 	 * Gets the slide design to use for the current context.
-	 * Priority order: frontmatter.slideDesign → settings.obasUserDesigns → settings.defaultDesign
+	 * Priority order: frontmatter.slideDesign → settings.slidesRupUserDesigns → settings.defaultDesign
 	 *
 	 * @param activeFile - Optional file to check, defaults to current active file
 	 * @returns The design string to use
@@ -1377,9 +1487,28 @@ ${lbnl}
 		return typeof loc === "string" && loc.trim() ? loc.trim() : "";
 	}
 
+	private _getSlideSize(
+		activeFile?: TFile | null
+	): { w: number; h: number } | null {
+		if (!activeFile) return null;
+		const frontmatter =
+			this.app.metadataCache.getFileCache(activeFile)?.frontmatter;
+		const width = frontmatter?.slideWidth;
+		const height = frontmatter?.slideHeight;
+		if (
+			typeof width === "number" &&
+			typeof height === "number" &&
+			width > 0 &&
+			height > 0
+		) {
+			return { w: width, h: height };
+		}
+		return null;
+	}
+
 	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {
 		if (!activeFile) {
-			return this.settings.obasAutoConvertLinks;
+			return this.settings.slidesRupAutoConvertLinks;
 		}
 
 		// Get file cache (this is already cached by Obsidian)
@@ -1395,12 +1524,12 @@ ${lbnl}
 			return frontmatterAutoConvertLinks;
 		}
 
-		return this.settings.obasAutoConvertLinks;
+		return this.settings.slidesRupAutoConvertLinks;
 	}
 
 	private _getEnableParagraphFragments(activeFile?: TFile | null): boolean {
 		if (!activeFile) {
-			return this.settings.obasEnableParagraphFragments;
+			return this.settings.slidesRupEnableParagraphFragments;
 		}
 
 		// Get file cache (this is already cached by Obsidian)
@@ -1416,14 +1545,14 @@ ${lbnl}
 			return frontmatterEnableParagraphFragments;
 		}
 
-		return this.settings.obasEnableParagraphFragments;
+		return this.settings.slidesRupEnableParagraphFragments;
 	}
 	/**
 	 * Gets the fallback design from settings
 	 * @private
 	 */
 	private _getFallbackDesign(): string {
-		const userDesign = this.settings.obasUserDesigns;
+		const userDesign = this.settings.slidesRupUserDesigns;
 		const defaultDesign = this.settings.defaultDesign;
 
 		// Check if user design is set and not 'none'
@@ -1435,5 +1564,40 @@ ${lbnl}
 		return defaultDesign && defaultDesign.trim()
 			? defaultDesign.trim()
 			: "A";
+	}
+
+	private _modidySlideClassList(line: string, listClass: string): string {
+		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+		const replaceMatches = line.match(
+			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+		);
+		let extracted: string[] = [];
+		let merged = "";
+
+		if (replaceMatches && replaceMatches.length > 0) {
+			// 如果匹配到 %%! ... %%，则用其内容覆盖 class
+			const replaceContent = replaceMatches
+				.map((m) => m.slice(3, -2).trim())
+				.join(" ");
+			if (replaceContent) {
+				listClass = replaceContent;
+			}
+		} else if (matches && matches.length > 0) {
+			// 否则，提取普通注释内容，追加到默认 class 后面
+			extracted = matches.map((m) => m.slice(2, -2).trim());
+			if (extracted.length > 0) {
+				merged = extracted.join(" ");
+				listClass += merged ? ` ${merged}` : "";
+			}
+		}
+
+		return listClass;
+	}
+
+	private _cleanLine(line: string): string {
+		return line
+			.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
+			.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+			.trim();
 	}
 }

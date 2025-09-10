@@ -84,19 +84,20 @@ export default {
 	"Validating...": "Validating...",
 	"Valid API Key": "Valid API Key",
 	"Valid Email": "Valid Email",
-	"OBAS Update API Key": "OBAS Update API Key",
-	"OBAS Framework Folder": "OBAS Framework Folder",
-	"OBAS Framework Folder Description": "OBAS Framework Folder Description",
+	"SlidesRup Update API Key": "SlidesRup Update API Key",
+	"SlidesRup Framework Folder": "SlidesRup Framework Folder",
+	"SlidesRup Framework Folder Description":
+		"SlidesRup Framework Folder Description",
 	"Get The Latest Version Of Style": "Get The Latest Version Of Style",
 	"Get The Latest Version Of Templates":
 		"Get The Latest Version Of Templates",
 	"Get The Latest Version Of User Templates":
 		"Get The Latest Version Of User Templates",
 	"One Click to Deploy": "One Click to Deploy",
-	"Please enter the path to the OBAS Framework Folder":
-		"Please enter the path to the OBAS Framework Folder",
-	"Enter the full path to the OBAS Framework folder":
-		"Enter the full path to the OBAS Framework folder",
+	"Please enter the path to the SlidesRup Framework Folder":
+		"Please enter the path to the SlidesRup Framework Folder",
+	"Enter the full path to the SlidesRup Framework folder":
+		"Enter the full path to the SlidesRup Framework folder",
 	"Create New Slides": "Create New Slides",
 	"Slide Design A": "Slide Design A",
 	"Slide Design B": "Slide Design B",
@@ -130,7 +131,7 @@ export default {
 	SubSlide: "SubSlide",
 	List: "List",
 	SubList: "SubList",
-	"Use OBAS to Express Yourself": "Use OBAS to Express Yourself",
+	"Use SlidesRup to Express Yourself": "Use SlidesRup to Express Yourself",
 	Farewell: "Farewell",
 	"Content is the king": "Content is the king",
 	"Keep is simple and powerful": "Keep is simple and powerful",
@@ -181,8 +182,8 @@ export default {
 	"Adjust the hue of the theme": "Adjust the hue of the theme",
 	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
 	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
-	"Get The Latest Version OBAS Reveal Addons":
-		"Get The Latest Version OBAS Reveal Addons",
+	"Get The Latest Version SlidesRup Reveal Addons":
+		"Get The Latest Version SlidesRup Reveal Addons",
 	"Reveal template updated.": "Reveal template updated.",
 	"User TOC Template": "User TOC Template",
 	"Please choose your personal TOC template":
@@ -219,10 +220,10 @@ export default {
 	"Choose your personal chapter with sub pages template":
 		"Choose your personal chapter with sub pages template",
 	"Enable User Templates": "Enable User Templates",
-	OBAS_Assistant_Settings_Heading: "OBAS Assistant Settings",
-	"OBAS Running Language": "OBAS Running Language",
-	"Please select your obas framework running language":
-		"Please select your obas framework running language",
+	SlidesRup_Settings_Heading: "SlidesRup Settings",
+	"SlidesRup Running Language": "SlidesRup Running Language",
+	"Please select your slidesRup framework running language":
+		"Please select your slidesRup framework running language",
 	"Auto (Follow System Language)": "Auto (Follow System Language)",
 	Chinese: "Chinese",
 	"Chinses Traditional": "Chinses Traditional",
@@ -362,4 +363,54 @@ export default {
 	EPF: "Use Fragments Effect for Paragraph",
 	BlankPage: "Blank",
 	ContentPage: "Content",
+	"Create New Design From Blank": "Create New Design From Blank",
+	"Create New Design From Current Design":
+		"Create New Design From Current Design",
+	"Please input your design name": "Please input your design name",
+	"Cann't find the source folder": "Cann't find the source folder: ",
+	"Cann't copy the source file": "Cann't copy the source file: ",
+	"Error Info": "Error Info: ",
+	"Cann't create file": "Cann't create file: ",
+	"Slide Default List": "Slide Default List",
+	"Fancy List": "Fancy List",
+	"Fancy List Row": "Fancy List Row",
+	"Fancy List With Order": "Fancy List With Order",
+	"Fancy List With Order Row": "Fancy List With Order Row",
+	"Grid List": "Grid List",
+	"Grid Step List": "Grid Step List",
+	"Grid Step List Vertical": "Grid Step List Vertical",
+	"Box List": "Box List",
+	"Order List With Border": "Order List With Border",
+	"Default TOC Page List Class": "Default TOC Page List Class",
+	"Please select the default list class for TOC pages":
+		"Please select the default list class for TOC pages",
+	"Default Chapter Page List Class": "Default Chapter Page List Class",
+	"Please select the default list class for chapter pages":
+		"Please select the default list class for chapter pages",
+	"Default Content Page List Class": "Default Content Page List Class",
+	"Please select the default list class for content pages":
+		"Please select the default list class for content pages",
+	"Default Blank Page List Class": "Default Blank Page List Class",
+	"Please select the default list class for blank pages":
+		"Please select the default list class for blank pages",
+	"Default BackCover Page List Class": "Default BackCover Page List Class",
+	"Please select the default list class for backcover page":
+		"Please select the default list class for backcover page",
+	"Default Slide Size": "Default Slide Size",
+	"Please select your default slide size":
+		"Please select your default slide size",
+	"Presentation 16:9": "Presentation 16:9",
+	"Presentation 9:16": "Presentation 9:16",
+	"A4 Vertical": "A4 Vertical",
+	"A4 Horizontal": "A4 Horizontal",
+	"User TOC Page List Class": "User TOC Page List Class",
+	"User Chapter Page List Class": "User Chapter Page List Class",
+	"User Content Page List Class": "User Content Page List Class",
+	"User Blank Page List Class": "User Blank Page List Class",
+	"User BackCover Page List Class": "User BackCover Page List Class",
+	"Set User TOC Page List Class": "Set User TOC Page List Class",
+	"Set User Chapter Page List Class": "Set User Chapter Page List Class",
+	"Set User Content Page List Class": "Set User Content Page List Class",
+	"Set User Blank Page List Class": "Set User Blank Page List Class",
+	"Set User BackCover Page List Class": "Set User BackCover Page List Class",
 };

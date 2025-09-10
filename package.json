@@ -1,7 +1,7 @@
 {
-	"name": "obas-assistant",
-	"version": "1.4.7",
-	"description": "This is a assistant plugin for OBAS presentation framework",
+	"name": "slidesrup",
+	"version": "1.5.0",
+	"description": "Convert Markdown to Beautiful and Useful Slides With One Click",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
