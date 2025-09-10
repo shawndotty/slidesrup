@@ -24,24 +24,24 @@ export class InputModal extends Modal {
 		const { contentEl } = this;
 
 		// 添加模态框容器样式
-		contentEl.addClass("obas-input-modal");
+		contentEl.addClass("slides-rup-input-modal");
 
 		// 创建标题
 		contentEl.createEl("h2", {
 			text: this.promptText,
-			cls: "obas-input-modal-title",
+			cls: "slides-rup-input-modal-title",
 		});
 
 		// 创建输入框容器
 		const inputContainer = contentEl.createEl("div", {
-			cls: "obas-input-container",
+			cls: "slides-rup-input-container",
 		});
 
 		// 创建输入框
 		this.inputEl = inputContainer.createEl("input", {
 			type: "text",
 			value: this.defaultValue || "",
-			cls: "obas-input",
+			cls: "slides-rup-input",
 		});
 
 		if (this.folderSearch) {
@@ -63,7 +63,7 @@ export class InputModal extends Modal {
 
 		// 创建按钮容器
 		const buttonContainer = contentEl.createEl("div", {
-			cls: "obas-button-container",
+			cls: "slides-rup-button-container",
 		});
 
 		// 创建取消按钮
@@ -71,7 +71,7 @@ export class InputModal extends Modal {
 			"button",
 			{
 				text: t("Cancel"),
-				cls: "obas-button obas-button-cancel",
+				cls: "slides-rup-button slides-rup-button-cancel",
 			},
 			(btn) => {
 				btn.addEventListener("click", () => {
@@ -86,7 +86,7 @@ export class InputModal extends Modal {
 			"button",
 			{
 				text: t("Confirm"),
-				cls: "obas-button obas-button-confirm",
+				cls: "slides-rup-button slides-rup-button-confirm",
 			},
 			(btn) => {
 				btn.addEventListener("click", () => {

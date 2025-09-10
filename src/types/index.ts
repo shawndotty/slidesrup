@@ -34,11 +34,11 @@ export interface UserDesignCss {
 	enabled: boolean;
 }
 
-export interface OBASAssistantSettings {
+export interface SlidesRupSettings {
 	updateAPIKey: string;
 	updateAPIKeyIsValid: boolean;
-	obasFrameworkFolder: string;
-	obasRunningLanguage: string;
+	slidesRupFrameworkFolder: string;
+	slidesRupRunningLanguage: string;
 	userEmail: string;
 	userChecked: boolean;
 	newSlideLocationOption: string;
@@ -67,71 +67,71 @@ export interface OBASAssistantSettings {
 		reveal: AirtableIds;
 		revealAS: AirtableIds;
 	};
-	obasThemeColor: string;
-	obasHue: number;
-	obasSaturation: number;
-	obasLightness: number;
-	obasHeadingFont: string;
-	obasMainFont: string;
-	obasMainFontSize: number;
+	slidesRupThemeColor: string;
+	slidesRupHue: number;
+	slidesRupSaturation: number;
+	slidesRupLightness: number;
+	slidesRupHeadingFont: string;
+	slidesRupMainFont: string;
+	slidesRupMainFontSize: number;
 	// 各级标题字体
-	obasH1Font: string;
-	obasH2Font: string;
-	obasH3Font: string;
-	obasH4Font: string;
-	obasH5Font: string;
-	obasH6Font: string;
+	slidesRupH1Font: string;
+	slidesRupH2Font: string;
+	slidesRupH3Font: string;
+	slidesRupH4Font: string;
+	slidesRupH5Font: string;
+	slidesRupH6Font: string;
 	// 各级标题字号
-	obasH1Size: number;
-	obasH2Size: number;
-	obasH3Size: number;
-	obasH4Size: number;
-	obasH5Size: number;
-	obasH6Size: number;
+	slidesRupH1Size: number;
+	slidesRupH2Size: number;
+	slidesRupH3Size: number;
+	slidesRupH4Size: number;
+	slidesRupH5Size: number;
+	slidesRupH6Size: number;
 	// 标题文字变换
-	obasHeadingTextTransform: string;
+	slidesRupHeadingTextTransform: string;
 	// 各级标题颜色
-	obasH1Color: string;
-	obasH2Color: string;
-	obasH3Color: string;
-	obasH4Color: string;
-	obasH5Color: string;
-	obasH6Color: string;
+	slidesRupH1Color: string;
+	slidesRupH2Color: string;
+	slidesRupH3Color: string;
+	slidesRupH4Color: string;
+	slidesRupH5Color: string;
+	slidesRupH6Color: string;
 	// 正文颜色
-	obasBodyColor: string;
-	obasParagraphColor: string;
-	obasListColor: string;
-	obasStrongColor: string;
-	obasEmColor: string;
-	obasLinkColor: string;
-	enableObasFontFamilyUserSetting: boolean;
-	enableObasFontSizeUserSetting: boolean;
-	enableObasColorUserSetting: boolean;
+	slidesRupBodyColor: string;
+	slidesRupParagraphColor: string;
+	slidesRupListColor: string;
+	slidesRupStrongColor: string;
+	slidesRupEmColor: string;
+	slidesRupLinkColor: string;
+	enableSlidesRupFontFamilyUserSetting: boolean;
+	enableSlidesRupFontSizeUserSetting: boolean;
+	enableSlidesRupColorUserSetting: boolean;
 
 	customCss: string;
 	enableCustomCss: boolean;
-	obasSlideMode: string;
-	obasUserDesigns: string;
+	slidesRupSlideMode: string;
+	slidesRupUserDesigns: string;
 
 	// 用户自定义的CSS设计列表，每个元素包含设计名称、文件路径和启用状态
-	obasUserDesignsCss: UserDesignCss[];
-	obasAutoConvertLinks: boolean;
-	obasEnableParagraphFragments: boolean;
+	slidesRupUserDesignsCss: UserDesignCss[];
+	slidesRupAutoConvertLinks: boolean;
+	slidesRupEnableParagraphFragments: boolean;
 
 	// Default Slide List Class
-	obasDefaultTOCListClass: string;
-	obasDefaultChapterListClass: string;
-	obasDefaultContentListClass: string;
-	obasDefaultBlankListClass: string;
-	obasDefaultBackCoverListClass: string;
+	slidesRupDefaultTOCListClass: string;
+	slidesRupDefaultChapterListClass: string;
+	slidesRupDefaultContentListClass: string;
+	slidesRupDefaultBlankListClass: string;
+	slidesRupDefaultBackCoverListClass: string;
 
-	obasUserTOCPageListClass: string;
-	obasUserChapterPageListClass: string;
-	obasUserContentPageListClass: string;
-	obasUserBlankPageListClass: string;
-	obasUserBackCoverPageListClass: string;
+	slidesRupUserTOCPageListClass: string;
+	slidesRupUserChapterPageListClass: string;
+	slidesRupUserContentPageListClass: string;
+	slidesRupUserBlankPageListClass: string;
+	slidesRupUserBackCoverPageListClass: string;
 
-	obasDefaultSlideSize: string;
+	slidesRupDefaultSlideSize: string;
 }
 
 export interface NocoDBTable {
@@ -180,7 +180,7 @@ export interface ReplaceConfig {
 	baseLayout?: string;
 	toc?: string;
 	design?: string;
-	obasPath?: string;
+	slidesRupPath?: string;
 	tagline?: string;
 	slogan?: string;
 	presenter?: string;

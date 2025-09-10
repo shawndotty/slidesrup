@@ -4,8 +4,8 @@ export const AIRTABLE_CONFIG = {
 	GET_UPDATE_IDS: {
 		BASE_ID: "appxQqkHaEkjUQnBf",
 		TABLE_ID: "EmailSync",
-		VIEW_ID: "OBAS",
-		FIELD_NAME: "OBASUpdateIDs",
+		VIEW_ID: "SlidesRup",
+		FIELD_NAME: "SlidesRupUpdateIDs",
 		TOKEN: "patCw7AoXaktNgHNM.bf8eb50a33da820fde56b1f5d4cf5899bc8c508096baf36b700e94cd13570000",
 	},
 
@@ -32,13 +32,13 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	cIndex: "CHAPTER_INDEX",
 	cName: "CHAPTER_NAME",
 	baseLayout: "BASE_LAYOUT",
-	obasPath: "OBAS_PATH",
+	slidesRupPath: "SlidesRup_PATH",
 	slideName: "SLIDE_NAME",
 };
 
 export const DEFAULT_DESIGNS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export const OBAS_LIST_CLASSES = [
+export const SlidesRup_LIST_CLASSES = [
 	"box-list",
 	"fancy-list",
 	"fancy-list-row",

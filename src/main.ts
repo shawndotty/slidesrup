@@ -1,13 +1,13 @@
 import { Plugin } from "obsidian";
 import { SettingsManager } from "./models/settings";
-import { OBASAssistantSettingTab } from "./ui/settings-tab";
-import { OBASAssistantSettings } from "./types";
+import { SlidesRupAssistantSettingTab } from "./ui/settings-tab";
+import { SlidesRupSettings } from "./types";
 import { createServices } from "./services";
 import { ClassesSuggest } from "./editor/classes-sugguest";
 import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 
-export default class OBASAssistant extends Plugin {
-	settings: OBASAssistantSettings;
+export default class SlidesRupAssistant extends Plugin {
+	settings: SlidesRupSettings;
 	settingsManager: SettingsManager;
 
 	services: ReturnType<typeof createServices>;
@@ -26,10 +26,10 @@ export default class OBASAssistant extends Plugin {
 		// Register all commands
 		this.services.commandService.registerCommands();
 
-		await this.services.obasStyleService.updateUserDesignCssSettings();
+		await this.services.slidesRupStyleService.updateUserDesignCssSettings();
 
 		// Add settings tab
-		this.addSettingTab(new OBASAssistantSettingTab(this.app, this));
+		this.addSettingTab(new SlidesRupAssistantSettingTab(this.app, this));
 
 		this.registerEditorSuggest(new ClassesSuggest(this.app));
 
@@ -38,7 +38,7 @@ export default class OBASAssistant extends Plugin {
 
 	onunload() {
 		// Clean up any resources, listeners, etc.
-		console.log("Unloading OBASAssistant plugin");
+		console.log("Unloading SlidesRupAssistant plugin");
 	}
 
 	async loadSettings() {

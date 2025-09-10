@@ -67,7 +67,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function buildFieldNames(
 	forceDefaultFetchFields: boolean = false,
-	obasRunningLanguage = "ob"
+	slidesRupRunningLanguage = "ob"
 ) {
 	if (forceDefaultFetchFields) {
 		return {
@@ -94,10 +94,10 @@ export function buildFieldNames(
 		},
 	};
 
-	if (obasRunningLanguage === "ob") {
+	if (slidesRupRunningLanguage === "ob") {
 		return fieldNamesMap[locale] || fieldNamesMap["en"];
 	} else {
-		return fieldNamesMap[obasRunningLanguage] || fieldNamesMap["en"];
+		return fieldNamesMap[slidesRupRunningLanguage] || fieldNamesMap["en"];
 	}
 }
 
@@ -207,15 +207,19 @@ export async function createPathIfNeeded(
 	}
 }
 
-export function getUserDesigns(app: App, obasPath: string) {
-	const obasUserDesignsPath = `${obasPath}/MyDesigns`;
+export function getUserDesigns(app: App, slidesRupPath: string) {
+	const slidesRupUserDesignsPath = `${slidesRupPath}/MyDesigns`;
 	// 获取框架文件夹
-	const obasUserDesignsFolder =
-		app.vault.getAbstractFileByPath(obasUserDesignsPath);
+	const slidesRupUserDesignsFolder = app.vault.getAbstractFileByPath(
+		slidesRupUserDesignsPath
+	);
 	let userDesigns: Array<string> = [];
-	if (obasUserDesignsFolder && obasUserDesignsFolder instanceof TFolder) {
+	if (
+		slidesRupUserDesignsFolder &&
+		slidesRupUserDesignsFolder instanceof TFolder
+	) {
 		// 获取所有子文件夹
-		const subFolders = obasUserDesignsFolder.children
+		const subFolders = slidesRupUserDesignsFolder.children
 			.filter((file) => file instanceof TFolder)
 			.map((folder) => folder.name.split("-").last() as string);
 		userDesigns = subFolders;

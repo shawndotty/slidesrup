@@ -1,9 +1,9 @@
 {
-	"id": "obas-assistant",
-	"name": "OBAS Assistant",
+	"id": "slides-rup",
+	"name": "SlidesRup",
 	"version": "1.5.0",
 	"minAppVersion": "0.15.0",
-	"description": "This is a plugin for assistant OBAS presentation framework",
+	"description": "Convert Markdown to Beautiful Presentation With One Click",
 	"author": "Obsidian",
 	"authorUrl": "https://obsidian.md",
 	"fundingUrl": "https://obsidian.md/pricing",

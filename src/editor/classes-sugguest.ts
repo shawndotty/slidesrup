@@ -5,11 +5,11 @@ import {
 	Editor,
 } from "obsidian";
 import { BaseSuggest } from "./base-suggest";
-import { OBAS_LIST_CLASSES } from "src/constants";
+import { SlidesRup_LIST_CLASSES } from "src/constants";
 
 export class ClassesSuggest extends BaseSuggest {
 	// 预定义的补全建议列表
-	private static readonly ITEM_LIST: string[] = OBAS_LIST_CLASSES;
+	private static readonly ITEM_LIST: string[] = SlidesRup_LIST_CLASSES;
 
 	constructor(app: App) {
 		super(app, ClassesSuggest.ITEM_LIST);

@@ -1,6 +1,6 @@
 import { App, Notice, Command } from "obsidian";
 import { t } from "../lang/helpers";
-import { OBASAssistantSettings, NocoDBSettings } from "../types";
+import { SlidesRupSettings, NocoDBSettings } from "../types";
 import { buildFieldNames } from "../utils";
 import { SlidesMaker } from "./slides-maker";
 import { DesignMaker } from "./design-maker";
@@ -22,7 +22,7 @@ export class CommandService {
 	constructor(
 		private addCommand: (command: Command) => void,
 		private app: App,
-		private settings: OBASAssistantSettings,
+		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
@@ -83,7 +83,7 @@ export class CommandService {
 		await this._templaterTriggerSwitch(async () => {
 			const fieldNames = buildFieldNames(
 				false,
-				this.settings.obasRunningLanguage
+				this.settings.slidesRupRunningLanguage
 			);
 			const nocoDBSettings: NocoDBSettings = {
 				apiKey: apiKey,
@@ -144,13 +144,13 @@ export class CommandService {
 				baseID: this.settings.updateIDs.templates.baseID,
 				tableID: this.settings.updateIDs.templates.tableID,
 				viewID: this.settings.updateIDs.templates.viewID,
-				targetFolderPath: this.settings.obasFrameworkFolder,
+				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
 
 		createNocoDBCommand(
 			"update-reveal-addons",
-			t("Get The Latest Version OBAS Reveal Addons"),
+			t("Get The Latest Version SlidesRup Reveal Addons"),
 			(() => {
 				const update =
 					this.settings.updateIDs[
@@ -172,7 +172,7 @@ export class CommandService {
 				baseID: this.settings.updateIDs.demo.baseID,
 				tableID: this.settings.updateIDs.demo.tableID,
 				viewID: this.settings.updateIDs.demo.viewID,
-				targetFolderPath: this.settings.obasFrameworkFolder,
+				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
 
@@ -194,7 +194,7 @@ export class CommandService {
 					baseID: this.settings.updateIDs.templates.baseID,
 					tableID: this.settings.updateIDs.templates.tableID,
 					viewID: this.settings.updateIDs.templates.viewID,
-					targetFolderPath: this.settings.obasFrameworkFolder,
+					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Templates updated."));
 
@@ -220,7 +220,7 @@ export class CommandService {
 					baseID: this.settings.updateIDs.demo.baseID,
 					tableID: this.settings.updateIDs.demo.tableID,
 					viewID: this.settings.updateIDs.demo.viewID,
-					targetFolderPath: this.settings.obasFrameworkFolder,
+					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Demo slides updated."));
 
@@ -229,7 +229,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:create-slides",
+			id: "slides-rup:create-slides",
 			name: t("Create New Slides"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
@@ -239,7 +239,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:add-slide-chapter",
+			id: "slides-rup:add-slide-chapter",
 			name: t("Add Chapter"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
@@ -249,7 +249,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:add-slide-page",
+			id: "slides-rup:add-slide-page",
 			name: t("Add Page"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
@@ -259,7 +259,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:covert-to-slide",
+			id: "slides-rup:covert-to-slide",
 			name: t("Convert to Slide"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
@@ -269,7 +269,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:crete-new-design",
+			id: "slides-rup:crete-new-design",
 			name: t("Create New Design From Blank"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
@@ -279,7 +279,7 @@ export class CommandService {
 		});
 
 		this.addCommand({
-			id: "obas-assistant:crete-new-design-from-current-design",
+			id: "slides-rup:crete-new-design-from-current-design",
 			name: t("Create New Design From Current Design"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>

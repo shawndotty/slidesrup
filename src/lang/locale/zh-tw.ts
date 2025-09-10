@@ -75,17 +75,17 @@ export default {
 	"Valid API Key": "有效API密鑰",
 	"Valid Email": "有效電子郵件",
 	Valid: "驗證通過",
-	"OBAS Update API Key": "OBAS 更新 API 金鑰",
-	"OBAS Framework Folder": "OBAS 框架資料夾",
-	"OBAS Framework Folder Description": "OBAS 框架資料夾說明",
+	"SlidesRup Update API Key": "SlidesRup 更新 API 金鑰",
+	"SlidesRup Framework Folder": "SlidesRup 框架資料夾",
+	"SlidesRup Framework Folder Description": "SlidesRup 框架資料夾說明",
 	"Get The Latest Version Of Style": "獲取最新版本的樣式",
 	"Get The Latest Version Of Templates": "獲取最新版本的設計模板",
 	"Get The Latest Version Of User Templates": "獲取最新的用戶演示模板",
 	"One Click to Deploy": "一鍵部署",
-	"Please enter the path to the OBAS Framework Folder":
-		"請輸入 OBAS 框架資料夾的路徑",
-	"Enter the full path to the OBAS Framework folder":
-		"輸入 OBAS 框架資料夾的完整路徑",
+	"Please enter the path to the SlidesRup Framework Folder":
+		"請輸入 SlidesRup 框架資料夾的路徑",
+	"Enter the full path to the SlidesRup Framework folder":
+		"輸入 SlidesRup 框架資料夾的完整路徑",
 	"Create New Slides": "建立新的簡報",
 	"Slide Design A": "簡報設計A",
 	"Slide Design B": "簡報設計B",
@@ -119,7 +119,7 @@ export default {
 	SubSlide: "子頁面",
 	List: "列表",
 	SubList: "子列表",
-	"Use OBAS to Express Yourself": "用OBAS表達自己",
+	"Use SlidesRup to Express Yourself": "用SlidesRup表達自己",
 	Farewell: "再會",
 	"Content is the king": "內容為王",
 	"Keep is simple and powerful": "簡單卻強大",
@@ -155,8 +155,8 @@ export default {
 	"Adjust the hue of the theme": "調整主題色的色相",
 	"Adjust the saturation of the theme": "調整主題色的飽和度",
 	"Adjust the lightness of the theme": "調整主題色的亮度",
-	"Get The Latest Version OBAS Reveal Addons":
-		"獲取最新的OBAS Reveal框架擴充檔案",
+	"Get The Latest Version SlidesRup Reveal Addons":
+		"獲取最新的SlidesRup Reveal框架擴充檔案",
 	"Reveal template updated.": "Reveal模板已更新",
 	"User TOC Template": "用戶簡報目錄模板",
 	"Please choose your personal TOC template": "請選擇你的簡報目錄模板",
@@ -194,10 +194,10 @@ export default {
 	"Choose your personal chapter with sub pages template":
 		"選擇你的包含子頁面的章節模板",
 	"Enable User Templates": "啟用用戶模板",
-	OBAS_Assistant_Settings_Heading: "OBAS助手設定",
-	"OBAS Running Language": "OBAS運行語言",
-	"Please select your obas framework running language":
-		"請選擇你的OBAS框架運行語言",
+	SlidesRup_Settings_Heading: "SlidesRup設定",
+	"SlidesRup Running Language": "SlidesRup運行語言",
+	"Please select your slidesRup framework running language":
+		"請選擇你的SlidesRup框架運行語言",
 	"Auto (Follow System Language)": "自動（跟隨系統語言）",
 	Chinese: "簡體中文",
 	"Chinses Traditional": "繁體中文",

@@ -1,8 +1,8 @@
-import { OBASAssistantSettings } from "../types";
+import { SlidesRupSettings } from "../types";
 import { DEFAULT_SETTINGS } from "./default-settings";
 
 export class SettingsManager {
-	private settings: OBASAssistantSettings;
+	private settings: SlidesRupSettings;
 
 	constructor(
 		private loadData: () => Promise<any>,
@@ -28,7 +28,7 @@ export class SettingsManager {
 		return this.settings;
 	}
 
-	update(settings: Partial<OBASAssistantSettings>) {
+	update(settings: Partial<SlidesRupSettings>) {
 		this.settings = { ...this.settings, ...settings };
 	}
 }

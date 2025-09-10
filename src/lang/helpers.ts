@@ -23,12 +23,12 @@ function _get_current_lang(): string {
 	try {
 		const app = getAppInstance();
 		// Use plugin settings for language, fallback to Obsidian's moment.locale()
-		const obasRunningLanguage =
-			app.plugins.plugins["obas-assistant"]?.settings
-				?.obasRunningLanguage ?? "ob";
-		return obasRunningLanguage === "ob"
+		const slidesRupRunningLanguage =
+			app.plugins.plugins["slides-rup"]?.settings
+				?.slidesRupRunningLanguage ?? "ob";
+		return slidesRupRunningLanguage === "ob"
 			? moment.locale()
-			: obasRunningLanguage;
+			: slidesRupRunningLanguage;
 	} catch (e) {
 		console.error(
 			"Failed to get language setting, falling back to 'en'",

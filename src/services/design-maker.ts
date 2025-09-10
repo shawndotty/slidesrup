@@ -1,6 +1,6 @@
 import { App, Editor, Notice, TFile, moment, TFolder } from "obsidian";
 import { t } from "../lang/helpers";
-import { OBASAssistantSettings } from "src/types";
+import { SlidesRupSettings } from "src/types";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import { InputModal } from "src/ui/modals/input-modal";
 import {
@@ -14,17 +14,17 @@ import { SlideDesignSuggester } from "../suggesters/suggesters";
 
 export class DesignMaker {
 	private app: App;
-	private settings: OBASAssistantSettings;
+	private settings: SlidesRupSettings;
 	private static readonly MY_DESIGN_FOLDER = "MyDesigns";
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesignPath: string = "";
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
 
-	constructor(app: App, settings: OBASAssistantSettings) {
+	constructor(app: App, settings: SlidesRupSettings) {
 		this.app = app;
 		this.settings = settings;
-		this.userDesignPath = `${this.settings.obasFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
+		this.userDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
 	}
 
 	async makeNewBlankDesign() {
@@ -70,7 +70,7 @@ export class DesignMaker {
 	async makeNewDesignFromCurrentDesign() {
 		this.userDesigns = getUserDesigns(
 			this.app,
-			this.settings.obasFrameworkFolder
+			this.settings.slidesRupFrameworkFolder
 		);
 		this.designOptions = getAllDesignsOptions(
 			this.defaultDesigns,
@@ -81,14 +81,14 @@ export class DesignMaker {
 
 		const designName = design.value;
 		const isDefaultDesign = this.defaultDesigns.includes(designName);
-		const originalDesignPath = `${this.settings.obasFrameworkFolder}/${
+		const originalDesignPath = `${this.settings.slidesRupFrameworkFolder}/${
 			isDefaultDesign ? "Designs" : "MyDesigns"
 		}/Design-${designName}`;
 
 		const newDesignName = await this._getDesignName();
 
 		if (!newDesignName) return;
-		const newDesignPath = `${this.settings.obasFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
+		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
 		await createPathIfNeeded(this.app, newDesignPath);
 
 		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName

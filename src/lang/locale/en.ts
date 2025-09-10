@@ -84,19 +84,20 @@ export default {
 	"Validating...": "Validating...",
 	"Valid API Key": "Valid API Key",
 	"Valid Email": "Valid Email",
-	"OBAS Update API Key": "OBAS Update API Key",
-	"OBAS Framework Folder": "OBAS Framework Folder",
-	"OBAS Framework Folder Description": "OBAS Framework Folder Description",
+	"SlidesRup Update API Key": "SlidesRup Update API Key",
+	"SlidesRup Framework Folder": "SlidesRup Framework Folder",
+	"SlidesRup Framework Folder Description":
+		"SlidesRup Framework Folder Description",
 	"Get The Latest Version Of Style": "Get The Latest Version Of Style",
 	"Get The Latest Version Of Templates":
 		"Get The Latest Version Of Templates",
 	"Get The Latest Version Of User Templates":
 		"Get The Latest Version Of User Templates",
 	"One Click to Deploy": "One Click to Deploy",
-	"Please enter the path to the OBAS Framework Folder":
-		"Please enter the path to the OBAS Framework Folder",
-	"Enter the full path to the OBAS Framework folder":
-		"Enter the full path to the OBAS Framework folder",
+	"Please enter the path to the SlidesRup Framework Folder":
+		"Please enter the path to the SlidesRup Framework Folder",
+	"Enter the full path to the SlidesRup Framework folder":
+		"Enter the full path to the SlidesRup Framework folder",
 	"Create New Slides": "Create New Slides",
 	"Slide Design A": "Slide Design A",
 	"Slide Design B": "Slide Design B",
@@ -130,7 +131,7 @@ export default {
 	SubSlide: "SubSlide",
 	List: "List",
 	SubList: "SubList",
-	"Use OBAS to Express Yourself": "Use OBAS to Express Yourself",
+	"Use SlidesRup to Express Yourself": "Use SlidesRup to Express Yourself",
 	Farewell: "Farewell",
 	"Content is the king": "Content is the king",
 	"Keep is simple and powerful": "Keep is simple and powerful",
@@ -181,8 +182,8 @@ export default {
 	"Adjust the hue of the theme": "Adjust the hue of the theme",
 	"Adjust the saturation of the theme": "Adjust the saturation of the theme",
 	"Adjust the lightness of the theme": "Adjust the lightness of the theme",
-	"Get The Latest Version OBAS Reveal Addons":
-		"Get The Latest Version OBAS Reveal Addons",
+	"Get The Latest Version SlidesRup Reveal Addons":
+		"Get The Latest Version SlidesRup Reveal Addons",
 	"Reveal template updated.": "Reveal template updated.",
 	"User TOC Template": "User TOC Template",
 	"Please choose your personal TOC template":
@@ -219,10 +220,10 @@ export default {
 	"Choose your personal chapter with sub pages template":
 		"Choose your personal chapter with sub pages template",
 	"Enable User Templates": "Enable User Templates",
-	OBAS_Assistant_Settings_Heading: "OBAS Assistant Settings",
-	"OBAS Running Language": "OBAS Running Language",
-	"Please select your obas framework running language":
-		"Please select your obas framework running language",
+	SlidesRup_Settings_Heading: "SlidesRup Settings",
+	"SlidesRup Running Language": "SlidesRup Running Language",
+	"Please select your slidesRup framework running language":
+		"Please select your slidesRup framework running language",
 	"Auto (Follow System Language)": "Auto (Follow System Language)",
 	Chinese: "Chinese",
 	"Chinses Traditional": "Chinses Traditional",

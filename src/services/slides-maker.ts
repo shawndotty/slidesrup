@@ -15,7 +15,7 @@ import {
 	SlideModeSuggester,
 } from "../suggesters/suggesters";
 import {
-	OBASAssistantSettings,
+	SlidesRupSettings,
 	ReplaceConfig,
 	UserSpecificListClassType,
 } from "../types";
@@ -33,7 +33,7 @@ import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 
 export class SlidesMaker {
 	private app: App;
-	private settings: OBASAssistantSettings;
+	private settings: SlidesRupSettings;
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
@@ -57,12 +57,12 @@ export class SlidesMaker {
 		BackCoverPageListClass: "",
 	};
 
-	constructor(app: App, settings: OBASAssistantSettings) {
+	constructor(app: App, settings: SlidesRupSettings) {
 		this.app = app;
 		this.settings = settings;
 		this.userDesigns = getUserDesigns(
 			this.app,
-			this.settings.obasFrameworkFolder
+			this.settings.slidesRupFrameworkFolder
 		);
 		this.designOptions = getAllDesignsOptions(
 			this.userDesigns,
@@ -102,7 +102,7 @@ export class SlidesMaker {
 
 		await createPathIfNeeded(this.app, newSlideLocation);
 
-		let slideMode = this.settings.obasSlideMode;
+		let slideMode = this.settings.slidesRupSlideMode;
 		if (!slideMode || slideMode === "none") {
 			slideMode = (await this._selectSlideMode())?.value || "light";
 		}
@@ -150,7 +150,7 @@ export class SlidesMaker {
 				presentDate: moment().format(
 					this.settings.dateFormat || "YYYY-MM-DD"
 				),
-				obasPath: this.settings.obasFrameworkFolder,
+				slidesRupPath: this.settings.slidesRupFrameworkFolder,
 				tagline: this.settings.tagline,
 				slogan: this.settings.slogan,
 			}
@@ -650,7 +650,7 @@ export class SlidesMaker {
 
 		// 统一获取默认值
 		const getDefault = (key: keyof UserSpecificListClassType): string => {
-			const settingKey = `obasUser${key}` as keyof OBASAssistantSettings;
+			const settingKey = `slidesRupUser${key}` as keyof SlidesRupSettings;
 			const value = this.settings[settingKey];
 			return typeof value === "string" ? value : "";
 		};
@@ -706,7 +706,7 @@ export class SlidesMaker {
 		};
 		const slideSize =
 			userSlideSize ||
-			slideSizeMap[this.settings.obasDefaultSlideSize] ||
+			slideSizeMap[this.settings.slidesRupDefaultSlideSize] ||
 			slideSizeMap["p16-9"];
 
 		let newSlideLocation = "";
@@ -753,7 +753,7 @@ export class SlidesMaker {
 				"H";
 		}
 
-		let slideMode = this.settings.obasSlideMode;
+		let slideMode = this.settings.slidesRupSlideMode;
 		if (!slideMode || slideMode === "none") {
 			slideMode = (await this._selectSlideMode())?.value || "light";
 		}
@@ -1105,7 +1105,7 @@ export class SlidesMaker {
 						"BlankPage"
 					)}-${design}]]" class="${
 						this.userSpecificListClass.BlankPageListClass ||
-						this.settings.obasDefaultBlankListClass
+						this.settings.slidesRupDefaultBlankListClass
 					}" -->`
 				);
 			} else {
@@ -1136,7 +1136,7 @@ export class SlidesMaker {
 				const classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ContentPageListClass ||
-						this.settings.obasDefaultContentListClass
+						this.settings.slidesRupDefaultContentListClass
 				);
 
 				finalLines.push("---");
@@ -1189,7 +1189,7 @@ export class SlidesMaker {
 				const classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ChapterPageListClass ||
-						this.settings.obasDefaultChapterListClass
+						this.settings.slidesRupDefaultChapterListClass
 				);
 
 				modifiedLines.push(
@@ -1297,7 +1297,7 @@ export class SlidesMaker {
 				let classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ContentPageListClass ||
-						this.settings.obasDefaultContentListClass
+						this.settings.slidesRupDefaultContentListClass
 				);
 
 				finalLines.push(
@@ -1324,7 +1324,7 @@ export class SlidesMaker {
 			"TOC"
 		)}-${design}]]" class="${
 			this.userSpecificListClass.TOCPageListClass ||
-			this.settings.obasDefaultTOCListClass
+			this.settings.slidesRupDefaultTOCListClass
 		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
 
@@ -1387,7 +1387,7 @@ transition: none
 
 <!-- slide template="[[${t("BackCover")}-${design}]]" class="${
 			this.userSpecificListClass.BackCoverPageListClass ||
-			this.settings.obasDefaultBackCoverListClass
+			this.settings.slidesRupDefaultBackCoverListClass
 		}" -->
 
 ${lbnl}
@@ -1461,7 +1461,7 @@ ${lbnl}
 
 	/**
 	 * Gets the slide design to use for the current context.
-	 * Priority order: frontmatter.slideDesign → settings.obasUserDesigns → settings.defaultDesign
+	 * Priority order: frontmatter.slideDesign → settings.slidesRupUserDesigns → settings.defaultDesign
 	 *
 	 * @param activeFile - Optional file to check, defaults to current active file
 	 * @returns The design string to use
@@ -1508,7 +1508,7 @@ ${lbnl}
 
 	private _getAutoConvertLinks(activeFile?: TFile | null): boolean {
 		if (!activeFile) {
-			return this.settings.obasAutoConvertLinks;
+			return this.settings.slidesRupAutoConvertLinks;
 		}
 
 		// Get file cache (this is already cached by Obsidian)
@@ -1524,12 +1524,12 @@ ${lbnl}
 			return frontmatterAutoConvertLinks;
 		}
 
-		return this.settings.obasAutoConvertLinks;
+		return this.settings.slidesRupAutoConvertLinks;
 	}
 
 	private _getEnableParagraphFragments(activeFile?: TFile | null): boolean {
 		if (!activeFile) {
-			return this.settings.obasEnableParagraphFragments;
+			return this.settings.slidesRupEnableParagraphFragments;
 		}
 
 		// Get file cache (this is already cached by Obsidian)
@@ -1545,14 +1545,14 @@ ${lbnl}
 			return frontmatterEnableParagraphFragments;
 		}
 
-		return this.settings.obasEnableParagraphFragments;
+		return this.settings.slidesRupEnableParagraphFragments;
 	}
 	/**
 	 * Gets the fallback design from settings
 	 * @private
 	 */
 	private _getFallbackDesign(): string {
-		const userDesign = this.settings.obasUserDesigns;
+		const userDesign = this.settings.slidesRupUserDesigns;
 		const defaultDesign = this.settings.defaultDesign;
 
 		// Check if user design is set and not 'none'
