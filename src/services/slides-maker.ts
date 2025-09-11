@@ -1622,9 +1622,10 @@ ${lbnl}
 	}
 
 	private _cleanLine(line: string): string {
+		// 优化：合并正则，减少多次 replace，提高效率
+		if (/`[^`]+`/.test(line)) return line;
 		return line
-			.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-			.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+			.replace(/%%(?!\!|\[\[)[\s\S]*?%%|%%\!.*?%%|%%\[\[.*?%%/g, "")
 			.trim();
 	}
 }
