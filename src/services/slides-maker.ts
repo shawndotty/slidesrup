@@ -949,7 +949,7 @@ export class SlidesMaker {
 		// 排除 ![ 开头的图片嵌入语法
 		return text
 			.replace(
-				/!\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
 				(match, name, link) => {
 					return `<img alt="${name}" src="${link}" data-preview-image />`;
 				}
