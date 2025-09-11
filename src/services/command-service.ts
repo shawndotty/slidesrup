@@ -21,6 +21,11 @@ export class CommandService {
 
 	constructor(
 		private addCommand: (command: Command) => void,
+		private addRibbonIcon: (
+			icon: string,
+			title: string,
+			callback: (evt: MouseEvent) => void
+		) => void,
 		private app: App,
 		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService
@@ -275,6 +280,7 @@ export class CommandService {
 		this.addCommand({
 			id: "slides-rup:covert-to-slide",
 			name: t("Convert to Slide"),
+			icon: "file-text",
 			callback: async () => {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
@@ -282,6 +288,15 @@ export class CommandService {
 					);
 				}
 			},
+		});
+
+		// 添加工具栏图标用于快速转换幻灯片
+		this.addRibbonIcon("presentation", t("Convert to Slide"), async () => {
+			if (this._checkUserType()) {
+				await this._templaterTriggerSwitch(() =>
+					this.slidesMaker.convertMDToSlide()
+				);
+			}
 		});
 
 		this.addCommand({
