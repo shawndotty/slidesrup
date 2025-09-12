@@ -582,16 +582,18 @@ export class SlidesMaker {
 			return;
 		}
 
-		await this._resetUserSpecificListClass(activeFile);
+		let newLines = lines;
 
 		// Check for multiple H1 headings
 		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
 		if (h1Count > 1) {
-			new Notice(
-				t("Invalid Format: Document must contain only one H1 heading")
+			newLines = this._regularizeHeadingsForContent(
+				activeFile.name,
+				lines
 			);
-			return;
 		}
+
+		await this._resetUserSpecificListClass(activeFile);
 
 		// 1. Setup slide location and get active file
 		const {
@@ -608,7 +610,7 @@ export class SlidesMaker {
 			this._generateNewSlideFilesNames(targetSlide);
 
 		// 4. Create TOC file
-		await this._createTocFile(newSlideLocation, tocName, lines);
+		await this._createTocFile(newSlideLocation, tocName, newLines);
 
 		// 5. Create BaseLayout file
 		await this._createBaseLayoutFile(
@@ -621,7 +623,7 @@ export class SlidesMaker {
 		// 6. Process content and create final slide
 		const processedContent = await this._processContentForSlide(
 			content,
-			lines,
+			newLines,
 			design,
 			tocName,
 			baseLayoutName,
@@ -634,6 +636,32 @@ export class SlidesMaker {
 			slideName,
 			processedContent
 		);
+	}
+
+	private _regularizeHeadingsForContent(
+		fileName: string,
+		lines: string[]
+	): string[] {
+		// 处理现有标题
+		for (let i = 1; i < lines.length; i++) {
+			const headingMatch = lines[i].match(/^(#{1,6})\s+(.+)$/);
+			if (!headingMatch) continue;
+
+			const currentLevel = headingMatch[1].length;
+			if (currentLevel === 6) {
+				// H6 转换为粗体文本
+				lines[i] = `**${headingMatch[2]}**`;
+			} else {
+				// 其他标题级别 +1，最大不超过 H6
+				const newLevel = Math.min(currentLevel + 1, 6);
+				lines[i] = `${"#".repeat(newLevel)} ${headingMatch[2]}`;
+			}
+		}
+
+		// 添加文件名作为 H1 标题
+		lines.unshift(`# ${fileName}`);
+
+		return lines;
 	}
 
 	/**
