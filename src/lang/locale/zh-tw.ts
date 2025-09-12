@@ -279,7 +279,7 @@ export default {
 	"Enable User Color Setting": "啟用用戶顏色設置",
 	"Invalid Format: No headings found": "無效格式：未找到標題",
 	"Invalid Format: Document must contain H1, H2, and H3 headings":
-		"無效格式：文件必須包含 H1、H2 和 H3 標題",
+		"無效格式：文件必須包含 H1 和 H2 標題",
 	"No active editor, can't excute this command.":
 		"沒有活動編輯器，無法執行此命令。",
 	"Invalid Format: Document must contain only one H1 heading":
