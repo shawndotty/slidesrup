@@ -15,6 +15,7 @@ export function createServices(
 	const slidesRupStyleService = new SlidesRupStyleService(app, settings);
 	const commandService = new CommandService(
 		plugin.addCommand.bind(plugin),
+		plugin.addRibbonIcon.bind(plugin),
 		app,
 		settings,
 		templaterService

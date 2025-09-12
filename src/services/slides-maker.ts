@@ -46,8 +46,9 @@ export class SlidesMaker {
 	);
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
-	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!)([\s\S]*?)%%/g;
+	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!|\[\[)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
@@ -948,7 +949,7 @@ export class SlidesMaker {
 		// 排除 ![ 开头的图片嵌入语法
 		return text
 			.replace(
-				/!\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
 				(match, name, link) => {
 					return `<img alt="${name}" src="${link}" data-preview-image />`;
 				}
@@ -1138,10 +1139,13 @@ export class SlidesMaker {
 					this.userSpecificListClass.ContentPageListClass ||
 						this.settings.slidesRupDefaultContentListClass
 				);
+				const template = this._modidySlideTemplate(line, "");
+				const slideTemplate =
+					(template && `template="${template}"`) || "";
 
 				finalLines.push("---");
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" class="${chapterClass} ${classValue}" -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1182,6 +1186,7 @@ export class SlidesMaker {
 	): string {
 		let h2Index = 0;
 		const modifiedLines: string[] = [];
+		let defaultTemplate = `[[${t("Chapter")}-${design}]]`;
 
 		for (const line of content.split("\n")) {
 			if (/^##\s+/.test(line)) {
@@ -1192,10 +1197,13 @@ export class SlidesMaker {
 						this.settings.slidesRupDefaultChapterListClass
 				);
 
+				const template = this._modidySlideTemplate(
+					line,
+					defaultTemplate
+				);
+
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" template="[[${t(
-						"Chapter"
-					)}-${design}]]" class="${classValue}" -->\n`
+					`\n<!-- slide id="c${h2Index}" template="${template}" class="${classValue}" -->\n`
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1300,8 +1308,12 @@ export class SlidesMaker {
 						this.settings.slidesRupDefaultContentListClass
 				);
 
+				const template = this._modidySlideTemplate(line, "");
+				const slideTemplate =
+					(template && `template="${template}"`) || "";
+
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" class="${chapterClass} ${classValue}" -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1566,6 +1578,21 @@ ${lbnl}
 			: "A";
 	}
 
+	private _modidySlideTemplate(line: string, template: string): string {
+		const matches = line.match(SlidesMaker.COMMENT_BLOCK_TEMPLATE_REGEX);
+		let extracted: string[] = [];
+
+		if (matches && matches.length > 0) {
+			// 否则，提取普通注释内容，追加到默认 class 后面
+			extracted = matches.map((m) => m.slice(2, -2).trim());
+			if (extracted.length > 0) {
+				template = extracted.join(" ");
+			}
+		}
+
+		return template;
+	}
+
 	private _modidySlideClassList(line: string, listClass: string): string {
 		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
 		const replaceMatches = line.match(
@@ -1595,9 +1622,10 @@ ${lbnl}
 	}
 
 	private _cleanLine(line: string): string {
+		// 优化：合并正则，减少多次 replace，提高效率
+		if (/`[^`]+`/.test(line)) return line;
 		return line
-			.replace(SlidesMaker.COMMENT_BLOCK_REGEX, "")
-			.replace(SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX, "")
+			.replace(/%%(?!\!|\[\[)[\s\S]*?%%|%%\!.*?%%|%%\[\[.*?%%/g, "")
 			.trim();
 	}
 }

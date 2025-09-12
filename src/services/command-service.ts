@@ -21,6 +21,11 @@ export class CommandService {
 
 	constructor(
 		private addCommand: (command: Command) => void,
+		private addRibbonIcon: (
+			icon: string,
+			title: string,
+			callback: (evt: MouseEvent) => void
+		) => void,
 		private app: App,
 		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService
@@ -34,6 +39,20 @@ export class CommandService {
 			this.presentationPluginFolder = ADVANCED_SLIDES_PLUGIN_FOLDER;
 			this.revealAddOnsViewName = "revealAS";
 		}
+	}
+
+	private _checkUserType(): boolean {
+		if (
+			!this.settings.userChecked ||
+			!this.settings.updateAPIKeyIsValid ||
+			!this.settings.userEmail ||
+			!this.settings.updateAPIKey ||
+			!this.settings.updateAPIKey.includes("patquQB1Cd93hSAlC")
+		) {
+			new Notice(t("This Action is only available for Paid Users"));
+			return false;
+		}
+		return true;
 	}
 
 	// 优化：抽取公共逻辑，减少重复代码
@@ -261,20 +280,34 @@ export class CommandService {
 		this.addCommand({
 			id: "slides-rup:covert-to-slide",
 			name: t("Convert to Slide"),
+			icon: "file-text",
 			callback: async () => {
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.slidesMaker.convertMDToSlide()
+					);
+				}
+			},
+		});
+
+		// 添加工具栏图标用于快速转换幻灯片
+		this.addRibbonIcon("presentation", t("Convert to Slide"), async () => {
+			if (this._checkUserType()) {
 				await this._templaterTriggerSwitch(() =>
 					this.slidesMaker.convertMDToSlide()
 				);
-			},
+			}
 		});
 
 		this.addCommand({
 			id: "slides-rup:crete-new-design",
 			name: t("Create New Design From Blank"),
 			callback: async () => {
-				await this._templaterTriggerSwitch(() =>
-					this.designMaker.makeNewBlankDesign()
-				);
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.designMaker.makeNewBlankDesign()
+					);
+				}
 			},
 		});
 
@@ -282,9 +315,11 @@ export class CommandService {
 			id: "slides-rup:crete-new-design-from-current-design",
 			name: t("Create New Design From Current Design"),
 			callback: async () => {
-				await this._templaterTriggerSwitch(() =>
-					this.designMaker.makeNewDesignFromCurrentDesign()
-				);
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.designMaker.makeNewDesignFromCurrentDesign()
+					);
+				}
 			},
 		});
 	}
