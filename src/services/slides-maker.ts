@@ -588,9 +588,11 @@ export class SlidesMaker {
 		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
 		if (h1Count > 1) {
 			newLines = this._regularizeHeadingsForContent(
-				activeFile.name,
+				activeFile.basename,
 				lines
 			);
+
+			console.dir(newLines);
 		}
 
 		await this._resetUserSpecificListClass(activeFile);
@@ -642,6 +644,9 @@ export class SlidesMaker {
 		fileName: string,
 		lines: string[]
 	): string[] {
+		// 添加文件名作为 H1 标题
+		lines.unshift(`# ${fileName}`);
+
 		// 处理现有标题
 		for (let i = 1; i < lines.length; i++) {
 			const headingMatch = lines[i].match(/^(#{1,6})\s+(.+)$/);
@@ -657,9 +662,6 @@ export class SlidesMaker {
 				lines[i] = `${"#".repeat(newLevel)} ${headingMatch[2]}`;
 			}
 		}
-
-		// 添加文件名作为 H1 标题
-		lines.unshift(`# ${fileName}`);
 
 		return lines;
 	}
