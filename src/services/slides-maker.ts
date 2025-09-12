@@ -571,9 +571,9 @@ export class SlidesMaker {
 		// Check for required heading levels
 		const hasH1 = headingsInfo.some((h) => h.level === 1);
 		const hasH2 = headingsInfo.some((h) => h.level === 2);
-		const hasH3 = headingsInfo.some((h) => h.level === 3);
+		//const hasH3 = headingsInfo.some((h) => h.level === 3);
 
-		if (!hasH1 || !hasH2 || !hasH3) {
+		if (!hasH1 || !hasH2) {
 			new Notice(
 				t(
 					"Invalid Format: Document must contain H1, H2, and H3 headings"
