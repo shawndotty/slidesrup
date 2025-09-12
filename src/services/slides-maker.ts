@@ -884,6 +884,9 @@ export class SlidesMaker {
 	): Promise<string> {
 		// Add Empty Page Annotation
 
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const simpleMode = fileCache?.frontmatter?.simpleMode;
+
 		const newLines = this._addEmptyPageAnnotation(lines, design);
 
 		// 1. Add page separators at headings
@@ -892,7 +895,8 @@ export class SlidesMaker {
 		// 2. Add slide annotations for chapters (H2)
 		const contentWithChapterSlides = this._addChapterSlideAnnotations(
 			contentWithSeparators,
-			design
+			design,
+			simpleMode
 		);
 
 		// 3. Add H3 links to each chapter
@@ -1182,11 +1186,16 @@ export class SlidesMaker {
 	 */
 	private _addChapterSlideAnnotations(
 		content: string,
-		design: string
+		design: string,
+		simpleMode: boolean = false
 	): string {
 		let h2Index = 0;
 		const modifiedLines: string[] = [];
 		let defaultTemplate = `[[${t("Chapter")}-${design}]]`;
+
+		if (simpleMode) {
+			defaultTemplate = "";
+		}
 
 		for (const line of content.split("\n")) {
 			if (/^##\s+/.test(line)) {
@@ -1202,8 +1211,10 @@ export class SlidesMaker {
 					defaultTemplate
 				);
 
+				const templateStr = template ? `template="${template}"` : "";
+
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" template="${template}" class="${classValue}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue}" -->\n`
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
