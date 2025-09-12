@@ -591,8 +591,6 @@ export class SlidesMaker {
 				activeFile.basename,
 				lines
 			);
-
-			console.dir(newLines);
 		}
 
 		await this._resetUserSpecificListClass(activeFile);
