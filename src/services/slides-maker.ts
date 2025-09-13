@@ -570,26 +570,37 @@ export class SlidesMaker {
 
 		// Check for required heading levels
 		const hasH1 = headingsInfo.some((h) => h.level === 1);
-		const hasH2 = headingsInfo.some((h) => h.level === 2);
-		//const hasH3 = headingsInfo.some((h) => h.level === 3);
 
 		if (!hasH1) {
-			new Notice(
-				t(
-					"Invalid Format: Document must contain H1, H2, and H3 headings"
-				)
-			);
+			new Notice(t("Invalid Format: Document must contain H1 headings"));
 			return;
 		}
 
 		let newLines = lines;
 
-		// Check for multiple H1 headings
-		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
-		const h2Count = headingsInfo.filter((h) => h.level === 2).length;
-		//const h3Count = headingsInfo.filter((h) => h.level === 3).length;
+		// 统计各级标题数量
+		const headingCounts = Array.from({ length: 6 }, (_, i) => ({
+			level: i + 1,
+			count: headingsInfo.filter((h) => h.level === i + 1).length,
+		}));
 
-		if (h1Count > 1) {
+		// 根据标题结构确定幻灯片源模式
+		let slideSourceMode = 0;
+
+		const [h1, h2, h3, h4, h5, h6] = headingCounts.map((h) => h.count);
+
+		// 判断文档结构类型
+		if (h1 === 1) {
+			if (h2 > 0) {
+				slideSourceMode = h3 > 0 ? 1 : 2; // 完整章节结构 vs 简单章节结构
+			} else if ([h2, h3, h4, h5, h6].every((count) => count === 0)) {
+				slideSourceMode = 4; // 仅有一个一级标题
+			}
+		} else if (h1 > 1) {
+			slideSourceMode = 3; // 多个一级标题
+		}
+
+		if (slideSourceMode === 3) {
 			newLines = this._regularizeHeadingsForContent(
 				activeFile.basename,
 				lines
@@ -612,10 +623,8 @@ export class SlidesMaker {
 		const { slideName, baseLayoutName, tocName } =
 			this._generateNewSlideFilesNames(targetSlide);
 
-		let minimizeMode = false;
-		if (h1Count === 1 && h2Count < 1) {
-			minimizeMode = true;
-		}
+		// 简化模式标志,当文档结构为单一一级标题时启用
+		const minimizeMode = slideSourceMode === 4;
 
 		if (!minimizeMode) {
 			// 4. Create TOC file
@@ -1540,7 +1549,7 @@ ${lbnl}
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
 			return [...before, authorTemplate, dateTemplate, ...after].join(
-				"\n"
+				"\n\n"
 			);
 		} else {
 			// 如果没有找到 '---'，则直接在内容最前面插入
