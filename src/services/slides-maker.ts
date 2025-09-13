@@ -649,7 +649,7 @@ export class SlidesMaker {
 			activeFile,
 			slideMode,
 			slideSize,
-			minimizeMode
+			slideSourceMode
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -932,13 +932,13 @@ export class SlidesMaker {
 			w: number;
 			h: number;
 		},
-		minimizeMode: boolean = false
+		slideSourceMode: number
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
 
-		const fileCache = this.app.metadataCache.getFileCache(activeFile);
-		const simpleMode = fileCache?.frontmatter?.simpleMode;
+		const simpleMode = slideSourceMode === 2;
+		const minimizeMode = slideSourceMode === 4;
 
 		// 定义处理步骤
 		const processPipeline: ProcessStep[] = [
