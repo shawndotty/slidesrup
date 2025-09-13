@@ -1549,7 +1549,7 @@ ${lbnl}
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
 			return [...before, authorTemplate, dateTemplate, ...after].join(
-				"\n\n"
+				"\n"
 			);
 		} else {
 			// 如果没有找到 '---'，则直接在内容最前面插入
