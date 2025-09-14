@@ -46,7 +46,8 @@ export class SlidesMaker {
 	);
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
-	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!|\[\[)([\s\S]*?)%%/g;
+	private static readonly COMMENT_BLOCK_REGEX =
+		/%%(?!\!|\[\[|\#)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
@@ -883,7 +884,20 @@ export class SlidesMaker {
 			.filter(Boolean) as string[];
 
 		const tocContent = h2List.length
-			? h2List.map((item, idx) => `+ [${item}](#c${idx + 1})`).join("\n")
+			? h2List
+					.map((item, idx) => {
+						// 从item中提取%%#Text%%格式的文本
+						const match = item.match(/%%#(.*?)%%/);
+						if (match) {
+							// 如果匹配到了%%#Text%%格式,使用Text部分
+							return `+ [${match[1].trim()}](#c${idx + 1})`;
+						}
+						// 否则使用原始item
+						return `+ [${item.replace(/%%.*?%%/g, "")}](#c${
+							idx + 1
+						})`;
+					})
+					.join("\n")
 			: "";
 
 		await this._createAndOpenSlide(location, tocName, tocContent, false);
