@@ -1298,7 +1298,7 @@ export class SlidesMaker {
 				const templateStr = template ? `template="${template}"` : "";
 
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue} chapter-${h2Index}" -->\n`
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
