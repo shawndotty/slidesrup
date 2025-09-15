@@ -428,4 +428,5 @@ export default {
 	Grid: "Grid",
 	"Default TOC Page Position": "Default TOC Page Position",
 	"Set Default TOC Page Position": "Set Default TOC Page Position",
+	"Convert to Marp Slides": "Convert Active File to Marp Slides",
 };

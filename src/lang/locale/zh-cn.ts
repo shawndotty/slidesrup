@@ -378,4 +378,5 @@ export default {
 	Grid: "网格",
 	"Default TOC Page Position": "默认目录页位置",
 	"Set Default TOC Page Position": "设置默认目录页位置",
+	"Convert to Marp Slides": "将当前笔记转换为 Marp 幻灯片",
 };

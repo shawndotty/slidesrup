@@ -3,6 +3,7 @@ import { t } from "../lang/helpers";
 import { SlidesRupSettings, NocoDBSettings } from "../types";
 import { buildFieldNames } from "../utils";
 import { SlidesMaker } from "./slides-maker";
+import { MarpSlidesMaker } from "./marp-maker";
 import { DesignMaker } from "./design-maker";
 import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
@@ -16,6 +17,7 @@ import {
 export class CommandService {
 	private slidesMaker: SlidesMaker;
 	private designMaker: DesignMaker;
+	private marpSlidesMaker: MarpSlidesMaker;
 	private presentationPluginFolder: string;
 	private revealAddOnsViewName: string;
 
@@ -32,6 +34,7 @@ export class CommandService {
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
+		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
 		if (this.settings.presentationPlugin === "slidesExtended") {
 			this.presentationPluginFolder = SLIDES_EXTENDED_PLUGIN_FOLDER;
 			this.revealAddOnsViewName = "reveal";
@@ -318,6 +321,18 @@ export class CommandService {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
 						this.designMaker.makeNewDesignFromCurrentDesign()
+					);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:convert-to-marp-slides",
+			name: t("Convert to Marp Slides"),
+			callback: async () => {
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.marpSlidesMaker.convertMDToMarpSlide()
 					);
 				}
 			},
