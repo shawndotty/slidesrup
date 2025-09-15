@@ -322,5 +322,17 @@ export class CommandService {
 				}
 			},
 		});
+
+		this.addCommand({
+			id: "slides-rup:convert-md-to-marp-slide",
+			name: t("Convert MD To Marp Slide"),
+			callback: async () => {
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.slidesMaker.convertMDToMarpSlide()
+					);
+				}
+			},
+		});
 	}
 }

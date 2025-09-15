@@ -415,4 +415,5 @@ export default {
 	"Set User BackCover Page List Class": "Set User BackCover Page List Class",
 	"This Action is only available for Paid Users":
 		"This Action is only available for Paid Users",
+	"Convert MD To Marp Slide": "Convert MD To Marp Slide",
 };
