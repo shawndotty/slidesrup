@@ -46,7 +46,8 @@ export class SlidesMaker {
 	);
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
-	private static readonly COMMENT_BLOCK_REGEX = /%%(?!\!|\[\[)([\s\S]*?)%%/g;
+	private static readonly COMMENT_BLOCK_REGEX =
+		/%%(?!\!|\[\[|\#)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
@@ -570,23 +571,37 @@ export class SlidesMaker {
 
 		// Check for required heading levels
 		const hasH1 = headingsInfo.some((h) => h.level === 1);
-		const hasH2 = headingsInfo.some((h) => h.level === 2);
-		//const hasH3 = headingsInfo.some((h) => h.level === 3);
 
-		if (!hasH1 || !hasH2) {
-			new Notice(
-				t(
-					"Invalid Format: Document must contain H1, H2, and H3 headings"
-				)
-			);
+		if (!hasH1) {
+			new Notice(t("Invalid Format: Document must contain H1 headings"));
 			return;
 		}
 
 		let newLines = lines;
 
-		// Check for multiple H1 headings
-		const h1Count = headingsInfo.filter((h) => h.level === 1).length;
-		if (h1Count > 1) {
+		// 统计各级标题数量
+		const headingCounts = Array.from({ length: 6 }, (_, i) => ({
+			level: i + 1,
+			count: headingsInfo.filter((h) => h.level === i + 1).length,
+		}));
+
+		// 根据标题结构确定幻灯片源模式
+		let slideSourceMode = 0;
+
+		const [h1, h2, h3, h4, h5, h6] = headingCounts.map((h) => h.count);
+
+		// 判断文档结构类型
+		if (h1 === 1) {
+			if (h2 > 0) {
+				slideSourceMode = h3 > 0 ? 1 : 2; // 完整章节结构 vs 简单章节结构
+			} else if ([h2, h3, h4, h5, h6].every((count) => count === 0)) {
+				slideSourceMode = 4; // 仅有一个一级标题
+			}
+		} else if (h1 > 1) {
+			slideSourceMode = 3; // 多个一级标题
+		}
+
+		if (slideSourceMode === 3) {
 			newLines = this._regularizeHeadingsForContent(
 				activeFile.basename,
 				lines
@@ -609,16 +624,21 @@ export class SlidesMaker {
 		const { slideName, baseLayoutName, tocName } =
 			this._generateNewSlideFilesNames(targetSlide);
 
-		// 4. Create TOC file
-		await this._createTocFile(newSlideLocation, tocName, newLines);
+		// 简化模式标志,当文档结构为单一一级标题时启用
+		const minimizeMode = slideSourceMode === 4;
 
-		// 5. Create BaseLayout file
-		await this._createBaseLayoutFile(
-			newSlideLocation,
-			baseLayoutName,
-			tocName,
-			design
-		);
+		if (!minimizeMode) {
+			// 4. Create TOC file
+			await this._createTocFile(newSlideLocation, tocName, newLines);
+
+			// 5. Create BaseLayout file
+			await this._createBaseLayoutFile(
+				newSlideLocation,
+				baseLayoutName,
+				tocName,
+				design
+			);
+		}
 
 		// 6. Process content and create final slide
 		const processedContent = await this._processContentForSlide(
@@ -629,7 +649,8 @@ export class SlidesMaker {
 			baseLayoutName,
 			activeFile,
 			slideMode,
-			slideSize
+			slideSize,
+			slideSourceMode
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -863,7 +884,20 @@ export class SlidesMaker {
 			.filter(Boolean) as string[];
 
 		const tocContent = h2List.length
-			? h2List.map((item, idx) => `+ [${item}](#c${idx + 1})`).join("\n")
+			? h2List
+					.map((item, idx) => {
+						// 从item中提取%%#Text%%格式的文本
+						const match = item.match(/%%#(.*?)%%/);
+						if (match) {
+							// 如果匹配到了%%#Text%%格式,使用Text部分
+							return `+ [${match[1].trim()}](#c${idx + 1})`;
+						}
+						// 否则使用原始item
+						return `+ [${item.replace(/%%.*?%%/g, "")}](#c${
+							idx + 1
+						})`;
+					})
+					.join("\n")
 			: "";
 
 		await this._createAndOpenSlide(location, tocName, tocContent, false);
@@ -911,68 +945,87 @@ export class SlidesMaker {
 		slideSize: {
 			w: number;
 			h: number;
-		}
+		},
+		slideSourceMode: number
 	): Promise<string> {
-		// Add Empty Page Annotation
+		// 创建处理管道，每个步骤返回处理后的内容
+		type ProcessStep = (content: string) => string | Promise<string>;
 
-		const fileCache = this.app.metadataCache.getFileCache(activeFile);
-		const simpleMode = fileCache?.frontmatter?.simpleMode;
+		const simpleMode = slideSourceMode === 2;
+		const minimizeMode = slideSourceMode === 4;
 
-		const newLines = this._addEmptyPageAnnotation(lines, design);
+		// 定义处理步骤
+		const processPipeline: ProcessStep[] = [
+			// 1. 添加空页注释
+			(content) => this._addEmptyPageAnnotation(lines, design).join("\n"),
 
-		// 1. Add page separators at headings
-		const contentWithSeparators = this._addPageSeparators(newLines);
+			// 2. 添加页面分隔符
+			(content) => this._addPageSeparators(content.split("\n")),
 
-		// 2. Add slide annotations for chapters (H2)
-		const contentWithChapterSlides = this._addChapterSlideAnnotations(
-			contentWithSeparators,
-			design,
-			simpleMode
-		);
+			// 3. 添加章节幻灯片注释
+			(content) =>
+				minimizeMode
+					? content
+					: this._addChapterSlideAnnotations(
+							content,
+							design,
+							simpleMode
+					  ),
 
-		// 3. Add H3 links to each chapter
-		const contentWithH3Links = this._addH3LinksToChapters(
-			contentWithChapterSlides
-		);
+			// 4. 添加 H3 链接到章节
+			(content) =>
+				minimizeMode ? content : this._addH3LinksToChapters(content),
 
-		// 4. Add slide annotations for pages (H3)
-		const contentWithPageSlides =
-			this._addPageSlideAnnotations(contentWithH3Links);
+			// 5. 添加页面幻灯片注释
+			(content) =>
+				minimizeMode ? content : this._addPageSlideAnnotations(content),
 
-		const contentWithSubPageSlides = this._addSubPageAnnotation(
-			contentWithPageSlides.split("\n")
-		).join("\n");
+			// 6. 添加子页面注释
+			(content) =>
+				minimizeMode
+					? content
+					: this._addSubPageAnnotation(content.split("\n")).join(
+							"\n"
+					  ),
 
-		// 5. Add TOC slide
-		const contentWithToc = this._addTocSlide(
-			contentWithSubPageSlides,
-			tocName,
-			design
-		);
+			// 7. 添加目录幻灯片
+			(content) =>
+				minimizeMode
+					? content
+					: this._addTocSlide(content, tocName, design),
 
-		// Convert WikiLink to data-preview-link
+			// 8. 转换 WikiLinks
+			(content) =>
+				this._getAutoConvertLinks(activeFile)
+					? this._convertMarkdownLinksToPreviewLinks(content)
+					: content,
 
-		const contentWithConvertedLinks = this._getAutoConvertLinks(activeFile)
-			? this._convertMarkdownLinksToPreviewLinks(contentWithToc)
-			: contentWithToc;
+			// 9. 添加段落片段
+			(content) =>
+				this._getEnableParagraphFragments(activeFile)
+					? this._addFragmentsToParagraph(content)
+					: content,
 
-		const contentWithParagrahFragments = this._getEnableParagraphFragments(
-			activeFile
-		)
-			? this._addFragmentsToParagraph(contentWithConvertedLinks)
-			: contentWithConvertedLinks;
+			// 10. 生成最终内容
+			(content) =>
+				this._generateFinalSlideContent(
+					content,
+					baseLayoutName,
+					design,
+					activeFile,
+					slideMode,
+					slideSize,
+					minimizeMode
+				),
+		];
 
-		const finalContent = contentWithParagrahFragments;
+		// 执行处理管道
+		let processedContent = content;
+		for (const step of processPipeline) {
+			processedContent = await step(processedContent);
+		}
 
-		// 6. Generate final content with frontmatter, cover and back pages
-		return this._generateFinalSlideContent(
-			finalContent,
-			baseLayoutName,
-			design,
-			activeFile,
-			slideMode,
-			slideSize
-		);
+		return processedContent;
 	}
 
 	/**
@@ -1245,7 +1298,7 @@ export class SlidesMaker {
 				const templateStr = template ? `template="${template}"` : "";
 
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue} chapter-${h2Index}" -->\n`
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1406,7 +1459,8 @@ export class SlidesMaker {
 		slideSize: {
 			w: number;
 			h: number;
-		}
+		},
+		minimizeMode: boolean = false
 	): string {
 		// Generate frontmatter
 		const frontmatter = `---
@@ -1432,7 +1486,8 @@ transition: none
 		const oburi = this._getOBURI(activeFile);
 
 		const newContent = this._addAuthorAndDate(
-			this._addLinkToH1(content, oburi)
+			this._addLinkToH1(content, oburi),
+			minimizeMode
 		);
 
 		// Generate back cover slide
@@ -1490,7 +1545,10 @@ ${lbnl}
 		return lbnl;
 	}
 
-	private _addAuthorAndDate(content: string): string {
+	private _addAuthorAndDate(
+		content: string,
+		minimizeMode: boolean = false
+	): string {
 		const author = this.settings.presenter || "";
 		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
 		const authorTemplate = `::: author\n${author}\n:::\n`;
@@ -1509,7 +1567,10 @@ ${lbnl}
 			);
 		} else {
 			// 如果没有找到 '---'，则直接在内容最前面插入
-			return `${authorTemplate}\n${dateTemplate}\n${content}`;
+			// 根据最小化模式决定模板组合顺序
+			return minimizeMode
+				? [content, authorTemplate, dateTemplate].join("\n\n")
+				: [authorTemplate, dateTemplate, content].join("\n\n");
 		}
 	}
 

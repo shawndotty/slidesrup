@@ -337,8 +337,8 @@ export default {
 	"Enable User Font Size Setting": "Enable User Font Size Setting",
 	"Enable User Color Setting": "Enable User Color Setting",
 	"Invalid Format: No headings found": "Invalid Format: No headings found",
-	"Invalid Format: Document must contain H1, H2, and H3 headings":
-		"Invalid Format: Document must contain H1 an H2 heading",
+	"Invalid Format: Document must contain H1 headings":
+		"Invalid Format: Document must contain H1 heading",
 	"Invalid Format: Document must contain only one H1 heading":
 		"Invalid Format: Document must contain only one level 1 heading",
 	"Convert to Slide": "Convert Current File to Slide",
