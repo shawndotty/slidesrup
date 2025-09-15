@@ -116,4 +116,5 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupUserBackCoverPageListClass: "",
 
 	slidesRupDefaultSlideSize: "p16-9",
+	slidesRupContentPageSlideType: "h",
 };

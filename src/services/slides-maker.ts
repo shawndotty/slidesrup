@@ -1251,14 +1251,32 @@ export class SlidesMaker {
 		let headingCount = 0;
 		const newLines: string[] = [];
 
+		// 优化: 使用 map 存储分隔符规则,避免重复判断
+		const separatorMap = {
+			h: "---",
+			v: "***",
+		};
+
 		for (const line of lines) {
-			if (/^#{1,3}\s/.test(line)) {
+			// 优化: 提取标题判断逻辑
+			const isHeading = /^#{1,3}\s/.test(line);
+
+			if (isHeading) {
 				headingCount++;
-				// 优化：只在3级标题前插入分隔符，无需插入空行
-				if (headingCount > 1) {
+
+				// 优化: 简化分隔符选择逻辑
+				if (
+					headingCount < 3 ||
+					this.settings.slidesRupContentPageSlideType === "h"
+				) {
 					newLines.push("---");
+				} else if (
+					this.settings.slidesRupContentPageSlideType === "v"
+				) {
+					newLines.push("***");
 				}
 			}
+
 			newLines.push(line);
 		}
 

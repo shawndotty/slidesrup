@@ -905,6 +905,17 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createDropdownSetting(
+			containerEl,
+			"Content Page Slide Type",
+			"Please select the default slide type for content pages",
+			"slidesRupContentPageSlideType",
+			{
+				h: "Horizontal",
+				v: "Vertical",
+			}
+		);
+
 		const defaultListClassOptions = {
 			"fancy-list": "Fancy List",
 			"fancy-list-row": "Fancy List Row",

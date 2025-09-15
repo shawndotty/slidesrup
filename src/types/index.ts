@@ -132,6 +132,7 @@ export interface SlidesRupSettings {
 	slidesRupUserBackCoverPageListClass: string;
 
 	slidesRupDefaultSlideSize: string;
+	slidesRupContentPageSlideType: string;
 }
 
 export interface NocoDBTable {
