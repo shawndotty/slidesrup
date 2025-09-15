@@ -117,4 +117,6 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 
 	slidesRupDefaultSlideSize: "p16-9",
 	slidesRupContentPageSlideType: "h",
+	slidesRupSlideNavigationMode: "default",
+	slidesRupDefaultTOCPageNumber: 2,
 };

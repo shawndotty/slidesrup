@@ -133,6 +133,8 @@ export interface SlidesRupSettings {
 
 	slidesRupDefaultSlideSize: string;
 	slidesRupContentPageSlideType: string;
+	slidesRupSlideNavigationMode: string;
+	slidesRupDefaultTOCPageNumber: number;
 }
 
 export interface NocoDBTable {

@@ -1230,8 +1230,11 @@ export class SlidesMaker {
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
 					(template && `template="${template}"`) || "";
-
-				finalLines.push("---");
+				if (this.settings.slidesRupContentPageSlideType === "v") {
+					finalLines.push("***");
+				} else {
+					finalLines.push("---");
+				}
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
 				);
@@ -1265,15 +1268,15 @@ export class SlidesMaker {
 				headingCount++;
 
 				// 优化: 简化分隔符选择逻辑
-				if (
-					headingCount < 3 ||
-					this.settings.slidesRupContentPageSlideType === "h"
-				) {
-					newLines.push("---");
-				} else if (
-					this.settings.slidesRupContentPageSlideType === "v"
-				) {
-					newLines.push("***");
+				if (headingCount > 1) {
+					if (
+						/^#{3}\s/.test(line) &&
+						this.settings.slidesRupContentPageSlideType === "v"
+					) {
+						newLines.push("***");
+					} else {
+						newLines.push("---");
+					}
 				}
 			}
 
@@ -1453,9 +1456,13 @@ export class SlidesMaker {
 		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
 
-		const tocIndex = contentLines.findIndex(
-			(line) => line.trim() === "---"
+		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;
+
+		let tocIndex = this._findSeparatorIndex(
+			contentLines,
+			tocPageNumber < 2 ? 1 : tocPageNumber - 1
 		);
+
 		if (tocIndex !== -1) {
 			contentLines.splice(tocIndex, 0, tocEmbed);
 		} else {
@@ -1463,6 +1470,33 @@ export class SlidesMaker {
 		}
 
 		return contentLines.join("\n");
+	}
+
+	/**
+	 * 在内容行数组中查找指定索引位置的分隔符
+	 * @param contentLines - 内容行数组
+	 * @param targetIndex - 目标索引位置(从1开始)
+	 * @returns 找到的分隔符在数组中的索引位置，未找到返回-1
+	 */
+	private _findSeparatorIndex(
+		contentLines: string[],
+		targetIndex: number = 1
+	): number {
+		if (targetIndex < 1) return -1;
+
+		let currentIndex = 0;
+		for (let i = 0; i < contentLines.length; i++) {
+			if (
+				contentLines[i].trim() === "---" ||
+				contentLines[i].trim() === "****"
+			) {
+				currentIndex++;
+				if (currentIndex === targetIndex) {
+					return i;
+				}
+			}
+		}
+		return -1;
 	}
 
 	/**
@@ -1487,6 +1521,7 @@ enableLinks: true
 width: ${slideSize.w}
 height: ${slideSize.h}
 margin: 0
+navigationMode: ${this.settings.slidesRupSlideNavigationMode}
 aliases:
  - ${activeFile.basename}
 defaultTemplate: "[[${baseLayoutName}]]"
@@ -1503,8 +1538,12 @@ transition: none
 
 		const oburi = this._getOBURI(activeFile);
 
+		const { author, date } = this._getAuthorAndDate();
+
 		const newContent = this._addAuthorAndDate(
 			this._addLinkToH1(content, oburi),
+			author,
+			date,
 			minimizeMode
 		);
 
@@ -1518,6 +1557,15 @@ transition: none
 		}" -->
 
 ${lbnl}
+
+::: author
+${author}
+:::
+
+::: date
+${date}
+:::
+
 `;
 
 		// Combine all parts
@@ -1563,12 +1611,18 @@ ${lbnl}
 		return lbnl;
 	}
 
-	private _addAuthorAndDate(
-		content: string,
-		minimizeMode: boolean = false
-	): string {
+	private _getAuthorAndDate(): { author: string; date: string } {
 		const author = this.settings.presenter || "";
 		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
+		return { author, date };
+	}
+
+	private _addAuthorAndDate(
+		content: string,
+		author: string,
+		date: string,
+		minimizeMode: boolean = false
+	): string {
 		const authorTemplate = `::: author\n${author}\n:::\n`;
 		const dateTemplate = `::: date\n${date}\n:::\n`;
 

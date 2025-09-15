@@ -420,4 +420,12 @@ export default {
 		"Please select the default slide type for content pages",
 	Horizontal: "Horizontal",
 	Vertical: "Vertical",
+	"Slide Navigation Mode": "Slide Navigation Mode",
+	"Please select the default slide navigation mode":
+		"Please select the default slide navigation mode",
+	Default: "Default",
+	Linear: "Linear",
+	Grid: "Grid",
+	"Default TOC Page Position": "Default TOC Page Position",
+	"Set Default TOC Page Position": "Set Default TOC Page Position",
 };

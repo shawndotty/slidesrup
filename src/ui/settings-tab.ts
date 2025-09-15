@@ -916,6 +916,29 @@ export class SlidesRupAssistantSettingTab extends PluginSettingTab {
 			}
 		);
 
+		this.createDropdownSetting(
+			containerEl,
+			"Slide Navigation Mode",
+			"Please select the default slide navigation mode",
+			"slidesRupSlideNavigationMode",
+			{
+				default: "Default",
+				linear: "Linear",
+				grid: "Grid",
+			}
+		);
+
+		this.createTextSetting(containerEl, {
+			name: "Default TOC Page Position",
+			desc: "Set Default TOC Page Position",
+			value: this.plugin.settings.slidesRupDefaultTOCPageNumber.toString(),
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupDefaultTOCPageNumber =
+					Number(value);
+				await this.plugin.saveSettings();
+			},
+		});
+
 		const defaultListClassOptions = {
 			"fancy-list": "Fancy List",
 			"fancy-list-row": "Fancy List Row",

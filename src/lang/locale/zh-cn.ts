@@ -370,4 +370,12 @@ export default {
 		"请选择内容页的默认幻灯片类型",
 	Horizontal: "水平",
 	Vertical: "垂直",
+	"Slide Navigation Mode": "幻灯片导航模式",
+	"Please select the default slide navigation mode":
+		"请选择内容页的默认幻灯片导航模式",
+	Default: "默认",
+	Linear: "线性",
+	Grid: "网格",
+	"Default TOC Page Position": "默认目录页位置",
+	"Set Default TOC Page Position": "设置默认目录页位置",
 };
