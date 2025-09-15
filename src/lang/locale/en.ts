@@ -415,4 +415,17 @@ export default {
 	"Set User BackCover Page List Class": "Set User BackCover Page List Class",
 	"This Action is only available for Paid Users":
 		"This Action is only available for Paid Users",
+	"Content Page Slide Type": "Content Page Slide Type",
+	"Please select the default slide type for content pages":
+		"Please select the default slide type for content pages",
+	Horizontal: "Horizontal",
+	Vertical: "Vertical",
+	"Slide Navigation Mode": "Slide Navigation Mode",
+	"Please select the default slide navigation mode":
+		"Please select the default slide navigation mode",
+	Default: "Default",
+	Linear: "Linear",
+	Grid: "Grid",
+	"Default TOC Page Position": "Default TOC Page Position",
+	"Set Default TOC Page Position": "Set Default TOC Page Position",
 };

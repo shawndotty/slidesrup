@@ -365,4 +365,17 @@ export default {
 	"Set User Blank Page List Class": "设置用户自建空白页列表样式",
 	"Set User BackCover Page List Class": "设置用户自建封底页列表样式",
 	"This Action is only available for Paid Users": "此功能仅供付费用户使用",
+	"Content Page Slide Type": "内容页幻灯片类型",
+	"Please select the default slide type for content pages":
+		"请选择内容页的默认幻灯片类型",
+	Horizontal: "水平",
+	Vertical: "垂直",
+	"Slide Navigation Mode": "幻灯片导航模式",
+	"Please select the default slide navigation mode":
+		"请选择内容页的默认幻灯片导航模式",
+	Default: "默认",
+	Linear: "线性",
+	Grid: "网格",
+	"Default TOC Page Position": "默认目录页位置",
+	"Set Default TOC Page Position": "设置默认目录页位置",
 };
