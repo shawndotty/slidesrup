@@ -33,6 +33,7 @@ import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
 import { TemplateProcessor } from "src/services/processors/template-precessor";
+import { FootnoteProcessor } from "src/services/processors/footnote-processor";
 
 export class MarpSlidesMaker {
 	private app: App;
@@ -42,6 +43,7 @@ export class MarpSlidesMaker {
 	private designOptions: Array<SuggesterOption> = [];
 	private multipleFileProcessor: MultipleFileProcessor;
 	private templateProcessor: TemplateProcessor;
+	private footNoteProcessor: FootnoteProcessor;
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -78,101 +80,9 @@ export class MarpSlidesMaker {
 		this.multipleFileProcessor = new MultipleFileProcessor(
 			new ObsidianUtils(this.app, this.settings)
 		);
+		this.footNoteProcessor = new FootnoteProcessor();
 		this.templateProcessor = new TemplateProcessor(
 			new ObsidianUtils(this.app, this.settings)
-		);
-	}
-
-	async createSlides(): Promise<void> {
-		const newSlideContainer = await this._determineNewSlideLocation();
-		if (newSlideContainer === null) {
-			new Notice(t("Operation cancelled by user"));
-			return;
-		}
-
-		let subFolder;
-
-		if (this.settings.customizeSlideFolderName) {
-			const modal = new InputModal(
-				this.app,
-				t("Please input slide folder name"),
-				"",
-				true,
-				newSlideContainer
-			);
-
-			subFolder = await modal.openAndGetValue();
-		}
-
-		if (!subFolder?.trim()) {
-			subFolder = t("Slide");
-		}
-
-		const newSlideLocation =
-			newSlideContainer === "/"
-				? subFolder
-				: `${newSlideContainer}/${subFolder}`;
-
-		await createPathIfNeeded(this.app, newSlideLocation);
-
-		let slideMode = this.settings.slidesRupSlideMode;
-		if (!slideMode || slideMode === "none") {
-			slideMode = (await this._selectSlideMode())?.value || "light";
-		}
-		slideMode = slideMode.toLowerCase?.() || "light";
-
-		const { slideName, baseLayoutName, tocName } =
-			this._generateNewSlideFilesNames();
-
-		const tocTemplate = await this.getFinalTemplate(
-			this.settings.userTocTemplate,
-			toc()
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			tocName,
-			tocTemplate,
-			false
-		);
-
-		const baseLayoutTemplate = await this.getFinalTemplate(
-			this.settings.userBaseLayoutTemplate,
-			baseLayoutWithSteps(),
-			{
-				toc: tocName,
-				tagline: this.settings.tagline,
-				slogan: this.settings.slogan,
-			}
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			baseLayoutName,
-			baseLayoutTemplate,
-			false
-		);
-
-		const finalTemplate = await this.getFinalTemplate(
-			this.settings.userSlideTemplate,
-			slideTemplate(slideMode),
-			{
-				baseLayout: baseLayoutName,
-				toc: tocName,
-				presenter: this.settings.presenter,
-				presentDate: moment().format(
-					this.settings.dateFormat || "YYYY-MM-DD"
-				),
-				slidesRupPath: this.settings.slidesRupFrameworkFolder,
-				tagline: this.settings.tagline,
-				slogan: this.settings.slogan,
-			}
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			slideName,
-			finalTemplate
 		);
 	}
 
@@ -1066,6 +976,13 @@ export class MarpSlidesMaker {
 
 			(content) => this._processEmbdedFile(content),
 
+			// 10. 处理脚注
+			(content) =>
+				this.footNoteProcessor.process(content, {
+					separator: "---",
+					verticalSeparator: "\\*\\*\\*",
+				}),
+
 			(content) => this._processTemplate(content),
 
 			(content) =>
@@ -1102,7 +1019,7 @@ export class MarpSlidesMaker {
 			'_header: ""',
 			`_template: "[[${t("Cover")}-${design}]]"`,
 			"-->",
-		].join(" ");
+		].join("\n");
 		const oburi = this._getOBURI(activeFile);
 
 		const { author, date } = this._getAuthorAndDate();
@@ -1130,7 +1047,7 @@ export class MarpSlidesMaker {
 			'_header: ""',
 			`_template: "[[${t("BackCover")}-${design}]]"`,
 			"-->",
-		].join(" ");
+		].join("\n");
 
 		const backCoverSlideContent = [
 			`${lbnl}`,
@@ -1202,6 +1119,7 @@ export class MarpSlidesMaker {
 	 * 处理模板
 	 */
 	private _processTemplate(content: string): string {
+		console.dir(content);
 		return content;
 	}
 
@@ -1383,7 +1301,7 @@ export class MarpSlidesMaker {
 							this.settings.slidesRupDefaultBlankListClass
 						}`,
 						"-->",
-					].join(" ")
+					].join("\n")
 				);
 			} else {
 				newLines.push(line);
@@ -1429,7 +1347,7 @@ export class MarpSlidesMaker {
 					slideTemplate.trim(),
 					`_class: ${[chapterClass, classValue]
 						.filter(Boolean)
-						.join(" ")}`,
+						.join("\n")}`,
 					"-->\n",
 				]
 					.filter(Boolean)
@@ -1513,7 +1431,7 @@ export class MarpSlidesMaker {
 						"-->\n",
 					]
 						.filter(Boolean)
-						.join(" ")
+						.join("\n")
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1641,7 +1559,7 @@ export class MarpSlidesMaker {
 						"-->\n",
 					]
 						.filter(Boolean)
-						.join(" ")
+						.join("\n")
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1673,7 +1591,7 @@ export class MarpSlidesMaker {
 			"-->\n",
 			`## ${t("TOC")}\n`,
 			`${tocContent}\n`,
-		].join(" ");
+		].join("\n");
 		const contentLines = content.split("\n");
 
 		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;

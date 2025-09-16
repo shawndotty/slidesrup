@@ -1,9 +1,10 @@
-import { Options } from "src/types";
-
 export class FootnoteProcessor {
 	private regex = /\[\^([^\]]*)]/im;
 
-	process(markdown: string, options: Options) {
+	process(
+		markdown: string,
+		options: { separator: string; verticalSeparator: string }
+	) {
 		let output = markdown;
 
 		markdown
@@ -86,7 +87,7 @@ export class FootnoteProcessor {
 		});
 
 		footNotesBlock += "</ol>\n";
-		footNotesBlock += "</div>\n";
+		footNotesBlock += "</div>\n\n";
 
 		const footnotePlaceholder = "<%? footnotes %>";
 
