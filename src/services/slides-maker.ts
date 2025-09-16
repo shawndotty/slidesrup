@@ -505,16 +505,20 @@ export class SlidesMaker {
 	/**
 	 * 优化生成新幻灯片相关文件名的方法，避免重复代码
 	 */
-	private _generateNewSlideFilesNames(targetSlide: string = ""): {
+	private _generateNewSlideFilesNames(
+		targetSlide: string = "",
+		isMarp: boolean = false
+	): {
 		slideName: string;
 		baseLayoutName: string;
 		tocName: string;
 	} {
+		const postfix = isMarp ? "-marp" : "";
 		const base = targetSlide || `${getTimeStamp()}-${t("Slide")}`;
 		return {
-			slideName: base,
-			baseLayoutName: `${base}-${t("BaseLayout")}`,
-			tocName: `${base}-${t("TOC")}`,
+			slideName: base + postfix,
+			baseLayoutName: base + postfix + "-" + t("BaseLayout"),
+			tocName: base + postfix + "-" + t("TOC"),
 		};
 	}
 
@@ -617,7 +621,7 @@ export class SlidesMaker {
 			design,
 			slideMode,
 			slideSize,
-		} = await this._setupSlideConversion();
+		} = await this._setupSlideConversion(activeFile);
 		if (newSlideContainer === null) return;
 
 		// 2. Generate file names for slide components
@@ -642,6 +646,120 @@ export class SlidesMaker {
 
 		// 6. Process content and create final slide
 		const processedContent = await this._processContentForSlide(
+			content,
+			newLines,
+			design,
+			tocName,
+			baseLayoutName,
+			activeFile,
+			slideMode,
+			slideSize,
+			slideSourceMode
+		);
+		await this._createAndOpenSlide(
+			newSlideLocation,
+			slideName,
+			processedContent
+		);
+	}
+
+	async convertMDToMarpSlide() {
+		// Get active file
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) {
+			new Notice(t("No active editor, can't excute this command."));
+			return;
+		}
+
+		// 3. Process markdown content
+		const { content, lines, headingsInfo, targetSlide } =
+			await this._extractContentFromFile(activeFile);
+
+		// Check if content already contains slide annotations
+		if (content.includes("<!-- slide")) {
+			new Notice(t("This file is already a slide presentation"));
+			return;
+		}
+
+		// Validate document structure
+		if (!headingsInfo.length) {
+			new Notice(t("Invalid Format: No headings found"));
+			return;
+		}
+
+		// Check for required heading levels
+		const hasH1 = headingsInfo.some((h) => h.level === 1);
+
+		if (!hasH1) {
+			new Notice(t("Invalid Format: Document must contain H1 headings"));
+			return;
+		}
+
+		let newLines = lines;
+
+		// 统计各级标题数量
+		const headingCounts = Array.from({ length: 6 }, (_, i) => ({
+			level: i + 1,
+			count: headingsInfo.filter((h) => h.level === i + 1).length,
+		}));
+
+		// 根据标题结构确定幻灯片源模式
+		let slideSourceMode = 0;
+
+		const [h1, h2, h3, h4, h5, h6] = headingCounts.map((h) => h.count);
+
+		// 判断文档结构类型
+		if (h1 === 1) {
+			if (h2 > 0) {
+				slideSourceMode = h3 > 0 ? 1 : 2; // 完整章节结构 vs 简单章节结构
+			} else if ([h2, h3, h4, h5, h6].every((count) => count === 0)) {
+				slideSourceMode = 4; // 仅有一个一级标题
+			}
+		} else if (h1 > 1) {
+			slideSourceMode = 3; // 多个一级标题
+		}
+
+		if (slideSourceMode === 3) {
+			newLines = this._regularizeHeadingsForContent(
+				activeFile.basename,
+				lines
+			);
+		}
+
+		await this._resetUserSpecificListClass(activeFile);
+
+		// 1. Setup slide location and get active file
+		const {
+			newSlideContainer,
+			newSlideLocation,
+			design,
+			slideMode,
+			slideSize,
+		} = await this._setupSlideConversion(activeFile);
+		if (newSlideContainer === null) return;
+
+		// 2. Generate file names for slide components
+		const { slideName, baseLayoutName, tocName } =
+			this._generateNewSlideFilesNames(targetSlide, true);
+
+		// 简化模式标志,当文档结构为单一一级标题时启用
+		const minimizeMode = slideSourceMode === 4;
+
+		if (!minimizeMode) {
+			// 4. Create TOC file
+			await this._createTocFile(newSlideLocation, tocName, newLines);
+
+			// 5. Create BaseLayout file
+			await this._createBaseLayoutFile(
+				newSlideLocation,
+				baseLayoutName,
+				tocName,
+				design
+			);
+		}
+
+		// 6. Process content and create final slide
+		const processedContent = await this._processContentForMarpSlide(
 			content,
 			newLines,
 			design,
@@ -738,15 +856,13 @@ export class SlidesMaker {
 	/**
 	 * Sets up the initial requirements for slide conversion
 	 */
-	private async _setupSlideConversion(): Promise<{
+	private async _setupSlideConversion(activeFile: TFile): Promise<{
 		newSlideContainer: string | null;
 		newSlideLocation: string;
 		design: string;
 		slideMode: string;
 		slideSize: { w: number; h: number };
 	}> {
-		const activeFile = this.app.workspace.getActiveFile();
-
 		// 优先使用 frontmatter 指定的幻灯片路径和尺寸，否则使用默认设置
 		const slideFMLocation = this._getSlideLocation(activeFile);
 		const userSlideSize = this._getSlideSize(activeFile);
@@ -1028,6 +1144,101 @@ export class SlidesMaker {
 		return processedContent;
 	}
 
+	private async _processContentForMarpSlide(
+		content: string,
+		lines: string[],
+		design: string,
+		tocName: string,
+		baseLayoutName: string,
+		activeFile: TFile,
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		},
+		slideSourceMode: number
+	): Promise<string> {
+		// 创建处理管道，每个步骤返回处理后的内容
+		type ProcessStep = (content: string) => string | Promise<string>;
+
+		const simpleMode = slideSourceMode === 2;
+		const minimizeMode = slideSourceMode === 4;
+
+		// 定义处理步骤
+		const processPipeline: ProcessStep[] = [
+			// 1. 添加空页注释
+			(content) =>
+				this._addEmptyPageAnnotationMarp(lines, design).join("\n"),
+
+			// 2. 添加页面分隔符
+			(content) => this._addPageSeparators(content.split("\n")),
+
+			// 3. 添加章节幻灯片注释
+			(content) =>
+				minimizeMode
+					? content
+					: this._addChapterSlideAnnotations(
+							content,
+							design,
+							simpleMode
+					  ),
+
+			// 4. 添加 H3 链接到章节
+			(content) =>
+				minimizeMode ? content : this._addH3LinksToChapters(content),
+
+			// 5. 添加页面幻灯片注释
+			(content) =>
+				minimizeMode ? content : this._addPageSlideAnnotations(content),
+
+			// 6. 添加子页面注释
+			(content) =>
+				minimizeMode
+					? content
+					: this._addSubPageAnnotation(content.split("\n")).join(
+							"\n"
+					  ),
+
+			// 7. 添加目录幻灯片
+			(content) =>
+				minimizeMode
+					? content
+					: this._addTocSlide(content, tocName, design),
+
+			// 8. 转换 WikiLinks
+			(content) =>
+				this._getAutoConvertLinks(activeFile)
+					? this._convertMarkdownLinksToPreviewLinks(content)
+					: content,
+
+			// 9. 添加段落片段
+			(content) =>
+				this._getEnableParagraphFragments(activeFile)
+					? this._addFragmentsToParagraph(content)
+					: content,
+
+			// 10. 生成最终内容
+			(content) =>
+				this._generateFinalSlideContentForMarp(
+					content,
+					baseLayoutName,
+					design,
+					activeFile,
+					slideMode,
+					slideSize,
+					minimizeMode
+				),
+		];
+
+		// 执行处理管道
+		let processedContent = content;
+		for (const step of processPipeline) {
+			processedContent = await step(processedContent);
+		}
+
+		return processedContent;
+	}
+
 	/**
 	 * 将文本中的 [name](link) 格式全部转换为 <a href="link" data-preview-link>name</a>
 	 * 其中 name 可以是任意字符，link 必须是 http 或 https 开头的链接
@@ -1196,6 +1407,27 @@ export class SlidesMaker {
 						this.userSpecificListClass.BlankPageListClass ||
 						this.settings.slidesRupDefaultBlankListClass
 					}" -->`
+				);
+			} else {
+				newLines.push(line);
+			}
+		}
+		return newLines;
+	}
+
+	private _addEmptyPageAnnotationMarp(
+		lines: string[],
+		design: string
+	): string[] {
+		const newLines: string[] = [];
+		for (const line of lines) {
+			if (/^(-|\*){3,}$/.test(line)) {
+				newLines.push(line);
+				newLines.push(
+					`<!-- _class: ${
+						this.userSpecificListClass.BlankPageListClass ||
+						this.settings.slidesRupDefaultBlankListClass
+					} -->`
 				);
 			} else {
 				newLines.push(line);
@@ -1471,6 +1703,7 @@ export class SlidesMaker {
 
 		return contentLines.join("\n");
 	}
+<<<<<<< HEAD
 
 	/**
 	 * 在内容行数组中查找指定索引位置的分隔符
@@ -1502,6 +1735,8 @@ export class SlidesMaker {
 	/**
 	 * Generates the final slide content with frontmatter, cover and back pages
 	 */
+=======
+>>>>>>> dd280866aa87e3ee24815b523d8b1618046bb99c
 	private _generateFinalSlideContent(
 		content: string,
 		baseLayoutName: string,
@@ -1573,6 +1808,67 @@ ${date}
 	}
 
 	/**
+	 * Generates the final slide content with frontmatter, cover and back pages
+	 */
+	private _generateFinalSlideContentForMarp(
+		content: string,
+		baseLayoutName: string,
+		design: string,
+		activeFile: TFile,
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		},
+		minimizeMode: boolean = false
+	): string {
+		// Generate frontmatter
+		const frontmatter = `---
+marp: true
+width: ${slideSize.w}
+height: ${slideSize.h}
+aliases:
+ - ${activeFile.basename}
+theme: uncover
+---`;
+
+		// Generate cover slide
+		const coverSlide = `<!-- 
+_class="cover" 
+_header="" 
+_footer="" 
+-->
+`;
+
+		const oburi = this._getOBURI(activeFile);
+
+		const newContent = this._addAuthorAndDate(
+			this._addLinkToH1(content, oburi),
+			minimizeMode,
+			true
+		);
+
+		// Generate back cover slide
+		const lbnl = this._getLastButNotLeast(activeFile);
+		const backCoverSlide = `---
+
+<!-- 
+_class="backCover ${
+			this.userSpecificListClass.BackCoverPageListClass ||
+			this.settings.slidesRupDefaultBackCoverListClass
+		}" 
+_header=""
+_footer=""
+-->
+
+${lbnl}
+`;
+
+		// Combine all parts
+		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+	}
+
+	/**
 	 * 获取指定文件的OBURI链接
 	 * @param file - 目标文件
 	 * @returns OBURI链接字符串
@@ -1611,6 +1907,7 @@ ${date}
 		return lbnl;
 	}
 
+<<<<<<< HEAD
 	private _getAuthorAndDate(): { author: string; date: string } {
 		const author = this.settings.presenter || "";
 		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
@@ -1625,6 +1922,26 @@ ${date}
 	): string {
 		const authorTemplate = `::: author\n${author}\n:::\n`;
 		const dateTemplate = `::: date\n${date}\n:::\n`;
+=======
+	private _addAuthorAndDate(
+		content: string,
+		minimizeMode: boolean = false,
+		forMarp: boolean = false
+	): string {
+		const author = this.settings.presenter || "";
+		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
+		// 使用模板字符串和三元运算符简化作者和日期模板的生成
+		const [authorWrapper, dateWrapper] = !forMarp
+			? ["::: author", "::: date"]
+			: ['<div class="author">', '<div class="date">'];
+
+		const authorTemplate = `${authorWrapper}\n${author}\n${
+			!forMarp ? ":::" : "</div>"
+		}\n`;
+		const dateTemplate = `${dateWrapper}\n${date}\n${
+			!forMarp ? ":::" : "</div>"
+		}\n`;
+>>>>>>> dd280866aa87e3ee24815b523d8b1618046bb99c
 
 		const contentLines = content.split("\n");
 		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
