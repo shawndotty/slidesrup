@@ -30,6 +30,9 @@ import {
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
 import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import { ObsidianUtils } from "src/utils/obsidianUtils";
+import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
+import { TemplateProcessor } from "src/services/processors/template-precessor";
 
 export class MarpSlidesMaker {
 	private app: App;
@@ -37,6 +40,8 @@ export class MarpSlidesMaker {
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
+	private multipleFileProcessor: MultipleFileProcessor;
+	private templateProcessor: TemplateProcessor;
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -69,6 +74,12 @@ export class MarpSlidesMaker {
 		this.designOptions = getAllDesignsOptions(
 			this.userDesigns,
 			this.defaultDesigns
+		);
+		this.multipleFileProcessor = new MultipleFileProcessor(
+			new ObsidianUtils(this.app, this.settings)
+		);
+		this.templateProcessor = new TemplateProcessor(
+			new ObsidianUtils(this.app, this.settings)
 		);
 	}
 
@@ -1091,7 +1102,7 @@ export class MarpSlidesMaker {
 			'_header: ""',
 			`_template: "[[${t("Cover")}-${design}]]"`,
 			"-->",
-		].join("\n");
+		].join(" ");
 		const oburi = this._getOBURI(activeFile);
 
 		const { author, date } = this._getAuthorAndDate();
@@ -1112,19 +1123,21 @@ export class MarpSlidesMaker {
 	): string {
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const { author, date } = this._getAuthorAndDate();
-		const backCoverSlide = [
-			"\n---\n",
+		const backCoverSlideComment = [
 			"<!--",
 			"_id: backcover",
 			"_class: backcover",
 			'_header: ""',
 			`_template: "[[${t("BackCover")}-${design}]]"`,
-			"-->\n",
+			"-->",
+		].join(" ");
+
+		const backCoverSlideContent = [
 			`${lbnl}`,
 			`<div class="author">${author}</div>`,
 			`<div class="date">${date}</div>`,
 		].join("\n");
-		return `${content}\n\n${backCoverSlide}`;
+		return `${content}\n\n---\n\n${backCoverSlideComment}\n${backCoverSlideContent}`;
 	}
 
 	private _addFrontMatter(
@@ -1192,9 +1205,11 @@ export class MarpSlidesMaker {
 		return content;
 	}
 
-	private _processEmbdedFile(content: string): string {
-		console.dir(content);
-		return content;
+	private async _processEmbdedFile(content: string): Promise<string> {
+		const processedContent = await this.multipleFileProcessor.process(
+			content
+		);
+		return processedContent;
 	}
 
 	/**
@@ -1368,7 +1383,7 @@ export class MarpSlidesMaker {
 							this.settings.slidesRupDefaultBlankListClass
 						}`,
 						"-->",
-					].join("\n")
+					].join(" ")
 				);
 			} else {
 				newLines.push(line);
@@ -1498,7 +1513,7 @@ export class MarpSlidesMaker {
 						"-->\n",
 					]
 						.filter(Boolean)
-						.join("\n")
+						.join(" ")
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1626,7 +1641,7 @@ export class MarpSlidesMaker {
 						"-->\n",
 					]
 						.filter(Boolean)
-						.join("\n")
+						.join(" ")
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1658,7 +1673,7 @@ export class MarpSlidesMaker {
 			"-->\n",
 			`## ${t("TOC")}\n`,
 			`${tocContent}\n`,
-		].join("\n");
+		].join(" ");
 		const contentLines = content.split("\n");
 
 		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;
