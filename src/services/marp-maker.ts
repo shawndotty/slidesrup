@@ -559,7 +559,7 @@ export class MarpSlidesMaker {
 			await this._extractContentFromFile(activeFile);
 
 		// Check if content already contains slide annotations
-		if (content.includes("marp: true")) {
+		if (content.includes("_class: cover")) {
 			new Notice(t("This file is already a slide presentation"));
 			return;
 		}
@@ -627,10 +627,14 @@ export class MarpSlidesMaker {
 
 		// 简化模式标志,当文档结构为单一一级标题时启用
 		const minimizeMode = slideSourceMode === 4;
+		let tocContent = "";
+		let navContent = "";
 
 		if (!minimizeMode) {
 			// 4. Create TOC file
-			await this._createTocFile(newSlideLocation, tocName, newLines);
+			//await this._createTocFile(newSlideLocation, tocName, newLines);
+			tocContent = this._getTocContent(newLines);
+			navContent = this._getNavContent(newLines);
 
 			// 5. Create BaseLayout file
 			await this._createBaseLayoutFile(
@@ -646,13 +650,15 @@ export class MarpSlidesMaker {
 			content,
 			newLines,
 			design,
-			tocName,
+			tocContent,
+			navContent,
 			baseLayoutName,
 			activeFile,
 			slideMode,
 			slideSize,
 			slideSourceMode
 		);
+
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
@@ -868,15 +874,7 @@ export class MarpSlidesMaker {
 		return { content, lines, headingsInfo, targetSlide };
 	}
 
-	/**
-	 * Creates the TOC file from markdown headings
-	 */
-	private async _createTocFile(
-		location: string,
-		tocName: string,
-		lines: string[]
-	): Promise<void> {
-		// Extract H2 headings and create TOC content
+	private _getTocContent(lines: string[]): string {
 		const h2List = lines
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
@@ -888,19 +886,62 @@ export class MarpSlidesMaker {
 			? h2List
 					.map((item, idx) => {
 						// 从item中提取%%#Text%%格式的文本
+						const title = item.replace(/%%.*?%%/g, "").trim();
 						const match = item.match(/%%#(.*?)%%/);
 						if (match) {
 							// 如果匹配到了%%#Text%%格式,使用Text部分
-							return `+ [${match[1].trim()}](#c${idx + 1})`;
+							return `+ [${match[1].trim()}](#${this._idMaker(
+								title
+							)})`;
 						}
 						// 否则使用原始item
-						return `+ [${item.replace(/%%.*?%%/g, "")}](#c${
-							idx + 1
-						})`;
+						return `+ [${title}](#${this._idMaker(title)})`;
 					})
 					.join("\n")
 			: "";
+		return tocContent;
+	}
 
+	private _getNavContent(lines: string[]): string {
+		const h2List = lines
+			.map((line) => {
+				const match = line.match(/^##\s+(.*)/);
+				return match ? match[1].trim() : null;
+			})
+			.filter(Boolean) as string[];
+
+		const navContent = h2List.length
+			? h2List
+					.map((item, idx) => {
+						// 从item中提取%%#Text%%格式的文本
+						const title = item.replace(/%%.*?%%/g, "").trim();
+						const match = item.match(/%%#(.*?)%%/);
+						if (match) {
+							// 如果匹配到了%%#Text%%格式,使用Text部分
+							return `<li><a href="#${this._idMaker(
+								title
+							)}">${match[1].trim()}</a></li>`;
+						}
+						// 否则使用原始item
+						return `<li><a href="#${this._idMaker(
+							title
+						)}">${title}</a></li>`;
+					})
+					.join("")
+			: "";
+		return `<ul>${navContent}</ul>`;
+	}
+
+	/**
+	 * Creates the TOC file from markdown headings
+	 */
+	private async _createTocFile(
+		location: string,
+		tocName: string,
+		lines: string[]
+	): Promise<void> {
+		// Extract H2 headings and create TOC content
+		const tocContent = this._getTocContent(lines);
 		await this._createAndOpenSlide(location, tocName, tocContent, false);
 	}
 
@@ -939,7 +980,8 @@ export class MarpSlidesMaker {
 		content: string,
 		lines: string[],
 		design: string,
-		tocName: string,
+		tocContent: string,
+		navContent: string,
 		baseLayoutName: string,
 		activeFile: TFile,
 		slideMode: string,
@@ -993,7 +1035,7 @@ export class MarpSlidesMaker {
 			(content) =>
 				minimizeMode
 					? content
-					: this._addTocSlide(content, tocName, design),
+					: this._addTocSlide(content, tocContent, design),
 
 			// 8. 转换 WikiLinks
 			(content) =>
@@ -1006,18 +1048,25 @@ export class MarpSlidesMaker {
 			// 	this._getEnableParagraphFragments(activeFile)
 			// 		? this._addFragmentsToParagraph(content)
 			// 		: content,
-
-			// 10. 生成最终内容
 			(content) =>
-				this._generateFinalSlideContent(
+				this._addCoverPage(content, design, activeFile, minimizeMode),
+
+			(content) => this._addBackCoverPage(content, design, activeFile),
+
+			(content) => this._processEmbdedFile(content),
+
+			(content) => this._processTemplate(content),
+
+			(content) =>
+				this._addFrontMatter(
 					content,
-					baseLayoutName,
-					design,
 					activeFile,
+					navContent,
 					slideMode,
-					slideSize,
-					minimizeMode
+					slideSize
 				),
+
+			(content) => this._addStyle(content),
 		];
 
 		// 执行处理管道
@@ -1027,6 +1076,125 @@ export class MarpSlidesMaker {
 		}
 
 		return processedContent;
+	}
+
+	private _addCoverPage(
+		content: string,
+		design: string,
+		activeFile: TFile,
+		minimizeMode: boolean = false
+	): string {
+		const coverSlide = [
+			"<!--",
+			"_id: home",
+			"_class: cover",
+			'_header: ""',
+			`_template: "[[${t("Cover")}-${design}]]"`,
+			"-->",
+		].join("\n");
+		const oburi = this._getOBURI(activeFile);
+
+		const { author, date } = this._getAuthorAndDate();
+
+		const newContent = this._addAuthorAndDate(
+			this._addLinkToH1(content, oburi),
+			author,
+			date,
+			minimizeMode
+		);
+		return `${coverSlide}\n\n${newContent}`;
+	}
+
+	private _addBackCoverPage(
+		content: string,
+		design: string,
+		activeFile: TFile
+	): string {
+		const lbnl = this._getLastButNotLeast(activeFile);
+		const { author, date } = this._getAuthorAndDate();
+		const backCoverSlide = [
+			"\n---\n",
+			"<!--",
+			"_id: backcover",
+			"_class: backcover",
+			'_header: ""',
+			`_template: "[[${t("BackCover")}-${design}]]"`,
+			"-->\n",
+			`${lbnl}`,
+			`<div class="author">${author}</div>`,
+			`<div class="date">${date}</div>`,
+		].join("\n");
+		return `${content}\n\n${backCoverSlide}`;
+	}
+
+	private _addFrontMatter(
+		content: string,
+		activeFile: TFile,
+		navContent: string,
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
+	): string {
+		const frontMatter = [
+			"---",
+			"marp: true",
+			"theme: default",
+			`header: <div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`,
+			`aliases: ${activeFile.basename}`,
+			`width: ${slideSize.w}`,
+			`height: ${slideSize.h}`,
+			`slideMode: ${slideMode}`,
+			"---",
+		].join("\n");
+		return frontMatter + "\n\n" + content;
+	}
+
+	private _addStyle(content: string): string {
+		const style = `
+<style>
+	.tagline {
+		font-size: 16px;
+		color: #888;
+	}
+	header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		color: #888;
+		padding: 10px 20px;
+		margin: 0 auto;
+		width: 100%;
+		box-sizing: border-box;
+		top: 0;
+		left: 0;
+	}
+
+	header ul {
+		list-style-type: none;
+		display: flex;
+		gap: 20px;
+	}
+
+	header ul li {
+		margin: 0;
+	}
+</style>
+`;
+		return content + "\n\n" + style;
+	}
+
+	/**
+	 * 处理模板
+	 */
+	private _processTemplate(content: string): string {
+		return content;
+	}
+
+	private _processEmbdedFile(content: string): string {
+		console.dir(content);
+		return content;
 	}
 
 	/**
@@ -1191,10 +1359,16 @@ export class MarpSlidesMaker {
 			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
 				newLines.push(
-					`\n<!-- _class: ${
-						this.userSpecificListClass.BlankPageListClass ||
-						this.settings.slidesRupDefaultBlankListClass
-					} -->`
+					[
+						"\n<!--",
+						'_header: ""',
+						`_template: "[[${t("BlankPage")}-${design}]]"`,
+						`_class: ${
+							this.userSpecificListClass.BlankPageListClass ||
+							this.settings.slidesRupDefaultBlankListClass
+						}`,
+						"-->",
+					].join("\n")
 				);
 			} else {
 				newLines.push(line);
@@ -1234,12 +1408,19 @@ export class MarpSlidesMaker {
 				} else {
 					finalLines.push("---");
 				}
-				finalLines.push(
-					`\n<!-- 
-_id: ${`c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}`.trim()}
-${slideTemplate.trim()}
-_class: ${[chapterClass, classValue].filter(Boolean).join(" ")} -->\n`
-				);
+				const slideAnnotation = [
+					"\n<!-- ",
+					`_id: ${`c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}`.trim()}`,
+					slideTemplate.trim(),
+					`_class: ${[chapterClass, classValue]
+						.filter(Boolean)
+						.join(" ")}`,
+					"-->\n",
+				]
+					.filter(Boolean)
+					.join("\n");
+
+				finalLines.push(slideAnnotation);
 				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
@@ -1306,12 +1487,18 @@ _class: ${[chapterClass, classValue].filter(Boolean).join(" ")} -->\n`
 				);
 
 				const templateStr = template ? `_template: "${template}"` : "";
-
+				const header = !simpleMode ? `_header: ""` : "";
 				modifiedLines.push(
-					`\n<!--
-_id: c${h2Index} 
-${templateStr} 
-_class: ${classValue} chapter-${h2Index} -->\n`
+					[
+						"\n<!--",
+						header,
+						`_id: c${h2Index}`,
+						templateStr,
+						`_class: ${classValue} chapter-${h2Index}`,
+						"-->\n",
+					]
+						.filter(Boolean)
+						.join("\n")
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1321,6 +1508,16 @@ _class: ${classValue} chapter-${h2Index} -->\n`
 		}
 
 		return modifiedLines.join("\n");
+	}
+
+	private _idMaker(str: string) {
+		return encodeURIComponent(
+			str
+				.trim()
+				.replace(/\s+/g, "-")
+				.replace(/[\.,，。?？]/g, "")
+				.toLowerCase()
+		);
 	}
 
 	/**
@@ -1375,7 +1572,7 @@ _class: ${classValue} chapter-${h2Index} -->\n`
 					h3TitleList[tempIdx].h2 === currentH2Index
 				) {
 					const h3 = h3TitleList[tempIdx];
-					h3s.push(`+ [${h3.title}](#c${h3.h2}p${h3.h3})`);
+					h3s.push(`+ [${h3.title}](#${this._idMaker(h3.title)})`);
 					tempIdx++;
 				}
 
@@ -1421,10 +1618,15 @@ _class: ${classValue} chapter-${h2Index} -->\n`
 					(template && `_template: "${template}"`) || "";
 
 				finalLines.push(
-					`\n<!-- 
-_id: c${currentChapterIndex}p${pageIndexInChapter} 
-${slideTemplate} 
-_class: ${chapterClass} ${classValue} -->\n`
+					[
+						"\n<!-- ",
+						`_id: c${currentChapterIndex}p${pageIndexInChapter}`,
+						slideTemplate,
+						`_class: ${chapterClass} ${classValue}`,
+						"-->\n",
+					]
+						.filter(Boolean)
+						.join("\n")
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1440,13 +1642,14 @@ _class: ${chapterClass} ${classValue} -->\n`
 	 */
 	private _addTocSlide(
 		content: string,
-		tocName: string,
+		tocContent: string,
 		design: string
 	): string {
 		// 优化: 使用模板字符串拼接,提高可读性和维护性
 		const tocEmbed = [
 			"---\n",
 			"<!--",
+			`_header: ""`,
 			`_template: "[[${t("TOC")}-${design}]]"`,
 			`_class: ${
 				this.userSpecificListClass.TOCPageListClass ||
@@ -1454,7 +1657,7 @@ _class: ${chapterClass} ${classValue} -->\n`
 			}`,
 			"-->\n",
 			`## ${t("TOC")}\n`,
-			`![[${tocName}]]\n`,
+			`${tocContent}\n`,
 		].join("\n");
 		const contentLines = content.split("\n");
 
@@ -1506,6 +1709,7 @@ _class: ${chapterClass} ${classValue} -->\n`
 	 */
 	private _generateFinalSlideContent(
 		content: string,
+		navContent: string,
 		baseLayoutName: string,
 		design: string,
 		activeFile: TFile,
@@ -1517,8 +1721,10 @@ _class: ${chapterClass} ${classValue} -->\n`
 		minimizeMode: boolean = false
 	): string {
 		// Generate frontmatter
+		const headerContent = `<div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`;
 		const frontmatter = `---
 marp: true
+header: ${headerContent}
 width: ${slideSize.w}
 height: ${slideSize.h}
 aliases:
@@ -1530,6 +1736,7 @@ theme: default
 		const coverSlide = `<!--
 _id: home
 _class: cover
+_header: ""
 _template: "[[${t("Cover")}-${design}]]" 
 -->`;
 
@@ -1548,10 +1755,15 @@ _template: "[[${t("Cover")}-${design}]]"
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const backCoverSlide = `---
 
-<!-- slide template="[[${t("BackCover")}-${design}]]" class="${
+<!-- 
+_id: backcover
+
+_template: "[[${t("BackCover")}-${design}]]" 
+_class: backcover ${
 			this.userSpecificListClass.BackCoverPageListClass ||
 			this.settings.slidesRupDefaultBackCoverListClass
-		}" -->
+		}
+-->
 
 ${lbnl}
 
@@ -1559,8 +1771,39 @@ ${lbnl}
 <div class="date">${date}</div>
 `;
 
+		const style = `
+<style>
+	.tagline {
+		font-size: 16px;
+		color: #888;
+	}
+	header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		color: #888;
+		padding: 10px 20px;
+		margin: 0 auto;
+		width: 100%;
+		box-sizing: border-box;
+		top: 0;
+		left: 0;
+	}
+
+	header ul {
+		list-style-type: none;
+		display: flex;
+		gap: 20px;
+	}
+
+	header ul li {
+		margin: 0;
+	}
+</style>
+`;
+
 		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
+		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}\n${style}`;
 	}
 
 	/**
@@ -1625,7 +1868,7 @@ ${lbnl}
 		if (firstSeparatorLineIndex !== -1) {
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
-			return [...before, authorTemplate, dateTemplate, ...after].join(
+			return [...before, authorTemplate, dateTemplate, "", ...after].join(
 				"\n"
 			);
 		} else {
