@@ -1,7 +1,7 @@
 import { CommentParser } from "src/comment";
 import { ObsidianUtils } from "../../utils/obsidianUtils";
 import { Options } from "../../types";
-import { FootnoteProcessor } from "./footnote-processor";
+import { FootnoteProcessor } from "./footNote-processor";
 import { MultipleFileProcessor } from "./multiple-file-processor";
 
 export class TemplateProcessor {

@@ -33,8 +33,9 @@ import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
 import { TemplateProcessor } from "src/services/processors/template-precessor";
-import { FootnoteProcessor } from "src/services/processors/footnote-processor";
+import { FootnoteProcessor } from "src/services/processors/footNote-processor";
 import { BlockProcessor } from "src/services/processors/block-processor";
+import { FragmentProcessor } from "src/services/processors/fragment-processor";
 
 export class MarpSlidesMaker {
 	private app: App;
@@ -46,6 +47,7 @@ export class MarpSlidesMaker {
 	private multipleFileProcessor: MultipleFileProcessor;
 	private templateProcessor: TemplateProcessor;
 	private footNoteProcessor: FootnoteProcessor;
+	private fragmentProcessor: FragmentProcessor;
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -87,6 +89,7 @@ export class MarpSlidesMaker {
 			new ObsidianUtils(this.app, this.settings)
 		);
 		this.blockProcessor = new BlockProcessor();
+		this.fragmentProcessor = new FragmentProcessor();
 	}
 
 	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
@@ -979,7 +982,10 @@ export class MarpSlidesMaker {
 
 			(content) => this._processEmbdedFile(content),
 
-			// 10. 处理脚注
+			// 10. 处理片段
+			(content) => this.fragmentProcessor.process(content),
+
+			// 11. 处理脚注
 			(content) =>
 				this.footNoteProcessor.process(content, {
 					separator: "---",
@@ -1300,7 +1306,7 @@ export class MarpSlidesMaker {
 						"\n<!--",
 						'_header: ""',
 						`_template: "[[${t("BlankPage")}-${design}]]"`,
-						`_class: ${
+						`_class: blank ${
 							this.userSpecificListClass.BlankPageListClass ||
 							this.settings.slidesRupDefaultBlankListClass
 						}`,
@@ -1349,7 +1355,7 @@ export class MarpSlidesMaker {
 					"\n<!-- ",
 					`_id: ${`c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}`.trim()}`,
 					slideTemplate.trim(),
-					`_class: ${[chapterClass, classValue]
+					`_class: content subpage ${[chapterClass, classValue]
 						.filter(Boolean)
 						.join("\n")}`,
 					"-->\n",
@@ -1431,7 +1437,7 @@ export class MarpSlidesMaker {
 						header,
 						`_id: c${h2Index}`,
 						templateStr,
-						`_class: ${classValue} chapter-${h2Index}`,
+						`_class: chapter ${classValue} chapter-${h2Index}`,
 						"-->\n",
 					]
 						.filter(Boolean)
@@ -1559,7 +1565,7 @@ export class MarpSlidesMaker {
 						"\n<!-- ",
 						`_id: c${currentChapterIndex}p${pageIndexInChapter}`,
 						slideTemplate,
-						`_class: ${chapterClass} ${classValue}`,
+						`_class: content ${chapterClass} ${classValue}`,
 						"-->\n",
 					]
 						.filter(Boolean)
@@ -1588,7 +1594,7 @@ export class MarpSlidesMaker {
 			"<!--",
 			`_header: ""`,
 			`_template: "[[${t("TOC")}-${design}]]"`,
-			`_class: ${
+			`_class: toc ${
 				this.userSpecificListClass.TOCPageListClass ||
 				this.settings.slidesRupDefaultTOCListClass
 			}`,
