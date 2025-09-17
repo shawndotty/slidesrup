@@ -1054,7 +1054,10 @@ export class MarpSlidesMaker {
 		const backCoverSlideComment = [
 			"<!--",
 			"_id: backcover",
-			"_class: backcover",
+			`_class: backcover ${
+				this.userSpecificListClass.BackCoverPageListClass ||
+				this.settings.slidesRupDefaultBackCoverListClass
+			}`,
 			'_header: ""',
 			`_template: "[[${t("BackCover")}-${design}]]"`,
 			"-->",
@@ -1645,108 +1648,6 @@ export class MarpSlidesMaker {
 			}
 		}
 		return -1;
-	}
-
-	/**
-	 * Generates the final slide content with frontmatter, cover and back pages
-	 */
-	private _generateFinalSlideContent(
-		content: string,
-		navContent: string,
-		baseLayoutName: string,
-		design: string,
-		activeFile: TFile,
-		slideMode: string,
-		slideSize: {
-			w: number;
-			h: number;
-		},
-		minimizeMode: boolean = false
-	): string {
-		// Generate frontmatter
-		const headerContent = `<div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`;
-		const frontmatter = `---
-marp: true
-header: ${headerContent}
-width: ${slideSize.w}
-height: ${slideSize.h}
-aliases:
- - ${activeFile.basename}
-theme: default
----`;
-
-		// Generate cover slide
-		const coverSlide = `<!--
-_id: home
-_class: cover
-_header: ""
-_template: "[[${t("Cover")}-${design}]]" 
--->`;
-
-		const oburi = this._getOBURI(activeFile);
-
-		const { author, date } = this._getAuthorAndDate();
-
-		const newContent = this._addAuthorAndDate(
-			this._addLinkToH1(content, oburi),
-			author,
-			date,
-			minimizeMode
-		);
-
-		// Generate back cover slide
-		const lbnl = this._getLastButNotLeast(activeFile);
-		const backCoverSlide = `---
-
-<!-- 
-_id: backcover
-
-_template: "[[${t("BackCover")}-${design}]]" 
-_class: backcover ${
-			this.userSpecificListClass.BackCoverPageListClass ||
-			this.settings.slidesRupDefaultBackCoverListClass
-		}
--->
-
-${lbnl}
-
-<div class="author">${author}</div>
-<div class="date">${date}</div>
-`;
-
-		const style = `
-<style>
-	.tagline {
-		font-size: 16px;
-		color: #888;
-	}
-	header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		color: #888;
-		padding: 10px 20px;
-		margin: 0 auto;
-		width: 100%;
-		box-sizing: border-box;
-		top: 0;
-		left: 0;
-	}
-
-	header ul {
-		list-style-type: none;
-		display: flex;
-		gap: 20px;
-	}
-
-	header ul li {
-		margin: 0;
-	}
-</style>
-`;
-
-		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}\n${style}`;
 	}
 
 	/**
