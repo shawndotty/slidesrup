@@ -3,7 +3,7 @@
 import { TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "./suggest";
 import { get_tfiles_from_folder } from "src/utils";
-import SlidesRupAssistant from "src/main";
+import SlidesRup from "src/main";
 import { errorWrapperSync } from "src/utils/error";
 
 export enum FileSuggestMode {
@@ -14,7 +14,7 @@ export enum FileSuggestMode {
 export class FileSuggest extends TextInputSuggest<TFile> {
 	constructor(
 		public inputEl: HTMLInputElement,
-		private plugin: SlidesRupAssistant,
+		private plugin: SlidesRup,
 		private mode: FileSuggestMode
 	) {
 		super(plugin.app, inputEl);

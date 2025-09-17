@@ -1,5 +1,5 @@
 import { Notice } from "obsidian";
-import { SlidesRupAssistantError } from "./error";
+import { SlidesRupError } from "./error";
 
 export function log_update(msg: string): void {
 	const notice = new Notice("", 15000);
@@ -8,9 +8,9 @@ export function log_update(msg: string): void {
 	notice.messageEl.innerHTML = `<b>SlidesRup Assistant update</b>:<br/>${msg}`;
 }
 
-export function log_error(e: Error | SlidesRupAssistantError): void {
+export function log_error(e: Error | SlidesRupError): void {
 	const notice = new Notice("", 8000);
-	if (e instanceof SlidesRupAssistantError && e.console_msg) {
+	if (e instanceof SlidesRupError && e.console_msg) {
 		// TODO: Find a better way for this
 		// @ts-ignore
 		notice.messageEl.innerHTML = `<b>SlidesRup Assistant Error</b>:<br/>${e.message}<br/>Check console for more information`;
