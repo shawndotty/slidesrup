@@ -999,13 +999,14 @@ export class MarpSlidesMaker {
 			(content) =>
 				this._addFrontMatter(
 					content,
+					design,
 					activeFile,
 					navContent,
 					slideMode,
 					slideSize
 				),
 
-			(content) => this._addStyle(content),
+			// (content) => this._addStyle(content),
 		];
 
 		// 执行处理管道
@@ -1073,6 +1074,7 @@ export class MarpSlidesMaker {
 
 	private _addFrontMatter(
 		content: string,
+		design: string,
 		activeFile: TFile,
 		navContent: string,
 		slideMode: string,
@@ -1084,11 +1086,9 @@ export class MarpSlidesMaker {
 		const frontMatter = [
 			"---",
 			"marp: true",
-			"theme: default",
+			`theme: sr-design-${design.toLocaleLowerCase()}`,
 			`header: <div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`,
 			`aliases: ${activeFile.basename}`,
-			`width: ${slideSize.w}`,
-			`height: ${slideSize.h}`,
 			`slideMode: ${slideMode}`,
 			"---",
 		].join("\n");
