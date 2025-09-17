@@ -94,7 +94,8 @@ export class FootnoteProcessor {
 		if (input.includes(footnotePlaceholder)) {
 			return input.replace(footnotePlaceholder, footNotesBlock);
 		} else {
-			return input + "\n" + footNotesBlock;
+			console.dir(input);
+			return "\n\n" + input.trim() + "\n\n" + footNotesBlock;
 		}
 	}
 }

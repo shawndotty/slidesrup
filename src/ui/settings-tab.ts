@@ -7,7 +7,7 @@ import {
 	TFolder,
 } from "obsidian";
 import { t } from "../lang/helpers";
-import SlidesRupAssistant from "../main";
+import SlidesRup from "../main";
 import { isValidApiKey, isValidEmail } from "../utils";
 import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
@@ -21,13 +21,13 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { DEFAULT_DESIGNS } from "../constants";
 
-type SettingsKeys = keyof SlidesRupAssistant["settings"];
+type SettingsKeys = keyof SlidesRup["settings"];
 
-export class SlidesRupAssistantSettingTab extends PluginSettingTab {
-	plugin: SlidesRupAssistant;
+export class SlidesRupSettingTab extends PluginSettingTab {
+	plugin: SlidesRup;
 	private apiService: ApiService;
 
-	constructor(app: App, plugin: SlidesRupAssistant) {
+	constructor(app: App, plugin: SlidesRup) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.apiService = new ApiService(this.plugin.settings);

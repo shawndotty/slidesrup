@@ -1,12 +1,12 @@
 import { Plugin } from "obsidian";
 import { SettingsManager } from "./models/settings";
-import { SlidesRupAssistantSettingTab } from "./ui/settings-tab";
+import { SlidesRupSettingTab } from "./ui/settings-tab";
 import { SlidesRupSettings } from "./types";
 import { createServices } from "./services";
 import { ClassesSuggest } from "./editor/classes-sugguest";
 import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 
-export default class SlidesRupAssistant extends Plugin {
+export default class SlidesRup extends Plugin {
 	settings: SlidesRupSettings;
 	settingsManager: SettingsManager;
 
@@ -29,7 +29,7 @@ export default class SlidesRupAssistant extends Plugin {
 		await this.services.slidesRupStyleService.updateUserDesignCssSettings();
 
 		// Add settings tab
-		this.addSettingTab(new SlidesRupAssistantSettingTab(this.app, this));
+		this.addSettingTab(new SlidesRupSettingTab(this.app, this));
 
 		this.registerEditorSuggest(new ClassesSuggest(this.app));
 
@@ -38,7 +38,7 @@ export default class SlidesRupAssistant extends Plugin {
 
 	onunload() {
 		// Clean up any resources, listeners, etc.
-		console.log("Unloading SlidesRupAssistant plugin");
+		console.log("Unloading SlidesRup plugin");
 	}
 
 	async loadSettings() {

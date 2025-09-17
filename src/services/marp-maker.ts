@@ -34,6 +34,7 @@ import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
 import { TemplateProcessor } from "src/services/processors/template-precessor";
 import { FootnoteProcessor } from "src/services/processors/footnote-processor";
+import { BlockProcessor } from "src/services/processors/block-processor";
 
 export class MarpSlidesMaker {
 	private app: App;
@@ -41,6 +42,7 @@ export class MarpSlidesMaker {
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
+	private blockProcessor: BlockProcessor;
 	private multipleFileProcessor: MultipleFileProcessor;
 	private templateProcessor: TemplateProcessor;
 	private footNoteProcessor: FootnoteProcessor;
@@ -84,6 +86,7 @@ export class MarpSlidesMaker {
 		this.templateProcessor = new TemplateProcessor(
 			new ObsidianUtils(this.app, this.settings)
 		);
+		this.blockProcessor = new BlockProcessor();
 	}
 
 	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
@@ -983,6 +986,8 @@ export class MarpSlidesMaker {
 					verticalSeparator: "\\*\\*\\*",
 				}),
 
+			(content) => this.blockProcessor.process(content),
+
 			(content) => this._processTemplate(content),
 
 			(content) =>
@@ -1119,7 +1124,6 @@ export class MarpSlidesMaker {
 	 * 处理模板
 	 */
 	private _processTemplate(content: string): string {
-		console.dir(content);
 		return content;
 	}
 
