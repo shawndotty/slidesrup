@@ -20,6 +20,7 @@ import { css } from "@codemirror/lang-css";
 import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { DEFAULT_DESIGNS } from "../constants";
+import { markdown } from "@codemirror/lang-markdown";
 
 type SettingsKeys = keyof SlidesRup["settings"];
 
@@ -1081,8 +1082,8 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName("自定义 CSS")
-			.setDesc("在此输入自定义 CSS 代码，将应用于演示文稿。")
+			.setName(t("User Customized CSS"))
+			.setDesc(t("Input Your Customized CSS"))
 			.setClass("slides-rup-custom-css");
 
 		// 创建一个 div 元素作为 CodeMirror 的容器
@@ -1126,6 +1127,61 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			500,
 			true
 		);
+
+		containerEl.createEl("h2", {
+			text: t("User Specific Frontmatter Options"),
+			cls: "slides-rup-title",
+		});
+
+		new Setting(containerEl)
+			.setName(t("Frontmatter Options"))
+			.setDesc(t("Input Your Frontmatter Options"))
+			.setClass("slides-rup-custom-fm");
+		// 添加 Advanced Slides YAML 参考链接
+
+		const yamlEditorContainer = containerEl.createDiv(
+			"slides-rup-yaml-editor"
+		);
+		new EditorView({
+			state: EditorState.create({
+				doc:
+					this.plugin.settings
+						.slidesRupUserSpecificFrontmatterOptions || "",
+				extensions: [
+					basicSetup, // 启用基础功能，如行号、括号匹配等
+					markdown(), // 启用Frontmatter语言高亮 // 启用Frontmatter语言高亮
+					autocompletion(), // 添加自动补全功能
+					...(document.body.classList.contains("theme-dark")
+						? [oneDark]
+						: []), // 仅在暗色模式下加载 oneDark 主题
+					EditorView.updateListener.of((update) => {
+						// 监听编辑器内容的变化
+						if (update.docChanged) {
+							const newFrontmatter = update.state.doc.toString();
+							// 使用 debounce 来防止频繁保存，提升性能
+							saveFrontmatterSetting(newFrontmatter);
+						}
+					}),
+				],
+			}),
+			parent: yamlEditorContainer,
+		});
+		// 保存设置的方法（防抖处理）
+		const saveFrontmatterSetting = debounce(
+			(newFrontmatter: string) => {
+				this.plugin.settings.slidesRupUserSpecificFrontmatterOptions =
+					newFrontmatter;
+				this.plugin.saveSettings();
+			},
+			500,
+			true
+		);
+
+		containerEl.createEl("a", {
+			text: t("Advanced Slides YAML Reference"),
+			href: "https://mszturc.github.io/obsidian-advanced-slides/yaml/",
+			cls: "slides-rup-link",
+		});
 	}
 
 	// 通用方法：创建切换设置项

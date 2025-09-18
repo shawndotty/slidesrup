@@ -135,6 +135,8 @@ export interface SlidesRupSettings {
 	slidesRupContentPageSlideType: string;
 	slidesRupSlideNavigationMode: string;
 	slidesRupDefaultTOCPageNumber: number;
+
+	slidesRupUserSpecificFrontmatterOptions: string;
 }
 
 export interface NocoDBTable {

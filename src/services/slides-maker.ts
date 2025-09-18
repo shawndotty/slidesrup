@@ -1537,6 +1537,8 @@ export class SlidesMaker {
 		minimizeMode: boolean = false
 	): string {
 		// Generate frontmatter
+		const userFrontmatter =
+			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
 		const frontmatter = `---
 css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
 enableLinks: true
@@ -1551,7 +1553,9 @@ pdfSeparateFragments: false
 verticalSeparator: \\*\\*\\*
 theme: white
 transition: none
----`;
+${userFrontmatter.trim()}
+---
+`;
 
 		// Generate cover slide
 		const coverSlide = `<!-- slide id="home" template="[[${t(
