@@ -47,7 +47,7 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/%%(?!\!|\[\[|\#)([\s\S]*?)%%/g;
+		/%%(?!\!|\[\[|\#|\|)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
