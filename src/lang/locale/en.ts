@@ -429,4 +429,10 @@ export default {
 	"Default TOC Page Position": "Default TOC Page Position",
 	"Set Default TOC Page Position": "Set Default TOC Page Position",
 	"Convert to Marp Slides": "Convert Active File to Marp Slides",
+	"User Specific Frontmatter Options": "User Specific Frontmatter Options",
+	"User Customized CSS": "User Customized CSS",
+	"Input Your Customized CSS": "Input Your Customized CSS",
+	"Frontmatter Options": "Frontmatter Options",
+	"Input Your Frontmatter Options": "Input Your Frontmatter Options",
+	"Advanced Slides YAML Reference": "Advanced Slides YAML Reference",
 };

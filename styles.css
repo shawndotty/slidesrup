@@ -313,6 +313,10 @@ h3.slides-rup-title {
 	display: block;
 }
 
-.slides-rup-css-editor {
+.slides-rup-css-editor, .slides-rup-yaml-editor {
 	border: 1px solid lightgray;
+}
+
+.slides-rup-yaml-editor {
+	margin-bottom: 16px;
 }
