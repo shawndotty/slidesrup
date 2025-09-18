@@ -4,6 +4,7 @@ import { SlidesRupSettingTab } from "./ui/settings-tab";
 import { SlidesRupSettings } from "./types";
 import { createServices } from "./services";
 import { ClassesSuggest } from "./editor/classes-sugguest";
+import { ColumnsSuggest } from "./editor/columns-sugguest";
 import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 
 export default class SlidesRup extends Plugin {
@@ -32,6 +33,7 @@ export default class SlidesRup extends Plugin {
 		this.addSettingTab(new SlidesRupSettingTab(this.app, this));
 
 		this.registerEditorSuggest(new ClassesSuggest(this.app));
+		this.registerEditorSuggest(new ColumnsSuggest(this.app));
 
 		this.registerEditorSuggest(new PlaceHoldersSuggest(this.app));
 	}
