@@ -990,7 +990,7 @@ export class SlidesMaker {
 
 			// 7. 添加目录幻灯片
 			(content) =>
-				minimizeMode
+				minimizeMode || this.settings.slidesRupDefaultTOCPageNumber < 2
 					? content
 					: this._addTocSlide(content, tocName, design),
 
