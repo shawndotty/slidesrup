@@ -1039,7 +1039,29 @@ export class SlidesMaker {
 			.replace(
 				/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
 				(match, name, link) => {
-					return `<img alt="${name}" src="${link}" data-preview-image />`;
+					// 处理图片尺寸信息
+					const sizeMatch = name.match(/\|(\d+)(?:x(\d+))?/);
+					if (!sizeMatch) {
+						return `<img alt="${name}" src="${link}" data-preview-image />`;
+					}
+
+					// 提取宽度和高度
+					// 使用数组解构从 sizeMatch 中提取宽度和高度
+					// sizeMatch 是一个正则匹配结果数组，第一个元素是完整匹配，后面的元素是捕获组
+					// 这里跳过第一个元素(完整匹配)，直接获取第二个(width)和第三个(height)元素
+					const [, width, height] = sizeMatch;
+
+					// 移除尺寸信息部分
+					const cleanName = name.replace(/\|.*$/, "");
+
+					// 构建基础样式
+					const baseStyle = `width:${width}px; object-fit: fill;`;
+					const finalStyle = height
+						? `${baseStyle} height:${height}px;`
+						: baseStyle;
+
+					// 返回构建的img标签
+					return `<img alt="${cleanName}" src="${link}" style="${finalStyle}" data-preview-image />`;
 				}
 			)
 			.replace(
