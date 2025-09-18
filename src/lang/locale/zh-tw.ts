@@ -367,4 +367,10 @@ export default {
 	Grid: "網格",
 	"Default TOC Page Position": "預設目錄頁位置",
 	"Set Default TOC Page Position": "設定預設目錄頁位置",
+	"User Specific Frontmatter Options": "用戶自定義 Frontmatter 選項",
+	"User Customized CSS": "用戶自定義 CSS",
+	"Input Your Customized CSS": "輸入您的自定義 CSS",
+	"Frontmatter Options": "Frontmatter 選項",
+	"Input Your Frontmatter Options": "輸入您的 Frontmatter 選項",
+	"Advanced Slides YAML Reference": "Advanced Slides YAML 參考",
 };

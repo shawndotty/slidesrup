@@ -119,4 +119,6 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupContentPageSlideType: "h",
 	slidesRupSlideNavigationMode: "default",
 	slidesRupDefaultTOCPageNumber: 2,
+
+	slidesRupUserSpecificFrontmatterOptions: "",
 };
