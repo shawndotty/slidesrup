@@ -100,26 +100,91 @@ export class DesignMaker {
 			);
 			return;
 		}
+
+		// 获取所有文件（包括 Markdown 和图片文件）
 		const filesToCopy = originalFolder.children.filter(
 			(f) => f instanceof TFile
 		) as TFile[];
+
+		// 创建图片文件夹
+		const imagesFolder = `${newDesignPath}`;
+		await createPathIfNeeded(this.app, imagesFolder);
+
 		for (const file of filesToCopy) {
 			const originalFileName = file.name;
-			const newFileName = originalFileName.replace(
-				`-${designName}`,
-				`-${newDesignName}`
+			let newFileName = originalFileName;
+			let newFilePath = "";
+
+			// 判断是否为图片文件
+			const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
+				originalFileName
 			);
-			const newFilePath = `${newDesignPath}/${newFileName}`;
-			try {
-				const content = await this.app.vault.read(file);
-				const newContent = content.replace(designName, newDesignName);
-				await this.app.vault.create(newFilePath, newContent);
-			} catch (error) {
-				new Notice(
-					`${t(
-						"Cann't copy the source file"
-					)}${originalFileName}\n${t("Error Info")}${error}`
+
+			if (isImage) {
+				// 图片文件：放入 images 文件夹并重命名
+				newFileName = originalFileName.replace(
+					new RegExp(`${designName}`, "g"),
+					newDesignName
 				);
+				newFilePath = `${imagesFolder}/${newFileName}`;
+
+				try {
+					// 使用 adapter API 复制二进制文件
+					const originalFilePath = file.path;
+					await this.app.vault.adapter.copy(
+						originalFilePath,
+						newFilePath
+					);
+				} catch (error) {
+					new Notice(
+						`${t(
+							"Cann't copy the source file"
+						)}${originalFileName}\n${t("Error Info")}${error}`
+					);
+				}
+			} else {
+				// Markdown 文件：直接放在设计文件夹下
+				newFileName = originalFileName.replace(
+					`-${designName}`,
+					`-${newDesignName}`
+				);
+				newFilePath = `${newDesignPath}/${newFileName}`;
+
+				try {
+					const content = await this.app.vault.read(file);
+					// 对于 Markdown 文件，替换内容中的设计名称和图片路径
+					let newContent = content
+						.split(designName)
+						.join(newDesignName);
+
+					// 更新图片引用路径
+					newContent = newContent.replace(
+						/!\[(.*?)\]\((.*?)\)/g,
+						(match, alt, path) => {
+							// 如果是相对路径的图片引用，更新路径
+							if (
+								!path.startsWith("http") &&
+								!path.startsWith("/")
+							) {
+								// 提取文件名
+								const imgFileName = path.split("/").pop();
+								if (imgFileName) {
+									// 更新为新的图片路径
+									return `![${alt}](images/${imgFileName})`;
+								}
+							}
+							return match;
+						}
+					);
+
+					await this.app.vault.create(newFilePath, newContent);
+				} catch (error) {
+					new Notice(
+						`${t(
+							"Cann't copy the source file"
+						)}${originalFileName}\n${t("Error Info")}${error}`
+					);
+				}
 			}
 		}
 		await this._revealNewDesign(newDesignPath);
