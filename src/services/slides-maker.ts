@@ -886,10 +886,10 @@ export class SlidesMaker {
 		const tocContent = h2List.length
 			? h2List
 					.map((item, idx) => {
-						// 从item中提取%%#Text%%格式的文本
-						const match = item.match(/%%#(.*?)%%/);
+						// 从item中提取%%|Text%%格式的文本
+						const match = item.match(/%%\|(.*?)%%/);
 						if (match) {
-							// 如果匹配到了%%#Text%%格式,使用Text部分
+							// 如果匹配到了%%|Text%%格式,使用Text部分
 							return `+ [${match[1].trim()}](#c${idx + 1})`;
 						}
 						// 否则使用原始item
