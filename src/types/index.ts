@@ -62,6 +62,7 @@ export interface SlidesRupSettings {
 	presentationPlugin: string;
 	updateIDs: {
 		style: AirtableIds;
+		marpTheme: AirtableIds;
 		templates: AirtableIds;
 		demo: AirtableIds;
 		reveal: AirtableIds;

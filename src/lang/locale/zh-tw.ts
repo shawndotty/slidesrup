@@ -374,4 +374,6 @@ export default {
 	"Frontmatter Options": "Frontmatter 選項",
 	"Input Your Frontmatter Options": "輸入您的 Frontmatter 選項",
 	"Advanced Slides YAML Reference": "Advanced Slides YAML 參考",
+	"Get The Latest Version Of Marp Themes": "獲取最新的 Marp 主題",
+	"Marp Themes updated.": "Marp 主題已更新。",
 };

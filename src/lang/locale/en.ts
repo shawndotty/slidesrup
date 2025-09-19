@@ -435,4 +435,7 @@ export default {
 	"Frontmatter Options": "Frontmatter Options",
 	"Input Your Frontmatter Options": "Input Your Frontmatter Options",
 	"Advanced Slides YAML Reference": "Advanced Slides YAML Reference",
+	"Get The Latest Version Of Marp Themes":
+		"Get The Latest Version Of Marp Themes",
+	"Marp Themes updated.": "Marp Themes Updated.",
 };

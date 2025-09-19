@@ -160,6 +160,17 @@ export class CommandService {
 		);
 
 		createNocoDBCommand(
+			"update-marp-theme",
+			t("Get The Latest Version Of Marp Themes"),
+			{
+				baseID: this.settings.updateIDs.marpTheme.baseID,
+				tableID: this.settings.updateIDs.marpTheme.tableID,
+				viewID: this.settings.updateIDs.marpTheme.viewID,
+				targetFolderPath: this.settings.slidesRupFrameworkFolder,
+			}
+		);
+
+		createNocoDBCommand(
 			"update-templates",
 			t("Get The Latest Version Of Templates"),
 			{
@@ -211,6 +222,14 @@ export class CommandService {
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 				});
 				new Notice(t("Styles updated."));
+
+				await this.runNocoDBCommand({
+					baseID: this.settings.updateIDs.marpTheme.baseID,
+					tableID: this.settings.updateIDs.marpTheme.tableID,
+					viewID: this.settings.updateIDs.marpTheme.viewID,
+					targetFolderPath: this.settings.slidesRupFrameworkFolder,
+				});
+				new Notice(t("Marp Themes updated."));
 
 				await this.runNocoDBCommand({
 					baseID: this.settings.updateIDs.templates.baseID,
