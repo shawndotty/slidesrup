@@ -588,7 +588,8 @@ export class MarpSlidesMaker {
 			activeFile,
 			slideMode,
 			slideSize,
-			slideSourceMode
+			slideSourceMode,
+			newSlideLocation
 		);
 
 		await this._createAndOpenSlide(
@@ -921,7 +922,8 @@ export class MarpSlidesMaker {
 			w: number;
 			h: number;
 		},
-		slideSourceMode: number
+		slideSourceMode: number,
+		newSlideLocation: string
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1001,7 +1003,7 @@ export class MarpSlidesMaker {
 			(content) => this.blockProcessor.process(content),
 
 			// 12. 处理图片
-			(content) => this.imageProcessor.process(content),
+			(content) => this.imageProcessor.process(content, newSlideLocation),
 
 			(content) => this._processTemplate(content),
 
