@@ -61,12 +61,12 @@ export interface SlidesRupSettings {
 	demoFolder: string;
 	presentationPlugin: string;
 	updateIDs: {
-		style: AirtableIds;
-		marpTheme: AirtableIds;
-		templates: AirtableIds;
-		demo: AirtableIds;
-		reveal: AirtableIds;
-		revealAS: AirtableIds;
+		style?: AirtableIds;
+		marpTheme?: AirtableIds;
+		templates?: AirtableIds;
+		demo?: AirtableIds;
+		reveal?: AirtableIds;
+		revealAS?: AirtableIds;
 	};
 	slidesRupThemeColor: string;
 	slidesRupHue: number;

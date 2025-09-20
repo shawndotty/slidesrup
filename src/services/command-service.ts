@@ -152,9 +152,9 @@ export class CommandService {
 			"update-style",
 			t("Get The Latest Version Of Style"),
 			{
-				baseID: this.settings.updateIDs.style.baseID,
-				tableID: this.settings.updateIDs.style.tableID,
-				viewID: this.settings.updateIDs.style.viewID,
+				baseID: this.settings?.updateIDs?.style?.baseID || "",
+				tableID: this.settings?.updateIDs?.style?.tableID || "",
+				viewID: this.settings?.updateIDs?.style?.viewID || "",
 				targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 			}
 		);
@@ -163,9 +163,9 @@ export class CommandService {
 			"update-marp-theme",
 			t("Get The Latest Version Of Marp Themes"),
 			{
-				baseID: this.settings.updateIDs.marpTheme.baseID,
-				tableID: this.settings.updateIDs.marpTheme.tableID,
-				viewID: this.settings.updateIDs.marpTheme.viewID,
+				baseID: this.settings?.updateIDs?.marpTheme?.baseID || "",
+				tableID: this.settings?.updateIDs?.marpTheme?.tableID || "",
+				viewID: this.settings?.updateIDs?.marpTheme?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
@@ -174,9 +174,9 @@ export class CommandService {
 			"update-templates",
 			t("Get The Latest Version Of Templates"),
 			{
-				baseID: this.settings.updateIDs.templates.baseID,
-				tableID: this.settings.updateIDs.templates.tableID,
-				viewID: this.settings.updateIDs.templates.viewID,
+				baseID: this.settings?.updateIDs?.templates?.baseID || "",
+				tableID: this.settings?.updateIDs?.templates?.tableID || "",
+				viewID: this.settings?.updateIDs?.templates?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
@@ -186,13 +186,13 @@ export class CommandService {
 			t("Get The Latest Version SlidesRup Reveal Addons"),
 			(() => {
 				const update =
-					this.settings.updateIDs[
+					this.settings?.updateIDs[
 						this.revealAddOnsViewName as "reveal" | "revealAS"
 					];
 				return {
-					baseID: update.baseID,
-					tableID: update.tableID,
-					viewID: update.viewID,
+					baseID: update?.baseID || "",
+					tableID: update?.tableID || "",
+					viewID: update?.viewID || "",
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 				};
 			})()
@@ -202,9 +202,9 @@ export class CommandService {
 			"update-demo-templates",
 			t("Get The Latest Version Of User Templates"),
 			{
-				baseID: this.settings.updateIDs.demo.baseID,
-				tableID: this.settings.updateIDs.demo.tableID,
-				viewID: this.settings.updateIDs.demo.viewID,
+				baseID: this.settings?.updateIDs?.demo?.baseID || "",
+				tableID: this.settings?.updateIDs?.demo?.tableID || "",
+				viewID: this.settings?.updateIDs?.demo?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
@@ -216,25 +216,25 @@ export class CommandService {
 				new Notice(t("Starting one-click deployment..."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.style.baseID,
-					tableID: this.settings.updateIDs.style.tableID,
-					viewID: this.settings.updateIDs.style.viewID,
+					baseID: this.settings?.updateIDs?.style?.baseID || "",
+					tableID: this.settings?.updateIDs?.style?.tableID || "",
+					viewID: this.settings?.updateIDs?.style?.viewID || "",
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 				});
 				new Notice(t("Styles updated."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.marpTheme.baseID,
-					tableID: this.settings.updateIDs.marpTheme.tableID,
-					viewID: this.settings.updateIDs.marpTheme.viewID,
+					baseID: this.settings?.updateIDs?.marpTheme?.baseID || "",
+					tableID: this.settings?.updateIDs?.marpTheme?.tableID || "",
+					viewID: this.settings?.updateIDs?.marpTheme?.viewID || "",
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Marp Themes updated."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.templates.baseID,
-					tableID: this.settings.updateIDs.templates.tableID,
-					viewID: this.settings.updateIDs.templates.viewID,
+					baseID: this.settings?.updateIDs?.templates?.baseID || "",
+					tableID: this.settings?.updateIDs?.templates?.tableID || "",
+					viewID: this.settings?.updateIDs?.templates?.viewID || "",
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Templates updated."));
@@ -248,9 +248,9 @@ export class CommandService {
 									| "revealAS"
 							];
 						return {
-							baseID: update.baseID,
-							tableID: update.tableID,
-							viewID: update.viewID,
+							baseID: update?.baseID || "",
+							tableID: update?.tableID || "",
+							viewID: update?.viewID || "",
 							targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 						};
 					})()
@@ -258,9 +258,9 @@ export class CommandService {
 				new Notice(t("Reveal template updated."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.demo.baseID,
-					tableID: this.settings.updateIDs.demo.tableID,
-					viewID: this.settings.updateIDs.demo.viewID,
+					baseID: this.settings?.updateIDs?.demo?.baseID || "",
+					tableID: this.settings?.updateIDs?.demo?.tableID || "",
+					viewID: this.settings?.updateIDs?.demo?.viewID || "",
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Demo slides updated."));

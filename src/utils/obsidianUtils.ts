@@ -28,7 +28,7 @@ export class ObsidianUtils {
 		return path.join(
 			this.getVaultDirectory(),
 			this.app.vault.configDir,
-			"plugins/obsidian-advanced-slides/"
+			"plugins/slidesrup/"
 		);
 	}
 
@@ -82,6 +82,44 @@ export class ObsidianUtils {
 		}
 		const file = this.getTFile(path);
 		return file?.path || "";
+	}
+
+	getRelativePathForTarget(path: string, target: string): string {
+		// path 是文件A的绝对路径，target 是一个文件夹的绝对路径
+		// 目标：返回 path 相对于 target 的相对路径
+		if (!path || !target) {
+			return "";
+		}
+		// 兼容 Obsidian 的路径分隔符（一般为 /）
+		const sep = "/";
+		const from = target.endsWith(sep) ? target : target + sep;
+		const to = path;
+
+		// 分割路径为数组
+		const fromArr = from.split(sep).filter(Boolean);
+		const toArr = to.split(sep).filter(Boolean);
+
+		// 找到共同前缀
+		let i = 0;
+		while (
+			i < fromArr.length &&
+			i < toArr.length &&
+			fromArr[i] === toArr[i]
+		) {
+			i++;
+		}
+
+		// 需要返回的上级目录数
+		const upLevels = fromArr.length - i;
+		let relPath = "";
+		if (upLevels > 0) {
+			relPath = Array(upLevels).fill("..").join(sep);
+			if (relPath) relPath += sep;
+		}
+		// 拼接剩余部分
+		relPath += toArr.slice(i).join(sep);
+
+		return relPath;
 	}
 
 	absolute(relativePath: string) {
