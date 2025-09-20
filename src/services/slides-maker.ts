@@ -1276,34 +1276,77 @@ export class SlidesMaker {
 	}
 
 	private _addFragmentsToNonCodeBlocks(text: string): string {
-		// 匹配Markdown中的段落（非标题、非列表、非代码块、非数学块、非空行）
-		return text.replace(
-			/(^|\n)(?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
-			(match, p1, p2) => {
-				// 跳过空行和以![[开头的段落
-				if (
-					!p2.trim() ||
-					p2.trim().startsWith("![[") ||
-					p2.trim().startsWith("<!--") ||
-					p2.trim().startsWith("|") ||
-					p2.trim().startsWith("---") ||
-					p2.trim().startsWith(":::") ||
-					p2.trim().startsWith("__CODE_BLOCK_") ||
-					p2.trim().startsWith("__MATH_BLOCK_") ||
-					p2.trim().startsWith("__HTML_BLOCK_")
-				)
-					return match;
-				// 如果是 Markdown 4~6 级标题，只包裹标题文本，不包含 #
-				const hMatch = p2.match(/^(#{4,6})\s+(.*)$/);
-				if (hMatch) {
-					const hashes = hMatch[1];
-					const title = hMatch[2];
-					if (title.trim().length === 0) return match;
-					return `${p1}${hashes} <span class="fragment">${title}</span>`;
+		// 保存原始分隔符
+		const separators: string[] = [];
+
+		// 按分页符分割内容，同时保存分隔符
+		const pages = text.split(/(?:\n-{3,}|\n\*{3,})/g);
+		const matches = text.match(/\n(-{3,}|\*{3,})/g);
+		if (matches) {
+			matches.forEach((match) => {
+				separators.push(match.trim().startsWith("*") ? "***" : "---");
+			});
+		}
+
+		// 处理每一页内容
+		const processedPages = pages.map((page, pageIndex) => {
+			let fragmentIndex = 0;
+
+			// 处理页面中的段落
+			return page.replace(
+				// 这个正则表达式用于匹配普通段落文本，具体含义如下：
+				// (^|\n) - 匹配行首或换行符
+				// (?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s) - 否定预查，不匹配以下内容：
+				//   - \s*[-*+>] - 列表标记符号
+				//   - #{1,3}\s - 1-3级标题
+				//   - `{3,} - 代码块标记
+				//   - >\s* - 引用块
+				//   - {4,} - 缩进代码块
+				//   - \d+\.\s - 有序列表
+				// ([^\n][^\n]*[^\n]) - 匹配非空行的内容
+				// (?=\n|$) - 正向预查，确保后面是换行符或文件结尾
+				/(^|\n)(?!\s*[-*>]|#{1,3}\s|`{3,}|>\s*| {4,})([^\n][^\n]*[^\n])(?=\n|$)/g,
+				(match, p1, p2) => {
+					// 跳过特殊内容
+					if (
+						!p2.trim() ||
+						p2.trim().startsWith("![[") ||
+						p2.trim().startsWith("<!--") ||
+						p2.trim().startsWith("|") ||
+						p2.trim().startsWith("---") ||
+						p2.trim().startsWith(":::") ||
+						p2.trim().startsWith("__CODE_BLOCK_") ||
+						p2.trim().startsWith("__MATH_BLOCK_") ||
+						p2.trim().startsWith("__HTML_BLOCK_")
+					) {
+						return match;
+					}
+
+					if (p2.startsWith("+") || p2.match(/^\d+\)\s/)) {
+						return `${match} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
+					}
+
+					// 处理4-6级标题
+					const hMatch = p2.match(/^(#{4,6})\s+(.*)$/);
+					if (hMatch) {
+						const hashes = hMatch[1];
+						const title = hMatch[2];
+						if (title.trim().length === 0) return match;
+						return `${p1}${hashes} <span class="fragment" data-fragment-index="${fragmentIndex++}">${title}</span>`;
+					}
+
+					// 处理普通段落
+					return `${p1}<span class="fragment" data-fragment-index="${fragmentIndex++}">${p2}</span>`;
 				}
-				return `${p1}<span class="fragment">${p2}</span>`;
-			}
-		);
+			);
+		});
+
+		// 重新组合页面，使用原始分隔符
+		return processedPages.reduce((result, page, index) => {
+			if (index === 0) return page;
+			const separator = separators[index - 1] || "---";
+			return `${result}\n${separator}\n${page}`;
+		}, "");
 	}
 
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
