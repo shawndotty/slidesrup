@@ -36,6 +36,7 @@ import { TemplateProcessor } from "src/services/processors/template-precessor";
 import { FootnoteProcessor } from "src/services/processors/footNote-processor";
 import { BlockProcessor } from "src/services/processors/block-processor";
 import { FragmentProcessor } from "src/services/processors/fragment-processor";
+import { ImageProcessor } from "src/services/processors/image-processor";
 
 export class MarpSlidesMaker {
 	private app: App;
@@ -45,6 +46,7 @@ export class MarpSlidesMaker {
 	private designOptions: Array<SuggesterOption> = [];
 	private blockProcessor: BlockProcessor;
 	private multipleFileProcessor: MultipleFileProcessor;
+	private imageProcessor: ImageProcessor;
 	private templateProcessor: TemplateProcessor;
 	private footNoteProcessor: FootnoteProcessor;
 	private fragmentProcessor: FragmentProcessor;
@@ -90,6 +92,9 @@ export class MarpSlidesMaker {
 		);
 		this.blockProcessor = new BlockProcessor();
 		this.fragmentProcessor = new FragmentProcessor();
+		this.imageProcessor = new ImageProcessor(
+			new ObsidianUtils(this.app, this.settings)
+		);
 	}
 
 	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
@@ -965,16 +970,17 @@ export class MarpSlidesMaker {
 					: this._addTocSlide(content, tocContent, design),
 
 			// 8. 转换 WikiLinks
-			(content) =>
-				this._getAutoConvertLinks(activeFile)
-					? this._convertMarkdownLinksToPreviewLinks(content)
-					: content,
+			// (content) =>
+			// 	this._getAutoConvertLinks(activeFile)
+			// 		? this._convertMarkdownLinksToPreviewLinks(content)
+			// 		: content,
 
 			// 9. 添加段落片段
 			// (content) =>
 			// 	this._getEnableParagraphFragments(activeFile)
 			// 		? this._addFragmentsToParagraph(content)
 			// 		: content,
+
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
 
@@ -993,6 +999,9 @@ export class MarpSlidesMaker {
 				}),
 
 			(content) => this.blockProcessor.process(content),
+
+			// 12. 处理图片
+			(content) => this.imageProcessor.process(content),
 
 			(content) => this._processTemplate(content),
 
