@@ -1019,18 +1019,6 @@ export class SlidesMaker {
 					slideMode,
 					slideSize
 				),
-
-			// // 10. 生成最终内容
-			// (content) =>
-			// 	this._generateFinalSlideContent(
-			// 		content,
-			// 		baseLayoutName,
-			// 		design,
-			// 		activeFile,
-			// 		slideMode,
-			// 		slideSize,
-			// 		minimizeMode
-			// 	),
 		];
 
 		// 执行处理管道
@@ -1631,83 +1619,6 @@ export class SlidesMaker {
 			}
 		}
 		return -1;
-	}
-
-	/**
-	 * Generates the final slide content with frontmatter, cover and back pages
-	 */
-	private _generateFinalSlideContent(
-		content: string,
-		baseLayoutName: string,
-		design: string,
-		activeFile: TFile,
-		slideMode: string,
-		slideSize: {
-			w: number;
-			h: number;
-		},
-		minimizeMode: boolean = false
-	): string {
-		// Generate frontmatter
-		const userFrontmatter =
-			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
-		const frontmatter = `---
-css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css
-enableLinks: true
-width: ${slideSize.w}
-height: ${slideSize.h}
-margin: 0
-navigationMode: ${this.settings.slidesRupSlideNavigationMode}
-aliases:
- - ${activeFile.basename}
-defaultTemplate: "[[${baseLayoutName}]]"
-pdfSeparateFragments: false
-verticalSeparator: \\*\\*\\*
-theme: white
-transition: none
-${userFrontmatter.trim()}
----
-`;
-
-		// Generate cover slide
-		const coverSlide = `<!-- slide id="home" template="[[${t(
-			"Cover"
-		)}-${design}]]" -->`;
-
-		const oburi = this._getOBURI(activeFile);
-
-		const { author, date } = this._getAuthorAndDate();
-
-		const newContent = this._addAuthorAndDate(
-			this._addLinkToH1(content, oburi),
-			author,
-			date,
-			minimizeMode
-		);
-
-		// Generate back cover slide
-		const lbnl = this._getLastButNotLeast(activeFile);
-		const backCoverSlide = `---
-
-<!-- slide template="[[${t("BackCover")}-${design}]]" class="${
-			this.userSpecificListClass.BackCoverPageListClass ||
-			this.settings.slidesRupDefaultBackCoverListClass
-		}" -->
-
-${lbnl}
-
-::: author
-${author}
-:::
-
-::: date
-${date}
-:::
-
-`;
-
-		// Combine all parts
-		return `${frontmatter.trim()}\n${coverSlide}\n\n${newContent}\n\n${backCoverSlide}`;
 	}
 
 	/**
