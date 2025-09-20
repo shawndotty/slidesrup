@@ -1006,17 +1006,31 @@ export class SlidesMaker {
 					? this._addFragmentsToParagraph(content)
 					: content,
 
-			// 10. 生成最终内容
 			(content) =>
-				this._generateFinalSlideContent(
+				this._addCoverPage(content, design, activeFile, minimizeMode),
+
+			(content) => this._addBackCoverPage(content, design, activeFile),
+
+			(content) =>
+				this._addFrontMatter(
 					content,
 					baseLayoutName,
-					design,
 					activeFile,
 					slideMode,
-					slideSize,
-					minimizeMode
+					slideSize
 				),
+
+			// // 10. 生成最终内容
+			// (content) =>
+			// 	this._generateFinalSlideContent(
+			// 		content,
+			// 		baseLayoutName,
+			// 		design,
+			// 		activeFile,
+			// 		slideMode,
+			// 		slideSize,
+			// 		minimizeMode
+			// 	),
 		];
 
 		// 执行处理管道
@@ -1026,6 +1040,104 @@ export class SlidesMaker {
 		}
 
 		return processedContent;
+	}
+
+	private _addCoverPage(
+		content: string,
+		design: string,
+		activeFile: TFile,
+		minimizeMode: boolean = false
+	): string {
+		const coverSlide = `<!-- slide id="home" template="[[${t(
+			"Cover"
+		)}-${design}]]" -->`;
+		const oburi = this._getOBURI(activeFile);
+
+		const { author, date } = this._getAuthorAndDate();
+
+		const newContent = this._addAuthorAndDate(
+			this._addLinkToH1(content, oburi),
+			author,
+			date,
+			minimizeMode
+		);
+		return `${coverSlide}\n\n${newContent}`;
+	}
+
+	private _addBackCoverPage(
+		content: string,
+		design: string,
+		activeFile: TFile
+	): string {
+		const lbnl = this._getLastButNotLeast(activeFile);
+		const { author, date } = this._getAuthorAndDate();
+		const backCoverSlideCommentParts = [
+			"<!-- slide",
+			`template="[[${t("BackCover")}-${design}]]"`,
+			`class="${
+				this.userSpecificListClass.BackCoverPageListClass ||
+				this.settings.slidesRupDefaultBackCoverListClass
+			}"`,
+			"-->",
+		];
+
+		const backCoverSlideComment = backCoverSlideCommentParts.join(" ");
+
+		// 使用数组存储模板片段,提升可维护性和可读性
+		const backCoverSlideContentParts = [
+			backCoverSlideComment,
+			"",
+			lbnl,
+			"",
+			"::: author",
+			author,
+			":::",
+			"",
+			"::: date",
+			date,
+			":::",
+			"",
+		];
+
+		const backCoverSlideContent = backCoverSlideContentParts.join("\n");
+
+		return `${content}\n\n---\n\n${backCoverSlideContent}`;
+	}
+
+	private _addFrontMatter(
+		content: string,
+		baseLayoutName: string,
+		activeFile: TFile,
+		slideMode: string,
+		slideSize: {
+			w: number;
+			h: number;
+		}
+	): string {
+		const userFrontmatter =
+			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
+		// 使用数组构建frontmatter,提升可维护性和可读性
+		const frontMatterLines = [
+			"---",
+			`css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css`,
+			"enableLinks: true",
+			`width: ${slideSize.w}`,
+			`height: ${slideSize.h}`,
+			"margin: 0",
+			`navigationMode: ${this.settings.slidesRupSlideNavigationMode}`,
+			"aliases:",
+			` - ${activeFile.basename}`,
+			`defaultTemplate: "[[${baseLayoutName}]]"`,
+			"pdfSeparateFragments: false",
+			"verticalSeparator: \\*\\*\\*",
+			"theme: white",
+			"transition: none",
+			userFrontmatter.trim(),
+			"---",
+		];
+
+		const frontMatter = frontMatterLines.filter(Boolean).join("\n");
+		return `${frontMatter}\n\n${content}`;
 	}
 
 	/**
