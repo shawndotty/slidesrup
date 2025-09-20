@@ -32,30 +32,43 @@ export class ImageProcessor {
 		line: string,
 		newSlideLocation: string
 	): string {
-		let result = line;
-		let m;
 		this.obsidianImageRegex.lastIndex = 0;
-		while ((m = this.obsidianImageRegex.exec(line)) !== null) {
-			if (m.index === this.obsidianImageRegex.lastIndex) {
-				this.obsidianImageRegex.lastIndex++;
+		let result = line;
+		const matches = [...line.matchAll(this.obsidianImageRegex)];
+		if (matches.length === 0) {
+			return line;
+		}
+		for (const m of matches) {
+			const [fullMatch, imagePathWithClass = "", sizeText = ""] = m;
+			// 先分离图片路径和类名
+			let imagePath = imagePathWithClass;
+			let classText = "";
+			const hashIndex = imagePathWithClass.indexOf("#");
+			if (hashIndex !== -1) {
+				imagePath = imagePathWithClass.substring(0, hashIndex);
+				classText = imagePathWithClass
+					.substring(hashIndex + 1)
+					.split("|")[0]
+					.trim();
 			}
-			const [match, imagePathWithClass, sizeText] = m;
-			// 从图片路径中提取类名和实际路径
-			const [imagePath, classText] = imagePathWithClass
-				.split("#")
-				.map((s) => s.split("|")[0]);
-
-			const filePath = this.util.findFile(imagePath);
-
+			// 处理文件路径
+			const filePath = this.util.findFile(imagePath.trim());
 			const relativePath = this.util.getRelativePathForTarget(
 				filePath,
 				newSlideLocation
 			);
 
 			const sizeControl = this._getSizeControl(sizeText);
-			const altControl = `${sizeControl} ${classText}`.trim();
+			const altControl = [classText, sizeControl]
+				.filter(Boolean)
+				.join(" ")
+				.trim();
 
-			result = `![${altControl}](${relativePath})`;
+			// 替换原始图片语法为标准 Markdown 图片语法
+			result = result.replace(
+				fullMatch,
+				`![${altControl}](${relativePath})`
+			);
 		}
 		return result;
 	}
