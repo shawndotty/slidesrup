@@ -1003,7 +1003,8 @@ export class MarpSlidesMaker {
 			(content) => this.blockProcessor.process(content),
 
 			// 12. 处理图片
-			(content) => this.imageProcessor.process(content, newSlideLocation),
+			(content) =>
+				this.imageProcessor.processForMarp(content, newSlideLocation),
 
 			(content) => this._processTemplate(content),
 

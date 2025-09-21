@@ -13,22 +13,43 @@ export class ImageProcessor {
 		this.util = util;
 	}
 
-	async process(markdown: string, newSlideLocation: string): Promise<string> {
+	async processForMarp(
+		markdown: string,
+		newSlideLocation: string
+	): Promise<string> {
 		return markdown
 			.split("\n")
 			.map((line) => {
 				if (this.obsidianImageRegex.test(line)) {
-					return this._transformObsidianImage(line, newSlideLocation);
+					return this._transformObsidianImageForMarp(
+						line,
+						newSlideLocation
+					);
 				}
 				if (this.markdownImageRegex.test(line)) {
-					return this._transformMarkdownImage(line);
+					return this._transformMarkdownImageForMarp(line);
 				}
 				return line;
 			})
 			.join("\n");
 	}
 
-	private _transformObsidianImage(
+	async processForReveal(markdown: string): Promise<string> {
+		return markdown
+			.split("\n")
+			.map((line) => {
+				if (this.obsidianImageRegex.test(line)) {
+					return this._transformObsidianImageForReveal(line);
+				}
+				if (this.markdownImageRegex.test(line)) {
+					return this._transformMarkdownImageForReveal(line);
+				}
+				return line;
+			})
+			.join("\n");
+	}
+
+	private _transformObsidianImageForMarp(
 		line: string,
 		newSlideLocation: string
 	): string {
@@ -73,7 +94,37 @@ export class ImageProcessor {
 		return result;
 	}
 
-	private _transformMarkdownImage(line: string): string {
+	private _transformObsidianImageForReveal(line: string): string {
+		this.obsidianImageRegex.lastIndex = 0;
+		let result = line;
+		const matches = [...line.matchAll(this.obsidianImageRegex)];
+		if (matches.length === 0) {
+			return line;
+		}
+		for (const m of matches) {
+			const [fullMatch, imagePathWithClass = "", sizeText = ""] = m;
+			// 先分离图片路径和类名
+			let classControl = "";
+			const hashIndex = imagePathWithClass.indexOf("#");
+			if (hashIndex !== -1) {
+				classControl = imagePathWithClass
+					.substring(hashIndex + 1)
+					.split("|")[0]
+					.trim();
+			}
+
+			// 处理元素控制属性
+			const elementControl = this._processElementControl(classControl);
+
+			// 如果有控制属性则添加HTML注释
+			result = elementControl
+				? `${fullMatch} <!-- element: ${elementControl} -->`
+				: line;
+		}
+		return result;
+	}
+
+	private _transformMarkdownImageForMarp(line: string): string {
 		this.markdownImageRegex.lastIndex = 0;
 		const m = this.markdownImageRegex.exec(line);
 		if (!m) {
@@ -109,6 +160,54 @@ export class ImageProcessor {
 		return `![${[imageName, altControl]
 			.filter(Boolean)
 			.join(" ")}](${url})`;
+	}
+
+	private _transformMarkdownImageForReveal(line: string): string {
+		this.markdownImageRegex.lastIndex = 0;
+		const m = this.markdownImageRegex.exec(line);
+		if (!m) {
+			return line;
+		}
+		const [fullMatch, altText = "", url = ""] = m;
+
+		// 提取类名（#后到|前）
+		let classControl = "";
+		const hashIndex = altText.indexOf("#");
+		if (hashIndex !== -1) {
+			const afterHash = altText.substring(hashIndex + 1);
+			classControl = afterHash.split("|")[0].trim();
+		}
+
+		// 处理元素控制属性
+		const elementControl = this._processElementControl(classControl);
+
+		// 如果有控制属性则添加HTML注释
+		return elementControl
+			? `${fullMatch} <!-- element: ${elementControl} -->`
+			: line;
+	}
+
+	/**
+	 * 处理元素控制属性，提取对齐方向和类名
+	 * @param classControl 类控制文本
+	 * @returns 格式化的元素控制属性字符串
+	 */
+	private _processElementControl(classControl: string): string {
+		// 提取对齐方向
+		const alignPattern = /(left|right|center|stretch)/;
+		const alignMatch = classControl.match(alignPattern);
+		const alignProperty = alignMatch ? `align="${alignMatch[1]}"` : "";
+
+		// 移除对齐相关的类名并保留其他类名
+		const otherClass = alignMatch
+			? classControl.replace(alignPattern, "").trim()
+			: classControl.trim();
+
+		// 构建class属性
+		const classProperty = otherClass && `class="${otherClass}"`;
+
+		// 组合element控制属性
+		return [alignProperty, classProperty].filter(Boolean).join(" ");
 	}
 
 	private _getSizeControl(sizeText: string): string {

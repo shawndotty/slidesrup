@@ -30,6 +30,8 @@ import {
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
 import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import { ImageProcessor } from "src/services/processors/image-processor";
+import { ObsidianUtils } from "src/utils/obsidianUtils";
 
 export class SlidesMaker {
 	private app: App;
@@ -37,6 +39,7 @@ export class SlidesMaker {
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
+	private imageProcessor: ImageProcessor;
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -69,6 +72,9 @@ export class SlidesMaker {
 		this.designOptions = getAllDesignsOptions(
 			this.userDesigns,
 			this.defaultDesigns
+		);
+		this.imageProcessor = new ImageProcessor(
+			new ObsidianUtils(this.app, this.settings)
 		);
 	}
 
@@ -999,6 +1005,9 @@ export class SlidesMaker {
 
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
+			// 8. 处理图片
+			(content) => this.imageProcessor.processForReveal(content),
+
 			// 8. 添加链接预览
 			(content) =>
 				this._getAutoConvertLinks(activeFile)
@@ -1143,13 +1152,28 @@ export class SlidesMaker {
 		);
 	}
 
+	/**
+	 * 为在线图片添加预览属性
+	 * @param text - 需要处理的文本内容
+	 * @returns 处理后的文本，为在线图片添加了预览属性
+	 */
 	private _addImagePreview(text: string): string {
-		return text.replace(
-			/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
-			(match, name, link) => {
-				return `<p><img alt="${name}" src="${link}" data-preview-image /></p>`;
+		// 优化：将正则表达式提取为常量，避免重复创建
+		const ONLINE_IMAGE_REGEX = /!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/;
+		const PREVIEW_ATTR = 'data-preview-image=""';
+
+		// 优化：使用正则替换而不是分割和重组
+		return text.replace(/[^\n]+/g, (line) => {
+			if (!ONLINE_IMAGE_REGEX.test(line)) {
+				return line;
 			}
-		);
+
+			const trimmedLine = line.trim();
+			// 优化：使用三元运算符简化逻辑
+			return trimmedLine.endsWith("-->")
+				? trimmedLine.replace("-->", ` ${PREVIEW_ATTR} -->`)
+				: `${trimmedLine} <!-- element: ${PREVIEW_ATTR} -->`;
+		});
 	}
 
 	/**
