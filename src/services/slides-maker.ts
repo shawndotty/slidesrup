@@ -1295,7 +1295,7 @@ export class SlidesMaker {
 			const hasH4ToH6 = /^#{4,6}\s+[^\n]+$/m.test(page);
 			// 检查是否包含普通段落文本
 			// 检测是否包含纯文本段落内容(不以特殊字符开头的行)
-			const hasNormalParagraph = /^[^#>\+\*\-<\d\s`|![\]{}].+$/m.test(
+			const hasNormalParagraph = /^[^#>\+\*\-\_<\d\s`|![\]{}].+$/m.test(
 				page
 			);
 			// 如果页面不包含需要处理的内容,直接返回
