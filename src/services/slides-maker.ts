@@ -1011,7 +1011,7 @@ export class SlidesMaker {
 					? this._addImagePreview(content)
 					: content,
 
-			// 9. 添加段落片段
+			// 8. 添加段落片段
 			(content) =>
 				this._getEnableParagraphFragments(activeFile)
 					? this._addFragmentsToParagraph(content)
