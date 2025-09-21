@@ -9,6 +9,8 @@ import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
+import { MarpSlidesService } from "./marp-slides-service";
+
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
@@ -20,6 +22,7 @@ export class CommandService {
 	private marpSlidesMaker: MarpSlidesMaker;
 	private presentationPluginFolder: string;
 	private revealAddOnsViewName: string;
+	private marpSlidesService: MarpSlidesService;
 
 	constructor(
 		private addCommand: (command: Command) => void,
@@ -35,6 +38,7 @@ export class CommandService {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
 		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
+		this.marpSlidesService = new MarpSlidesService(this.app);
 		if (this.settings.presentationPlugin === "slidesExtended") {
 			this.presentationPluginFolder = SLIDES_EXTENDED_PLUGIN_FOLDER;
 			this.revealAddOnsViewName = "reveal";
@@ -264,6 +268,16 @@ export class CommandService {
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Demo slides updated."));
+
+				await this.marpSlidesService.setPluginSetting(
+					"EnableHTML",
+					true
+				);
+
+				await this.marpSlidesService.setPluginSetting(
+					"ThemePath",
+					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`
+				);
 
 				new Notice(t("One-click deployment finished!"));
 			},
