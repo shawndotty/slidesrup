@@ -1291,6 +1291,17 @@ export class SlidesMaker {
 		// 处理每一页内容
 		const processedPages = pages.map((page, pageIndex) => {
 			let fragmentIndex = 0;
+			// 检查页面是否包含4-6级标题或普通段落
+			const hasH4ToH6 = /^#{4,6}\s+[^\n]+$/m.test(page);
+			// 检查是否包含普通段落文本
+			// 检测是否包含纯文本段落内容(不以特殊字符开头的行)
+			const hasNormalParagraph = /^[^#>\+\*\-<\d\s`|![\]{}].+$/m.test(
+				page
+			);
+			// 如果页面不包含需要处理的内容,直接返回
+			if (!hasH4ToH6 && !hasNormalParagraph) {
+				return page;
+			}
 
 			// 处理页面中的段落
 			return page.replace(
@@ -1322,7 +1333,8 @@ export class SlidesMaker {
 						return match;
 					}
 
-					if (p2.startsWith("+") || p2.match(/^\d+\)\s/)) {
+					// 匹配所有层级的列表标记
+					if (p2.match(/^[+]|^\d+\)\s|^\s+[+]|^\s+\d+\)\s/)) {
 						return `${match} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
 					}
 
@@ -1721,7 +1733,7 @@ export class SlidesMaker {
 		const contentLines = content.split("\n");
 		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
 		const firstSeparatorLineIndex = contentLines.findIndex(
-			(line) => line.trim() === "---"
+			(line) => line.trim() === "---" || line.trim() === "***"
 		);
 		if (firstSeparatorLineIndex !== -1) {
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
