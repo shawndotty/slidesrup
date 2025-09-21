@@ -994,10 +994,21 @@ export class SlidesMaker {
 					? content
 					: this._addTocSlide(content, tocName, design),
 
-			// 8. 转换 WikiLinks
+			(content) =>
+				this._addCoverPage(content, design, activeFile, minimizeMode),
+
+			(content) => this._addBackCoverPage(content, design, activeFile),
+
+			// 8. 添加链接预览
 			(content) =>
 				this._getAutoConvertLinks(activeFile)
-					? this._convertMarkdownLinksToPreviewLinks(content)
+					? this._addLinkPreview(content)
+					: content,
+
+			// 9. 添加图片预览
+			(content) =>
+				this._getAutoConvertLinks(activeFile)
+					? this._addImagePreview(content)
 					: content,
 
 			// 9. 添加段落片段
@@ -1005,11 +1016,6 @@ export class SlidesMaker {
 				this._getEnableParagraphFragments(activeFile)
 					? this._addFragmentsToParagraph(content)
 					: content,
-
-			(content) =>
-				this._addCoverPage(content, design, activeFile, minimizeMode),
-
-			(content) => this._addBackCoverPage(content, design, activeFile),
 
 			(content) =>
 				this._addFrontMatter(
@@ -1126,6 +1132,24 @@ export class SlidesMaker {
 
 		const frontMatter = frontMatterLines.filter(Boolean).join("\n");
 		return `${frontMatter}\n\n${content}`;
+	}
+
+	private _addLinkPreview(text: string): string {
+		return text.replace(
+			/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+			(match, name, link) => {
+				return `<a href="${link}" data-preview-link>${name}</a>`;
+			}
+		);
+	}
+
+	private _addImagePreview(text: string): string {
+		return text.replace(
+			/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
+			(match, name, link) => {
+				return `<p><img alt="${name}" src="${link}" data-preview-image /></p>`;
+			}
+		);
 	}
 
 	/**
