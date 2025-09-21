@@ -994,22 +994,22 @@ export class SlidesMaker {
 					? content
 					: this._addTocSlide(content, tocName, design),
 
-			// 8. 转换 WikiLinks
+			(content) =>
+				this._addCoverPage(content, design, activeFile, minimizeMode),
+
+			(content) => this._addBackCoverPage(content, design, activeFile),
+
+			// 7. 转换 WikiLinks
 			(content) =>
 				this._getAutoConvertLinks(activeFile)
 					? this._convertMarkdownLinksToPreviewLinks(content)
 					: content,
 
-			// 9. 添加段落片段
+			// 8. 添加段落片段
 			(content) =>
 				this._getEnableParagraphFragments(activeFile)
 					? this._addFragmentsToParagraph(content)
 					: content,
-
-			(content) =>
-				this._addCoverPage(content, design, activeFile, minimizeMode),
-
-			(content) => this._addBackCoverPage(content, design, activeFile),
 
 			(content) =>
 				this._addFrontMatter(
