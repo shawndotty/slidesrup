@@ -199,12 +199,12 @@ export class ImageProcessor {
 		const alignProperty = alignMatch ? `align="${alignMatch[1]}"` : "";
 
 		// 移除对齐相关的类名并保留其他类名
-		const otherClass = alignMatch
-			? classControl.replace(alignPattern, "").trim()
-			: classControl.trim();
+		// const otherClass = alignMatch
+		// 	? classControl.replace(alignPattern, "").trim()
+		// 	: classControl.trim();
 
 		// 构建class属性
-		const classProperty = otherClass && `class="${otherClass}"`;
+		const classProperty = classControl && `class="${classControl}"`;
 
 		// 组合element控制属性
 		return [alignProperty, classProperty].filter(Boolean).join(" ");

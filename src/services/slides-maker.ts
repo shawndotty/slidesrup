@@ -1392,11 +1392,21 @@ export class SlidesMaker {
 						const hashes = hMatch[1];
 						const title = hMatch[2];
 						if (title.trim().length === 0) return match;
-						return `${p1}${hashes} <span class="fragment" data-fragment-index="${fragmentIndex++}">${title}</span>`;
+						return `${p1}${hashes} ${title} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
 					}
 
 					// 处理普通段落
-					return `${p1}<span class="fragment" data-fragment-index="${fragmentIndex++}">${p2}</span>`;
+
+					if (match.includes("<!-- element:")) {
+						// 优化：使用一次性替换，避免多次字符串操作
+						return match.replace(/-->|class="/g, (matched) =>
+							matched === "-->"
+								? ` data-fragment-index="${fragmentIndex++}" -->`
+								: 'class="fragment '
+						);
+					}
+
+					return `${p1}${p2} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
 				}
 			);
 		});
