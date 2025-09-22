@@ -1404,12 +1404,24 @@ export class SlidesMaker {
 					// 处理普通段落
 
 					if (match.includes("<!-- element:")) {
-						// 优化：使用一次性替换，避免多次字符串操作
-						return match.replace(/-->|class="/g, (matched) =>
-							matched === "-->"
-								? ` data-fragment-index="${fragmentIndex++}" -->`
-								: 'class="fragment '
-						);
+						// 使用正则表达式优化处理 element 标签的 class 和 fragment 属性
+						const hasClass = match.includes("class=");
+						match = hasClass
+							? match
+									.replace(
+										/class="([^"']*)"/,
+										`class="fragment $1"`
+									)
+									.replace(
+										/-->\s*$/,
+										` data-fragment-index="${fragmentIndex++}" -->`
+									)
+							: match.replace(
+									/<!-- element:/,
+									`<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" `
+							  );
+
+						return match;
 					}
 
 					return `${p1}${p2} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;

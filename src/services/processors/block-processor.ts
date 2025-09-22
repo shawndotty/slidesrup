@@ -7,6 +7,7 @@ export class BlockProcessor {
 		// 预编译正则表达式以提高性能
 		const blockPatterns = {
 			block: new RegExp(":::\\sblock\\s*", "g"),
+			lblock: new RegExp(":::\\slblock\\s*", "g"),
 			cblock: new RegExp(":::\\scblock\\s*", "g"),
 			rblock: new RegExp(":::\\srblock\\s*", "g"),
 			close: new RegExp(":::", "g"),
@@ -15,6 +16,7 @@ export class BlockProcessor {
 		// 使用链式替换减少循环和内存开销
 		return markdown
 			.replace(blockPatterns.block, '<div class="block">\n\n')
+			.replace(blockPatterns.lblock, '<div class="block left">\n\n')
 			.replace(blockPatterns.cblock, '<div class="block center">\n\n')
 			.replace(blockPatterns.rblock, '<div class="block right">\n\n')
 			.replace(blockPatterns.close, "</div>\n\n");
