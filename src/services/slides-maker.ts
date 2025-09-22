@@ -32,6 +32,7 @@ import { InputModal } from "src/ui/modals/input-modal";
 import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
 import { ImageProcessor } from "src/services/processors/image-processor";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
+import { BlockProcessor } from "src/services/processors/block-processor";
 
 export class SlidesMaker {
 	private app: App;
@@ -40,6 +41,7 @@ export class SlidesMaker {
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
 	private imageProcessor: ImageProcessor;
+	private blockProcessor: BlockProcessor;
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -76,6 +78,7 @@ export class SlidesMaker {
 		this.imageProcessor = new ImageProcessor(
 			new ObsidianUtils(this.app, this.settings)
 		);
+		this.blockProcessor = new BlockProcessor();
 	}
 
 	async createSlides(): Promise<void> {
@@ -1000,9 +1003,6 @@ export class SlidesMaker {
 					? content
 					: this._addTocSlide(content, tocName, design),
 
-			(content) =>
-				this._addCoverPage(content, design, activeFile, minimizeMode),
-
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
 			// 8. 处理图片
@@ -1025,6 +1025,11 @@ export class SlidesMaker {
 				this._getEnableParagraphFragments(activeFile)
 					? this._addFragmentsToParagraph(content)
 					: content,
+
+			(content) =>
+				this._addCoverPage(content, design, activeFile, minimizeMode),
+			// 10. 处理块
+			(content) => this.blockProcessor.transformSpecialBlock(content),
 
 			(content) =>
 				this._addFrontMatter(
