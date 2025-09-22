@@ -1374,7 +1374,8 @@ export class SlidesMaker {
 					// 跳过特殊内容
 					if (
 						!p2.trim() ||
-						p2.trim().startsWith("![[") ||
+						(p2.trim().startsWith("![[") &&
+							!/\.(png|jpe?g|gif|bmp|webp|svg)/i.test(p2)) ||
 						p2.trim().startsWith("<!--") ||
 						p2.trim().startsWith("|") ||
 						p2.trim().startsWith("---") ||
