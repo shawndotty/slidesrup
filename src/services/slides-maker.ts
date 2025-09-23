@@ -1026,6 +1026,9 @@ export class SlidesMaker {
 					? this._addFragmentsToParagraph(content)
 					: content,
 
+			// 8. 添加段落片段
+			(content) => this._reverseListFragmentIndex(content),
+
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
 			// 10. 处理块
@@ -1181,50 +1184,6 @@ export class SlidesMaker {
 		});
 	}
 
-	/**
-	 * 将文本中的 [name](link) 格式全部转换为 <a href="link" data-preview-link>name</a>
-	 * 其中 name 可以是任意字符，link 必须是 http 或 https 开头的链接
-	 */
-	private _convertMarkdownLinksToPreviewLinks(text: string): string {
-		// 使用正则匹配 [name](link) 形式，link 以 http 或 https 开头
-		// 排除 ![ 开头的图片嵌入语法
-		return text
-			.replace(
-				/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
-				(match, name, link) => {
-					// 处理图片尺寸信息
-					const sizeMatch = name.match(/\|(\d+)(?:x(\d+))?/);
-					if (!sizeMatch) {
-						return `<img alt="${name}" src="${link}" data-preview-image />`;
-					}
-
-					// 提取宽度和高度
-					// 使用数组解构从 sizeMatch 中提取宽度和高度
-					// sizeMatch 是一个正则匹配结果数组，第一个元素是完整匹配，后面的元素是捕获组
-					// 这里跳过第一个元素(完整匹配)，直接获取第二个(width)和第三个(height)元素
-					const [, width, height] = sizeMatch;
-
-					// 移除尺寸信息部分
-					const cleanName = name.replace(/\|.*$/, "");
-
-					// 构建基础样式
-					const baseStyle = `width:${width}px; object-fit: fill;`;
-					const finalStyle = height
-						? `${baseStyle} height:${height}px;`
-						: baseStyle;
-
-					// 返回构建的img标签
-					return `<img alt="${cleanName}" src="${link}" style="${finalStyle}" data-preview-image />`;
-				}
-			)
-			.replace(
-				/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-				(match, name, link) => {
-					return `<a href="${link}" data-preview-link>${name}</a>`;
-				}
-			);
-	}
-
 	private _addFragmentsToParagraph(text: string): string {
 		// 优化：先保护代码块，然后处理普通段落
 		return this._processTextWithBlockProtection(text);
@@ -1326,6 +1285,77 @@ export class SlidesMaker {
 		});
 
 		return processedText;
+	}
+
+	private _reverseListFragmentIndex(text: string): string {
+		// 保存原始分隔符
+		const separators: string[] = [];
+
+		// 按分页符分割内容，同时保存分隔符
+		const pages = text.split(/(?:\n-{3,}|\n\*{3,})/g);
+		const matches = text.match(/\n(-{3,}|\*{3,})/g);
+		if (matches) {
+			matches.forEach((match) => {
+				separators.push(match.trim().startsWith("*") ? "***" : "---");
+			});
+		}
+
+		const processedPages = pages.map((page) => {
+			// 检查页面是否包含 reverse-list-fragment 标记
+			if (!page.includes("reverse-list-fragment")) {
+				return page;
+			}
+
+			// 匹配所有以 + 开头的列表项
+			const listItems = page.match(/^[+][^\n]+$/gm);
+			if (!listItems) {
+				return page;
+			}
+
+			// 获取第一个列表项之前的fragment数量
+			let fragmentCountBeforeList = 0;
+			const lines = page.split("\n");
+			for (const line of lines) {
+				// 如果遇到列表项就停止计数
+				if (line.trim().startsWith("+")) {
+					break;
+				}
+				// 计算包含data-fragment-index的行数
+				if (line.includes("data-fragment-index")) {
+					fragmentCountBeforeList++;
+				}
+			}
+
+			let processedPage = page;
+			const totalItems = listItems.length;
+
+			// 为每个列表项添加倒序的 fragment-index
+			listItems.forEach((item, index) => {
+				const fragmentIndex =
+					totalItems - index + fragmentCountBeforeList;
+				const escapedItem = item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+				const regex = new RegExp(
+					`${escapedItem}(?!.*<!-- element:)`,
+					"g"
+				);
+				processedPage = processedPage.replace(
+					regex,
+					`${item.replace(
+						/<!--.*?-->/g,
+						""
+					)} <!-- element: class="fragment" data-fragment-index="${fragmentIndex}" -->`
+				);
+			});
+
+			return processedPage;
+		});
+
+		// 重新组合页面，使用原始分隔符
+		return processedPages.reduce((result, page, index) => {
+			if (index === 0) return page;
+			const separator = separators[index - 1] || "---";
+			return `${result}\n${separator}\n${page}`;
+		}, "");
 	}
 
 	private _addFragmentsToNonCodeBlocks(text: string): string {
