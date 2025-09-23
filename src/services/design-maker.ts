@@ -229,6 +229,10 @@ export class DesignMaker {
 				newMarpThemePath,
 				updatedThemeContent
 			);
+
+			await this.vscodeService.addNewMarpThemeForVSCode(
+				newDesignName.toLowerCase()
+			);
 		}
 		await this._revealNewDesign(newDesignPath);
 	}

@@ -438,4 +438,6 @@ export default {
 	"Get The Latest Version Of Marp Themes":
 		"Get The Latest Version Of Marp Themes",
 	"Marp Themes updated.": "Marp Themes Updated.",
+	"Add Default Marp Themes for VS Code":
+		"Add Default Marp Themes for VS Code",
 };

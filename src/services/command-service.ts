@@ -10,6 +10,7 @@ import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
 import { MarpSlidesService } from "./marp-slides-service";
+import { VSCodeService } from "./vscode-service";
 
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
@@ -33,7 +34,8 @@ export class CommandService {
 		) => void,
 		private app: App,
 		private settings: SlidesRupSettings,
-		private templaterService: TemplaterService
+		private templaterService: TemplaterService,
+		private vscodeService: VSCodeService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
@@ -279,6 +281,8 @@ export class CommandService {
 					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`
 				);
 
+				await this.vscodeService.addDefaultMarpThemesForVSCode();
+
 				new Notice(t("One-click deployment finished!"));
 			},
 		});
@@ -368,6 +372,14 @@ export class CommandService {
 						this.marpSlidesMaker.convertMDToMarpSlide()
 					);
 				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:add-default-marp-themes-for-vscode",
+			name: t("Add Default Marp Themes for VS Code"),
+			callback: async () => {
+				await this.vscodeService.addDefaultMarpThemesForVSCode();
 			},
 		});
 	}

@@ -387,4 +387,5 @@ export default {
 	"Advanced Slides YAML Reference": "Advanced Slides YAML 参考",
 	"Get The Latest Version Of Marp Themes": "获取最新的 Marp 主题",
 	"Marp Themes updated.": "Marp 主题已更新。",
+	"Add Default Marp Themes for VS Code": "为 VS Code 添加默认 Marp 主题",
 };

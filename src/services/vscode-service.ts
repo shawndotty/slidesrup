@@ -24,16 +24,37 @@ export class VSCodeService {
 				}.css`
 		);
 
-		const vscodeSettings = {
+		// 构建settings.json的完整路径
+		const settingsPath = `${this.vscodeConfigFolder}/settings.json`;
+
+		// 读取现有的settings.json文件
+		let existingSettings = {};
+		try {
+			const existingContent = await this.app.vault.adapter.read(
+				settingsPath
+			);
+			existingSettings = JSON.parse(existingContent);
+		} catch (error) {
+			// 如果文件不存在，使用空对象作为默认值
+		}
+
+		// 合并现有设置和新设置
+		const existingThemes = Array.isArray(
+			(existingSettings as any)["markdown.marp.themes"]
+		)
+			? (existingSettings as any)["markdown.marp.themes"]
+			: [];
+
+		const updatedSettings = {
+			...existingSettings,
 			"markdown.marp.html": "default",
-			"markdown.marp.themes": themeFiles,
+			"markdown.marp.themes": [
+				...new Set([...existingThemes, ...themeFiles]),
+			],
 		};
 
 		// 将配置内容转换为JSON字符串
-		const settingsJson = JSON.stringify(vscodeSettings, null, 4);
-
-		// 构建settings.json的完整路径
-		const settingsPath = `${this.vscodeConfigFolder}/settings.json`;
+		const settingsJson = JSON.stringify(updatedSettings, null, 4);
 
 		// 写入配置文件
 		await this.app.vault.adapter.write(settingsPath, settingsJson);
