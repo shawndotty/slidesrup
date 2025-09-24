@@ -396,6 +396,7 @@ export class SlidesRupStyleService {
 	private generateMarpUserStyleFromSections(): string {
 		const fontImports = this.getFontImports();
 		return `
+/* @theme my-sr-settings */
 ${fontImports}
 
 ${this.styleSections.hsl}
