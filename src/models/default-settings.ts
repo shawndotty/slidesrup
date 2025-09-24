@@ -101,6 +101,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	enableSlidesRupColorUserSetting: false,
 
 	customCss: "",
+	customMarpCss: "",
 	enableCustomCss: false,
 	slidesRupSlideMode: "light",
 	slidesRupUserDesigns: "none",

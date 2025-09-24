@@ -377,4 +377,6 @@ export default {
 	"Get The Latest Version Of Marp Themes": "獲取最新的 Marp 主題",
 	"Marp Themes updated.": "Marp 主題已更新。",
 	"Add Default Marp Themes for VS Code": "為 VS Code 添加默認 Marp 主題",
+	"User Customized Marp CSS": "用戶自定義 Marp CSS",
+	"Input Your Customized Marp CSS": "輸入您的自定義 Marp CSS",
 };

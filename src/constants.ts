@@ -55,3 +55,4 @@ export const SLIDESRUP_COLUMN_CLASSES = [
 
 export const SLIDES_EXTENDED_PLUGIN_FOLDER = "plugins/slides-extended";
 export const ADVANCED_SLIDES_PLUGIN_FOLDER = "plugins/obsidian-advanced-slides";
+export const MARP_THEMES_FOLDER = "MarpThemes";

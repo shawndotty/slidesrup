@@ -110,6 +110,7 @@ export interface SlidesRupSettings {
 	enableSlidesRupColorUserSetting: boolean;
 
 	customCss: string;
+	customMarpCss: string;
 	enableCustomCss: boolean;
 	slidesRupSlideMode: string;
 	slidesRupUserDesigns: string;

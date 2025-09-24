@@ -3,6 +3,7 @@ import { SlidesRupSettings, UserDesignCss } from "../types";
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
+	MARP_THEMES_FOLDER,
 } from "../constants";
 
 interface StyleSection {
@@ -13,10 +14,12 @@ interface StyleSection {
 	fontSize: string;
 	userCss: string;
 	userStyle: string;
+	userMarpCss: string;
 }
 
 export class SlidesRupStyleService {
 	private slidesRupMainStyleFilePath: string;
+	private slidesRupMarpUserSettingFilePath: string;
 	private styleSections: StyleSection = {
 		hsl: "",
 		headingTransform: "",
@@ -25,6 +28,7 @@ export class SlidesRupStyleService {
 		fontSize: "",
 		userCss: "",
 		userStyle: "",
+		userMarpCss: "",
 	};
 
 	constructor(private app: App, private settings: SlidesRupSettings) {
@@ -33,8 +37,10 @@ export class SlidesRupStyleService {
 				? SLIDES_EXTENDED_PLUGIN_FOLDER
 				: ADVANCED_SLIDES_PLUGIN_FOLDER;
 		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
+		const marpThemesPath = `${this.settings.slidesRupFrameworkFolder}/${MARP_THEMES_FOLDER}`;
 
 		this.slidesRupMainStyleFilePath = `${basePath}/my-slides-rup-user-style.css`;
+		this.slidesRupMarpUserSettingFilePath = `${marpThemesPath}/my-sr-settings.css`;
 	}
 
 	async updateUserDesignCssSettings() {
@@ -379,12 +385,31 @@ export class SlidesRupStyleService {
 		);
 	}
 
-	/**
-	 * 从样式部分生成样式表，不重新从设置生成
-	 */
-	private generateStyleSheetFromSections(): string {
-		// 生成字体导入语句（需要从当前设置获取字体信息）
-		const fontImports = this.generateFontImports([
+	private async writeMarpUserSettingFile() {
+		const allMarpCss = this.generateMarpUserStyleFromSections();
+		await this.app.vault.adapter.write(
+			this.slidesRupMarpUserSettingFilePath,
+			allMarpCss
+		);
+	}
+
+	private generateMarpUserStyleFromSections(): string {
+		const fontImports = this.getFontImports();
+		return `
+${fontImports}
+
+${this.styleSections.hsl}
+
+${
+	this.styleSections.userMarpCss
+		? `/* Customize CSS */\n${this.styleSections.userMarpCss}`
+		: ""
+}
+`;
+	}
+
+	private getFontImports(): string {
+		return this.generateFontImports([
 			this.settings.slidesRupHeadingFont,
 			this.settings.slidesRupMainFont,
 			this.settings.slidesRupH1Font || this.settings.slidesRupHeadingFont,
@@ -394,6 +419,14 @@ export class SlidesRupStyleService {
 			this.settings.slidesRupH5Font || this.settings.slidesRupHeadingFont,
 			this.settings.slidesRupH6Font || this.settings.slidesRupHeadingFont,
 		]);
+	}
+
+	/**
+	 * 从样式部分生成样式表，不重新从设置生成
+	 */
+	private generateStyleSheetFromSections(): string {
+		// 生成字体导入语句（需要从当前设置获取字体信息）
+		const fontImports = this.getFontImports();
 
 		return `
 ${fontImports}
@@ -416,7 +449,7 @@ ${
 
 ${
 	this.styleSections.userStyle
-		? `/* 自定义CSS */\n${this.styleSections.userStyle}`
+		? `/* Customize CSS */\n${this.styleSections.userStyle}`
 		: ""
 }
 `;
@@ -497,9 +530,14 @@ ${
 			case "userCss":
 				this.styleSections.userCss = await this.generateUserCss();
 				break;
+			case "userMarpCss":
+				this.styleSections.userMarpCss =
+					this.settings.customMarpCss || "";
+				break;
 			// 其他样式部分的处理...
 		}
 		await this.writeStyleFile();
+		await this.writeMarpUserSettingFile();
 	}
 
 	/**

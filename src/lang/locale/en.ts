@@ -440,4 +440,6 @@ export default {
 	"Marp Themes updated.": "Marp Themes Updated.",
 	"Add Default Marp Themes for VS Code":
 		"Add Default Marp Themes for VS Code",
+	"User Customized Marp CSS": "User Customized Marp CSS",
+	"Input Your Customized Marp CSS": "Input Your Customized Marp CSS",
 };
