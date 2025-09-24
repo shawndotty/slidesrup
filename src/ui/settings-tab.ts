@@ -415,6 +415,9 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"color"
 					);
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
+						"colorMarp"
+					);
 				}
 			},
 		});
@@ -1170,7 +1173,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				this.plugin.settings.customMarpCss = newCss;
 				this.plugin.saveSettings();
 				this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"userMarpCss"
+					"userStyleMarp"
 				);
 			},
 			500,
