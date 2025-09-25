@@ -29,7 +29,11 @@ import {
 	getAllDesignsOptions,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
-import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import {
+	TEMPLATE_PLACE_HOLDERS,
+	DEFAULT_DESIGNS,
+	MARP_THEMES_FOLDER,
+} from "src/constants";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
 import { TemplateProcessor } from "src/services/processors/template-precessor";
@@ -50,6 +54,8 @@ export class MarpSlidesMaker {
 	private templateProcessor: TemplateProcessor;
 	private footNoteProcessor: FootnoteProcessor;
 	private fragmentProcessor: FragmentProcessor;
+	private util: ObsidianUtils;
+
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -83,18 +89,13 @@ export class MarpSlidesMaker {
 			this.userDesigns,
 			this.defaultDesigns
 		);
-		this.multipleFileProcessor = new MultipleFileProcessor(
-			new ObsidianUtils(this.app, this.settings)
-		);
+		this.util = new ObsidianUtils(this.app, this.settings);
+		this.multipleFileProcessor = new MultipleFileProcessor(this.util);
 		this.footNoteProcessor = new FootnoteProcessor();
-		this.templateProcessor = new TemplateProcessor(
-			new ObsidianUtils(this.app, this.settings)
-		);
+		this.templateProcessor = new TemplateProcessor(this.util);
 		this.blockProcessor = new BlockProcessor();
 		this.fragmentProcessor = new FragmentProcessor();
-		this.imageProcessor = new ImageProcessor(
-			new ObsidianUtils(this.app, this.settings)
-		);
+		this.imageProcessor = new ImageProcessor(this.util);
 	}
 
 	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
@@ -592,11 +593,54 @@ export class MarpSlidesMaker {
 			newSlideLocation
 		);
 
+		await this._rewriteThemeImageUrl(design, newSlideLocation);
+
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
 			processedContent
 		);
+	}
+
+	private async _rewriteThemeImageUrl(
+		design: string,
+		newSlideLocation: string
+	) {
+		const slidesRupFrameworkFolder = this.settings.slidesRupFrameworkFolder;
+		const themeFilePath = `${slidesRupFrameworkFolder}/${MARP_THEMES_FOLDER}/sr-design-${design.toLowerCase()}.css`;
+		const themeFile = this.app.vault.getAbstractFileByPath(themeFilePath);
+		if (themeFile instanceof TFile) {
+			const coverImagePath = `${slidesRupFrameworkFolder}/MyDesigns/Design-${design}/Cover-${design}.png`;
+			const newRelativePath = this.util.getRelativePathForTarget(
+				coverImagePath,
+				newSlideLocation
+			);
+			const newPathBase = newRelativePath.substring(
+				0,
+				newRelativePath.lastIndexOf("/")
+			);
+			console.dir(newPathBase);
+
+			const themeContent = await this.app.vault.read(themeFile);
+			console.dir(themeContent);
+			const updatedContent = themeContent.replace(
+				/url\("(.*?)"\)/g,
+				(match, p1) => {
+					// 判断是否为http链接
+					if (p1.startsWith("http://") || p1.startsWith("https://")) {
+						return match;
+					}
+					// 获取路径中最后一个/之前的内容
+					const lastSlashIndex = p1.lastIndexOf("/");
+					if (lastSlashIndex !== -1) {
+						const fileName = p1.substring(lastSlashIndex + 1);
+						return `url("${newPathBase}/${fileName}")`;
+					}
+					return match;
+				}
+			);
+			await this.app.vault.modify(themeFile, updatedContent);
+		}
 	}
 
 	private _regularizeHeadingsForContent(
