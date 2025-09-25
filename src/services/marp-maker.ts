@@ -1042,8 +1042,8 @@ export class MarpSlidesMaker {
 			// 11. 处理脚注
 			(content) =>
 				this.footNoteProcessor.process(content, {
-					separator: "---",
-					verticalSeparator: "\\*\\*\\*",
+					separator: "^---$",
+					verticalSeparator: "^\\*\\*\\*$",
 				}),
 
 			(content) => this.blockProcessor.process(content),
