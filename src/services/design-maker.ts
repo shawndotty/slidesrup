@@ -9,22 +9,29 @@ import {
 	getUserDesigns,
 	getAllDesignsOptions,
 } from "src/utils";
-import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import {
+	TEMPLATE_PLACE_HOLDERS,
+	DEFAULT_DESIGNS,
+	REVEAL_USER_DESIGN_FOLDER,
+} from "src/constants";
 import { SlideDesignSuggester } from "../suggesters/suggesters";
+import { VSCodeService } from "./vscode-service";
 
 export class DesignMaker {
 	private app: App;
 	private settings: SlidesRupSettings;
-	private static readonly MY_DESIGN_FOLDER = "MyDesigns";
+	private static readonly MY_DESIGN_FOLDER = REVEAL_USER_DESIGN_FOLDER;
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesignPath: string = "";
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
+	private vscodeService: VSCodeService;
 
 	constructor(app: App, settings: SlidesRupSettings) {
 		this.app = app;
 		this.settings = settings;
 		this.userDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
+		this.vscodeService = new VSCodeService(this.app, this.settings);
 	}
 
 	async makeNewBlankDesign() {
@@ -45,6 +52,7 @@ export class DesignMaker {
 			`${t("Chapter")}-${trimedDesignName}`,
 			`${t("ContentPage")}-${trimedDesignName}`,
 			`${t("BlankPage")}-${trimedDesignName}`,
+			`sr-design-${trimedDesignName.toLowerCase()}`,
 		];
 
 		// Optimized approach:
@@ -64,6 +72,19 @@ export class DesignMaker {
 
 		await Promise.allSettled(fileCreationPromises);
 
+		const marpThemesFolder = `${this.settings.slidesRupFrameworkFolder}/MarpThemes`;
+		const marpThemePath = `${marpThemesFolder}/sr-design-${trimedDesignName.toLowerCase()}.css`;
+		const defaultThemeContent = [
+			`/* @theme sr-design-${trimedDesignName.toLowerCase()} */`,
+			'@import "sr-base"',
+		].join("\n");
+
+		await this.app.vault.create(marpThemePath, defaultThemeContent);
+
+		await this.vscodeService.addNewMarpThemeForVSCode(
+			trimedDesignName.toLowerCase()
+		);
+
 		await this._revealNewDesign(newDesignPath);
 	}
 
@@ -82,13 +103,19 @@ export class DesignMaker {
 		const designName = design.value;
 		const isDefaultDesign = this.defaultDesigns.includes(designName);
 		const originalDesignPath = `${this.settings.slidesRupFrameworkFolder}/${
-			isDefaultDesign ? "Designs" : "MyDesigns"
+			isDefaultDesign ? "Designs" : DesignMaker.MY_DESIGN_FOLDER
 		}/Design-${designName}`;
+
+		const marpThemesFolder = `${this.settings.slidesRupFrameworkFolder}/MarpThemes`;
 
 		const newDesignName = await this._getDesignName();
 
+		const newMarpThemePath = `${marpThemesFolder}/sr-design-${newDesignName.toLowerCase()}.css`;
+
+		const originalMarpThemePath = `${marpThemesFolder}/sr-design-${designName.toLowerCase()}.css`;
+
 		if (!newDesignName) return;
-		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
+		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}/Design-${newDesignName}`;
 		await createPathIfNeeded(this.app, newDesignPath);
 
 		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName
@@ -186,6 +213,35 @@ export class DesignMaker {
 					);
 				}
 			}
+		}
+		// 复制 Marp 主题文件
+		if (originalMarpThemePath) {
+			await this.app.vault.adapter.copy(
+				originalMarpThemePath,
+				newMarpThemePath
+			);
+
+			// 读取并更新主题文件内容
+			const themeContent = await this.app.vault.adapter.read(
+				newMarpThemePath
+			);
+			const updatedThemeContent = themeContent
+				.replace(
+					new RegExp(`sr-design-${designName.toLowerCase()}`, "g"),
+					`sr-design-${newDesignName.toLowerCase()}`
+				)
+				.replace(
+					new RegExp(`\-${designName.toUpperCase()}`, "g"),
+					`-${newDesignName.toUpperCase()}`
+				);
+			await this.app.vault.adapter.write(
+				newMarpThemePath,
+				updatedThemeContent
+			);
+
+			await this.vscodeService.addNewMarpThemeForVSCode(
+				newDesignName.toLowerCase()
+			);
 		}
 		await this._revealNewDesign(newDesignPath);
 	}

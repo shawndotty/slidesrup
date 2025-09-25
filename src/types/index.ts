@@ -61,11 +61,12 @@ export interface SlidesRupSettings {
 	demoFolder: string;
 	presentationPlugin: string;
 	updateIDs: {
-		style: AirtableIds;
-		templates: AirtableIds;
-		demo: AirtableIds;
-		reveal: AirtableIds;
-		revealAS: AirtableIds;
+		style?: AirtableIds;
+		marpTheme?: AirtableIds;
+		templates?: AirtableIds;
+		demo?: AirtableIds;
+		reveal?: AirtableIds;
+		revealAS?: AirtableIds;
 	};
 	slidesRupThemeColor: string;
 	slidesRupHue: number;
@@ -109,6 +110,7 @@ export interface SlidesRupSettings {
 	enableSlidesRupColorUserSetting: boolean;
 
 	customCss: string;
+	customMarpCss: string;
 	enableCustomCss: boolean;
 	slidesRupSlideMode: string;
 	slidesRupUserDesigns: string;
@@ -195,3 +197,24 @@ export interface ReplaceConfig {
 	cName?: string;
 	slideName?: string;
 }
+
+export type Options = {
+	theme: string;
+	highlightTheme: string;
+	template: string;
+	separator: string;
+	verticalSeparator: string;
+	notesSeparator: string;
+	enableLinks: boolean;
+	title: string;
+	css: string | string[];
+	remoteCSS: string | string[];
+	width: number;
+	height: number;
+	margin: number;
+	showGrid: boolean;
+	bg: string;
+	center: boolean;
+	log: boolean;
+	defaultTemplate: string;
+};

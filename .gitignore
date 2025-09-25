@@ -23,6 +23,6 @@ data.json
 
 *.zip
 
-src/constants.ts
+src/airtable-config.ts
 
 WARP.md

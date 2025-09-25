@@ -1,6 +1,6 @@
 {
 	"name": "slidesrup",
-	"version": "1.5.2",
+	"version": "1.5.3",
 	"description": "Convert Markdown to Beautiful and Useful Slides With One Click",
 	"main": "main.js",
 	"scripts": {
@@ -12,11 +12,13 @@
 	"author": "JohnnyLearns",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/color": "^4.2.0",
 		"@types/node": "^16.11.6",
 		"@types/tinycolor2": "^1.4.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
+		"color": "^4.2.3",
 		"esbuild": "0.17.3",
 		"obsidian": "latest",
 		"tslib": "2.4.0",

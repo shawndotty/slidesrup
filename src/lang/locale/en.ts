@@ -428,10 +428,18 @@ export default {
 	Grid: "Grid",
 	"Default TOC Page Position": "Default TOC Page Position",
 	"Set Default TOC Page Position": "Set Default TOC Page Position",
+	"Convert to Marp Slides": "Convert Active File to Marp Slides",
 	"User Specific Frontmatter Options": "User Specific Frontmatter Options",
 	"User Customized CSS": "User Customized CSS",
 	"Input Your Customized CSS": "Input Your Customized CSS",
 	"Frontmatter Options": "Frontmatter Options",
 	"Input Your Frontmatter Options": "Input Your Frontmatter Options",
 	"Advanced Slides YAML Reference": "Advanced Slides YAML Reference",
+	"Get The Latest Version Of Marp Themes":
+		"Get The Latest Version Of Marp Themes",
+	"Marp Themes updated.": "Marp Themes Updated.",
+	"Add Default Marp Themes for VS Code":
+		"Add Default Marp Themes for VS Code",
+	"User Customized Marp CSS": "User Customized Marp CSS",
+	"Input Your Customized Marp CSS": "Input Your Customized Marp CSS",
 };

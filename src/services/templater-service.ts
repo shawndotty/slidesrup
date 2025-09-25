@@ -1,4 +1,5 @@
 import { App } from "obsidian";
+import { createPathIfNeeded } from "src/utils";
 
 export class TemplaterService {
 	constructor(private app: App) {}

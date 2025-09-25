@@ -8,6 +8,8 @@ import {
 	moment,
 } from "obsidian";
 
+import { REVEAL_USER_DESIGN_FOLDER } from "../constants";
+
 import { t } from "../lang/helpers";
 
 /**
@@ -208,8 +210,7 @@ export async function createPathIfNeeded(
 }
 
 export function getUserDesigns(app: App, slidesRupPath: string) {
-	const slidesRupUserDesignsPath = `${slidesRupPath}/MyDesigns`;
-	// 获取框架文件夹
+	const slidesRupUserDesignsPath = `${slidesRupPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 	const slidesRupUserDesignsFolder = app.vault.getAbstractFileByPath(
 		slidesRupUserDesignsPath
 	);
@@ -218,7 +219,6 @@ export function getUserDesigns(app: App, slidesRupPath: string) {
 		slidesRupUserDesignsFolder &&
 		slidesRupUserDesignsFolder instanceof TFolder
 	) {
-		// 获取所有子文件夹
 		const subFolders = slidesRupUserDesignsFolder.children
 			.filter((file) => file instanceof TFolder)
 			.map((folder) => folder.name.split("-").last() as string);

@@ -33,6 +33,11 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 			tableID: "",
 			viewID: "",
 		},
+		marpTheme: {
+			baseID: "",
+			tableID: "",
+			viewID: "",
+		},
 		templates: {
 			baseID: "",
 			tableID: "",
@@ -96,6 +101,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	enableSlidesRupColorUserSetting: false,
 
 	customCss: "",
+	customMarpCss: "",
 	enableCustomCss: false,
 	slidesRupSlideMode: "light",
 	slidesRupUserDesigns: "none",

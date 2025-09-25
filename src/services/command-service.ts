@@ -3,11 +3,15 @@ import { t } from "../lang/helpers";
 import { SlidesRupSettings, NocoDBSettings } from "../types";
 import { buildFieldNames } from "../utils";
 import { SlidesMaker } from "./slides-maker";
+import { MarpSlidesMaker } from "./marp-maker";
 import { DesignMaker } from "./design-maker";
 import { NocoDB } from "./db-sync/noco-db";
 import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
+import { MarpSlidesService } from "./marp-slides-service";
+import { VSCodeService } from "./vscode-service";
+
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
@@ -16,8 +20,10 @@ import {
 export class CommandService {
 	private slidesMaker: SlidesMaker;
 	private designMaker: DesignMaker;
+	private marpSlidesMaker: MarpSlidesMaker;
 	private presentationPluginFolder: string;
 	private revealAddOnsViewName: string;
+	private marpSlidesService: MarpSlidesService;
 
 	constructor(
 		private addCommand: (command: Command) => void,
@@ -28,10 +34,13 @@ export class CommandService {
 		) => void,
 		private app: App,
 		private settings: SlidesRupSettings,
-		private templaterService: TemplaterService
+		private templaterService: TemplaterService,
+		private vscodeService: VSCodeService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
+		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
+		this.marpSlidesService = new MarpSlidesService(this.app);
 		if (this.settings.presentationPlugin === "slidesExtended") {
 			this.presentationPluginFolder = SLIDES_EXTENDED_PLUGIN_FOLDER;
 			this.revealAddOnsViewName = "reveal";
@@ -149,10 +158,21 @@ export class CommandService {
 			"update-style",
 			t("Get The Latest Version Of Style"),
 			{
-				baseID: this.settings.updateIDs.style.baseID,
-				tableID: this.settings.updateIDs.style.tableID,
-				viewID: this.settings.updateIDs.style.viewID,
+				baseID: this.settings?.updateIDs?.style?.baseID || "",
+				tableID: this.settings?.updateIDs?.style?.tableID || "",
+				viewID: this.settings?.updateIDs?.style?.viewID || "",
 				targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
+			}
+		);
+
+		createNocoDBCommand(
+			"update-marp-theme",
+			t("Get The Latest Version Of Marp Themes"),
+			{
+				baseID: this.settings?.updateIDs?.marpTheme?.baseID || "",
+				tableID: this.settings?.updateIDs?.marpTheme?.tableID || "",
+				viewID: this.settings?.updateIDs?.marpTheme?.viewID || "",
+				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
 
@@ -160,9 +180,9 @@ export class CommandService {
 			"update-templates",
 			t("Get The Latest Version Of Templates"),
 			{
-				baseID: this.settings.updateIDs.templates.baseID,
-				tableID: this.settings.updateIDs.templates.tableID,
-				viewID: this.settings.updateIDs.templates.viewID,
+				baseID: this.settings?.updateIDs?.templates?.baseID || "",
+				tableID: this.settings?.updateIDs?.templates?.tableID || "",
+				viewID: this.settings?.updateIDs?.templates?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
@@ -172,13 +192,13 @@ export class CommandService {
 			t("Get The Latest Version SlidesRup Reveal Addons"),
 			(() => {
 				const update =
-					this.settings.updateIDs[
+					this.settings?.updateIDs[
 						this.revealAddOnsViewName as "reveal" | "revealAS"
 					];
 				return {
-					baseID: update.baseID,
-					tableID: update.tableID,
-					viewID: update.viewID,
+					baseID: update?.baseID || "",
+					tableID: update?.tableID || "",
+					viewID: update?.viewID || "",
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 				};
 			})()
@@ -188,9 +208,9 @@ export class CommandService {
 			"update-demo-templates",
 			t("Get The Latest Version Of User Templates"),
 			{
-				baseID: this.settings.updateIDs.demo.baseID,
-				tableID: this.settings.updateIDs.demo.tableID,
-				viewID: this.settings.updateIDs.demo.viewID,
+				baseID: this.settings?.updateIDs?.demo?.baseID || "",
+				tableID: this.settings?.updateIDs?.demo?.tableID || "",
+				viewID: this.settings?.updateIDs?.demo?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			}
 		);
@@ -202,17 +222,25 @@ export class CommandService {
 				new Notice(t("Starting one-click deployment..."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.style.baseID,
-					tableID: this.settings.updateIDs.style.tableID,
-					viewID: this.settings.updateIDs.style.viewID,
+					baseID: this.settings?.updateIDs?.style?.baseID || "",
+					tableID: this.settings?.updateIDs?.style?.tableID || "",
+					viewID: this.settings?.updateIDs?.style?.viewID || "",
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
 				});
 				new Notice(t("Styles updated."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.templates.baseID,
-					tableID: this.settings.updateIDs.templates.tableID,
-					viewID: this.settings.updateIDs.templates.viewID,
+					baseID: this.settings?.updateIDs?.marpTheme?.baseID || "",
+					tableID: this.settings?.updateIDs?.marpTheme?.tableID || "",
+					viewID: this.settings?.updateIDs?.marpTheme?.viewID || "",
+					targetFolderPath: this.settings.slidesRupFrameworkFolder,
+				});
+				new Notice(t("Marp Themes updated."));
+
+				await this.runNocoDBCommand({
+					baseID: this.settings?.updateIDs?.templates?.baseID || "",
+					tableID: this.settings?.updateIDs?.templates?.tableID || "",
+					viewID: this.settings?.updateIDs?.templates?.viewID || "",
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Templates updated."));
@@ -226,9 +254,9 @@ export class CommandService {
 									| "revealAS"
 							];
 						return {
-							baseID: update.baseID,
-							tableID: update.tableID,
-							viewID: update.viewID,
+							baseID: update?.baseID || "",
+							tableID: update?.tableID || "",
+							viewID: update?.viewID || "",
 							targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 						};
 					})()
@@ -236,12 +264,29 @@ export class CommandService {
 				new Notice(t("Reveal template updated."));
 
 				await this.runNocoDBCommand({
-					baseID: this.settings.updateIDs.demo.baseID,
-					tableID: this.settings.updateIDs.demo.tableID,
-					viewID: this.settings.updateIDs.demo.viewID,
+					baseID: this.settings?.updateIDs?.demo?.baseID || "",
+					tableID: this.settings?.updateIDs?.demo?.tableID || "",
+					viewID: this.settings?.updateIDs?.demo?.viewID || "",
 					targetFolderPath: this.settings.slidesRupFrameworkFolder,
 				});
 				new Notice(t("Demo slides updated."));
+
+				await this.marpSlidesService.setPluginSetting(
+					"EnableHTML",
+					true
+				);
+
+				await this.marpSlidesService.setPluginSetting(
+					"EnableMarkdownItPlugins",
+					true
+				);
+
+				await this.marpSlidesService.setPluginSetting(
+					"ThemePath",
+					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`
+				);
+
+				await this.vscodeService.addDefaultMarpThemesForVSCode();
 
 				new Notice(t("One-click deployment finished!"));
 			},
@@ -320,6 +365,26 @@ export class CommandService {
 						this.designMaker.makeNewDesignFromCurrentDesign()
 					);
 				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:convert-to-marp-slides",
+			name: t("Convert to Marp Slides"),
+			callback: async () => {
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.marpSlidesMaker.convertMDToMarpSlide()
+					);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:add-default-marp-themes-for-vscode",
+			name: t("Add Default Marp Themes for VS Code"),
+			callback: async () => {
+				await this.vscodeService.addDefaultMarpThemesForVSCode();
 			},
 		});
 	}

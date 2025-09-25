@@ -3,28 +3,41 @@ import { SlidesRupSettings, UserDesignCss } from "../types";
 import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
+	MARP_THEMES_FOLDER,
+	REVEAL_USER_DESIGN_FOLDER,
 } from "../constants";
 
 interface StyleSection {
 	hsl: string;
 	headingTransform: string;
+	headingTransformMarp: string;
 	color: string;
+	colorMarp: string;
 	fontFamily: string;
+	fontFamilyMarp: string;
 	fontSize: string;
+	fontSizeMarp: string;
 	userCss: string;
 	userStyle: string;
+	userStyleMarp: string;
 }
 
 export class SlidesRupStyleService {
 	private slidesRupMainStyleFilePath: string;
+	private slidesRupMarpUserSettingFilePath: string;
 	private styleSections: StyleSection = {
 		hsl: "",
 		headingTransform: "",
+		headingTransformMarp: "",
 		color: "",
+		colorMarp: "",
 		fontFamily: "",
+		fontFamilyMarp: "",
 		fontSize: "",
+		fontSizeMarp: "",
 		userCss: "",
 		userStyle: "",
+		userStyleMarp: "",
 	};
 
 	constructor(private app: App, private settings: SlidesRupSettings) {
@@ -33,8 +46,10 @@ export class SlidesRupStyleService {
 				? SLIDES_EXTENDED_PLUGIN_FOLDER
 				: ADVANCED_SLIDES_PLUGIN_FOLDER;
 		const basePath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles`;
+		const marpThemesPath = `${this.settings.slidesRupFrameworkFolder}/${MARP_THEMES_FOLDER}`;
 
 		this.slidesRupMainStyleFilePath = `${basePath}/my-slides-rup-user-style.css`;
+		this.slidesRupMarpUserSettingFilePath = `${marpThemesPath}/my-sr-settings.css`;
 	}
 
 	async updateUserDesignCssSettings() {
@@ -109,13 +124,16 @@ export class SlidesRupStyleService {
 	/**
 	 * 生成标题变换样式部分
 	 */
-	private generateHeadingTransformSection(transform: string): string {
-		return `.reveal h1,
-.reveal h2,
-.reveal h3,
-.reveal h4,
-.reveal h5,
-.reveal h6 {
+	private generateHeadingTransformSection(
+		transform: string,
+		prefix: string = ".reveal"
+	): string {
+		return `${prefix} h1,
+${prefix} h2,
+${prefix} h3,
+${prefix} h4,
+${prefix} h5,
+${prefix} h6 {
     text-transform: ${transform};
 }`;
 	}
@@ -123,7 +141,47 @@ export class SlidesRupStyleService {
 	/**
 	 * 生成颜色样式部分
 	 */
-	private generateColorSection(colors: {
+	private generateColorSection(
+		colors: {
+			slidesRupH1Color: string;
+			slidesRupH2Color: string;
+			slidesRupH3Color: string;
+			slidesRupH4Color: string;
+			slidesRupH5Color: string;
+			slidesRupH6Color: string;
+			slidesRupBodyColor: string;
+			slidesRupParagraphColor: string;
+			slidesRupListColor: string;
+			slidesRupStrongColor: string;
+			slidesRupEmColor: string;
+			slidesRupLinkColor: string;
+		},
+		prefix: string = ".reveal"
+	): string {
+		const colorVariables = this.generateColorVariables(colors);
+
+		return `
+${colorVariables}
+
+/* Heading Colors */
+${prefix} h1 { color: var(--r-h1-color); }
+${prefix} h2 { color: var(--r-h2-color); }
+${prefix} h3 { color: var(--r-h3-color); }
+${prefix} h4 { color: var(--r-h4-color); }
+${prefix} h5 { color: var(--r-h5-color); }
+${prefix} h6 { color: var(--r-h6-color); }
+
+/* Other Colors */
+${prefix} { color: var(--r-body-color); }
+${prefix} p { color: var(--r-paragraph-color); }
+${prefix} ul, ${prefix} ol { color: var(--r-list-color); }
+${prefix} strong, ${prefix} b { color: var(--r-strong-color); }
+${prefix} em, ${prefix} i { color: var(--r-em-color); }
+${prefix} a { color: var(--r-link-color); }
+${prefix} a:hover { opacity: 0.8; }`;
+	}
+
+	private generateColorVariables(colors: {
 		slidesRupH1Color: string;
 		slidesRupH2Color: string;
 		slidesRupH3Color: string;
@@ -137,68 +195,53 @@ export class SlidesRupStyleService {
 		slidesRupEmColor: string;
 		slidesRupLinkColor: string;
 	}): string {
-		const {
-			slidesRupH1Color,
-			slidesRupH2Color,
-			slidesRupH3Color,
-			slidesRupH4Color,
-			slidesRupH5Color,
-			slidesRupH6Color,
-			slidesRupBodyColor,
-			slidesRupParagraphColor,
-			slidesRupListColor,
-			slidesRupStrongColor,
-			slidesRupEmColor,
-			slidesRupLinkColor,
-		} = colors;
+		// 创建颜色变量映射
+		const colorMap = {
+			h1: colors.slidesRupH1Color,
+			h2: colors.slidesRupH2Color,
+			h3: colors.slidesRupH3Color,
+			h4: colors.slidesRupH4Color,
+			h5: colors.slidesRupH5Color,
+			h6: colors.slidesRupH6Color,
+			body: colors.slidesRupBodyColor,
+			paragraph: colors.slidesRupParagraphColor,
+			list: colors.slidesRupListColor,
+			strong: colors.slidesRupStrongColor,
+			em: colors.slidesRupEmColor,
+			link: colors.slidesRupLinkColor,
+		};
 
-		return `:root {
-    /* 颜色变量 */
-    --r-h1-color: ${slidesRupH1Color};
-    --r-h2-color: ${slidesRupH2Color};
-    --r-h3-color: ${slidesRupH3Color};
-    --r-h4-color: ${slidesRupH4Color};
-    --r-h5-color: ${slidesRupH5Color};
-    --r-h6-color: ${slidesRupH6Color};
-    --r-body-color: ${slidesRupBodyColor};
-    --r-paragraph-color: ${slidesRupParagraphColor};
-    --r-list-color: ${slidesRupListColor};
-    --r-strong-color: ${slidesRupStrongColor};
-    --r-em-color: ${slidesRupEmColor};
-    --r-link-color: ${slidesRupLinkColor};
-}
+		// 使用数组方法生成CSS变量声明
+		const cssVariables = Object.entries(colorMap)
+			.map(([key, value]) => `    --r-${key}-color: ${value};`)
+			.join("\n");
 
-/* 标题颜色应用 */
-.reveal h1 { color: var(--r-h1-color); }
-.reveal h2 { color: var(--r-h2-color); }
-.reveal h3 { color: var(--r-h3-color); }
-.reveal h4 { color: var(--r-h4-color); }
-.reveal h5 { color: var(--r-h5-color); }
-.reveal h6 { color: var(--r-h6-color); }
+		const cssLines = [
+			":root {",
+			"    /* Color Variables */",
+			cssVariables,
+			"}",
+		];
 
-/* 主体和文本元素颜色 */
-.reveal { color: var(--r-body-color); }
-.reveal p { color: var(--r-paragraph-color); }
-.reveal ul, .reveal ol { color: var(--r-list-color); }
-.reveal strong, .reveal b { color: var(--r-strong-color); }
-.reveal em, .reveal i { color: var(--r-em-color); }
-.reveal a { color: var(--r-link-color); }
-.reveal a:hover { opacity: 0.8; }`;
+		return cssLines.join("\n");
 	}
 
 	/**
 	 * 生成字体族样式部分
 	 */
-	private generateFontFamilySection(fonts: {
-		slidesRupHeadingFont: string;
-		slidesRupMainFont: string;
-		slidesRupH1Font?: string;
-		slidesRupH2Font?: string;
-		slidesRupH3Font?: string;
-		slidesRupH4Font?: string;
-		slidesRupH5Font?: string;
-		slidesRupH6Font?: string;
-	}): string {
+	private generateFontFamilySection(
+		fonts: {
+			slidesRupHeadingFont: string;
+			slidesRupMainFont: string;
+			slidesRupH1Font?: string;
+			slidesRupH2Font?: string;
+			slidesRupH3Font?: string;
+			slidesRupH4Font?: string;
+			slidesRupH5Font?: string;
+			slidesRupH6Font?: string;
+		},
+		prefix: string = ".reveal"
+	): string {
 		const {
 			slidesRupHeadingFont,
 			slidesRupMainFont,
@@ -244,15 +287,15 @@ export class SlidesRupStyleService {
 }
 
 /* 标题字体应用 */
-.reveal h1 { font-family: var(--r-h1-font); }
-.reveal h2 { font-family: var(--r-h2-font); }
-.reveal h3 { font-family: var(--r-h3-font); }
-.reveal h4 { font-family: var(--r-h4-font); }
-.reveal h5 { font-family: var(--r-h5-font); }
-.reveal h6 { font-family: var(--r-h6-font); }
+${prefix} h1 { font-family: var(--r-h1-font); }
+${prefix} h2 { font-family: var(--r-h2-font); }
+${prefix} h3 { font-family: var(--r-h3-font); }
+${prefix} h4 { font-family: var(--r-h4-font); }
+${prefix} h5 { font-family: var(--r-h5-font); }
+${prefix} h6 { font-family: var(--r-h6-font); }
 
 /* 主体字体 */
-.reveal { font-family: var(--r-main-font); }`;
+${prefix} { font-family: var(--r-main-font); }`;
 	}
 
 	private getHeadingFontOption(
@@ -269,15 +312,18 @@ export class SlidesRupStyleService {
 	/**
 	 * 生成字体大小样式部分
 	 */
-	private generateFontSizeSection(sizes: {
-		slidesRupMainFontSize: number;
-		slidesRupH1Size: number;
-		slidesRupH2Size: number;
-		slidesRupH3Size: number;
-		slidesRupH4Size: number;
-		slidesRupH5Size: number;
-		slidesRupH6Size: number;
-	}): string {
+	private generateFontSizeSection(
+		sizes: {
+			slidesRupMainFontSize: number;
+			slidesRupH1Size: number;
+			slidesRupH2Size: number;
+			slidesRupH3Size: number;
+			slidesRupH4Size: number;
+			slidesRupH5Size: number;
+			slidesRupH6Size: number;
+		},
+		prefix: string = ".reveal"
+	): string {
 		const {
 			slidesRupMainFontSize,
 			slidesRupH1Size,
@@ -300,15 +346,15 @@ export class SlidesRupStyleService {
 }
 
 /* 标题字体大小应用 */
-.reveal h1 { font-size: var(--r-heading1-size); }
-.reveal h2 { font-size: var(--r-heading2-size); }
-.reveal h3 { font-size: var(--r-heading3-size); }
-.reveal h4 { font-size: var(--r-heading4-size); }
-.reveal h5 { font-size: var(--r-heading5-size); }
-.reveal h6 { font-size: var(--r-heading6-size); }
+${prefix} h1 { font-size: var(--r-heading1-size); }
+${prefix} h2 { font-size: var(--r-heading2-size); }
+${prefix} h3 { font-size: var(--r-heading3-size); }
+${prefix} h4 { font-size: var(--r-heading4-size); }
+${prefix} h5 { font-size: var(--r-heading5-size); }
+${prefix} h6 { font-size: var(--r-heading6-size); }
 
 /* 主体字体大小 */
-.reveal { font-size: var(--r-main-font-size); }`;
+${prefix} { font-size: var(--r-main-font-size); }`;
 	}
 
 	/**
@@ -379,12 +425,40 @@ export class SlidesRupStyleService {
 		);
 	}
 
-	/**
-	 * 从样式部分生成样式表，不重新从设置生成
-	 */
-	private generateStyleSheetFromSections(): string {
-		// 生成字体导入语句（需要从当前设置获取字体信息）
-		const fontImports = this.generateFontImports([
+	private async writeMarpUserSettingFile() {
+		const allMarpCss = this.generateMarpUserStyleFromSections();
+		await this.app.vault.adapter.write(
+			this.slidesRupMarpUserSettingFilePath,
+			allMarpCss
+		);
+	}
+
+	private generateMarpUserStyleFromSections(): string {
+		const fontImports = this.getFontImports();
+		return `
+/* @theme my-sr-settings */
+${fontImports}
+
+${this.styleSections.hsl}
+
+${this.styleSections.headingTransformMarp}
+
+${this.styleSections.colorMarp}
+
+${this.styleSections.fontFamilyMarp}
+
+${this.styleSections.fontSizeMarp}
+
+${
+	this.styleSections.userStyleMarp
+		? `/* Customize CSS */\n${this.styleSections.userStyleMarp}`
+		: ""
+}
+`;
+	}
+
+	private getFontImports(): string {
+		return this.generateFontImports([
 			this.settings.slidesRupHeadingFont,
 			this.settings.slidesRupMainFont,
 			this.settings.slidesRupH1Font || this.settings.slidesRupHeadingFont,
@@ -394,6 +468,14 @@ export class SlidesRupStyleService {
 			this.settings.slidesRupH5Font || this.settings.slidesRupHeadingFont,
 			this.settings.slidesRupH6Font || this.settings.slidesRupHeadingFont,
 		]);
+	}
+
+	/**
+	 * 从样式部分生成样式表，不重新从设置生成
+	 */
+	private generateStyleSheetFromSections(): string {
+		// 生成字体导入语句（需要从当前设置获取字体信息）
+		const fontImports = this.getFontImports();
 
 		return `
 ${fontImports}
@@ -416,7 +498,7 @@ ${
 
 ${
 	this.styleSections.userStyle
-		? `/* 自定义CSS */\n${this.styleSections.userStyle}`
+		? `/* Customize CSS */\n${this.styleSections.userStyle}`
 		: ""
 }
 `;
@@ -445,6 +527,11 @@ ${
 					this.generateHeadingTransformSection(
 						this.settings.slidesRupHeadingTextTransform
 					);
+				this.styleSections.headingTransformMarp =
+					this.generateHeadingTransformSection(
+						this.settings.slidesRupHeadingTextTransform,
+						"section"
+					);
 				break;
 			case "color":
 				const colors = {
@@ -463,6 +550,10 @@ ${
 					slidesRupLinkColor: this.settings.slidesRupLinkColor,
 				};
 				this.styleSections.color = this.generateColorSection(colors);
+				this.styleSections.colorMarp = this.generateColorSection(
+					colors,
+					"section"
+				);
 				break;
 			case "fontFamily":
 				const fonts = {
@@ -477,6 +568,8 @@ ${
 				};
 				this.styleSections.fontFamily =
 					this.generateFontFamilySection(fonts);
+				this.styleSections.fontFamilyMarp =
+					this.generateFontFamilySection(fonts, "section");
 				break;
 			case "fontSize":
 				const sizes = {
@@ -490,6 +583,10 @@ ${
 				};
 				this.styleSections.fontSize =
 					this.generateFontSizeSection(sizes);
+				this.styleSections.fontSizeMarp = this.generateFontSizeSection(
+					sizes,
+					"section"
+				);
 				break;
 			case "userStyle":
 				this.styleSections.userStyle = this.settings.customCss || "";
@@ -497,9 +594,14 @@ ${
 			case "userCss":
 				this.styleSections.userCss = await this.generateUserCss();
 				break;
+			case "userStyleMarp":
+				this.styleSections.userStyleMarp =
+					this.settings.customMarpCss || "";
+				break;
 			// 其他样式部分的处理...
 		}
 		await this.writeStyleFile();
+		await this.writeMarpUserSettingFile();
 	}
 
 	/**
@@ -510,11 +612,12 @@ ${
 			this.styleSections[key as keyof StyleSection] = "";
 		});
 		await this.writeStyleFile();
+		await this.writeMarpUserSettingFile();
 	}
 
 	async getUserDesignCssFiles() {
 		const slidesRupFrameworkPath = this.settings.slidesRupFrameworkFolder;
-		const userDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
+		const userDesignsPath = `${slidesRupFrameworkPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 		let cssFiles: string[] = [];
 		// 使用 Obsidian 的 adapter API 递归获取 userDesignsPath 下所有子文件夹的 css 文件
 		cssFiles = await this.getAllCssFilesInFolder(userDesignsPath);

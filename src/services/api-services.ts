@@ -1,5 +1,5 @@
 import { requestUrl } from "obsidian";
-import { AIRTABLE_CONFIG } from "../constants";
+import { AIRTABLE_CONFIG } from "../airtable-config";
 import { SlidesRupSettings } from "../types";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
 

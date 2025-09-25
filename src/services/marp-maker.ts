@@ -29,19 +29,34 @@ import {
 	getAllDesignsOptions,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
-import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
-import { ImageProcessor } from "src/services/processors/image-processor";
+import {
+	TEMPLATE_PLACE_HOLDERS,
+	DEFAULT_DESIGNS,
+	MARP_THEMES_FOLDER,
+	REVEAL_USER_DESIGN_FOLDER,
+} from "src/constants";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
+import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
+import { TemplateProcessor } from "src/services/processors/template-precessor";
+import { FootnoteProcessor } from "src/services/processors/footNote-processor";
 import { BlockProcessor } from "src/services/processors/block-processor";
+import { FragmentProcessor } from "src/services/processors/fragment-processor";
+import { ImageProcessor } from "src/services/processors/image-processor";
 
-export class SlidesMaker {
+export class MarpSlidesMaker {
 	private app: App;
 	private settings: SlidesRupSettings;
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
-	private imageProcessor: ImageProcessor;
 	private blockProcessor: BlockProcessor;
+	private multipleFileProcessor: MultipleFileProcessor;
+	private imageProcessor: ImageProcessor;
+	private templateProcessor: TemplateProcessor;
+	private footNoteProcessor: FootnoteProcessor;
+	private fragmentProcessor: FragmentProcessor;
+	private util: ObsidianUtils;
+
 	// 优化：通过遍历 TEMPLATE_PLACE_HOLDERS 动态生成正则表达式映射，减少重复代码
 	private static readonly REPLACE_REGEX = Object.fromEntries(
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
@@ -52,7 +67,7 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/%%(?!\!|\[\[|\#|\|)([\s\S]*?)%%/g;
+		/%%(?!\!|\[\[|\#)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
@@ -75,103 +90,13 @@ export class SlidesMaker {
 			this.userDesigns,
 			this.defaultDesigns
 		);
-		this.imageProcessor = new ImageProcessor(
-			new ObsidianUtils(this.app, this.settings)
-		);
+		this.util = new ObsidianUtils(this.app, this.settings);
+		this.multipleFileProcessor = new MultipleFileProcessor(this.util);
+		this.footNoteProcessor = new FootnoteProcessor();
+		this.templateProcessor = new TemplateProcessor(this.util);
 		this.blockProcessor = new BlockProcessor();
-	}
-
-	async createSlides(): Promise<void> {
-		const newSlideContainer = await this._determineNewSlideLocation();
-		if (newSlideContainer === null) {
-			new Notice(t("Operation cancelled by user"));
-			return;
-		}
-
-		let subFolder;
-
-		if (this.settings.customizeSlideFolderName) {
-			const modal = new InputModal(
-				this.app,
-				t("Please input slide folder name"),
-				"",
-				true,
-				newSlideContainer
-			);
-
-			subFolder = await modal.openAndGetValue();
-		}
-
-		if (!subFolder?.trim()) {
-			subFolder = t("Slide");
-		}
-
-		const newSlideLocation =
-			newSlideContainer === "/"
-				? subFolder
-				: `${newSlideContainer}/${subFolder}`;
-
-		await createPathIfNeeded(this.app, newSlideLocation);
-
-		let slideMode = this.settings.slidesRupSlideMode;
-		if (!slideMode || slideMode === "none") {
-			slideMode = (await this._selectSlideMode())?.value || "light";
-		}
-		slideMode = slideMode.toLowerCase?.() || "light";
-
-		const { slideName, baseLayoutName, tocName } =
-			this._generateNewSlideFilesNames();
-
-		const tocTemplate = await this.getFinalTemplate(
-			this.settings.userTocTemplate,
-			toc()
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			tocName,
-			tocTemplate,
-			false
-		);
-
-		const baseLayoutTemplate = await this.getFinalTemplate(
-			this.settings.userBaseLayoutTemplate,
-			baseLayoutWithSteps(),
-			{
-				toc: tocName,
-				tagline: this.settings.tagline,
-				slogan: this.settings.slogan,
-			}
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			baseLayoutName,
-			baseLayoutTemplate,
-			false
-		);
-
-		const finalTemplate = await this.getFinalTemplate(
-			this.settings.userSlideTemplate,
-			slideTemplate(slideMode),
-			{
-				baseLayout: baseLayoutName,
-				toc: tocName,
-				presenter: this.settings.presenter,
-				presentDate: moment().format(
-					this.settings.dateFormat || "YYYY-MM-DD"
-				),
-				slidesRupPath: this.settings.slidesRupFrameworkFolder,
-				tagline: this.settings.tagline,
-				slogan: this.settings.slogan,
-			}
-		);
-
-		await this._createAndOpenSlide(
-			newSlideLocation,
-			slideName,
-			finalTemplate
-		);
+		this.fragmentProcessor = new FragmentProcessor();
+		this.imageProcessor = new ImageProcessor(this.util);
 	}
 
 	async getUserTemplate(path: string, replaceConfig: ReplaceConfig) {
@@ -195,8 +120,8 @@ export class SlidesMaker {
 		let finalizedTemplate = template;
 		for (const [key, value] of Object.entries(replaceConfig)) {
 			const regex =
-				SlidesMaker.REPLACE_REGEX[
-					key as keyof typeof SlidesMaker.REPLACE_REGEX
+				MarpSlidesMaker.REPLACE_REGEX[
+					key as keyof typeof MarpSlidesMaker.REPLACE_REGEX
 				];
 			if (regex) {
 				finalizedTemplate = finalizedTemplate.replace(
@@ -353,7 +278,7 @@ export class SlidesMaker {
 		// 优化：减少变量声明，合并逻辑，提升可读性
 		const config: ReplaceConfig = { ...replaceConfig };
 
-		if (SlidesMaker.REPLACE_REGEX.design.test(template)) {
+		if (MarpSlidesMaker.REPLACE_REGEX.design.test(template)) {
 			let design = this._getSlideDesign();
 			if (!design || design === "none") {
 				const designOption = await this._selectSlideDesign(
@@ -388,17 +313,17 @@ export class SlidesMaker {
 		}> = [
 			{
 				key: "cIndex",
-				regex: SlidesMaker.REPLACE_REGEX.cIndex,
+				regex: MarpSlidesMaker.REPLACE_REGEX.cIndex,
 				getValue: this._getChapterIndex.bind(this),
 			},
 			{
 				key: "pIndex",
-				regex: SlidesMaker.REPLACE_REGEX.pIndex,
+				regex: MarpSlidesMaker.REPLACE_REGEX.pIndex,
 				getValue: this._getPageIndex.bind(this),
 			},
 			{
 				key: "slideName",
-				regex: SlidesMaker.REPLACE_REGEX.slideName,
+				regex: MarpSlidesMaker.REPLACE_REGEX.slideName,
 				getValue: this._getSlideName.bind(this),
 			},
 		];
@@ -519,11 +444,12 @@ export class SlidesMaker {
 		baseLayoutName: string;
 		tocName: string;
 	} {
+		const suffix = "-marp";
 		const base = targetSlide || `${getTimeStamp()}-${t("Slide")}`;
 		return {
-			slideName: base,
-			baseLayoutName: `${base}-${t("BaseLayout")}`,
-			tocName: `${base}-${t("TOC")}`,
+			slideName: base + suffix,
+			baseLayoutName: `${base + suffix}-${t("BaseLayout")}`,
+			tocName: `${base + suffix}-${t("TOC")}`,
 		};
 	}
 
@@ -552,9 +478,9 @@ export class SlidesMaker {
 	}
 
 	/**
-	 * Converts a markdown file to a slide presentation
+	 * Converts a markdown file to a Marp slide presentation
 	 */
-	async convertMDToSlide() {
+	async convertMDToMarpSlide() {
 		// Get active file
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) {
@@ -568,8 +494,8 @@ export class SlidesMaker {
 
 		// Check if content already contains slide annotations
 		if (
-			content.includes("<!-- slide") ||
-			content.includes("_class: cover")
+			content.includes("_class: cover") ||
+			content.includes("<!-- slide")
 		) {
 			new Notice(t("This file is already a slide presentation"));
 			return;
@@ -638,10 +564,14 @@ export class SlidesMaker {
 
 		// 简化模式标志,当文档结构为单一一级标题时启用
 		const minimizeMode = slideSourceMode === 4;
+		let tocContent = "";
+		let navContent = "";
 
 		if (!minimizeMode) {
 			// 4. Create TOC file
-			await this._createTocFile(newSlideLocation, tocName, newLines);
+			//await this._createTocFile(newSlideLocation, tocName, newLines);
+			tocContent = this._getTocContent(newLines);
+			navContent = this._getNavContent(newLines);
 
 			// 5. Create BaseLayout file
 			await this._createBaseLayoutFile(
@@ -657,18 +587,62 @@ export class SlidesMaker {
 			content,
 			newLines,
 			design,
-			tocName,
+			tocContent,
+			navContent,
 			baseLayoutName,
 			activeFile,
 			slideMode,
 			slideSize,
-			slideSourceMode
+			slideSourceMode,
+			newSlideLocation
 		);
+
+		await this._rewriteThemeImageUrl(design, newSlideLocation);
+
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
 			processedContent
 		);
+	}
+
+	private async _rewriteThemeImageUrl(
+		design: string,
+		newSlideLocation: string
+	) {
+		const slidesRupFrameworkFolder = this.settings.slidesRupFrameworkFolder;
+		const themeFilePath = `${slidesRupFrameworkFolder}/${MARP_THEMES_FOLDER}/sr-design-${design.toLowerCase()}.css`;
+		const themeFile = this.app.vault.getAbstractFileByPath(themeFilePath);
+		if (themeFile instanceof TFile) {
+			const coverImagePath = `${slidesRupFrameworkFolder}/${REVEAL_USER_DESIGN_FOLDER}/Design-${design}/Cover-${design}.png`;
+			const newRelativePath = this.util.getRelativePathForTarget(
+				coverImagePath,
+				newSlideLocation
+			);
+			const newPathBase = newRelativePath.substring(
+				0,
+				newRelativePath.lastIndexOf("/")
+			);
+
+			const themeContent = await this.app.vault.read(themeFile);
+			const updatedContent = themeContent.replace(
+				/url\("(.*?)"\)/g,
+				(match, p1) => {
+					// 判断是否为http链接
+					if (p1.startsWith("http://") || p1.startsWith("https://")) {
+						return match;
+					}
+					// 获取路径中最后一个/之前的内容
+					const lastSlashIndex = p1.lastIndexOf("/");
+					if (lastSlashIndex !== -1) {
+						const fileName = p1.substring(lastSlashIndex + 1);
+						return `url("${newPathBase}/${fileName}")`;
+					}
+					return match;
+				}
+			);
+			await this.app.vault.modify(themeFile, updatedContent);
+		}
 	}
 
 	private _regularizeHeadingsForContent(
@@ -879,15 +853,7 @@ export class SlidesMaker {
 		return { content, lines, headingsInfo, targetSlide };
 	}
 
-	/**
-	 * Creates the TOC file from markdown headings
-	 */
-	private async _createTocFile(
-		location: string,
-		tocName: string,
-		lines: string[]
-	): Promise<void> {
-		// Extract H2 headings and create TOC content
+	private _getTocContent(lines: string[]): string {
 		const h2List = lines
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
@@ -898,20 +864,63 @@ export class SlidesMaker {
 		const tocContent = h2List.length
 			? h2List
 					.map((item, idx) => {
-						// 从item中提取%%|Text%%格式的文本
-						const match = item.match(/%%\|(.*?)%%/);
+						// 从item中提取%%#Text%%格式的文本
+						const title = item.replace(/%%.*?%%/g, "").trim();
+						const match = item.match(/%%#(.*?)%%/);
 						if (match) {
-							// 如果匹配到了%%|Text%%格式,使用Text部分
-							return `+ [${match[1].trim()}](#c${idx + 1})`;
+							// 如果匹配到了%%#Text%%格式,使用Text部分
+							return `+ [${match[1].trim()}](#${this._idMaker(
+								title
+							)})`;
 						}
 						// 否则使用原始item
-						return `+ [${item.replace(/%%.*?%%/g, "")}](#c${
-							idx + 1
-						})`;
+						return `+ [${title}](#${this._idMaker(title)})`;
 					})
 					.join("\n")
 			: "";
+		return tocContent;
+	}
 
+	private _getNavContent(lines: string[]): string {
+		const h2List = lines
+			.map((line) => {
+				const match = line.match(/^##\s+(.*)/);
+				return match ? match[1].trim() : null;
+			})
+			.filter(Boolean) as string[];
+
+		const navContent = h2List.length
+			? h2List
+					.map((item, idx) => {
+						// 从item中提取%%#Text%%格式的文本
+						const title = item.replace(/%%.*?%%/g, "").trim();
+						const match = item.match(/%%#(.*?)%%/);
+						if (match) {
+							// 如果匹配到了%%#Text%%格式,使用Text部分
+							return `<li><a href="#${this._idMaker(
+								title
+							)}">${match[1].trim()}</a></li>`;
+						}
+						// 否则使用原始item
+						return `<li><a href="#${this._idMaker(
+							title
+						)}">${title}</a></li>`;
+					})
+					.join("")
+			: "";
+		return `<ul>${navContent}</ul>`;
+	}
+
+	/**
+	 * Creates the TOC file from markdown headings
+	 */
+	private async _createTocFile(
+		location: string,
+		tocName: string,
+		lines: string[]
+	): Promise<void> {
+		// Extract H2 headings and create TOC content
+		const tocContent = this._getTocContent(lines);
 		await this._createAndOpenSlide(location, tocName, tocContent, false);
 	}
 
@@ -950,7 +959,8 @@ export class SlidesMaker {
 		content: string,
 		lines: string[],
 		design: string,
-		tocName: string,
+		tocContent: string,
+		navContent: string,
 		baseLayoutName: string,
 		activeFile: TFile,
 		slideMode: string,
@@ -958,7 +968,8 @@ export class SlidesMaker {
 			w: number;
 			h: number;
 		},
-		slideSourceMode: number
+		slideSourceMode: number,
+		newSlideLocation: string
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1002,49 +1013,58 @@ export class SlidesMaker {
 
 			// 7. 添加目录幻灯片
 			(content) =>
-				minimizeMode || this.settings.slidesRupDefaultTOCPageNumber < 2
+				minimizeMode
 					? content
-					: this._addTocSlide(content, tocName, design),
+					: this._addTocSlide(content, tocContent, design),
 
-			(content) => this._addBackCoverPage(content, design, activeFile),
+			// 8. 转换 WikiLinks
+			// (content) =>
+			// 	this._getAutoConvertLinks(activeFile)
+			// 		? this._convertMarkdownLinksToPreviewLinks(content)
+			// 		: content,
 
-			// 8. 处理图片
-			(content) => this.imageProcessor.processForReveal(content),
-
-			// 8. 添加链接预览
-			(content) =>
-				this._getAutoConvertLinks(activeFile)
-					? this._addLinkPreview(content)
-					: content,
-
-			// 9. 添加图片预览
-			(content) =>
-				this._getAutoConvertLinks(activeFile)
-					? this._addImagePreview(content)
-					: content,
-
-			// 8. 添加段落片段
-			(content) =>
-				this._getEnableParagraphFragments(activeFile)
-					? this._addFragmentsToParagraph(content)
-					: content,
-
-			// 8. 添加段落片段
-			(content) => this._reverseListFragmentIndex(content),
+			// 9. 添加段落片段
+			// (content) =>
+			// 	this._getEnableParagraphFragments(activeFile)
+			// 		? this._addFragmentsToParagraph(content)
+			// 		: content,
 
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
-			// 10. 处理块
-			(content) => this.blockProcessor.transformSpecialBlock(content),
+
+			(content) => this._addBackCoverPage(content, design, activeFile),
+
+			(content) => this._processEmbdedFile(content),
+
+			// 10. 处理片段
+			(content) => this.fragmentProcessor.process(content),
+
+			// 11. 处理脚注
+			(content) =>
+				this.footNoteProcessor.process(content, {
+					separator: "---",
+					verticalSeparator: "\\*\\*\\*",
+				}),
+
+			(content) => this.blockProcessor.process(content),
+
+			// 12. 处理图片
+			(content) =>
+				this.imageProcessor.processForMarp(content, newSlideLocation),
+
+			(content) => this._processTemplate(content),
 
 			(content) =>
 				this._addFrontMatter(
 					content,
-					baseLayoutName,
+					design,
 					activeFile,
+					navContent,
 					slideMode,
 					slideSize
 				),
+
+			// (content) => this._addStyle(content),
 		];
 
 		// 执行处理管道
@@ -1062,9 +1082,14 @@ export class SlidesMaker {
 		activeFile: TFile,
 		minimizeMode: boolean = false
 	): string {
-		const coverSlide = `<!-- slide id="home" template="[[${t(
-			"Cover"
-		)}-${design}]]" -->`;
+		const coverSlide = [
+			"<!--",
+			"_id: home",
+			"_class: cover",
+			'_header: ""',
+			`_template: "[[${t("Cover")}-${design}]]"`,
+			"-->",
+		].join("\n");
 		const oburi = this._getOBURI(activeFile);
 
 		const { author, date } = this._getAuthorAndDate();
@@ -1085,106 +1110,117 @@ export class SlidesMaker {
 	): string {
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const { author, date } = this._getAuthorAndDate();
-		const backCoverSlideCommentParts = [
-			"<!-- slide",
-			`template="[[${t("BackCover")}-${design}]]"`,
-			`class="${
+		const backCoverSlideComment = [
+			"<!--",
+			"_id: backcover",
+			`_class: backcover ${
 				this.userSpecificListClass.BackCoverPageListClass ||
 				this.settings.slidesRupDefaultBackCoverListClass
-			}"`,
+			}`,
+			'_header: ""',
+			`_template: "[[${t("BackCover")}-${design}]]"`,
 			"-->",
-		];
+		].join("\n");
 
-		const backCoverSlideComment = backCoverSlideCommentParts.join(" ");
-
-		// 使用数组存储模板片段,提升可维护性和可读性
-		const backCoverSlideContentParts = [
-			backCoverSlideComment,
-			"",
-			lbnl,
-			"",
-			"::: author",
-			author,
-			":::",
-			"",
-			"::: date",
-			date,
-			":::",
-			"",
-		];
-
-		const backCoverSlideContent = backCoverSlideContentParts.join("\n");
-
-		return `${content}\n\n---\n\n${backCoverSlideContent}`;
+		const backCoverSlideContent = [
+			`${lbnl}`,
+			`<div class="author">${author}</div>`,
+			`<div class="date">${date}</div>`,
+		].join("\n");
+		return `${content}\n\n---\n\n${backCoverSlideComment}\n${backCoverSlideContent}`;
 	}
 
 	private _addFrontMatter(
 		content: string,
-		baseLayoutName: string,
+		design: string,
 		activeFile: TFile,
+		navContent: string,
 		slideMode: string,
 		slideSize: {
 			w: number;
 			h: number;
 		}
 	): string {
-		const userFrontmatter =
-			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
-		// 使用数组构建frontmatter,提升可维护性和可读性
-		const frontMatterLines = [
+		const frontMatter = [
 			"---",
-			`css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css`,
-			"enableLinks: true",
-			`width: ${slideSize.w}`,
-			`height: ${slideSize.h}`,
-			"margin: 0",
-			`navigationMode: ${this.settings.slidesRupSlideNavigationMode}`,
-			"aliases:",
-			` - ${activeFile.basename}`,
-			`defaultTemplate: "[[${baseLayoutName}]]"`,
-			"pdfSeparateFragments: false",
-			"verticalSeparator: \\*\\*\\*",
-			"theme: white",
-			"transition: none",
-			userFrontmatter.trim(),
+			"marp: true",
+			`theme: sr-design-${design.toLocaleLowerCase()}`,
+			`header: <div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`,
+			`aliases: ${activeFile.basename}`,
+			`slideMode: ${slideMode}`,
 			"---",
-		];
-
-		const frontMatter = frontMatterLines.filter(Boolean).join("\n");
-		return `${frontMatter}\n\n${content}`;
+		].join("\n");
+		return frontMatter + "\n\n" + content;
 	}
 
-	private _addLinkPreview(text: string): string {
-		return text.replace(
-			/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-			(match, name, link) => {
-				return `<a href="${link}" data-preview-link>${name}</a>`;
-			}
-		);
+	private _addStyle(content: string): string {
+		const style = `
+<style>
+	.tagline {
+		font-size: 16px;
+		color: #888;
+	}
+	header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		color: #888;
+		padding: 10px 20px;
+		margin: 0 auto;
+		width: 100%;
+		box-sizing: border-box;
+		top: 0;
+		left: 0;
+	}
+
+	header ul {
+		list-style-type: none;
+		display: flex;
+		gap: 20px;
+	}
+
+	header ul li {
+		margin: 0;
+	}
+</style>
+`;
+		return content + "\n\n" + style;
 	}
 
 	/**
-	 * 为在线图片添加预览属性
-	 * @param text - 需要处理的文本内容
-	 * @returns 处理后的文本，为在线图片添加了预览属性
+	 * 处理模板
 	 */
-	private _addImagePreview(text: string): string {
-		// 优化：将正则表达式提取为常量，避免重复创建
-		const ONLINE_IMAGE_REGEX = /!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/;
-		const PREVIEW_ATTR = 'data-preview-image=""';
+	private _processTemplate(content: string): string {
+		return content;
+	}
 
-		// 优化：使用正则替换而不是分割和重组
-		return text.replace(/[^\n]+/g, (line) => {
-			if (!ONLINE_IMAGE_REGEX.test(line)) {
-				return line;
-			}
+	private async _processEmbdedFile(content: string): Promise<string> {
+		const processedContent = await this.multipleFileProcessor.process(
+			content
+		);
+		return processedContent;
+	}
 
-			const trimmedLine = line.trim();
-			// 优化：使用三元运算符简化逻辑
-			return trimmedLine.endsWith("-->")
-				? trimmedLine.replace("-->", ` ${PREVIEW_ATTR} -->`)
-				: `${trimmedLine} <!-- element: ${PREVIEW_ATTR} -->`;
-		});
+	/**
+	 * 将文本中的 [name](link) 格式全部转换为 <a href="link" data-preview-link>name</a>
+	 * 其中 name 可以是任意字符，link 必须是 http 或 https 开头的链接
+	 */
+	private _convertMarkdownLinksToPreviewLinks(text: string): string {
+		// 使用正则匹配 [name](link) 形式，link 以 http 或 https 开头
+		// 排除 ![ 开头的图片嵌入语法
+		return text
+			.replace(
+				/!\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<img alt="${name}" src="${link}" data-preview-image />`;
+				}
+			)
+			.replace(
+				/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+				(match, name, link) => {
+					return `<a href="${link}" data-preview-link>${name}</a>`;
+				}
+			);
 	}
 
 	private _addFragmentsToParagraph(text: string): string {
@@ -1290,184 +1326,35 @@ export class SlidesMaker {
 		return processedText;
 	}
 
-	private _reverseListFragmentIndex(text: string): string {
-		// 保存原始分隔符
-		const separators: string[] = [];
-
-		// 按分页符分割内容，同时保存分隔符
-		const pages = text.split(/(?:\n-{3,}|\n\*{3,})/g);
-		const matches = text.match(/\n(-{3,}|\*{3,})/g);
-		if (matches) {
-			matches.forEach((match) => {
-				separators.push(match.trim().startsWith("*") ? "***" : "---");
-			});
-		}
-
-		const processedPages = pages.map((page) => {
-			// 检查页面是否包含 reverse-list-fragment 标记
-			if (!page.includes("reverse-list-fragment")) {
-				return page;
-			}
-
-			// 匹配所有以 + 开头的列表项
-			const listItems = page.match(/^[+][^\n]+$/gm);
-			if (!listItems) {
-				return page;
-			}
-
-			// 获取第一个列表项之前的fragment数量
-			let fragmentCountBeforeList = 0;
-			const lines = page.split("\n");
-			for (const line of lines) {
-				// 如果遇到列表项就停止计数
-				if (line.trim().startsWith("+")) {
-					break;
-				}
-				// 计算包含data-fragment-index的行数
-				if (line.includes("data-fragment-index")) {
-					fragmentCountBeforeList++;
-				}
-			}
-
-			let processedPage = page;
-			const totalItems = listItems.length;
-
-			// 为每个列表项添加倒序的 fragment-index
-			listItems.forEach((item, index) => {
-				const fragmentIndex =
-					totalItems - index + fragmentCountBeforeList;
-				const escapedItem = item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-				const regex = new RegExp(
-					`${escapedItem}(?!.*<!-- element:)`,
-					"g"
-				);
-				processedPage = processedPage.replace(
-					regex,
-					`${item.replace(
-						/<!--.*?-->/g,
-						""
-					)} <!-- element: class="fragment" data-fragment-index="${fragmentIndex}" -->`
-				);
-			});
-
-			return processedPage;
-		});
-
-		// 重新组合页面，使用原始分隔符
-		return processedPages.reduce((result, page, index) => {
-			if (index === 0) return page;
-			const separator = separators[index - 1] || "---";
-			return `${result}\n${separator}\n${page}`;
-		}, "");
-	}
-
 	private _addFragmentsToNonCodeBlocks(text: string): string {
-		// 保存原始分隔符
-		const separators: string[] = [];
-
-		// 按分页符分割内容，同时保存分隔符
-		const pages = text.split(/(?:\n-{3,}|\n\*{3,})/g);
-		const matches = text.match(/\n(-{3,}|\*{3,})/g);
-		if (matches) {
-			matches.forEach((match) => {
-				separators.push(match.trim().startsWith("*") ? "***" : "---");
-			});
-		}
-
-		// 处理每一页内容
-		const processedPages = pages.map((page, pageIndex) => {
-			let fragmentIndex = 0;
-			// 检查页面是否包含4-6级标题或普通段落
-			const hasH4ToH6 = /^#{4,6}\s+[^\n]+$/m.test(page);
-			// 检查是否包含普通段落文本
-			// 检测是否包含纯文本段落内容(不以特殊字符开头的行)
-			const hasNormalParagraph = /^[^#>\+\*\-\_<\d\s`|![\]{}].+$/m.test(
-				page
-			);
-			// 如果页面不包含需要处理的内容,直接返回
-			if (!hasH4ToH6 && !hasNormalParagraph) {
-				return page;
-			}
-
-			// 处理页面中的段落
-			return page.replace(
-				// 这个正则表达式用于匹配普通段落文本，具体含义如下：
-				// (^|\n) - 匹配行首或换行符
-				// (?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s) - 否定预查，不匹配以下内容：
-				//   - \s*[-*+>] - 列表标记符号
-				//   - #{1,3}\s - 1-3级标题
-				//   - `{3,} - 代码块标记
-				//   - >\s* - 引用块
-				//   - {4,} - 缩进代码块
-				//   - \d+\.\s - 有序列表
-				// ([^\n][^\n]*[^\n]) - 匹配非空行的内容
-				// (?=\n|$) - 正向预查，确保后面是换行符或文件结尾
-				/(^|\n)(?!\s*[-*>]|#{1,3}\s|`{3,}|>\s*| {4,})([^\n][^\n]*[^\n])(?=\n|$)/g,
-				(match, p1, p2) => {
-					// 跳过特殊内容
-					if (
-						!p2.trim() ||
-						(p2.trim().startsWith("![[") &&
-							!/\.(png|jpe?g|gif|bmp|webp|svg)/i.test(p2)) ||
-						p2.trim().startsWith("<!--") ||
-						p2.trim().startsWith("|") ||
-						p2.trim().startsWith("---") ||
-						p2.trim().startsWith(":::") ||
-						p2.trim().startsWith("__CODE_BLOCK_") ||
-						p2.trim().startsWith("__MATH_BLOCK_") ||
-						p2.trim().startsWith("__HTML_BLOCK_")
-					) {
-						return match;
-					}
-
-					// 匹配所有层级的列表标记
-					if (p2.match(/^[+]|^\d+\)\s|^\s+[+]|^\s+\d+\)\s/)) {
-						return `${match} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
-					}
-
-					// 处理4-6级标题
-					const hMatch = p2.match(/^(#{4,6})\s+(.*)$/);
-					if (hMatch) {
-						const hashes = hMatch[1];
-						const title = hMatch[2];
-						if (title.trim().length === 0) return match;
-						return `${p1}${hashes} ${title} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
-					}
-
-					// 处理普通段落
-
-					if (match.includes("<!-- element:")) {
-						// 使用正则表达式优化处理 element 标签的 class 和 fragment 属性
-						const hasClass = match.includes("class=");
-						match = hasClass
-							? match
-									.replace(
-										/class="([^"']*)"/,
-										`class="fragment $1"`
-									)
-									.replace(
-										/-->\s*$/,
-										` data-fragment-index="${fragmentIndex++}" -->`
-									)
-							: match.replace(
-									/<!-- element:/,
-									`<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" `
-							  );
-
-						return match;
-					}
-
-					return `${p1}${p2} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
+		// 匹配Markdown中的段落（非标题、非列表、非代码块、非数学块、非空行）
+		return text.replace(
+			/(^|\n)(?!\s*[-*+>]|#{1,3}\s|`{3,}|>\s*| {4,}|\d+\.\s)([^\n][^\n]*[^\n])(?=\n|$)/g,
+			(match, p1, p2) => {
+				// 跳过空行和以![[开头的段落
+				if (
+					!p2.trim() ||
+					p2.trim().startsWith("![[") ||
+					p2.trim().startsWith("<!--") ||
+					p2.trim().startsWith("|") ||
+					p2.trim().startsWith("---") ||
+					p2.trim().startsWith(":::") ||
+					p2.trim().startsWith("__CODE_BLOCK_") ||
+					p2.trim().startsWith("__MATH_BLOCK_") ||
+					p2.trim().startsWith("__HTML_BLOCK_")
+				)
+					return match;
+				// 如果是 Markdown 4~6 级标题，只包裹标题文本，不包含 #
+				const hMatch = p2.match(/^(#{4,6})\s+(.*)$/);
+				if (hMatch) {
+					const hashes = hMatch[1];
+					const title = hMatch[2];
+					if (title.trim().length === 0) return match;
+					return `${p1}${hashes} <span class="fragment">${title}</span>`;
 				}
-			);
-		});
-
-		// 重新组合页面，使用原始分隔符
-		return processedPages.reduce((result, page, index) => {
-			if (index === 0) return page;
-			const separator = separators[index - 1] || "---";
-			return `${result}\n${separator}\n${page}`;
-		}, "");
+				return `${p1}<span class="fragment">${p2}</span>`;
+			}
+		);
 	}
 
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
@@ -1476,12 +1363,16 @@ export class SlidesMaker {
 			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
 				newLines.push(
-					`\n<!-- slide template="[[${t(
-						"BlankPage"
-					)}-${design}]]" class="${
-						this.userSpecificListClass.BlankPageListClass ||
-						this.settings.slidesRupDefaultBlankListClass
-					}" -->`
+					[
+						"\n<!--",
+						'_header: ""',
+						`_template: "[[${t("BlankPage")}-${design}]]"`,
+						`_class: blank ${
+							this.userSpecificListClass.BlankPageListClass ||
+							this.settings.slidesRupDefaultBlankListClass
+						}`,
+						"-->",
+					].join("\n")
 				);
 			} else {
 				newLines.push(line);
@@ -1515,15 +1406,25 @@ export class SlidesMaker {
 				);
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
-					(template && `template="${template}"`) || "";
+					(template && `_template: ${template}`) || "";
 				if (this.settings.slidesRupContentPageSlideType === "v") {
 					finalLines.push("***");
 				} else {
 					finalLines.push("---");
 				}
-				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
-				);
+				const slideAnnotation = [
+					"\n<!-- ",
+					`_id: ${`c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}`.trim()}`,
+					slideTemplate.trim(),
+					`_class: content subpage ${[chapterClass, classValue]
+						.filter(Boolean)
+						.join("\n")}`,
+					"-->\n",
+				]
+					.filter(Boolean)
+					.join("\n");
+
+				finalLines.push(slideAnnotation);
 				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
@@ -1540,12 +1441,6 @@ export class SlidesMaker {
 		let headingCount = 0;
 		const newLines: string[] = [];
 
-		// 优化: 使用 map 存储分隔符规则,避免重复判断
-		const separatorMap = {
-			h: "---",
-			v: "***",
-		};
-
 		for (const line of lines) {
 			// 优化: 提取标题判断逻辑
 			const isHeading = /^#{1,3}\s/.test(line);
@@ -1555,14 +1450,7 @@ export class SlidesMaker {
 
 				// 优化: 简化分隔符选择逻辑
 				if (headingCount > 1) {
-					if (
-						/^#{3}\s/.test(line) &&
-						this.settings.slidesRupContentPageSlideType === "v"
-					) {
-						newLines.push("***");
-					} else {
-						newLines.push("---");
-					}
+					newLines.push("---");
 				}
 			}
 
@@ -1602,10 +1490,21 @@ export class SlidesMaker {
 					defaultTemplate
 				);
 
-				const templateStr = template ? `template="${template}"` : "";
+				const pageClass = simpleMode ? "content" : "chapter";
 
+				const templateStr = template ? `_template: "${template}"` : "";
+				const header = !simpleMode ? `_header: ""` : "";
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue} chapter-${h2Index}" -->\n`
+					[
+						"\n<!--",
+						header,
+						`_id: c${h2Index}`,
+						templateStr,
+						`_class: ${pageClass} ${classValue} chapter-${h2Index}`,
+						"-->\n",
+					]
+						.filter(Boolean)
+						.join("\n")
 				);
 				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
@@ -1615,6 +1514,16 @@ export class SlidesMaker {
 		}
 
 		return modifiedLines.join("\n");
+	}
+
+	private _idMaker(str: string) {
+		return encodeURIComponent(
+			str
+				.trim()
+				.replace(/\s+/g, "-")
+				.replace(/[\.,，。?？]/g, "")
+				.toLowerCase()
+		);
 	}
 
 	/**
@@ -1669,7 +1578,7 @@ export class SlidesMaker {
 					h3TitleList[tempIdx].h2 === currentH2Index
 				) {
 					const h3 = h3TitleList[tempIdx];
-					h3s.push(`+ [${h3.title}](#c${h3.h2}p${h3.h3})`);
+					h3s.push(`+ [${h3.title}](#${this._idMaker(h3.title)})`);
 					tempIdx++;
 				}
 
@@ -1712,10 +1621,18 @@ export class SlidesMaker {
 
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
-					(template && `template="${template}"`) || "";
+					(template && `_template: "${template}"`) || "";
 
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
+					[
+						"\n<!-- ",
+						`_id: c${currentChapterIndex}p${pageIndexInChapter}`,
+						slideTemplate,
+						`_class: content ${chapterClass} ${classValue}`,
+						"-->\n",
+					]
+						.filter(Boolean)
+						.join("\n")
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -1731,15 +1648,23 @@ export class SlidesMaker {
 	 */
 	private _addTocSlide(
 		content: string,
-		tocName: string,
+		tocContent: string,
 		design: string
 	): string {
-		const tocEmbed = `---\n\n<!-- slide template="[[${t(
-			"TOC"
-		)}-${design}]]" class="${
-			this.userSpecificListClass.TOCPageListClass ||
-			this.settings.slidesRupDefaultTOCListClass
-		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
+		// 优化: 使用模板字符串拼接,提高可读性和维护性
+		const tocEmbed = [
+			"---\n",
+			"<!--",
+			`_header: ""`,
+			`_template: "[[${t("TOC")}-${design}]]"`,
+			`_class: toc ${
+				this.userSpecificListClass.TOCPageListClass ||
+				this.settings.slidesRupDefaultTOCListClass
+			}`,
+			"-->\n",
+			`## ${t("TOC")}\n`,
+			`${tocContent}\n`,
+		].join("\n");
 		const contentLines = content.split("\n");
 
 		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;
@@ -1836,18 +1761,18 @@ export class SlidesMaker {
 		date: string,
 		minimizeMode: boolean = false
 	): string {
-		const authorTemplate = `::: author\n${author}\n:::\n`;
-		const dateTemplate = `::: date\n${date}\n:::\n`;
+		const authorTemplate = `<div class="author">${author}</div>`;
+		const dateTemplate = `<div class="date">${date}</div>`;
 
 		const contentLines = content.split("\n");
 		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
 		const firstSeparatorLineIndex = contentLines.findIndex(
-			(line) => line.trim() === "---" || line.trim() === "***"
+			(line) => line.trim() === "---"
 		);
 		if (firstSeparatorLineIndex !== -1) {
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
-			return [...before, authorTemplate, dateTemplate, ...after].join(
+			return [...before, authorTemplate, dateTemplate, "", ...after].join(
 				"\n"
 			);
 		} else {
@@ -1967,7 +1892,9 @@ export class SlidesMaker {
 	}
 
 	private _modidySlideTemplate(line: string, template: string): string {
-		const matches = line.match(SlidesMaker.COMMENT_BLOCK_TEMPLATE_REGEX);
+		const matches = line.match(
+			MarpSlidesMaker.COMMENT_BLOCK_TEMPLATE_REGEX
+		);
 		let extracted: string[] = [];
 
 		if (matches && matches.length > 0) {
@@ -1982,9 +1909,9 @@ export class SlidesMaker {
 	}
 
 	private _modidySlideClassList(line: string, listClass: string): string {
-		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+		const matches = line.match(MarpSlidesMaker.COMMENT_BLOCK_REGEX);
 		const replaceMatches = line.match(
-			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+			MarpSlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
 		);
 		let extracted: string[] = [];
 		let merged = "";

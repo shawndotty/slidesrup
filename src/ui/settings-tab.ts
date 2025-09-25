@@ -19,7 +19,7 @@ import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
 import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { DEFAULT_DESIGNS } from "../constants";
+import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "../constants";
 import { markdown } from "@codemirror/lang-markdown";
 
 type SettingsKeys = keyof SlidesRup["settings"];
@@ -414,6 +414,9 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				} else {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
 						"color"
+					);
+					await this.plugin.services.slidesRupStyleService.clearStyleSection(
+						"colorMarp"
 					);
 				}
 			},
@@ -1128,6 +1131,55 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			true
 		);
 
+		new Setting(containerEl)
+			.setName(t("User Customized Marp CSS"))
+			.setDesc(t("Input Your Customized Marp CSS"))
+			.setClass("slides-rup-custom-css");
+
+		// 创建一个 div 元素作为 CodeMirror 的容器
+		const editorContainerForMarpCss = containerEl.createDiv(
+			"slides-rup-css-editor"
+		);
+
+		new EditorView({
+			state: EditorState.create({
+				doc: this.plugin.settings.customMarpCss || "",
+				extensions: [
+					basicSetup, // 启用基础功能，如行号、括号匹配等
+					css(), // 启用CSS语言高亮
+					autocompletion(), // 添加自动补全功能
+					...(document.body.classList.contains("theme-dark")
+						? [oneDark]
+						: []), // 仅在暗色模式下加载 oneDark 主题
+					EditorView.updateListener.of((update) => {
+						// 监听编辑器内容的变化
+						if (update.docChanged) {
+							const newCss = update.state.doc.toString();
+							// 使用 debounce 来防止频繁保存，提升性能
+							saveMarpCssSetting(newCss);
+						}
+					}),
+				],
+			}),
+			parent: editorContainerForMarpCss,
+		});
+
+		// 如果你希望根据 Obsidian 当前的主题自动切换，可以进一步判断 document.body 的 class（比如 "theme-dark"），
+		// 并动态切换 oneDark 或默认主题。
+
+		// 保存设置的方法（防抖处理）
+		const saveMarpCssSetting = debounce(
+			(newCss: string) => {
+				this.plugin.settings.customMarpCss = newCss;
+				this.plugin.saveSettings();
+				this.plugin.services.slidesRupStyleService.modifyStyleSection(
+					"userStyleMarp"
+				);
+			},
+			500,
+			true
+		);
+
 		containerEl.createEl("h2", {
 			text: t("User Specific Frontmatter Options"),
 			cls: "slides-rup-title",
@@ -1506,7 +1558,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	private getUserDesignOptions() {
 		const slidesRupFrameworkPath =
 			this.plugin.settings.slidesRupFrameworkFolder;
-		const slidesRupUserDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
+		const slidesRupUserDesignsPath = `${slidesRupFrameworkPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 		const options = {
 			none: t("None"),
 		};
