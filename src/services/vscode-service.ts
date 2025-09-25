@@ -23,7 +23,7 @@ export class VSCodeService {
 					suffix === "base" ? suffix : `design-${suffix}`
 				}.css`
 		);
-		themeFiles.push(`${this.marpThemesFolder}/my-sr-settings.css`);
+		themeFiles.push(`./${this.marpThemesFolder}/my-sr-settings.css`);
 		// 构建settings.json的完整路径
 		const settingsPath = `${this.vscodeConfigFolder}/settings.json`;
 
