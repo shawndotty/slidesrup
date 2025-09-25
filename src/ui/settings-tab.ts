@@ -19,7 +19,7 @@ import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
 import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { DEFAULT_DESIGNS } from "../constants";
+import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "../constants";
 import { markdown } from "@codemirror/lang-markdown";
 
 type SettingsKeys = keyof SlidesRup["settings"];
@@ -1558,7 +1558,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	private getUserDesignOptions() {
 		const slidesRupFrameworkPath =
 			this.plugin.settings.slidesRupFrameworkFolder;
-		const slidesRupUserDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
+		const slidesRupUserDesignsPath = `${slidesRupFrameworkPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 		const options = {
 			none: t("None"),
 		};

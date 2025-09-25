@@ -4,6 +4,7 @@ import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
 	MARP_THEMES_FOLDER,
+	REVEAL_USER_DESIGN_FOLDER,
 } from "../constants";
 
 interface StyleSection {
@@ -616,7 +617,7 @@ ${
 
 	async getUserDesignCssFiles() {
 		const slidesRupFrameworkPath = this.settings.slidesRupFrameworkFolder;
-		const userDesignsPath = `${slidesRupFrameworkPath}/MyDesigns`;
+		const userDesignsPath = `${slidesRupFrameworkPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 		let cssFiles: string[] = [];
 		// 使用 Obsidian 的 adapter API 递归获取 userDesignsPath 下所有子文件夹的 css 文件
 		cssFiles = await this.getAllCssFilesInFolder(userDesignsPath);

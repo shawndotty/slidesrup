@@ -9,14 +9,18 @@ import {
 	getUserDesigns,
 	getAllDesignsOptions,
 } from "src/utils";
-import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import {
+	TEMPLATE_PLACE_HOLDERS,
+	DEFAULT_DESIGNS,
+	REVEAL_USER_DESIGN_FOLDER,
+} from "src/constants";
 import { SlideDesignSuggester } from "../suggesters/suggesters";
 import { VSCodeService } from "./vscode-service";
 
 export class DesignMaker {
 	private app: App;
 	private settings: SlidesRupSettings;
-	private static readonly MY_DESIGN_FOLDER = "MyDesigns";
+	private static readonly MY_DESIGN_FOLDER = REVEAL_USER_DESIGN_FOLDER;
 	private defaultDesigns: typeof DEFAULT_DESIGNS = DEFAULT_DESIGNS;
 	private userDesignPath: string = "";
 	private userDesigns: Array<string> = [];
@@ -99,7 +103,7 @@ export class DesignMaker {
 		const designName = design.value;
 		const isDefaultDesign = this.defaultDesigns.includes(designName);
 		const originalDesignPath = `${this.settings.slidesRupFrameworkFolder}/${
-			isDefaultDesign ? "Designs" : "MyDesigns"
+			isDefaultDesign ? "Designs" : DesignMaker.MY_DESIGN_FOLDER
 		}/Design-${designName}`;
 
 		const marpThemesFolder = `${this.settings.slidesRupFrameworkFolder}/MarpThemes`;
@@ -111,7 +115,7 @@ export class DesignMaker {
 		const originalMarpThemePath = `${marpThemesFolder}/sr-design-${designName.toLowerCase()}.css`;
 
 		if (!newDesignName) return;
-		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/MyDesigns/Design-${newDesignName}`;
+		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}/Design-${newDesignName}`;
 		await createPathIfNeeded(this.app, newDesignPath);
 
 		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName

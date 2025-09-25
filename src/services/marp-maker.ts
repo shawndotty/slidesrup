@@ -33,6 +33,7 @@ import {
 	TEMPLATE_PLACE_HOLDERS,
 	DEFAULT_DESIGNS,
 	MARP_THEMES_FOLDER,
+	REVEAL_USER_DESIGN_FOLDER,
 } from "src/constants";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { MultipleFileProcessor } from "src/services/processors/multiple-file-processor";
@@ -610,7 +611,7 @@ export class MarpSlidesMaker {
 		const themeFilePath = `${slidesRupFrameworkFolder}/${MARP_THEMES_FOLDER}/sr-design-${design.toLowerCase()}.css`;
 		const themeFile = this.app.vault.getAbstractFileByPath(themeFilePath);
 		if (themeFile instanceof TFile) {
-			const coverImagePath = `${slidesRupFrameworkFolder}/MyDesigns/Design-${design}/Cover-${design}.png`;
+			const coverImagePath = `${slidesRupFrameworkFolder}/${REVEAL_USER_DESIGN_FOLDER}/Design-${design}/Cover-${design}.png`;
 			const newRelativePath = this.util.getRelativePathForTarget(
 				coverImagePath,
 				newSlideLocation
@@ -619,10 +620,8 @@ export class MarpSlidesMaker {
 				0,
 				newRelativePath.lastIndexOf("/")
 			);
-			console.dir(newPathBase);
 
 			const themeContent = await this.app.vault.read(themeFile);
-			console.dir(themeContent);
 			const updatedContent = themeContent.replace(
 				/url\("(.*?)"\)/g,
 				(match, p1) => {
