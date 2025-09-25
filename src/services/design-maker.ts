@@ -231,8 +231,8 @@ export class DesignMaker {
 					`sr-design-${newDesignName.toLowerCase()}`
 				)
 				.replace(
-					new RegExp(`\-${designName.toUpperCase()}\.`, "g"),
-					`-${newDesignName.toUpperCase()}.`
+					new RegExp(`\-${designName.toUpperCase()}`, "g"),
+					`-${newDesignName.toUpperCase()}`
 				);
 			await this.app.vault.adapter.write(
 				newMarpThemePath,
