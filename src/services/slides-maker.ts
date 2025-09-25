@@ -567,7 +567,10 @@ export class SlidesMaker {
 			await this._extractContentFromFile(activeFile);
 
 		// Check if content already contains slide annotations
-		if (content.includes("<!-- slide")) {
+		if (
+			content.includes("<!-- slide") ||
+			content.includes("_class: cover")
+		) {
 			new Notice(t("This file is already a slide presentation"));
 			return;
 		}

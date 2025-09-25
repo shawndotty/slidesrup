@@ -225,10 +225,15 @@ export class DesignMaker {
 			const themeContent = await this.app.vault.adapter.read(
 				newMarpThemePath
 			);
-			const updatedThemeContent = themeContent.replace(
-				new RegExp(`sr-design-${designName.toLowerCase()}`, "g"),
-				`sr-design-${newDesignName.toLowerCase()}`
-			);
+			const updatedThemeContent = themeContent
+				.replace(
+					new RegExp(`sr-design-${designName.toLowerCase()}`, "g"),
+					`sr-design-${newDesignName.toLowerCase()}`
+				)
+				.replace(
+					`-${designName.toUpperCase()}.`,
+					`-${newDesignName.toUpperCase()}.`
+				);
 			await this.app.vault.adapter.write(
 				newMarpThemePath,
 				updatedThemeContent

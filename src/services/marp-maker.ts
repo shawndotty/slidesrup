@@ -493,7 +493,10 @@ export class MarpSlidesMaker {
 			await this._extractContentFromFile(activeFile);
 
 		// Check if content already contains slide annotations
-		if (content.includes("_class: cover")) {
+		if (
+			content.includes("_class: cover") ||
+			content.includes("<!-- slide")
+		) {
 			new Notice(t("This file is already a slide presentation"));
 			return;
 		}
@@ -1487,6 +1490,8 @@ export class MarpSlidesMaker {
 					defaultTemplate
 				);
 
+				const pageClass = simpleMode ? "content" : "chapter";
+
 				const templateStr = template ? `_template: "${template}"` : "";
 				const header = !simpleMode ? `_header: ""` : "";
 				modifiedLines.push(
@@ -1495,7 +1500,7 @@ export class MarpSlidesMaker {
 						header,
 						`_id: c${h2Index}`,
 						templateStr,
-						`_class: chapter ${classValue} chapter-${h2Index}`,
+						`_class: ${pageClass} ${classValue} chapter-${h2Index}`,
 						"-->\n",
 					]
 						.filter(Boolean)
