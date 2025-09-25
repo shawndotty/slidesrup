@@ -277,6 +277,11 @@ export class CommandService {
 				);
 
 				await this.marpSlidesService.setPluginSetting(
+					"EnableMarkdownItPlugins",
+					true
+				);
+
+				await this.marpSlidesService.setPluginSetting(
 					"ThemePath",
 					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`
 				);
