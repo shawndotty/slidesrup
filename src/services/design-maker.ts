@@ -231,7 +231,7 @@ export class DesignMaker {
 					`sr-design-${newDesignName.toLowerCase()}`
 				)
 				.replace(
-					`-${designName.toUpperCase()}.`,
+					new RegExp(`\-${designName.toUpperCase()}\.`, "g"),
 					`-${newDesignName.toUpperCase()}.`
 				);
 			await this.app.vault.adapter.write(
