@@ -979,13 +979,10 @@ export class MarpSlidesMaker {
 
 		// 定义处理步骤
 		const processPipeline: ProcessStep[] = [
-			// 1. 添加空页注释
 			(content) => this._addEmptyPageAnnotation(lines, design).join("\n"),
 
-			// 2. 添加页面分隔符
 			(content) => this._addPageSeparators(content.split("\n")),
 
-			// 3. 添加章节幻灯片注释
 			(content) =>
 				minimizeMode
 					? content
@@ -995,15 +992,12 @@ export class MarpSlidesMaker {
 							simpleMode
 					  ),
 
-			// 4. 添加 H3 链接到章节
 			(content) =>
 				minimizeMode ? content : this._addH3LinksToChapters(content),
 
-			// 5. 添加页面幻灯片注释
 			(content) =>
 				minimizeMode ? content : this._addPageSlideAnnotations(content),
 
-			// 6. 添加子页面注释
 			(content) =>
 				minimizeMode
 					? content
@@ -1011,23 +1005,10 @@ export class MarpSlidesMaker {
 							"\n"
 					  ),
 
-			// 7. 添加目录幻灯片
 			(content) =>
 				minimizeMode
 					? content
 					: this._addTocSlide(content, tocContent, design),
-
-			// 8. 转换 WikiLinks
-			// (content) =>
-			// 	this._getAutoConvertLinks(activeFile)
-			// 		? this._convertMarkdownLinksToPreviewLinks(content)
-			// 		: content,
-
-			// 9. 添加段落片段
-			// (content) =>
-			// 	this._getEnableParagraphFragments(activeFile)
-			// 		? this._addFragmentsToParagraph(content)
-			// 		: content,
 
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
@@ -1036,10 +1017,8 @@ export class MarpSlidesMaker {
 
 			(content) => this._processEmbdedFile(content),
 
-			// 10. 处理片段
 			(content) => this.fragmentProcessor.process(content),
 
-			// 11. 处理脚注
 			(content) =>
 				this.footNoteProcessor.process(content, {
 					separator: "^---$",
@@ -1048,7 +1027,6 @@ export class MarpSlidesMaker {
 
 			(content) => this.blockProcessor.process(content),
 
-			// 12. 处理图片
 			(content) =>
 				this.imageProcessor.processForMarp(content, newSlideLocation),
 
@@ -1063,11 +1041,8 @@ export class MarpSlidesMaker {
 					slideMode,
 					slideSize
 				),
-
-			// (content) => this._addStyle(content),
 		];
 
-		// 执行处理管道
 		let processedContent = content;
 		for (const step of processPipeline) {
 			processedContent = await step(processedContent);
