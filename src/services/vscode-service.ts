@@ -17,13 +17,25 @@ export class VSCodeService {
 		await createPathIfNeeded(this.app, this.vscodeConfigFolder);
 		// 定义VSCode的配置内容
 		// 定义主题文件名数组
-		const themeFiles = ["base", "a", "b", "c", "d", "e", "f", "g", "h"].map(
+		const themeFiles = [
+			"base",
+			"a",
+			"b",
+			"c",
+			"d",
+			"e",
+			"f",
+			"g",
+			"h",
+			"gfss",
+			"pslx",
+		].map(
 			(suffix) =>
 				`./${this.marpThemesFolder}/sr-${
 					suffix === "base" ? suffix : `design-${suffix}`
 				}.css`
 		);
-		themeFiles.push(`${this.marpThemesFolder}/my-sr-settings.css`);
+		themeFiles.push(`./${this.marpThemesFolder}/my-sr-settings.css`);
 		// 构建settings.json的完整路径
 		const settingsPath = `${this.vscodeConfigFolder}/settings.json`;
 

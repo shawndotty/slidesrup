@@ -32,6 +32,7 @@ export class FootnoteProcessor {
 		}
 
 		let input = markdown;
+
 		let noteIdx = 1;
 
 		const footNotes = new Map();
@@ -94,7 +95,6 @@ export class FootnoteProcessor {
 		if (input.includes(footnotePlaceholder)) {
 			return input.replace(footnotePlaceholder, footNotesBlock);
 		} else {
-			console.dir(input);
 			return "\n\n" + input.trim() + "\n\n" + footNotesBlock;
 		}
 	}
