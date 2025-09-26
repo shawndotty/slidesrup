@@ -1415,7 +1415,8 @@ export class SlidesMaker {
 						p2.trim().startsWith(":::") ||
 						p2.trim().startsWith("__CODE_BLOCK_") ||
 						p2.trim().startsWith("__MATH_BLOCK_") ||
-						p2.trim().startsWith("__HTML_BLOCK_")
+						p2.trim().startsWith("__HTML_BLOCK_") ||
+						p2.trim().startsWith("[^")
 					) {
 						return match;
 					}
@@ -1455,6 +1456,10 @@ export class SlidesMaker {
 							  );
 
 						return match;
+					}
+
+					if (/\[\^[^\]]+\]/.test(p2)) {
+						return `<span class="fragment" data-fragment-index="${fragmentIndex++}">${p2}</span>`;
 					}
 
 					return `${p1}${p2} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
