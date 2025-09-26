@@ -866,7 +866,7 @@ export class MarpSlidesMaker {
 					.map((item, idx) => {
 						// 从item中提取%%#Text%%格式的文本
 						const title = item.replace(/%%.*?%%/g, "").trim();
-						const match = item.match(/%%#(.*?)%%/);
+						const match = item.match(/%%|(.*?)%%/);
 						if (match) {
 							// 如果匹配到了%%#Text%%格式,使用Text部分
 							return `+ [${match[1].trim()}](#${this._idMaker(
