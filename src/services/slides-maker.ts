@@ -1462,7 +1462,7 @@ export class SlidesMaker {
 						return `<span class="fragment" data-fragment-index="${fragmentIndex++}">${p2}</span>`;
 					}
 
-					return `${p1}${p2} <!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
+					return `${p1}${p2}\n<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
 				}
 			);
 		});
