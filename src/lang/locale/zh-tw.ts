@@ -379,4 +379,10 @@ export default {
 	"Add Default Marp Themes for VS Code": "為 VS Code 添加默認 Marp 主題",
 	"User Customized Marp CSS": "用戶自定義 Marp CSS",
 	"Input Your Customized Marp CSS": "輸入您的自定義 Marp CSS",
+	"Toggle TOC Page Fragments": "切換目錄頁片段",
+	"Toggle Chapter Page Fragments": "切換章節頁片段",
+	"Turn on to use fragments": "開啟以使用片段",
+	"List Class Name Added by User": "用戶添加的列表類名",
+	"Columns Class Name Added by User": "用戶添加的列類名",
+	"One Class name each line": "每行一個類名",
 };
