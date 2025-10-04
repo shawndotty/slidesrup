@@ -139,6 +139,11 @@ export interface SlidesRupSettings {
 	slidesRupDefaultTOCPageNumber: number;
 
 	slidesRupUserSpecificFrontmatterOptions: string;
+	slidesRupTurnOnFragmentsInTOCSlide: boolean;
+	slidesRupTurnOnFragmentsInChapterSlides: boolean;
+
+	userAddedListClasses: string;
+	userAddedColumnClasses: string;
 }
 
 export interface NocoDBTable {

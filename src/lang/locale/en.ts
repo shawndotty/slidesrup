@@ -442,4 +442,10 @@ export default {
 		"Add Default Marp Themes for VS Code",
 	"User Customized Marp CSS": "User Customized Marp CSS",
 	"Input Your Customized Marp CSS": "Input Your Customized Marp CSS",
+	"Toggle TOC Page Fragments": "Toggle TOC Page Fragments",
+	"Toggle Chapter Page Fragments": "Toggle Chapter Page Fragments",
+	"Turn on to use fragments": "Turn on to use fragments",
+	"List Class Name Added by User": "List Class Name Added by User",
+	"Columns Class Name Added by User": "Columns Class Name Added by User",
+	"One Class name each line": "One Class name per line",
 };

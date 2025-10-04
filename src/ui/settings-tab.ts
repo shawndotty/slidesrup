@@ -943,6 +943,27 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createToggleSetting(containerEl, {
+			name: "Toggle TOC Page Fragments",
+			desc: "Turn on to use fragments",
+			value: this.plugin.settings.slidesRupTurnOnFragmentsInTOCSlide,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupTurnOnFragmentsInTOCSlide = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Toggle Chapter Page Fragments",
+			desc: "Turn on to use fragments",
+			value: this.plugin.settings.slidesRupTurnOnFragmentsInChapterSlides,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupTurnOnFragmentsInChapterSlides =
+					value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		const defaultListClassOptions = {
 			"fancy-list": "Fancy List",
 			"fancy-list-row": "Fancy List Row",
@@ -1179,6 +1200,26 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			500,
 			true
 		);
+
+		this.createTextSetting(containerEl, {
+			name: "List Class Name Added by User",
+			desc: "One Class name each line",
+			value: this.plugin.settings.userAddedListClasses,
+			onChange: async (value) => {
+				this.plugin.settings.userAddedListClasses = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Columns Class Name Added by User",
+			desc: "One Class name each line",
+			value: this.plugin.settings.userAddedColumnClasses,
+			onChange: async (value) => {
+				this.plugin.settings.userAddedColumnClasses = value;
+				await this.plugin.saveSettings();
+			},
+		});
 
 		containerEl.createEl("h2", {
 			text: t("User Specific Frontmatter Options"),

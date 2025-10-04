@@ -888,6 +888,9 @@ export class SlidesMaker {
 		lines: string[]
 	): Promise<void> {
 		// Extract H2 headings and create TOC content
+		const listMark = this.settings.slidesRupTurnOnFragmentsInTOCSlide
+			? "+"
+			: "-";
 		const h2List = lines
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
@@ -902,12 +905,15 @@ export class SlidesMaker {
 						const match = item.match(/%%\|(.*?)%%/);
 						if (match) {
 							// 如果匹配到了%%|Text%%格式,使用Text部分
-							return `+ [${match[1].trim()}](#c${idx + 1})`;
+							return `${listMark} [${match[1].trim()}](#c${
+								idx + 1
+							})`;
 						}
 						// 否则使用原始item
-						return `+ [${item.replace(/%%.*?%%/g, "")}](#c${
-							idx + 1
-						})`;
+						return `${listMark} [${item.replace(
+							/%%.*?%%/g,
+							""
+						)}](#c${idx + 1})`;
 					})
 					.join("\n")
 			: "";
@@ -1626,6 +1632,9 @@ export class SlidesMaker {
 	 * Adds H3 links to each chapter (H2)
 	 */
 	private _addH3LinksToChapters(content: string): string {
+		const listMark = this.settings.slidesRupTurnOnFragmentsInChapterSlides
+			? "+"
+			: "-";
 		const lines = content.split("\n");
 		const resultLines: string[] = [];
 		let currentH2Index = 0;
@@ -1674,7 +1683,7 @@ export class SlidesMaker {
 					h3TitleList[tempIdx].h2 === currentH2Index
 				) {
 					const h3 = h3TitleList[tempIdx];
-					h3s.push(`+ [${h3.title}](#c${h3.h2}p${h3.h3})`);
+					h3s.push(`${listMark} [${h3.title}](#c${h3.h2}p${h3.h3})`);
 					tempIdx++;
 				}
 

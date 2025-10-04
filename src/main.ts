@@ -32,8 +32,8 @@ export default class SlidesRup extends Plugin {
 		// Add settings tab
 		this.addSettingTab(new SlidesRupSettingTab(this.app, this));
 
-		this.registerEditorSuggest(new ClassesSuggest(this.app));
-		this.registerEditorSuggest(new ColumnsSuggest(this.app));
+		this.registerEditorSuggest(new ClassesSuggest(this.app, this.settings));
+		this.registerEditorSuggest(new ColumnsSuggest(this.app, this.settings));
 
 		this.registerEditorSuggest(new PlaceHoldersSuggest(this.app));
 	}

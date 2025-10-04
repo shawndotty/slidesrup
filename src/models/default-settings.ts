@@ -127,4 +127,9 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupDefaultTOCPageNumber: 2,
 
 	slidesRupUserSpecificFrontmatterOptions: "",
+	slidesRupTurnOnFragmentsInTOCSlide: true,
+	slidesRupTurnOnFragmentsInChapterSlides: true,
+
+	userAddedListClasses: "",
+	userAddedColumnClasses: "",
 };

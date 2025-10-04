@@ -4,6 +4,7 @@ import {
 	EditorSuggestTriggerInfo,
 	Editor,
 } from "obsidian";
+import { SlidesRupSettings } from "src/types";
 import { BaseSuggest } from "./base-suggest";
 import { SLIDESRUP_COLUMN_CLASSES } from "src/constants";
 
@@ -11,8 +12,20 @@ export class ColumnsSuggest extends BaseSuggest {
 	// 预定义的补全建议列表
 	private static readonly ITEM_LIST: string[] = SLIDESRUP_COLUMN_CLASSES;
 
-	constructor(app: App) {
-		super(app, ColumnsSuggest.ITEM_LIST);
+	constructor(app: App, settings: SlidesRupSettings) {
+		super(app, ColumnsSuggest.makeClassList(settings));
+	}
+
+	static makeClassList(settings: SlidesRupSettings) {
+		const userColumnsClasses = settings.userAddedColumnClasses.split("\n");
+		// 合并用户自定义的类和预定义类，去除空字符串和重复项
+		const combined = Array.from(
+			new Set([
+				...userColumnsClasses.map((c) => c.trim()).filter((c) => c),
+				...ColumnsSuggest.ITEM_LIST,
+			])
+		);
+		return combined;
 	}
 
 	// 确定何时触发建议
