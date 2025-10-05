@@ -3,7 +3,7 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	toc: "TOC",
 	presenter: "PRESENTER",
 	presentDate: "PRESENT_DATE",
-	tagline: "TAGLINE",
+	tagline: "LOGO_OR_TAGLINE",
 	slogan: "SLOGAN",
 	pIndex: "PAGE_INDEX",
 	cIndex: "CHAPTER_INDEX",

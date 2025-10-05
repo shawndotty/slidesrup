@@ -193,11 +193,14 @@ export class SlidesMaker {
 
 	private _finalizeTemplate(template: string, replaceConfig: ReplaceConfig) {
 		let finalizedTemplate = template;
-		for (const [key, value] of Object.entries(replaceConfig)) {
+		for (let [key, value] of Object.entries(replaceConfig)) {
 			const regex =
 				SlidesMaker.REPLACE_REGEX[
 					key as keyof typeof SlidesMaker.REPLACE_REGEX
 				];
+			if (key === "tagline") {
+				value = this._buildLogoOrTagline(value);
+			}
 			if (regex) {
 				finalizedTemplate = finalizedTemplate.replace(
 					regex,
@@ -206,6 +209,46 @@ export class SlidesMaker {
 			}
 		}
 		return finalizedTemplate.trim();
+	}
+
+	private _buildLogoOrTagline(value: string) {
+		if (!value) {
+			return "[SlidesRup](#home)";
+		}
+
+		const isOnlineImage = value.startsWith("http");
+
+		if (isOnlineImage) {
+			return `<a href="#home" class="logo"><img src="${value}" alt="${value}" /></a>`;
+		}
+
+		// 如果 value 包含常见图片后缀，则将其视为图片路径
+		const imageExtensions = [
+			".png",
+			".jpg",
+			".jpeg",
+			".gif",
+			".svg",
+			".webp",
+		];
+		const isLocalImage = imageExtensions.some((ext) =>
+			value.toLowerCase().endsWith(ext)
+		);
+
+		if (isLocalImage) {
+			return `<a href="#home" class="logo">![[${value}]]</a>`;
+		}
+
+		// 如果 value 是 Obsidian 图片链接格式，如 [[image.png]]
+		if (
+			value.startsWith("[[") &&
+			value.endsWith("]]") &&
+			imageExtensions.some((ext) => value.toLowerCase().includes(ext))
+		) {
+			return `<a href="#home" class="logo">!${value}</a>`;
+		}
+
+		return `[${value}](#home)`;
 	}
 
 	async getDefaultTemplate(
@@ -629,6 +672,7 @@ export class SlidesMaker {
 			design,
 			slideMode,
 			slideSize,
+			logoOrTagline,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
@@ -648,7 +692,8 @@ export class SlidesMaker {
 				newSlideLocation,
 				baseLayoutName,
 				tocName,
-				design
+				design,
+				logoOrTagline
 			);
 		}
 
@@ -756,6 +801,7 @@ export class SlidesMaker {
 		design: string;
 		slideMode: string;
 		slideSize: { w: number; h: number };
+		logoOrTagline: string;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -789,6 +835,7 @@ export class SlidesMaker {
 					design: "",
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
+					logoOrTagline: "",
 				};
 			}
 			let subFolder = this.settings.customizeSlideFolderName
@@ -824,12 +871,15 @@ export class SlidesMaker {
 		}
 		slideMode = slideMode.toLowerCase?.() || "light";
 
+		let logoOrTagline = this._getSlideLogoOrTagline(activeFile);
+
 		return {
 			newSlideContainer,
 			newSlideLocation,
 			design,
 			slideMode,
 			slideSize,
+			logoOrTagline,
 		};
 	}
 
@@ -928,14 +978,15 @@ export class SlidesMaker {
 		location: string,
 		baseLayoutName: string,
 		tocName: string,
-		design: string
+		design: string,
+		logoOrTagline: string
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
 			baseLayoutWithSteps(),
 			{
 				toc: tocName,
-				tagline: this.settings.tagline,
+				tagline: logoOrTagline || this.settings.tagline,
 				slogan: this.settings.slogan,
 			},
 			true,
@@ -1891,6 +1942,16 @@ export class SlidesMaker {
 						.frontmatter!.slideDesign!.trim()
 				: "";
 		return design ? design : this._getFallbackDesign();
+	}
+
+	private _getSlideLogoOrTagline(activeFile?: TFile | null): string {
+		const logoOrTagline = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideLogoOrTagline
+			: "";
+		return typeof logoOrTagline === "string" && logoOrTagline.trim()
+			? logoOrTagline.trim()
+			: "";
 	}
 
 	private _getSlideLocation(activeFile?: TFile | null): string {
