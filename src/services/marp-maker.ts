@@ -555,6 +555,7 @@ export class MarpSlidesMaker {
 			design,
 			slideMode,
 			slideSize,
+			logoOrTagline,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
@@ -594,7 +595,8 @@ export class MarpSlidesMaker {
 			slideMode,
 			slideSize,
 			slideSourceMode,
-			newSlideLocation
+			newSlideLocation,
+			logoOrTagline
 		);
 
 		await this._rewriteThemeImageUrl(design, newSlideLocation);
@@ -730,6 +732,7 @@ export class MarpSlidesMaker {
 		design: string;
 		slideMode: string;
 		slideSize: { w: number; h: number };
+		logoOrTagline: string;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -763,6 +766,7 @@ export class MarpSlidesMaker {
 					design: "",
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
+					logoOrTagline: "",
 				};
 			}
 			let subFolder = this.settings.customizeSlideFolderName
@@ -798,12 +802,15 @@ export class MarpSlidesMaker {
 		}
 		slideMode = slideMode.toLowerCase?.() || "light";
 
+		const logoOrTagline = this._getLogoOrTagline(activeFile);
+
 		return {
 			newSlideContainer,
 			newSlideLocation,
 			design,
 			slideMode,
 			slideSize,
+			logoOrTagline,
 		};
 	}
 
@@ -912,19 +919,6 @@ export class MarpSlidesMaker {
 	}
 
 	/**
-	 * Creates the TOC file from markdown headings
-	 */
-	private async _createTocFile(
-		location: string,
-		tocName: string,
-		lines: string[]
-	): Promise<void> {
-		// Extract H2 headings and create TOC content
-		const tocContent = this._getTocContent(lines);
-		await this._createAndOpenSlide(location, tocName, tocContent, false);
-	}
-
-	/**
 	 * Creates the BaseLayout file for the slide
 	 */
 	private async _createBaseLayoutFile(
@@ -969,7 +963,8 @@ export class MarpSlidesMaker {
 			h: number;
 		},
 		slideSourceMode: number,
-		newSlideLocation: string
+		newSlideLocation: string,
+		logoOrTagline: string
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1039,7 +1034,9 @@ export class MarpSlidesMaker {
 					activeFile,
 					navContent,
 					slideMode,
-					slideSize
+					slideSize,
+					logoOrTagline,
+					newSlideLocation
 				),
 		];
 
@@ -1114,13 +1111,19 @@ export class MarpSlidesMaker {
 		slideSize: {
 			w: number;
 			h: number;
-		}
+		},
+		logoOrTagline: string,
+		newSlideLocation: string
 	): string {
+		const logoOrTaglineHtml = this._buildLogoOrTagline(
+			logoOrTagline,
+			newSlideLocation
+		);
 		const frontMatter = [
 			"---",
 			"marp: true",
 			`theme: sr-design-${design.toLocaleLowerCase()}`,
-			`header: <div class="tagline"><a href="#1">${this.settings.tagline}</a></div>${navContent}`,
+			`header: ${logoOrTaglineHtml}${navContent}`,
 			`aliases: ${activeFile.basename}`,
 			`slideMode: ${slideMode}`,
 			"---",
@@ -1128,38 +1131,49 @@ export class MarpSlidesMaker {
 		return frontMatter + "\n\n" + content;
 	}
 
-	private _addStyle(content: string): string {
-		const style = `
-<style>
-	.tagline {
-		font-size: 16px;
-		color: #888;
-	}
-	header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		color: #888;
-		padding: 10px 20px;
-		margin: 0 auto;
-		width: 100%;
-		box-sizing: border-box;
-		top: 0;
-		left: 0;
-	}
+	/**
+	 * 构建 logo 或 tagline HTML 字符串
+	 * 如果 value 是 URL，则视为在线图片，否则视为本地图片路径
+	 */
+	private _buildLogoOrTagline(
+		logoOrTagline: string,
+		newSlideLocation: string
+	): string {
+		const value = logoOrTagline || this.settings.tagline;
+		if (!value) {
+			return `<div class="tagline"><a href="#1" class="logo">SlidesRup</a></div>`;
+		}
 
-	header ul {
-		list-style-type: none;
-		display: flex;
-		gap: 20px;
-	}
+		const isOnlineImage = value.startsWith("http");
 
-	header ul li {
-		margin: 0;
-	}
-</style>
-`;
-		return content + "\n\n" + style;
+		if (isOnlineImage) {
+			return `<div class="tagline"><a href="#1" class="logo"><img src="${value}" alt="${value}" /></a></div>`;
+		}
+
+		// 如果 value 包含常见图片后缀，则将其视为图片路径
+		const imageExtensions = [
+			".png",
+			".jpg",
+			".jpeg",
+			".gif",
+			".svg",
+			".webp",
+		];
+		const isLocalImage = imageExtensions.some(
+			(ext) =>
+				value.toLowerCase().endsWith(ext) ||
+				value.replace("]]", "").endsWith(ext)
+		);
+		if (isLocalImage) {
+			const iamgePath = this.util.getRelativePath(value) || "";
+			const relativePath = this.util.getRelativePathForTarget(
+				iamgePath,
+				newSlideLocation
+			);
+			return `<div class="tagline"><a href="#1" class="logo"><img src="${relativePath}" alt="${value}" /></a></div>`;
+		}
+
+		return `<div class="tagline">${value}</div>`;
 	}
 
 	/**
@@ -1777,6 +1791,16 @@ export class MarpSlidesMaker {
 						.frontmatter!.slideDesign!.trim()
 				: "";
 		return design ? design : this._getFallbackDesign();
+	}
+
+	private _getLogoOrTagline(activeFile?: TFile | null): string {
+		const logoOrTagline = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideLogoOrTagline
+			: "";
+		return typeof logoOrTagline === "string" && logoOrTagline.trim()
+			? logoOrTagline.trim()
+			: "";
 	}
 
 	private _getSlideLocation(activeFile?: TFile | null): string {
