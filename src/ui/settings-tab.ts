@@ -1201,7 +1201,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			true
 		);
 
-		this.createTextSetting(containerEl, {
+		this.createTextAreaSetting(containerEl, {
 			name: "List Class Name Added by User",
 			desc: "One Class name each line",
 			value: this.plugin.settings.userAddedListClasses,
@@ -1211,7 +1211,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
-		this.createTextSetting(containerEl, {
+		this.createTextAreaSetting(containerEl, {
 			name: "Columns Class Name Added by User",
 			desc: "One Class name each line",
 			value: this.plugin.settings.userAddedColumnClasses,
@@ -1298,6 +1298,18 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			.setName(t(config.name as any))
 			.setDesc(t(config.desc as any))
 			.addText((text) => {
+				text.setValue(config.value).onChange(config.onChange);
+			});
+	}
+
+	private createTextAreaSetting(
+		content: HTMLElement,
+		config: SettingConfig
+	): void {
+		new Setting(content)
+			.setName(t(config.name as any))
+			.setDesc(t(config.desc as any))
+			.addTextArea((text) => {
 				text.setValue(config.value).onChange(config.onChange);
 			});
 	}
