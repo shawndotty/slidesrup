@@ -861,6 +861,9 @@ export class MarpSlidesMaker {
 	}
 
 	private _getTocContent(lines: string[]): string {
+		const listMark = this.settings.slidesRupTurnOnFragmentsInTOCSlide
+			? "+"
+			: "-";
 		const h2List = lines
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
@@ -876,12 +879,14 @@ export class MarpSlidesMaker {
 						const match = item.match(/%%|(.*?)%%/);
 						if (match) {
 							// 如果匹配到了%%#Text%%格式,使用Text部分
-							return `+ [${match[1].trim()}](#${this._idMaker(
+							return `${listMark} [${match[1].trim()}](#${this._idMaker(
 								title
 							)})`;
 						}
 						// 否则使用原始item
-						return `+ [${title}](#${this._idMaker(title)})`;
+						return `${listMark} [${title}](#${this._idMaker(
+							title
+						)})`;
 					})
 					.join("\n")
 			: "";
@@ -1519,6 +1524,9 @@ export class MarpSlidesMaker {
 	 * Adds H3 links to each chapter (H2)
 	 */
 	private _addH3LinksToChapters(content: string): string {
+		const listMark = this.settings.slidesRupTurnOnFragmentsInChapterSlides
+			? "+"
+			: "-";
 		const lines = content.split("\n");
 		const resultLines: string[] = [];
 		let currentH2Index = 0;
@@ -1567,7 +1575,9 @@ export class MarpSlidesMaker {
 					h3TitleList[tempIdx].h2 === currentH2Index
 				) {
 					const h3 = h3TitleList[tempIdx];
-					h3s.push(`+ [${h3.title}](#${this._idMaker(h3.title)})`);
+					h3s.push(
+						`${listMark} [${h3.title}](#${this._idMaker(h3.title)})`
+					);
 					tempIdx++;
 				}
 
