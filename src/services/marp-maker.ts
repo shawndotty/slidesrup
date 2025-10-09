@@ -540,10 +540,7 @@ export class MarpSlidesMaker {
 		}
 
 		if (slideSourceMode === 3) {
-			newLines = this._regularizeHeadingsForContent(
-				activeFile.basename,
-				lines
-			);
+			newLines = this._regularizeHeadingsForContent(activeFile, lines);
 		}
 
 		await this._resetUserSpecificListClass(activeFile);
@@ -648,11 +645,13 @@ export class MarpSlidesMaker {
 	}
 
 	private _regularizeHeadingsForContent(
-		fileName: string,
+		activeFile: TFile,
 		lines: string[]
 	): string[] {
 		// 添加文件名作为 H1 标题
-		lines.unshift(`# ${fileName}`);
+		const activeFileCache = this.app.metadataCache.getFileCache(activeFile);
+		const aliasName = activeFileCache?.frontmatter?.aliases?.first();
+		lines.unshift(`# ${aliasName || activeFile.basename}`);
 
 		// 处理现有标题
 		for (let i = 1; i < lines.length; i++) {
