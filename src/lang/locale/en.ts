@@ -449,4 +449,7 @@ export default {
 	"Columns Class Name Added by User": "Columns Class Name Added by User",
 	"One Class name each line": "One Class name per line",
 	WithoutNav: "WithoutNav",
+	"Turn on Base Layout Without Nav": "Turn on Base Layout Without Nav",
+	"Turn on to use base layout without nav":
+		"Turn on to use base layout without nav",
 };

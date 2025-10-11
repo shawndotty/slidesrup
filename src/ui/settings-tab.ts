@@ -909,6 +909,17 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createToggleSetting(containerEl, {
+			name: "Turn on Base Layout Without Nav",
+			desc: "Turn on to use base layout without nav",
+			value: this.plugin.settings.slidesRupTrunOnBaseLayoutWithoutNav,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupTrunOnBaseLayoutWithoutNav =
+					value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		this.createDropdownSetting(
 			containerEl,
 			"Content Page Slide Type",

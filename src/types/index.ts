@@ -142,6 +142,8 @@ export interface SlidesRupSettings {
 	slidesRupTurnOnFragmentsInTOCSlide: boolean;
 	slidesRupTurnOnFragmentsInChapterSlides: boolean;
 
+	slidesRupTrunOnBaseLayoutWithoutNav: boolean;
+
 	userAddedListClasses: string;
 	userAddedColumnClasses: string;
 }

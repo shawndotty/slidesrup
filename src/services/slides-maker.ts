@@ -575,12 +575,16 @@ export class SlidesMaker {
 	private _generateNewSlideFilesNames(targetSlide: string = ""): {
 		slideName: string;
 		baseLayoutName: string;
+		baseLayoutWithoutNavName: string;
 		tocName: string;
 	} {
 		const base = targetSlide || `${getTimeStamp()}-${t("Slide")}`;
 		return {
 			slideName: base,
 			baseLayoutName: `${base}-${t("BaseLayout")}`,
+			baseLayoutWithoutNavName: `${base}-${t("BaseLayout")}-${t(
+				"WithoutNav"
+			)}`,
 			tocName: `${base}-${t("TOC")}`,
 		};
 	}
@@ -688,7 +692,7 @@ export class SlidesMaker {
 		if (newSlideContainer === null) return;
 
 		// 2. Generate file names for slide components
-		const { slideName, baseLayoutName, tocName } =
+		const { slideName, baseLayoutName, tocName, baseLayoutWithoutNavName } =
 			this._generateNewSlideFilesNames(targetSlide);
 
 		// 简化模式标志,当文档结构为单一一级标题时启用
@@ -710,7 +714,7 @@ export class SlidesMaker {
 			// 6. Create BaseLayoutWithoutNav file
 			await this._createBaseLayoutWithoutNavFile(
 				newSlideLocation,
-				baseLayoutName + "-" + t("WithoutNav"),
+				baseLayoutWithoutNavName,
 				tocName,
 				design,
 				logoOrTagline
@@ -724,6 +728,7 @@ export class SlidesMaker {
 			design,
 			tocName,
 			baseLayoutName,
+			baseLayoutWithoutNavName,
 			activeFile,
 			slideMode,
 			slideSize,
@@ -1059,6 +1064,7 @@ export class SlidesMaker {
 		design: string,
 		tocName: string,
 		baseLayoutName: string,
+		baseLayoutWithoutNavName: string,
 		activeFile: TFile,
 		slideMode: string,
 		slideSize: {
@@ -1097,15 +1103,21 @@ export class SlidesMaker {
 
 			// 5. 添加页面幻灯片注释
 			(content) =>
-				minimizeMode ? content : this._addPageSlideAnnotations(content),
+				minimizeMode
+					? content
+					: this._addPageSlideAnnotations(
+							content,
+							baseLayoutWithoutNavName
+					  ),
 
 			// 6. 添加子页面注释
 			(content) =>
 				minimizeMode
 					? content
-					: this._addSubPageAnnotation(content.split("\n")).join(
-							"\n"
-					  ),
+					: this._addSubPageAnnotation(
+							content.split("\n"),
+							baseLayoutWithoutNavName
+					  ).join("\n"),
 
 			// 7. 添加目录幻灯片
 			(content) =>
@@ -1148,6 +1160,7 @@ export class SlidesMaker {
 				this._addFrontMatter(
 					content,
 					baseLayoutName,
+					baseLayoutWithoutNavName,
 					activeFile,
 					slideMode,
 					slideSize
@@ -1228,6 +1241,7 @@ export class SlidesMaker {
 	private _addFrontMatter(
 		content: string,
 		baseLayoutName: string,
+		baseLayoutWithoutNavName: string,
 		activeFile: TFile,
 		slideMode: string,
 		slideSize: {
@@ -1248,7 +1262,11 @@ export class SlidesMaker {
 			`navigationMode: ${this.settings.slidesRupSlideNavigationMode}`,
 			"aliases:",
 			` - ${activeFile.basename}`,
-			`defaultTemplate: "[[${baseLayoutName}]]"`,
+			`defaultTemplate: "[[${
+				this.settings.slidesRupTrunOnBaseLayoutWithoutNav
+					? baseLayoutWithoutNavName
+					: baseLayoutName
+			}]]"`,
 			"pdfSeparateFragments: false",
 			"verticalSeparator: \\*\\*\\*",
 			"theme: white",
@@ -1602,7 +1620,10 @@ export class SlidesMaker {
 		return newLines;
 	}
 
-	private _addSubPageAnnotation(lines: string[]): string[] {
+	private _addSubPageAnnotation(
+		lines: string[],
+		baseLayoutWithoutNavName: string
+	): string[] {
 		let currentChapterIndex = 0;
 		let pageIndexInChapter = 0;
 		let subPageIndex = 0;
@@ -1627,7 +1648,13 @@ export class SlidesMaker {
 				);
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
-					(template && `template="${template}"`) || "";
+					(template &&
+						`template="${
+							template === t("WithoutNav")
+								? baseLayoutWithoutNavName
+								: template
+						}"`) ||
+					"";
 				if (this.settings.slidesRupContentPageSlideType === "v") {
 					finalLines.push("***");
 				} else {
@@ -1805,7 +1832,10 @@ export class SlidesMaker {
 	/**
 	 * Adds slide annotations for page headings (H3)
 	 */
-	private _addPageSlideAnnotations(content: string): string {
+	private _addPageSlideAnnotations(
+		content: string,
+		baseLayoutWithoutNavName: string
+	): string {
 		const lines = content.split("\n");
 		let currentChapterIndex = 0;
 		let pageIndexInChapter = 0;
@@ -1827,7 +1857,13 @@ export class SlidesMaker {
 
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
-					(template && `template="${template}"`) || "";
+					(template &&
+						`template="${
+							template === t("WithoutNav")
+								? baseLayoutWithoutNavName
+								: template
+						}"`) ||
+					"";
 
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
