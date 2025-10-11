@@ -618,7 +618,6 @@ export class SlidesMaker {
 			return;
 		}
 
-		// Validate document structure
 		if (!headingsInfo.length) {
 			new Notice(t("Invalid Format: No headings found"));
 			return;
