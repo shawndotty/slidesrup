@@ -195,7 +195,7 @@ export function getBaseLayout() {
 export function getBaseLayoutWithSteps() {
 	return `
 <grid drag="100 10" class="header steps bg-with-back-color has-dark-background no-fragments" drop="topleft"  flow="row"  pad="0 40px" style="color: white;">
-[{{${TEMPLATE_PLACE_HOLDERS.tagline}}}](#home)
+{{${TEMPLATE_PLACE_HOLDERS.tagline}}}
 
 ![[{{${TEMPLATE_PLACE_HOLDERS.toc}}}]]
 

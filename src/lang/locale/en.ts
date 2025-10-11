@@ -448,4 +448,5 @@ export default {
 	"List Class Name Added by User": "List Class Name Added by User",
 	"Columns Class Name Added by User": "Columns Class Name Added by User",
 	"One Class name each line": "One Class name per line",
+	WithoutNav: "WithoutNav",
 };

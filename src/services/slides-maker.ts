@@ -5,6 +5,7 @@ import {
 	slidePageTemplate,
 	slideTemplate,
 	baseLayoutWithSteps,
+	baseLayout,
 	toc,
 	chapterAndPagesTemplate,
 } from "../templates/slide-template";
@@ -29,7 +30,11 @@ import {
 	getAllDesignsOptions,
 } from "src/utils";
 import { InputModal } from "src/ui/modals/input-modal";
-import { TEMPLATE_PLACE_HOLDERS, DEFAULT_DESIGNS } from "src/constants";
+import {
+	TEMPLATE_PLACE_HOLDERS,
+	DEFAULT_DESIGNS,
+	ContentPageType,
+} from "src/constants";
 import { ImageProcessor } from "src/services/processors/image-processor";
 import { ObsidianUtils } from "src/utils/obsidianUtils";
 import { BlockProcessor } from "src/services/processors/block-processor";
@@ -269,7 +274,7 @@ export class SlidesMaker {
 		userTemplate: string,
 		defaultTemplate: string | (() => string),
 		replaceConfig: ReplaceConfig = {},
-		isContentPage: boolean = false,
+		contentPageType: number = ContentPageType.None,
 		design: string = ""
 	) {
 		// 优化后的代码，减少重复、提升可读性
@@ -285,8 +290,18 @@ export class SlidesMaker {
 				? defaultTemplate()
 				: defaultTemplate;
 
-		if (isContentPage) {
-			const contentTemplateName = `${t("ContentPage")}-${design}.md`;
+		// 统一处理两种 contentPageType，减少重复
+		if (
+			contentPageType === ContentPageType.WithNav ||
+			contentPageType === ContentPageType.WithoutNav
+		) {
+			const suffix =
+				contentPageType === ContentPageType.WithoutNav
+					? `-${t("WithoutNav")}`
+					: "";
+			const contentTemplateName = `${t(
+				"ContentPage"
+			)}${suffix}-${design}.md`;
 			const contentTemplateFile = this.app.vault
 				.getMarkdownFiles()
 				.find((f) => f.name === contentTemplateName);
@@ -691,6 +706,15 @@ export class SlidesMaker {
 				design,
 				logoOrTagline
 			);
+
+			// 6. Create BaseLayoutWithoutNav file
+			await this._createBaseLayoutWithoutNavFile(
+				newSlideLocation,
+				baseLayoutName + "-" + t("WithoutNav"),
+				tocName,
+				design,
+				logoOrTagline
+			);
 		}
 
 		// 6. Process content and create final slide
@@ -987,7 +1011,7 @@ export class SlidesMaker {
 				tagline: logoOrTagline || this.settings.tagline,
 				slogan: this.settings.slogan,
 			},
-			true,
+			ContentPageType.WithNav,
 			design
 		);
 		await this._createAndOpenSlide(
@@ -998,6 +1022,34 @@ export class SlidesMaker {
 		);
 	}
 
+	/**
+	 * Creates the BaseLayoutWithoutNav file for the slide
+	 */
+	private async _createBaseLayoutWithoutNavFile(
+		location: string,
+		baseLayoutName: string,
+		tocName: string,
+		design: string,
+		logoOrTagline: string
+	): Promise<void> {
+		const baseLayoutTemplate = await this.getFinalTemplate(
+			this.settings.userBaseLayoutTemplate,
+			baseLayout(),
+			{
+				toc: tocName,
+				tagline: logoOrTagline || this.settings.tagline,
+				slogan: this.settings.slogan,
+			},
+			ContentPageType.WithoutNav,
+			design
+		);
+		await this._createAndOpenSlide(
+			location,
+			baseLayoutName,
+			baseLayoutTemplate,
+			false
+		);
+	}
 	/**
 	 * Processes markdown content for slide presentation
 	 */

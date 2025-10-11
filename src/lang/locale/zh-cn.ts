@@ -396,4 +396,5 @@ export default {
 	"List Class Name Added by User": "用户添加的列表类名",
 	"Columns Class Name Added by User": "用户添加的列类名",
 	"One Class name each line": "每行一个类名",
+	WithoutNav: "无导航",
 };
