@@ -553,6 +553,7 @@ export class MarpSlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slideNavOn,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
@@ -593,7 +594,8 @@ export class MarpSlidesMaker {
 			slideSize,
 			slideSourceMode,
 			newSlideLocation,
-			logoOrTagline
+			logoOrTagline,
+			slideNavOn
 		);
 
 		await this._rewriteThemeImageUrl(design, newSlideLocation);
@@ -732,6 +734,7 @@ export class MarpSlidesMaker {
 		slideMode: string;
 		slideSize: { w: number; h: number };
 		logoOrTagline: string;
+		slideNavOn: boolean;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -766,6 +769,7 @@ export class MarpSlidesMaker {
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
 					logoOrTagline: "",
+					slideNavOn: true,
 				};
 			}
 			let subFolder = this.settings.customizeSlideFolderName
@@ -803,6 +807,8 @@ export class MarpSlidesMaker {
 
 		const logoOrTagline = this._getLogoOrTagline(activeFile);
 
+		let slideNavOn = this._getSlideNavOn(activeFile);
+
 		return {
 			newSlideContainer,
 			newSlideLocation,
@@ -810,6 +816,7 @@ export class MarpSlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slideNavOn,
 		};
 	}
 
@@ -968,13 +975,18 @@ export class MarpSlidesMaker {
 		},
 		slideSourceMode: number,
 		newSlideLocation: string,
-		logoOrTagline: string
+		logoOrTagline: string,
+		slideNavOn: boolean
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
 
 		const simpleMode = slideSourceMode === 2;
 		const minimizeMode = slideSourceMode === 4;
+		const logoOrTaglineHtml = this._buildLogoOrTagline(
+			logoOrTagline,
+			newSlideLocation
+		);
 
 		// 定义处理步骤
 		const processPipeline: ProcessStep[] = [
@@ -995,14 +1007,17 @@ export class MarpSlidesMaker {
 				minimizeMode ? content : this._addH3LinksToChapters(content),
 
 			(content) =>
-				minimizeMode ? content : this._addPageSlideAnnotations(content),
+				minimizeMode
+					? content
+					: this._addPageSlideAnnotations(content, logoOrTaglineHtml),
 
 			(content) =>
 				minimizeMode
 					? content
-					: this._addSubPageAnnotation(content.split("\n")).join(
-							"\n"
-					  ),
+					: this._addSubPageAnnotation(
+							content.split("\n"),
+							logoOrTaglineHtml
+					  ).join("\n"),
 
 			(content) =>
 				minimizeMode
@@ -1040,7 +1055,8 @@ export class MarpSlidesMaker {
 					slideMode,
 					slideSize,
 					logoOrTagline,
-					newSlideLocation
+					newSlideLocation,
+					slideNavOn
 				),
 		];
 
@@ -1117,17 +1133,19 @@ export class MarpSlidesMaker {
 			h: number;
 		},
 		logoOrTagline: string,
-		newSlideLocation: string
+		newSlideLocation: string,
+		slideNavOn: boolean
 	): string {
 		const logoOrTaglineHtml = this._buildLogoOrTagline(
 			logoOrTagline,
 			newSlideLocation
 		);
+		const slogan = `<p>${this.settings.slogan}</p>`;
 		const frontMatter = [
 			"---",
 			"marp: true",
 			`theme: sr-design-${design.toLocaleLowerCase()}`,
-			`header: ${logoOrTaglineHtml}${navContent}`,
+			`header: ${logoOrTaglineHtml}${slideNavOn ? navContent : slogan}`,
 			`aliases: ${activeFile.basename}`,
 			`slideMode: ${slideMode}`,
 			"---",
@@ -1374,7 +1392,10 @@ export class MarpSlidesMaker {
 		return newLines;
 	}
 
-	private _addSubPageAnnotation(lines: string[]): string[] {
+	private _addSubPageAnnotation(
+		lines: string[],
+		logoOrTaglineHtml: string
+	): string[] {
 		let currentChapterIndex = 0;
 		let pageIndexInChapter = 0;
 		let subPageIndex = 0;
@@ -1400,6 +1421,11 @@ export class MarpSlidesMaker {
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
 					(template && `_template: ${template}`) || "";
+				const slogan =
+					template === `[[${t("WithoutNav")}]]`
+						? `_header: '${logoOrTaglineHtml}<p>${this.settings.slogan}</p>'`
+						: "";
+
 				if (this.settings.slidesRupContentPageSlideType === "v") {
 					finalLines.push("***");
 				} else {
@@ -1409,6 +1435,7 @@ export class MarpSlidesMaker {
 					"\n<!-- ",
 					`_id: ${`c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}`.trim()}`,
 					slideTemplate.trim(),
+					slogan,
 					`_class: content subpage ${[chapterClass, classValue]
 						.filter(Boolean)
 						.join("\n")}`,
@@ -1597,7 +1624,10 @@ export class MarpSlidesMaker {
 	/**
 	 * Adds slide annotations for page headings (H3)
 	 */
-	private _addPageSlideAnnotations(content: string): string {
+	private _addPageSlideAnnotations(
+		content: string,
+		logoOrTaglineHtml: string
+	): string {
 		const lines = content.split("\n");
 		let currentChapterIndex = 0;
 		let pageIndexInChapter = 0;
@@ -1618,14 +1648,21 @@ export class MarpSlidesMaker {
 				);
 
 				const template = this._modidySlideTemplate(line, "");
+				console.dir(template);
 				const slideTemplate =
 					(template && `_template: "${template}"`) || "";
+
+				const slogan =
+					template === `[[${t("WithoutNav")}]]`
+						? `_header: '${logoOrTaglineHtml}<p>${this.settings.slogan}</p>'`
+						: "";
 
 				finalLines.push(
 					[
 						"\n<!-- ",
 						`_id: c${currentChapterIndex}p${pageIndexInChapter}`,
 						slideTemplate,
+						slogan,
 						`_class: content ${chapterClass} ${classValue}`,
 						"-->\n",
 					]
@@ -1810,6 +1847,16 @@ export class MarpSlidesMaker {
 		return typeof logoOrTagline === "string" && logoOrTagline.trim()
 			? logoOrTagline.trim()
 			: "";
+	}
+
+	private _getSlideNavOn(activeFile?: TFile | null): boolean {
+		const navOn = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideNavOn
+			: null;
+		return typeof navOn === "boolean"
+			? navOn
+			: this.settings.slidesRupTrunOnBaseLayoutNav;
 	}
 
 	private _getSlideLocation(activeFile?: TFile | null): string {
