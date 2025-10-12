@@ -688,6 +688,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slideNavOff,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
@@ -732,7 +733,8 @@ export class SlidesMaker {
 			activeFile,
 			slideMode,
 			slideSize,
-			slideSourceMode
+			slideSourceMode,
+			slideNavOff
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -829,6 +831,7 @@ export class SlidesMaker {
 		slideMode: string;
 		slideSize: { w: number; h: number };
 		logoOrTagline: string;
+		slideNavOff: boolean;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -863,6 +866,7 @@ export class SlidesMaker {
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
 					logoOrTagline: "",
+					slideNavOff: false,
 				};
 			}
 			let subFolder = this.settings.customizeSlideFolderName
@@ -900,6 +904,8 @@ export class SlidesMaker {
 
 		let logoOrTagline = this._getSlideLogoOrTagline(activeFile);
 
+		let slideNavOff = this._getSlideNavOff(activeFile);
+
 		return {
 			newSlideContainer,
 			newSlideLocation,
@@ -907,6 +913,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slideNavOff,
 		};
 	}
 
@@ -1071,7 +1078,8 @@ export class SlidesMaker {
 			w: number;
 			h: number;
 		},
-		slideSourceMode: number
+		slideSourceMode: number,
+		slideNavOff: boolean
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1163,7 +1171,8 @@ export class SlidesMaker {
 					baseLayoutWithoutNavName,
 					activeFile,
 					slideMode,
-					slideSize
+					slideSize,
+					slideNavOff
 				),
 		];
 
@@ -1247,7 +1256,8 @@ export class SlidesMaker {
 		slideSize: {
 			w: number;
 			h: number;
-		}
+		},
+		slideNavOff: boolean
 	): string {
 		const userFrontmatter =
 			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
@@ -1263,7 +1273,7 @@ export class SlidesMaker {
 			"aliases:",
 			` - ${activeFile.basename}`,
 			`defaultTemplate: "[[${
-				this.settings.slidesRupTrunOnBaseLayoutWithoutNav
+				slideNavOff || this.settings.slidesRupTrunOnBaseLayoutWithoutNav
 					? baseLayoutWithoutNavName
 					: baseLayoutName
 			}]]"`,
@@ -2038,6 +2048,14 @@ export class SlidesMaker {
 		return typeof logoOrTagline === "string" && logoOrTagline.trim()
 			? logoOrTagline.trim()
 			: "";
+	}
+
+	private _getSlideNavOff(activeFile?: TFile | null): boolean {
+		const navOff = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideNavOff
+			: false;
+		return typeof navOff === "boolean" ? navOff : false;
 	}
 
 	private _getSlideLocation(activeFile?: TFile | null): string {
