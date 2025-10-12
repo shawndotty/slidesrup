@@ -688,7 +688,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
-			slideNavOff,
+			slideNavOn,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
 
@@ -734,7 +734,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			slideSourceMode,
-			slideNavOff
+			slideNavOn
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
@@ -831,7 +831,7 @@ export class SlidesMaker {
 		slideMode: string;
 		slideSize: { w: number; h: number };
 		logoOrTagline: string;
-		slideNavOff: boolean;
+		slideNavOn: boolean;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -866,7 +866,7 @@ export class SlidesMaker {
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
 					logoOrTagline: "",
-					slideNavOff: false,
+					slideNavOn: true,
 				};
 			}
 			let subFolder = this.settings.customizeSlideFolderName
@@ -904,7 +904,7 @@ export class SlidesMaker {
 
 		let logoOrTagline = this._getSlideLogoOrTagline(activeFile);
 
-		let slideNavOff = this._getSlideNavOff(activeFile);
+		let slideNavOn = this._getSlideNavOn(activeFile);
 
 		return {
 			newSlideContainer,
@@ -913,7 +913,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
-			slideNavOff,
+			slideNavOn,
 		};
 	}
 
@@ -1079,7 +1079,7 @@ export class SlidesMaker {
 			h: number;
 		},
 		slideSourceMode: number,
-		slideNavOff: boolean
+		slideNavOn: boolean
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1172,7 +1172,7 @@ export class SlidesMaker {
 					activeFile,
 					slideMode,
 					slideSize,
-					slideNavOff
+					slideNavOn
 				),
 		];
 
@@ -1257,11 +1257,12 @@ export class SlidesMaker {
 			w: number;
 			h: number;
 		},
-		slideNavOff: boolean
+		slideNavOn: boolean
 	): string {
 		const userFrontmatter =
 			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
 		// 使用数组构建frontmatter,提升可维护性和可读性
+
 		const frontMatterLines = [
 			"---",
 			`css: dist/Styles/main${slideMode === "dark" ? "-dark" : ""}.css`,
@@ -1273,9 +1274,7 @@ export class SlidesMaker {
 			"aliases:",
 			` - ${activeFile.basename}`,
 			`defaultTemplate: "[[${
-				slideNavOff || this.settings.slidesRupTrunOnBaseLayoutWithoutNav
-					? baseLayoutWithoutNavName
-					: baseLayoutName
+				slideNavOn ? baseLayoutName : baseLayoutWithoutNavName
 			}]]"`,
 			"pdfSeparateFragments: false",
 			"verticalSeparator: \\*\\*\\*",
@@ -2050,12 +2049,14 @@ export class SlidesMaker {
 			: "";
 	}
 
-	private _getSlideNavOff(activeFile?: TFile | null): boolean {
-		const navOff = activeFile
+	private _getSlideNavOn(activeFile?: TFile | null): boolean {
+		const navOn = activeFile
 			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
-					?.slideNavOff
-			: false;
-		return typeof navOff === "boolean" ? navOff : false;
+					?.slideNavOn
+			: null;
+		return typeof navOn === "boolean"
+			? navOn
+			: this.settings.slidesRupTrunOnBaseLayoutNav;
 	}
 
 	private _getSlideLocation(activeFile?: TFile | null): string {

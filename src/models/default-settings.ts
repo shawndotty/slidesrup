@@ -130,7 +130,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupTurnOnFragmentsInTOCSlide: true,
 	slidesRupTurnOnFragmentsInChapterSlides: true,
 
-	slidesRupTrunOnBaseLayoutWithoutNav: false,
+	slidesRupTrunOnBaseLayoutNav: true,
 
 	userAddedListClasses: "",
 	userAddedColumnClasses: "",

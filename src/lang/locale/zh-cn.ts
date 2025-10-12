@@ -397,6 +397,6 @@ export default {
 	"Columns Class Name Added by User": "用户添加的列类名",
 	"One Class name each line": "每行一个类名",
 	WithoutNav: "无导航",
-	"Turn on Base Layout Without Nav": "开启无导航布局",
-	"Turn on to use base layout without nav": "开启以使用无导航布局",
+	"Turn on Base Layout Nav": "开启导航布局",
+	"Turn on to use base layout with nav": "开启以使用导航布局",
 };
