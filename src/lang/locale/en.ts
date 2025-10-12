@@ -452,4 +452,5 @@ export default {
 	"Turn on Base Layout Nav": "Turn on Base Layout Nav",
 	"Turn on to use base layout with nav":
 		"Turn on to use base layout with nav",
+	SLIDESRUP_SLOGAN: "Simple, Elegant, and Powerful",
 };

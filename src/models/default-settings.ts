@@ -21,7 +21,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	userTocTemplate: "",
 	presenter: "Johnny",
 	tagline: "SlidesRup",
-	slogan: t("Keep is simple but elegant"),
+	slogan: t("SLIDESRUP_SLOGAN"),
 	dateFormat: "",
 	enableUserTemplates: true,
 	customizeSlideFolderName: true,

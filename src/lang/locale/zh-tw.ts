@@ -122,7 +122,6 @@ export default {
 	"Use SlidesRup to Express Yourself": "用SlidesRup表達自己",
 	Farewell: "再會",
 	"Content is the king": "內容為王",
-	"Keep is simple and powerful": "簡單卻強大",
 	"Focus on the basic first": "關注基本",
 	"Operation cancelled by user": "用戶取消操作",
 	"Starting one-click deployment...": "正在一键部署...",
@@ -388,4 +387,5 @@ export default {
 	WithoutNav: "無導航",
 	"Turn on Base Layout Nav": "開啟導航布局",
 	"Turn on to use base layout with nav": "開啟以使用導航布局",
+	SLIDESRUP_SLOGAN: "簡單、優雅且強大",
 };

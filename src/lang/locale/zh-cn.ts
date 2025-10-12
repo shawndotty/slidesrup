@@ -171,7 +171,6 @@ export default {
 	"Please input slide folder name": "请输入演示文件夹名",
 	"Customize Slide Folder Name": "自定义演示文件夹名",
 	"Use Customize Slide Folder Name": "使用自定义的演示文件夹名",
-	"Keep is simple but elegant": "简洁且优雅",
 	"Slide Settings": "演示设置",
 	Tagline: "Logo 或 标语",
 	"Set Tagline": "设置 Logo 或 标语",
@@ -399,4 +398,5 @@ export default {
 	WithoutNav: "无导航",
 	"Turn on Base Layout Nav": "开启导航布局",
 	"Turn on to use base layout with nav": "开启以使用导航布局",
+	SLIDESRUP_SLOGAN: "简单、优雅且强大",
 };
