@@ -1659,7 +1659,7 @@ export class SlidesMaker {
 				const slideTemplate =
 					(template &&
 						`template="${
-							template === t("WithoutNav")
+							template === `[[${t("WithoutNav")}]]`
 								? baseLayoutWithoutNavName
 								: template
 						}"`) ||
@@ -1868,7 +1868,7 @@ export class SlidesMaker {
 				const slideTemplate =
 					(template &&
 						`template="${
-							template === t("WithoutNav")
+							template === `[[${t("WithoutNav")}]]`
 								? baseLayoutWithoutNavName
 								: template
 						}"`) ||
