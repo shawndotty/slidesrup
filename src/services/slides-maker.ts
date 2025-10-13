@@ -1660,7 +1660,7 @@ export class SlidesMaker {
 					(template &&
 						`template="${
 							template === `[[${t("WithoutNav")}]]`
-								? baseLayoutWithoutNavName
+								? `[[${baseLayoutWithoutNavName}]]`
 								: template
 						}"`) ||
 					"";
@@ -1869,7 +1869,7 @@ export class SlidesMaker {
 					(template &&
 						`template="${
 							template === `[[${t("WithoutNav")}]]`
-								? baseLayoutWithoutNavName
+								? `[[${baseLayoutWithoutNavName}]]`
 								: template
 						}"`) ||
 					"";
