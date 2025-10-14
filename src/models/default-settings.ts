@@ -131,6 +131,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupTurnOnFragmentsInChapterSlides: true,
 
 	slidesRupTrunOnBaseLayoutNav: true,
+	slidesRupSeparateNavAndToc: false,
 
 	userAddedListClasses: "",
 	userAddedColumnClasses: "",

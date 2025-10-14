@@ -144,6 +144,8 @@ export interface SlidesRupSettings {
 
 	slidesRupTrunOnBaseLayoutNav: boolean;
 
+	slidesRupSeparateNavAndToc: boolean;
+
 	userAddedListClasses: string;
 	userAddedColumnClasses: string;
 }

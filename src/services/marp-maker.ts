@@ -67,7 +67,7 @@ export class MarpSlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/%%(?!\!|\[\[|\#)([\s\S]*?)%%/g;
+		/%%(?!\!|\[\[|\#|\||---)([\s\S]*?)%%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
@@ -871,6 +871,7 @@ export class MarpSlidesMaker {
 			? "+"
 			: "-";
 		const h2List = lines
+			.filter((line) => !line.includes("%%@%%"))
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
 				return match ? match[1].trim() : null;
@@ -882,13 +883,16 @@ export class MarpSlidesMaker {
 					.map((item, idx) => {
 						// 从item中提取%%#Text%%格式的文本
 						const title = item.replace(/%%.*?%%/g, "").trim();
-						const match = item.match(/%%|(.*?)%%/);
-						if (match) {
-							// 如果匹配到了%%#Text%%格式,使用Text部分
-							return `${listMark} [${match[1].trim()}](#${this._idMaker(
-								title
-							)})`;
+						if (!this.settings.slidesRupSeparateNavAndToc) {
+							const match = item.match(/%%|(.*?)%%/);
+							if (match) {
+								// 如果匹配到了%%|Text%%格式,使用Text部分
+								return `${listMark} [${match[1].trim()}](#${this._idMaker(
+									title
+								)})`;
+							}
 						}
+
 						// 否则使用原始item
 						return `${listMark} [${title}](#${this._idMaker(
 							title
@@ -901,6 +905,7 @@ export class MarpSlidesMaker {
 
 	private _getNavContent(lines: string[]): string {
 		const h2List = lines
+			.filter((line) => !line.includes("%%@%%"))
 			.map((line) => {
 				const match = line.match(/^##\s+(.*)/);
 				return match ? match[1].trim() : null;
@@ -1402,15 +1407,18 @@ export class MarpSlidesMaker {
 		const finalLines: string[] = [];
 
 		for (const line of lines) {
-			if (/^##\s+/.test(line)) {
+			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				currentChapterIndex++;
 				pageIndexInChapter = 0;
 			}
-			if (/^###\s+/.test(line)) {
+			if (/^###\s+/.test(line) && !line.includes("%%@%%")) {
 				pageIndexInChapter++;
 				subPageIndex = 0;
 			}
-			if (/^#{4,6}\s+/.test(line) && /%%/.test(line)) {
+			if (
+				(/^#{4,6}\s+/.test(line) && /%%/.test(line)) ||
+				/%%---%%/.test(line)
+			) {
 				subPageIndex++;
 				const chapterClass = `chapter-${currentChapterIndex}`;
 				const classValue = this._modidySlideClassList(
@@ -1463,7 +1471,7 @@ export class MarpSlidesMaker {
 
 		for (const line of lines) {
 			// 优化: 提取标题判断逻辑
-			const isHeading = /^#{1,3}\s/.test(line);
+			const isHeading = /^#{1,3}\s/.test(line) && !line.includes("%%@%%");
 
 			if (isHeading) {
 				headingCount++;
@@ -1497,7 +1505,7 @@ export class MarpSlidesMaker {
 		}
 
 		for (const line of content.split("\n")) {
-			if (/^##\s+/.test(line)) {
+			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				h2Index++;
 				const classValue = this._modidySlideClassList(
 					line,
@@ -1526,7 +1534,6 @@ export class MarpSlidesMaker {
 						.filter(Boolean)
 						.join("\n")
 				);
-				// 去除所有注释块
 				modifiedLines.push(this._cleanLine(line));
 			} else {
 				modifiedLines.push(line);
@@ -1568,11 +1575,15 @@ export class MarpSlidesMaker {
 		// First pass: collect all H3 headings and their positions
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (/^##\s+/.test(line)) {
+			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				currentH2Index++;
 				h3Index = 0;
 				inH2 = true;
-			} else if (/^###\s+/.test(line) && inH2) {
+			} else if (
+				/^###\s+/.test(line) &&
+				inH2 &&
+				!line.includes("%%@%%")
+			) {
 				h3Index++;
 				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
 				h3TitleList.push({
@@ -1589,7 +1600,7 @@ export class MarpSlidesMaker {
 		let h3TitleIdx = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (/^##\s+/.test(line)) {
+			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				currentH2Index++;
 				resultLines.push(line);
 
@@ -1610,7 +1621,7 @@ export class MarpSlidesMaker {
 				if (h3s.length > 0) {
 					resultLines.push(...h3s);
 				}
-			} else if (/^###\s+/.test(line)) {
+			} else if (/^###\s+/.test(line) && !line.includes("%%@%%")) {
 				h3TitleIdx++;
 				resultLines.push(line);
 			} else {
@@ -1634,11 +1645,11 @@ export class MarpSlidesMaker {
 		const finalLines: string[] = [];
 
 		for (const line of lines) {
-			if (/^##\s+/.test(line)) {
+			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				currentChapterIndex++;
 				pageIndexInChapter = 0;
 			}
-			if (/^###\s+/.test(line)) {
+			if (/^###\s+/.test(line) && !line.includes("%%@%%")) {
 				pageIndexInChapter++;
 				const chapterClass = `chapter-${currentChapterIndex}`;
 				let classValue = this._modidySlideClassList(

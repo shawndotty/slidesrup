@@ -453,4 +453,7 @@ export default {
 	"Turn on to use base layout with nav":
 		"Turn on to use base layout with nav",
 	SLIDESRUP_SLOGAN: "Simple, Elegant, and Powerful",
+	"Separate Nav and TOC": "Separate Nav and TOC",
+	"Turn on to separate nav and TOC": "Turn on to separate nav and TOC",
+	Nav: "Nav",
 };

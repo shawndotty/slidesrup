@@ -919,6 +919,16 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createToggleSetting(containerEl, {
+			name: "Separate Nav and TOC",
+			desc: "Turn on to separate nav and TOC",
+			value: this.plugin.settings.slidesRupSeparateNavAndToc,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupSeparateNavAndToc = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		this.createDropdownSetting(
 			containerEl,
 			"Content Page Slide Type",

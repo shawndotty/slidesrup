@@ -388,4 +388,7 @@ export default {
 	"Turn on Base Layout Nav": "開啟導航布局",
 	"Turn on to use base layout with nav": "開啟以使用導航布局",
 	SLIDESRUP_SLOGAN: "簡單、優雅且強大",
+	"Separate Nav and TOC": "分離導航和目錄",
+	"Turn on to separate nav and TOC": "開啟以分離導航和目錄",
+	Nav: "導航",
 };
