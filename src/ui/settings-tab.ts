@@ -193,26 +193,6 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		});
-
-		this.createToggleSetting(containerEl, {
-			name: "Auto Convert Links",
-			desc: "ACLD",
-			value: this.plugin.settings.slidesRupAutoConvertLinks,
-			onChange: async (value) => {
-				this.plugin.settings.slidesRupAutoConvertLinks = value;
-				await this.plugin.saveSettings();
-			},
-		});
-
-		this.createToggleSetting(containerEl, {
-			name: "Enable Paragraph Fragments",
-			desc: "EPF",
-			value: this.plugin.settings.slidesRupEnableParagraphFragments,
-			onChange: async (value) => {
-				this.plugin.settings.slidesRupEnableParagraphFragments = value;
-				await this.plugin.saveSettings();
-			},
-		});
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {
@@ -980,6 +960,26 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			onChange: async (value) => {
 				this.plugin.settings.slidesRupTurnOnFragmentsInChapterSlides =
 					value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Auto Convert Links",
+			desc: "ACLD",
+			value: this.plugin.settings.slidesRupAutoConvertLinks,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupAutoConvertLinks = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Enable Paragraph Fragments",
+			desc: "EPF",
+			value: this.plugin.settings.slidesRupEnableParagraphFragments,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupEnableParagraphFragments = value;
 				await this.plugin.saveSettings();
 			},
 		});

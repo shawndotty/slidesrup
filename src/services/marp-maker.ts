@@ -884,7 +884,7 @@ export class MarpSlidesMaker {
 						// 从item中提取%%#Text%%格式的文本
 						const title = item.replace(/%%.*?%%/g, "").trim();
 						if (!this.settings.slidesRupSeparateNavAndToc) {
-							const match = item.match(/%%|(.*?)%%/);
+							const match = item.match(/%%\|(.*?)%%/);
 							if (match) {
 								// 如果匹配到了%%|Text%%格式,使用Text部分
 								return `${listMark} [${match[1].trim()}](#${this._idMaker(
@@ -915,11 +915,11 @@ export class MarpSlidesMaker {
 		const navContent = h2List.length
 			? h2List
 					.map((item, idx) => {
-						// 从item中提取%%#Text%%格式的文本
+						// 从item中提取%%|Text%%格式的文本
 						const title = item.replace(/%%.*?%%/g, "").trim();
-						const match = item.match(/%%#(.*?)%%/);
+						const match = item.match(/%%\|(.*?)%%/);
 						if (match) {
-							// 如果匹配到了%%#Text%%格式,使用Text部分
+							// 如果匹配到了%%|Text%%格式,使用Text部分
 							return `<li><a href="#${this._idMaker(
 								title
 							)}">${match[1].trim()}</a></li>`;
@@ -1028,6 +1028,8 @@ export class MarpSlidesMaker {
 				minimizeMode
 					? content
 					: this._addTocSlide(content, tocContent, design),
+
+			(content) => content.replace(/%%@%%/g, ""),
 
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
@@ -1446,7 +1448,7 @@ export class MarpSlidesMaker {
 					slogan,
 					`_class: content subpage ${[chapterClass, classValue]
 						.filter(Boolean)
-						.join("\n")}`,
+						.join(" ")}`,
 					"-->\n",
 				]
 					.filter(Boolean)

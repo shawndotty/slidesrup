@@ -1189,6 +1189,8 @@ export class SlidesMaker {
 					? content
 					: this._addTocSlide(content, tocName, design),
 
+			(content) => content.replace(/%%@%%/g, ""),
+
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
 			// 8. 处理图片
