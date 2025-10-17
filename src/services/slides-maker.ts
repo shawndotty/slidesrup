@@ -1191,6 +1191,8 @@ export class SlidesMaker {
 
 			(content) => content.replace(/%%@%%/g, ""),
 
+			(content) => this._addOBURIToHeadings(content, activeFile),
+
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
 			// 8. 处理图片
@@ -1263,6 +1265,33 @@ export class SlidesMaker {
 			minimizeMode
 		);
 		return `${coverSlide}\n\n${newContent}`;
+	}
+
+	private _addOBURIToHeadings(content: string, activeFile: TFile): string {
+		const lines = content.split("\n");
+		const newLines: string[] = [];
+		const oburi = this._getOBURI(activeFile);
+		for (const line of lines) {
+			const isSection = /^#{2,3}\s/.test(line);
+			if (isSection) {
+				// 提取出line中符合标题内容的部分
+				const lineContent = this._cleanLine(line);
+				const headingMatch = lineContent.match(/^(#{2,3}\s)+(.*)$/);
+				let headingResult = "";
+				if (headingMatch) {
+					const headingContent = headingMatch[2].trim();
+					headingResult =
+						headingMatch[1] +
+						`<a href="${oburi}%23${encodeURIComponent(
+							headingContent
+						)}">${headingContent}</a>`;
+					// 可在这里使用 headingContent 做进一步处理
+				}
+				newLines.push(headingResult);
+			}
+			newLines.push(line);
+		}
+		return newLines.join("\n");
 	}
 
 	private _addBackCoverPage(
