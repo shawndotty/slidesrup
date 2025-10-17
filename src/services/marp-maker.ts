@@ -1635,6 +1635,7 @@ export class MarpSlidesMaker {
 			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
 				currentH2Index++;
 				resultLines.push(line);
+				resultLines.push("");
 
 				// Collect all H3s for this H2
 				const h3s = [];

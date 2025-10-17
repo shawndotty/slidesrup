@@ -1908,6 +1908,8 @@ export class SlidesMaker {
 				currentH2Index++;
 				resultLines.push(line);
 
+				resultLines.push("");
+
 				// Collect all H3s for this H2
 				const h3s = [];
 				let tempIdx = h3TitleIdx;
