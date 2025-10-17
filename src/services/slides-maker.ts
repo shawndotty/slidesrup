@@ -1288,8 +1288,9 @@ export class SlidesMaker {
 					// 可在这里使用 headingContent 做进一步处理
 				}
 				newLines.push(headingResult);
+			} else {
+				newLines.push(line);
 			}
-			newLines.push(line);
 		}
 		return newLines.join("\n");
 	}
