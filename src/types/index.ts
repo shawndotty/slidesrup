@@ -146,6 +146,8 @@ export interface SlidesRupSettings {
 
 	slidesRupSeparateNavAndToc: boolean;
 
+	slidesRupEnableHeadingOBURI: boolean;
+
 	userAddedListClasses: string;
 	userAddedColumnClasses: string;
 }

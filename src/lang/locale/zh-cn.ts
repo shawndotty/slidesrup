@@ -402,4 +402,8 @@ export default {
 	"Separate Nav and TOC": "分离导航和目录",
 	"Turn on to separate nav and TOC": "开启以分离导航和目录",
 	Nav: "导航",
+	"Toggle Chapter and Content Page Heading OBURI":
+		"切换章节页和内容页标题 OBURI",
+	"Turn on to enable Heading OBURI for chapter and content pages":
+		"开启以启用章节页和内容页标题 OBURI",
 };

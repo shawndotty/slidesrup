@@ -133,6 +133,8 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupTrunOnBaseLayoutNav: true,
 	slidesRupSeparateNavAndToc: false,
 
+	slidesRupEnableHeadingOBURI: true,
+
 	userAddedListClasses: "",
 	userAddedColumnClasses: "",
 };

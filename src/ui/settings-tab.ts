@@ -965,6 +965,16 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		});
 
 		this.createToggleSetting(containerEl, {
+			name: "Toggle Chapter and Content Page Heading OBURI",
+			desc: "Turn on to enable Heading OBURI for chapter and content pages",
+			value: this.plugin.settings.slidesRupEnableHeadingOBURI,
+			onChange: async (value) => {
+				this.plugin.settings.slidesRupEnableHeadingOBURI = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
 			name: "Auto Convert Links",
 			desc: "ACLD",
 			value: this.plugin.settings.slidesRupAutoConvertLinks,

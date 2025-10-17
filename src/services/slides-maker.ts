@@ -57,7 +57,7 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/%%(?!\!|\[\[|\#|\||---)([\s\S]*?)%%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 
@@ -1191,7 +1191,10 @@ export class SlidesMaker {
 
 			(content) => content.replace(/%%@%%/g, ""),
 
-			(content) => this._addOBURIToHeadings(content, activeFile),
+			(content) =>
+				this.settings.slidesRupEnableHeadingOBURI
+					? this._addOBURIToHeadings(content, activeFile)
+					: content,
 
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
@@ -1762,6 +1765,8 @@ export class SlidesMaker {
 				finalLines.push(
 					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
 				);
+				const counterResetStyle = this._getCounterResetStyle(line);
+				finalLines.push(counterResetStyle);
 				finalLines.push(this._cleanLine(line));
 			} else {
 				finalLines.push(line);
@@ -1769,6 +1774,19 @@ export class SlidesMaker {
 		}
 
 		return finalLines;
+	}
+
+	private _getCounterResetStyle(line: string): string {
+		const counterResetRegex = /counter-reset-(\d+)/;
+		const match = counterResetRegex.exec(line);
+		let style = "";
+		if (match) {
+			const step = match[1];
+			style = `\n<style>.counter-reset-${step} ul { counter-reset: step ${
+				Number(step) - 1
+			} !important; }</style>\n`;
+		}
+		return style;
 	}
 
 	/**
@@ -2261,6 +2279,7 @@ export class SlidesMaker {
 
 	private _modidySlideClassList(line: string, listClass: string): string {
 		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
+		console.dir(matches);
 		const replaceMatches = line.match(
 			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
 		);

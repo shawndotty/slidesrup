@@ -456,4 +456,8 @@ export default {
 	"Separate Nav and TOC": "Separate Nav and TOC",
 	"Turn on to separate nav and TOC": "Turn on to separate nav and TOC",
 	Nav: "Nav",
+	"Toggle Chapter and Content Page Heading OBURI":
+		"Toggle Chapter and Content Page Heading OBURI",
+	"Turn on to enable Heading OBURI for chapter and content pages":
+		"Turn on to enable Heading OBURI for chapter and content pages",
 };
