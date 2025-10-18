@@ -60,7 +60,7 @@ export class SlidesMaker {
 		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
-	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
