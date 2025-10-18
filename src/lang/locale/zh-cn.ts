@@ -406,4 +406,12 @@ export default {
 		"切换章节页和内容页标题 OBURI",
 	"Turn on to enable Heading OBURI for chapter and content pages":
 		"开启以启用章节页和内容页标题 OBURI",
+	"commentController.replaceClass": "替换类",
+	"commentController.anchorHeading": "锁定标题",
+	"commentController.addNotes": "添加注释",
+	"commentController.replaceTemplate": "替换模板",
+	"commentController.addHeadingAliases": "添加标题别名",
+	"commentController.appendClass": "追加类",
+	"commentController.addPageSeparator": "添加页面分隔符",
+	"commentController.resetCounter": "重置计数器",
 };

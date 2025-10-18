@@ -460,4 +460,12 @@ export default {
 		"Toggle Chapter and Content Page Heading OBURI",
 	"Turn on to enable Heading OBURI for chapter and content pages":
 		"Turn on to enable Heading OBURI for chapter and content pages",
+	"commentController.appendClass": "Append Class",
+	"commentController.replaceClass": "Replace Class",
+	"commentController.anchorHeading": "Anchor Heading",
+	"commentController.addNotes": "Add Notes",
+	"commentController.replaceTemplate": "Replace Template",
+	"commentController.addHeadingAliases": "Add Heading Aliases",
+	"commentController.addPageSeparator": "Add Page Separator",
+	"commentController.resetCounter": "Reset Counter",
 };
