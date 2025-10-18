@@ -468,4 +468,5 @@ export default {
 	"commentController.addHeadingAliases": "Add Heading Aliases",
 	"commentController.addPageSeparator": "Add Page Separator",
 	"commentController.resetCounter": "Reset Counter",
+	"commentController.useNoNavTemplate": "Use Template Without Nav",
 };

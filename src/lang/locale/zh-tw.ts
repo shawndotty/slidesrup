@@ -403,4 +403,5 @@ export default {
 	"commentController.addHeadingAliases": "添加標題別名",
 	"commentController.addPageSeparator": "添加頁面分隔符",
 	"commentController.resetCounter": "重置計數器",
+	"commentController.useNoNavTemplate": "使用無導航模板",
 };

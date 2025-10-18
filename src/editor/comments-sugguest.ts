@@ -13,6 +13,7 @@ export class CommentsSuggest extends AdvancedSuggest {
 		t("commentController.appendClass"),
 		t("commentController.addPageSeparator"),
 		t("commentController.resetCounter"),
+		t("commentController.useNoNavTemplate"),
 		"! - " + t("commentController.replaceClass"),
 		"@ - " + t("commentController.anchorHeading"),
 		"& - " + t("commentController.addNotes"),

@@ -414,4 +414,5 @@ export default {
 	"commentController.appendClass": "追加类",
 	"commentController.addPageSeparator": "添加页面分隔符",
 	"commentController.resetCounter": "重置计数器",
+	"commentController.useNoNavTemplate": "使用无导航模板",
 };

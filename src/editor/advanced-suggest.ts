@@ -32,6 +32,9 @@ export abstract class AdvancedSuggest extends EditorSuggest<string> {
 			case t("commentController.resetCounter"):
 				suggestionText = "counter-reset-";
 				break;
+			case t("commentController.useNoNavTemplate"):
+				suggestionText = `[[${t("WithoutNav")}]]`;
+				break;
 			default:
 				suggestionText = suggestion.split(" - ")[0];
 				break;
