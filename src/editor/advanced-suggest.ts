@@ -21,8 +21,9 @@ export abstract class AdvancedSuggest extends EditorSuggest<string> {
 	}
 
 	selectSuggestion(suggestion: string): void {
+		const modifiedSuggestion = suggestion.replace(/\d{1,2}\.\s/g, "");
 		let suggestionText = "";
-		switch (suggestion) {
+		switch (modifiedSuggestion) {
 			case t("commentController.appendClass"):
 				suggestionText = " ";
 				break;
@@ -36,9 +37,10 @@ export abstract class AdvancedSuggest extends EditorSuggest<string> {
 				suggestionText = `[[${t("WithoutNav")}]]`;
 				break;
 			default:
-				suggestionText = suggestion.split(" - ")[0];
+				suggestionText = modifiedSuggestion.split(" - ")[0];
 				break;
 		}
+		console.dir(this.context);
 		if (this.context) {
 			this.context.editor.replaceRange(
 				`%%${suggestionText}%%`,
@@ -47,7 +49,10 @@ export abstract class AdvancedSuggest extends EditorSuggest<string> {
 			);
 			this.context.editor.setCursor({
 				line: this.context.end.line,
-				ch: this.context.end.ch + suggestionText.length,
+				ch:
+					this.context.end.ch +
+					suggestionText.length -
+					this.context.query.length,
 			});
 		}
 	}

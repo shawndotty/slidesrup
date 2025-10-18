@@ -10,15 +10,15 @@ import { t } from "src/lang/helpers";
 export class CommentsSuggest extends AdvancedSuggest {
 	// 预定义的补全建议列表
 	private static readonly ITEM_LIST: string[] = [
-		t("commentController.appendClass"),
-		t("commentController.addPageSeparator"),
-		t("commentController.resetCounter"),
-		t("commentController.useNoNavTemplate"),
-		"! - " + t("commentController.replaceClass"),
-		"@ - " + t("commentController.anchorHeading"),
-		"& - " + t("commentController.addNotes"),
-		"[[ - " + t("commentController.replaceTemplate"),
-		"| - " + t("commentController.addHeadingAliases"),
+		"1. " + t("commentController.appendClass"),
+		"2. " + t("commentController.addPageSeparator"),
+		"3. " + t("commentController.resetCounter"),
+		"4. " + t("commentController.useNoNavTemplate"),
+		"5. ! - " + t("commentController.replaceClass"),
+		"6. @ - " + t("commentController.anchorHeading"),
+		"7. & - " + t("commentController.addNotes"),
+		"8. [[ - " + t("commentController.replaceTemplate"),
+		"9. | - " + t("commentController.addHeadingAliases"),
 	];
 
 	// Test
