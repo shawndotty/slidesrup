@@ -57,9 +57,10 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&(.*?)%%/g;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
@@ -1222,6 +1223,8 @@ export class SlidesMaker {
 			// 8. 添加段落片段
 			(content) => this._reverseListFragmentIndex(content),
 
+			(content) => this._convertNotesToMarkdown(content),
+
 			(content) =>
 				this._addCoverPage(content, design, activeFile, minimizeMode),
 			// 10. 处理块
@@ -1296,6 +1299,16 @@ export class SlidesMaker {
 			}
 		}
 		return newLines.join("\n");
+	}
+
+	private _convertNotesToMarkdown(content: string): string {
+		console.log("I am here");
+		return content.replace(
+			SlidesMaker.COMMENT_BLOCK_NOTES_REGEX,
+			(match, p1) => {
+				return `\nnote: \n${p1.trim()}\n`;
+			}
+		);
 	}
 
 	private _addBackCoverPage(
@@ -1636,6 +1649,7 @@ export class SlidesMaker {
 							!/\.(png|jpe?g|gif|bmp|webp|svg)/i.test(p2)) ||
 						p2.trim().startsWith("<!--") ||
 						p2.trim().startsWith("|") ||
+						p2.trim().startsWith("%%") ||
 						p2.trim().startsWith("---") ||
 						p2.trim().startsWith(":::") ||
 						p2.trim().startsWith("__CODE_BLOCK_") ||
@@ -2279,7 +2293,6 @@ export class SlidesMaker {
 
 	private _modidySlideClassList(line: string, listClass: string): string {
 		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
-		console.dir(matches);
 		const replaceMatches = line.match(
 			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
 		);

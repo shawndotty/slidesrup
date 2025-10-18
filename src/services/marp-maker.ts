@@ -67,9 +67,10 @@ export class MarpSlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&(.*?)%%/g;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
@@ -1058,6 +1059,8 @@ export class MarpSlidesMaker {
 
 			(content) => this._processTemplate(content),
 
+			(content) => this._convertNotesToMarkdown(content),
+
 			(content) =>
 				this._addFrontMatter(
 					content,
@@ -1133,6 +1136,15 @@ export class MarpSlidesMaker {
 			}
 		}
 		return newLines.join("\n");
+	}
+
+	private _convertNotesToMarkdown(content: string): string {
+		return content.replace(
+			MarpSlidesMaker.COMMENT_BLOCK_NOTES_REGEX,
+			(match, p1) => {
+				return `\n<!--\n${p1.trim()}\n-->\n`;
+			}
+		);
 	}
 
 	private _addBackCoverPage(
@@ -1388,6 +1400,7 @@ export class MarpSlidesMaker {
 					p2.trim().startsWith("![[") ||
 					p2.trim().startsWith("<!--") ||
 					p2.trim().startsWith("|") ||
+					p2.trim().startsWith("%%") ||
 					p2.trim().startsWith("---") ||
 					p2.trim().startsWith(":::") ||
 					p2.trim().startsWith("__CODE_BLOCK_") ||
