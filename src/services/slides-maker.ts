@@ -1199,6 +1199,8 @@ export class SlidesMaker {
 
 			(content) => this._addBackCoverPage(content, design, activeFile),
 
+			(content) => this._addToolTips(content),
+
 			// 8. 处理图片
 			(content) => this.imageProcessor.processForReveal(content),
 
@@ -1397,6 +1399,22 @@ export class SlidesMaker {
 			/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
 			(match, name, link) => {
 				return `<a href="${link}" data-preview-link>${name}</a>`;
+			}
+		);
+	}
+
+	private _addToolTips(text: string): string {
+		return text.replace(
+			// 匹配 Markdown 外链语法，但排除已被“!”转义的图片链接
+			// (?<!!)          负向后瞻：确保前面没有“!”（即不是图片）
+			// \[([^\]]+)\]     捕获“[显示文本]”，允许除“]”外的任意字符
+			// \(https?:\/\/    紧接着“(”并以“http://”或“https://”开头
+			// [^\s)]+          匹配网址部分：不允许空白或右括号
+			// \)               匹配结尾的“)”
+			// /g               全局匹配，替换所有出现的链接
+			/(?<!!)\[([^\]]+)\]\(&([^\s)]+)\)/g,
+			(match, content, tooltip) => {
+				return `<span class="sr-tooltip sr-tooltip-top" data-sr-tooltip="${tooltip.trim()}">${content}</span>`;
 			}
 		);
 	}
