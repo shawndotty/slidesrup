@@ -1412,9 +1412,27 @@ export class SlidesMaker {
 			// [^\s)]+          匹配网址部分：不允许空白或右括号
 			// \)               匹配结尾的“)”
 			// /g               全局匹配，替换所有出现的链接
-			/(?<!!)\[([^\]]+)\]\(&([^\s)]+)\)/g,
-			(match, content, tooltip) => {
-				return `<span class="sr-tooltip sr-tooltip-top" data-sr-tooltip="${tooltip.trim()}">${content}</span>`;
+			/(?<!!)\[([^\]]+)\]\(&([^\<\>v]?\s)([^\s)]+)\)/g,
+			(match, content, arrow, tooltip) => {
+				let type = "";
+				switch (arrow.trim()) {
+					case ">":
+						type = "right";
+						break;
+					case "<":
+						type = "left";
+						break;
+					case "^":
+						type = "top";
+						break;
+					case "v":
+						type = "bottom";
+						break;
+					default:
+						type = "top";
+						break;
+				}
+				return `<span class="sr-tooltip sr-tooltip-${type}" data-sr-tooltip="${tooltip.trim()}">${content}</span>`;
 			}
 		);
 	}
