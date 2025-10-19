@@ -50,7 +50,7 @@ export class BlocksSuggest extends AdvancedSuggest {
 	): EditorSuggestTriggerInfo | null {
 		const line = editor.getLine(cursor.line).slice(0, cursor.ch);
 		// const match = line.match(/(?:^|\s)%%(\w*)$/);
-		const match = line.match(/:::(\w*)$/);
+		const match = line.match(/[:：]{3}(\w*)$/);
 
 		if (match) {
 			return {
