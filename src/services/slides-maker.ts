@@ -1405,34 +1405,46 @@ export class SlidesMaker {
 
 	private _addToolTips(text: string): string {
 		return text.replace(
-			// 匹配形如 [文字](&箭头 提示) 的链接，但排除前面带 ! 的（即非图片链接）
-			// (?<!!)          负向后瞻：确保前面没有 !
-			// \[([^\]]+)\]    捕获组1：匹配 [...] 内的任意非]文字
-			// \(&              字面量 (&
-			// ([\^\<\>v]?\s)  捕获组2：可选的箭头符号(^< >v) + 一个空白
-			// ([^\s)]+)       捕获组3：一个或多个非空白、非)的字符（提示内容）
-			// \)               字面量 )
-			/(?<!!)\[([^\]]+)\]\(&([\^\<\>v]?\s)([^)]+)\)/g,
+			// 匹配形如 [内容](方向 "提示") 的链接，方向可选 ^ < > v 之一，提示用双引号包裹
+			// (?<!!) 确保前面不是 !，排除图片链接
+			// \[([^\]]+)\] 捕获方括号内的链接文本
+			// \(([\^\<\>v]?\s?)"([^)]+)"\) 捕获圆括号内：可选方向字符、空格、双引号包裹的提示文本
+			/(?<!!)\[([^\]]+)\]\(([\^\<\>v]?m?\s?)"([^)]+)"\)/g,
 			(match, content, arrow, tooltip) => {
 				let type = "";
 				switch (arrow.trim()) {
 					case ">":
-						type = "right";
+						type = "sr-tooltip-right";
 						break;
 					case "<":
-						type = "left";
+						type = "sr-tooltip-left";
 						break;
 					case "^":
-						type = "top";
+						type = "sr-tooltip-top";
 						break;
 					case "v":
-						type = "bottom";
+						type = "sr-tooltip-bottom";
+						break;
+					case "m":
+						type = "sr-tooltip-multiline sr-tooltip-top";
+						break;
+					case "^m":
+						type = "sr-tooltip-multiline sr-tooltip-top";
+						break;
+					case "vm":
+						type = "sr-tooltip-multiline sr-tooltip-bottom";
+						break;
+					case "<m":
+						type = "sr-tooltip-multiline sr-tooltip-left";
+						break;
+					case ">m":
+						type = "sr-tooltip-multiline sr-tooltip-right";
 						break;
 					default:
-						type = "top";
+						type = "sr-tooltip-top";
 						break;
 				}
-				return `<u class="sr-tooltip sr-tooltip-${type}" data-sr-tooltip="${tooltip.trim()}">${content}</u>`;
+				return `<u class="sr-tooltip ${type}" data-sr-tooltip="${tooltip.trim()}">${content}</u>`;
 			}
 		);
 	}
