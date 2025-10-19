@@ -7,30 +7,70 @@ import {
 import { AdvancedSuggest } from "./advanced-suggest";
 import { t } from "src/lang/helpers";
 
+import { SRSuggestion } from "src/types";
+
 export class CommentsSuggest extends AdvancedSuggest {
-	// 预定义的补全建议列表
-	private static readonly ITEM_LIST: string[] = [
-		"1. " + t("commentController.appendClass"),
-		"2. " + t("commentController.addPageSeparator"),
-		"3. " + t("commentController.resetCounter"),
-		"4. " + t("commentController.useNoNavTemplate"),
-		"5. ! - " + t("commentController.replaceClass"),
-		"6. @ - " + t("commentController.anchorHeading"),
-		"7. & - " + t("commentController.addNotes"),
-		"8. [[ - " + t("commentController.replaceTemplate"),
-		"9. | - " + t("commentController.addHeadingAliases"),
+	private static readonly ITEMS: SRSuggestion[] = [
+		{
+			id: "appendClass",
+			title: t("commentController.appendClass"),
+			suggestionText: " ",
+			// description: "Input list or col to append class",
+		},
+		{
+			id: "replaceClass",
+			title: t("commentController.replaceClass"),
+			suggestionText: "!",
+			// description: "Replace class",
+		},
+		{
+			id: "addPageSeparator",
+			title: t("commentController.addPageSeparator"),
+			suggestionText: "---",
+			// description: "Add page separator",
+		},
+		{
+			id: "resetCounter",
+			title: t("commentController.resetCounter"),
+			suggestionText: "counter-reset-",
+			// description: "Reset counter",
+		},
+		{
+			id: "useNoNavTemplate",
+			title: t("commentController.useNoNavTemplate"),
+			suggestionText: `[[${t("WithoutNav")}]]`,
+			// description: "Use no navigation template",
+		},
+		{
+			id: "addNotes",
+			title: t("commentController.addNotes"),
+			suggestionText: "&",
+			// description: "Add notes",
+		},
+		{
+			id: "anchorHeading",
+			title: t("commentController.anchorHeading"),
+			suggestionText: "@",
+			// description: "Anchor heading",
+		},
+		{
+			id: "replaceTemplate",
+			title: t("commentController.replaceTemplate"),
+			suggestionText: "[[",
+			// description: "Replace template",
+		},
+		{
+			id: "addHeadingAliases",
+			title: t("commentController.addHeadingAliases"),
+			suggestionText: "|",
+			// description: "Add heading aliases",
+		},
 	];
 
 	// Test
 
 	constructor(app: App) {
-		super(app, CommentsSuggest.makeCommentList());
-	}
-
-	static makeCommentList() {
-		// 合并用户自定义的类和预定义类，去除空字符串和重复项
-		const combined = Array.from(new Set([...CommentsSuggest.ITEM_LIST]));
-		return combined;
+		super(app, CommentsSuggest.ITEMS);
 	}
 
 	// 确定何时触发建议
@@ -50,5 +90,40 @@ export class CommentsSuggest extends AdvancedSuggest {
 			};
 		}
 		return null;
+	}
+
+	selectSuggestion(suggestion: string): void {
+		const index = parseInt(suggestion.split(".")[0]) - 1;
+		const selectedItem = CommentsSuggest.ITEMS[index];
+
+		const id = selectedItem.id;
+
+		const isAddNotes = id === "addNotes";
+
+		const replaceText = !isAddNotes
+			? `%%${selectedItem.suggestionText}%%`
+			: `%%${selectedItem.suggestionText}\n\n%%`;
+
+		if (this.context) {
+			this.context.editor.replaceRange(
+				replaceText,
+				this.context.start,
+				this.context.end
+			);
+			if (!isAddNotes) {
+				this.context.editor.setCursor({
+					line: this.context.end.line,
+					ch:
+						this.context.end.ch +
+						(selectedItem.suggestionText?.length ?? 0) -
+						this.context.query.length,
+				});
+			} else {
+				this.context.editor.setCursor({
+					line: this.context.end.line + 1,
+					ch: 0,
+				});
+			}
+		}
 	}
 }

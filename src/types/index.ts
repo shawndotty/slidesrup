@@ -229,3 +229,10 @@ export type Options = {
 	log: boolean;
 	defaultTemplate: string;
 };
+
+export interface SRSuggestion {
+	id: string;
+	title: string;
+	description?: string;
+	suggestionText?: string;
+}

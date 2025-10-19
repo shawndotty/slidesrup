@@ -1,9 +1,11 @@
 import { App, EditorSuggest, EditorSuggestContext, Editor } from "obsidian";
 import { t } from "src/lang/helpers";
-export abstract class AdvancedSuggest extends EditorSuggest<string> {
-	private suggestionItems: string[];
+import { SRSuggestion } from "src/types";
 
-	constructor(app: App, suggestions: string[]) {
+export abstract class AdvancedSuggest extends EditorSuggest<string> {
+	private suggestionItems: SRSuggestion[];
+
+	constructor(app: App, suggestions: SRSuggestion[]) {
 		super(app);
 		this.suggestionItems = suggestions;
 	}
@@ -11,49 +13,19 @@ export abstract class AdvancedSuggest extends EditorSuggest<string> {
 	getSuggestions(
 		context: EditorSuggestContext
 	): string[] | Promise<string[]> {
-		return this.suggestionItems.filter((suggestion) =>
-			suggestion.toLowerCase().includes(context.query.toLowerCase())
-		);
+		return this.suggestionItems
+			.map((item, index) => `${index + 1}. ${item.title}`)
+			.filter((suggestion) =>
+				suggestion.toLowerCase().includes(context.query.toLowerCase())
+			);
 	}
 
 	renderSuggestion(suggestion: string, el: HTMLElement): void {
+		const index = parseInt(suggestion.split(".")[0]) - 1;
+		const item = this.suggestionItems[index];
 		el.createEl("div", { text: suggestion });
-	}
-
-	selectSuggestion(suggestion: string): void {
-		const modifiedSuggestion = suggestion.replace(/\d{1,2}\.\s/g, "");
-		let suggestionText = "";
-		switch (modifiedSuggestion) {
-			case t("commentController.appendClass"):
-				suggestionText = " ";
-				break;
-			case t("commentController.addPageSeparator"):
-				suggestionText = "---";
-				break;
-			case t("commentController.resetCounter"):
-				suggestionText = "counter-reset-";
-				break;
-			case t("commentController.useNoNavTemplate"):
-				suggestionText = `[[${t("WithoutNav")}]]`;
-				break;
-			default:
-				suggestionText = modifiedSuggestion.split(" - ")[0];
-				break;
-		}
-		console.dir(this.context);
-		if (this.context) {
-			this.context.editor.replaceRange(
-				`%%${suggestionText}%%`,
-				this.context.start,
-				this.context.end
-			);
-			this.context.editor.setCursor({
-				line: this.context.end.line,
-				ch:
-					this.context.end.ch +
-					suggestionText.length -
-					this.context.query.length,
-			});
+		if (item?.description) {
+			el.createEl("small", { text: item.description });
 		}
 	}
 }
