@@ -1405,14 +1405,14 @@ export class SlidesMaker {
 
 	private _addToolTips(text: string): string {
 		return text.replace(
-			// 匹配 Markdown 外链语法，但排除已被“!”转义的图片链接
-			// (?<!!)          负向后瞻：确保前面没有“!”（即不是图片）
-			// \[([^\]]+)\]     捕获“[显示文本]”，允许除“]”外的任意字符
-			// \(https?:\/\/    紧接着“(”并以“http://”或“https://”开头
-			// [^\s)]+          匹配网址部分：不允许空白或右括号
-			// \)               匹配结尾的“)”
-			// /g               全局匹配，替换所有出现的链接
-			/(?<!!)\[([^\]]+)\]\(&([^\<\>v]?\s)([^\s)]+)\)/g,
+			// 匹配形如 [文字](&箭头 提示) 的链接，但排除前面带 ! 的（即非图片链接）
+			// (?<!!)          负向后瞻：确保前面没有 !
+			// \[([^\]]+)\]    捕获组1：匹配 [...] 内的任意非]文字
+			// \(&              字面量 (&
+			// ([\^\<\>v]?\s)  捕获组2：可选的箭头符号(^< >v) + 一个空白
+			// ([^\s)]+)       捕获组3：一个或多个非空白、非)的字符（提示内容）
+			// \)               字面量 )
+			/(?<!!)\[([^\]]+)\]\(&([\^\<\>v]?\s)([^)]+)\)/g,
 			(match, content, arrow, tooltip) => {
 				let type = "";
 				switch (arrow.trim()) {
@@ -1432,7 +1432,7 @@ export class SlidesMaker {
 						type = "top";
 						break;
 				}
-				return `<span class="sr-tooltip sr-tooltip-${type}" data-sr-tooltip="${tooltip.trim()}">${content}</span>`;
+				return `<u class="sr-tooltip sr-tooltip-${type}" data-sr-tooltip="${tooltip.trim()}">${content}</u>`;
 			}
 		);
 	}
