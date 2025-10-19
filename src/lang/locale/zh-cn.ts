@@ -415,4 +415,8 @@ export default {
 	"commentController.addPageSeparator": "添加页面分隔符",
 	"commentController.resetCounter": "重置计数器",
 	"commentController.useNoNavTemplate": "使用无导航模板",
+	"blockController.block": "普通Block",
+	"blockController.leftBlock": "左对齐Block",
+	"blockController.centerBlock": "居中对齐Block",
+	"blockController.rightBlock": "右对齐Block",
 };

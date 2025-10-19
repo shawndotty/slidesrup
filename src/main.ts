@@ -6,6 +6,8 @@ import { createServices } from "./services";
 import { ClassesSuggest } from "./editor/classes-sugguest";
 import { ColumnsSuggest } from "./editor/columns-sugguest";
 import { CommentsSuggest } from "./editor/comments-sugguest";
+import { BlocksSuggest } from "./editor/blocks-sugguest";
+
 import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 
 export default class SlidesRup extends Plugin {
@@ -38,6 +40,7 @@ export default class SlidesRup extends Plugin {
 
 		this.registerEditorSuggest(new PlaceHoldersSuggest(this.app));
 		this.registerEditorSuggest(new CommentsSuggest(this.app));
+		this.registerEditorSuggest(new BlocksSuggest(this.app));
 	}
 
 	onunload() {

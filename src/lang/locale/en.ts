@@ -469,4 +469,8 @@ export default {
 	"commentController.addPageSeparator": "Add Page Separator",
 	"commentController.resetCounter": "Reset Counter",
 	"commentController.useNoNavTemplate": "Use Template Without Nav",
+	"blockController.block": "Normal Block",
+	"blockController.leftBlock": "Left Aligned Block",
+	"blockController.centerBlock": "Center Aligned Block",
+	"blockController.rightBlock": "Right Aligned Block",
 };
