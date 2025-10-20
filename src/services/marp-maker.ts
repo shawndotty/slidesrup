@@ -720,7 +720,7 @@ export class MarpSlidesMaker {
 
 		// 优先 frontmatter，其次默认值
 		this.userSpecificListClass = keys.reduce((acc, key) => {
-			acc[key] = fm[key] ?? getDefault(key);
+			acc[key] = fm[`slide${key}`] ?? getDefault(key);
 			return acc;
 		}, {} as UserSpecificListClassType);
 	}
@@ -1902,7 +1902,7 @@ export class MarpSlidesMaker {
 	private _getLastButNotLeast(activeFile: TFile): string {
 		const fileCache = this.app.metadataCache.getFileCache(activeFile);
 		const lbnl =
-			(fileCache?.frontmatter?.lastButNotLeast as string) ||
+			(fileCache?.frontmatter?.slideLastButNotLeast as string) ||
 			`# ${t("Farewell")}`;
 		return lbnl;
 	}
