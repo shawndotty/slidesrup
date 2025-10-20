@@ -691,6 +691,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slogan,
 			slideNavOn,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
@@ -722,7 +723,8 @@ export class SlidesMaker {
 				tocName,
 				navName,
 				design,
-				logoOrTagline
+				logoOrTagline,
+				slogan
 			);
 
 			// 6. Create BaseLayoutWithoutNav file
@@ -731,7 +733,8 @@ export class SlidesMaker {
 				baseLayoutWithoutNavName,
 				tocName,
 				design,
-				logoOrTagline
+				logoOrTagline,
+				slogan
 			);
 		}
 
@@ -844,6 +847,7 @@ export class SlidesMaker {
 		slideMode: string;
 		slideSize: { w: number; h: number };
 		logoOrTagline: string;
+		slogan: string;
 		slideNavOn: boolean;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
@@ -879,6 +883,7 @@ export class SlidesMaker {
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
 					logoOrTagline: "",
+					slogan: "",
 					slideNavOn: true,
 				};
 			}
@@ -917,6 +922,8 @@ export class SlidesMaker {
 
 		let logoOrTagline = this._getSlideLogoOrTagline(activeFile);
 
+		let slogan = this._getSlideSlogan(activeFile);
+
 		let slideNavOn = this._getSlideNavOn(activeFile);
 
 		return {
@@ -926,6 +933,7 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slogan,
 			slideNavOn,
 		};
 	}
@@ -1068,7 +1076,8 @@ export class SlidesMaker {
 		tocName: string,
 		navName: string,
 		design: string,
-		logoOrTagline: string
+		logoOrTagline: string,
+		slogan: string
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
@@ -1078,7 +1087,7 @@ export class SlidesMaker {
 					? navName
 					: tocName,
 				tagline: logoOrTagline || this.settings.tagline,
-				slogan: this.settings.slogan,
+				slogan: slogan || this.settings.slogan,
 			},
 			ContentPageType.WithNav,
 			design
@@ -1099,7 +1108,8 @@ export class SlidesMaker {
 		baseLayoutName: string,
 		tocName: string,
 		design: string,
-		logoOrTagline: string
+		logoOrTagline: string,
+		slogan: string
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
@@ -1107,7 +1117,7 @@ export class SlidesMaker {
 			{
 				toc: tocName,
 				tagline: logoOrTagline || this.settings.tagline,
-				slogan: this.settings.slogan,
+				slogan: slogan || this.settings.slogan,
 			},
 			ContentPageType.WithoutNav,
 			design
@@ -1264,7 +1274,7 @@ export class SlidesMaker {
 		)}-${design}]]" -->`;
 		const oburi = this._getOBURI(activeFile);
 
-		const { author, date } = this._getAuthorAndDate();
+		const { author, date } = this._getAuthorAndDate(activeFile);
 
 		const newContent = this._addAuthorAndDate(
 			this._addLinkToH1(content, oburi),
@@ -1319,7 +1329,7 @@ export class SlidesMaker {
 		activeFile: TFile
 	): string {
 		const lbnl = this._getLastButNotLeast(activeFile);
-		const { author, date } = this._getAuthorAndDate();
+		const { author, date } = this._getAuthorAndDate(activeFile);
 		const backCoverSlideCommentParts = [
 			"<!-- slide",
 			`template="[[${t("BackCover")}-${design}]]"`,
@@ -2162,9 +2172,18 @@ export class SlidesMaker {
 		return lbnl;
 	}
 
-	private _getAuthorAndDate(): { author: string; date: string } {
-		const author = this.settings.presenter || "";
-		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
+	private _getAuthorAndDate(activeFile: TFile): {
+		author: string;
+		date: string;
+	} {
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const author =
+			fileCache?.frontmatter?.slideAuthor ||
+			this.settings.presenter ||
+			"";
+		const date = moment(
+			fileCache?.frontmatter?.slideDate || Date.now()
+		).format(this.settings.dateFormat || "YYYY-MM-DD");
 		return { author, date };
 	}
 
@@ -2225,6 +2244,14 @@ export class SlidesMaker {
 		return typeof logoOrTagline === "string" && logoOrTagline.trim()
 			? logoOrTagline.trim()
 			: "";
+	}
+
+	private _getSlideSlogan(activeFile?: TFile | null): string {
+		const slogan = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideSlogan
+			: "";
+		return typeof slogan === "string" && slogan.trim() ? slogan.trim() : "";
 	}
 
 	private _getSlideNavOn(activeFile?: TFile | null): boolean {

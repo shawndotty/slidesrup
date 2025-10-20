@@ -554,6 +554,7 @@ export class MarpSlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slogan,
 			slideNavOn,
 		} = await this._setupSlideConversion();
 		if (newSlideContainer === null) return;
@@ -596,6 +597,7 @@ export class MarpSlidesMaker {
 			slideSourceMode,
 			newSlideLocation,
 			logoOrTagline,
+			slogan,
 			slideNavOn
 		);
 
@@ -735,6 +737,7 @@ export class MarpSlidesMaker {
 		slideMode: string;
 		slideSize: { w: number; h: number };
 		logoOrTagline: string;
+		slogan: string;
 		slideNavOn: boolean;
 	}> {
 		const activeFile = this.app.workspace.getActiveFile();
@@ -770,6 +773,7 @@ export class MarpSlidesMaker {
 					slideMode: "",
 					slideSize: { w: 1920, h: 1080 },
 					logoOrTagline: "",
+					slogan: "",
 					slideNavOn: true,
 				};
 			}
@@ -810,6 +814,8 @@ export class MarpSlidesMaker {
 
 		let slideNavOn = this._getSlideNavOn(activeFile);
 
+		const slogan = this._getSlideSlogan(activeFile);
+
 		return {
 			newSlideContainer,
 			newSlideLocation,
@@ -817,6 +823,7 @@ export class MarpSlidesMaker {
 			slideMode,
 			slideSize,
 			logoOrTagline,
+			slogan,
 			slideNavOn,
 		};
 	}
@@ -982,6 +989,7 @@ export class MarpSlidesMaker {
 		slideSourceMode: number,
 		newSlideLocation: string,
 		logoOrTagline: string,
+		slogan: string,
 		slideNavOn: boolean
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
@@ -1072,6 +1080,7 @@ export class MarpSlidesMaker {
 					slideMode,
 					slideSize,
 					logoOrTagline,
+					slogan,
 					newSlideLocation,
 					slideNavOn
 				),
@@ -1101,7 +1110,7 @@ export class MarpSlidesMaker {
 		].join("\n");
 		const oburi = this._getOBURI(activeFile);
 
-		const { author, date } = this._getAuthorAndDate();
+		const { author, date } = this._getAuthorAndDate(activeFile);
 
 		const newContent = this._addAuthorAndDate(
 			this._addLinkToH1(content, oburi),
@@ -1155,7 +1164,7 @@ export class MarpSlidesMaker {
 		activeFile: TFile
 	): string {
 		const lbnl = this._getLastButNotLeast(activeFile);
-		const { author, date } = this._getAuthorAndDate();
+		const { author, date } = this._getAuthorAndDate(activeFile);
 		const backCoverSlideComment = [
 			"<!--",
 			"_id: backcover",
@@ -1187,6 +1196,7 @@ export class MarpSlidesMaker {
 			h: number;
 		},
 		logoOrTagline: string,
+		slogan: string,
 		newSlideLocation: string,
 		slideNavOn: boolean
 	): string {
@@ -1194,12 +1204,14 @@ export class MarpSlidesMaker {
 			logoOrTagline,
 			newSlideLocation
 		);
-		const slogan = `<p>${this.settings.slogan}</p>`;
+		const sloganHtml = `<p>${slogan || this.settings.slogan}</p>`;
 		const frontMatter = [
 			"---",
 			"marp: true",
 			`theme: sr-design-${design.toLocaleLowerCase()}`,
-			`header: ${logoOrTaglineHtml}${slideNavOn ? navContent : slogan}`,
+			`header: ${logoOrTaglineHtml}${
+				slideNavOn ? navContent : sloganHtml
+			}`,
 			`aliases: ${activeFile.basename}`,
 			`slideMode: ${slideMode}`,
 			"---",
@@ -1907,9 +1919,20 @@ export class MarpSlidesMaker {
 		return lbnl;
 	}
 
-	private _getAuthorAndDate(): { author: string; date: string } {
-		const author = this.settings.presenter || "";
-		const date = moment().format(this.settings.dateFormat || "YYYY-MM-DD");
+	private _getAuthorAndDate(activeFile?: TFile | null): {
+		author: string;
+		date: string;
+	} {
+		const fileCache = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)
+			: null;
+		const author =
+			fileCache?.frontmatter?.slideAuthor ||
+			this.settings.presenter ||
+			"";
+		const date = moment(
+			fileCache?.frontmatter?.slideDate || Date.now()
+		).format(this.settings.dateFormat || "YYYY-MM-DD");
 		return { author, date };
 	}
 
@@ -1970,6 +1993,14 @@ export class MarpSlidesMaker {
 		return typeof logoOrTagline === "string" && logoOrTagline.trim()
 			? logoOrTagline.trim()
 			: "";
+	}
+
+	private _getSlideSlogan(activeFile?: TFile | null): string {
+		const slogan = activeFile
+			? this.app.metadataCache.getFileCache(activeFile)?.frontmatter
+					?.slideSlogan
+			: "";
+		return typeof slogan === "string" && slogan.trim() ? slogan.trim() : "";
 	}
 
 	private _getSlideNavOn(activeFile?: TFile | null): boolean {
