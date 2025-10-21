@@ -215,6 +215,17 @@ export class CommandService {
 			}
 		);
 
+		createNocoDBCommand(
+			"update-help-docs",
+			t("Get The Latest Version Of Help Docs"),
+			{
+				baseID: this.settings?.updateIDs?.help?.baseID || "",
+				tableID: this.settings?.updateIDs?.help?.tableID || "",
+				viewID: this.settings?.updateIDs?.help?.viewID || "",
+				targetFolderPath: this.settings.slidesRupFrameworkFolder,
+			}
+		);
+
 		this.addCommand({
 			id: "one-click-deploy",
 			name: t("One Click to Deploy"),
@@ -262,6 +273,14 @@ export class CommandService {
 					})()
 				);
 				new Notice(t("Reveal template updated."));
+
+				await this.runNocoDBCommand({
+					baseID: this.settings?.updateIDs?.help?.baseID || "",
+					tableID: this.settings?.updateIDs?.help?.tableID || "",
+					viewID: this.settings?.updateIDs?.help?.viewID || "",
+					targetFolderPath: this.settings.slidesRupFrameworkFolder,
+				});
+				new Notice(t("Help docs updated."));
 
 				await this.runNocoDBCommand({
 					baseID: this.settings?.updateIDs?.demo?.baseID || "",

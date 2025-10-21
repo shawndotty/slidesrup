@@ -419,4 +419,6 @@ export default {
 	"blockController.leftBlock": "左对齐Block",
 	"blockController.centerBlock": "居中对齐Block",
 	"blockController.rightBlock": "右对齐Block",
+	"Get The Latest Version Of Help Docs": "获取最新的帮助文档",
+	"Help docs updated.": "帮助文档已更新。",
 };

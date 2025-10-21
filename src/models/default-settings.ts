@@ -58,6 +58,11 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 			tableID: "",
 			viewID: "",
 		},
+		help: {
+			baseID: "",
+			tableID: "",
+			viewID: "",
+		},
 	},
 	slidesRupThemeColor: "#0044FF",
 	slidesRupHue: 225,

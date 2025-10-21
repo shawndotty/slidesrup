@@ -473,4 +473,7 @@ export default {
 	"blockController.leftBlock": "Left Aligned Block",
 	"blockController.centerBlock": "Center Aligned Block",
 	"blockController.rightBlock": "Right Aligned Block",
+	"Get The Latest Version Of Help Docs":
+		"Get The Latest Version Of Help Docs",
+	"Help docs updated.": "Help docs updated.",
 };

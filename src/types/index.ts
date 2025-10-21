@@ -67,6 +67,7 @@ export interface SlidesRupSettings {
 		demo?: AirtableIds;
 		reveal?: AirtableIds;
 		revealAS?: AirtableIds;
+		help?: AirtableIds;
 	};
 	slidesRupThemeColor: string;
 	slidesRupHue: number;

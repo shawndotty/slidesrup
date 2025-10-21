@@ -408,4 +408,6 @@ export default {
 	"blockController.leftBlock": "左對齊Block",
 	"blockController.centerBlock": "居中對齊Block",
 	"blockController.rightBlock": "右對齊Block",
+	"Get The Latest Version Of Help Docs": "獲取最新的幫助文件",
+	"Help docs updated.": "幫助文件已更新。",
 };
