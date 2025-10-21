@@ -1826,6 +1826,7 @@ export class MarpSlidesMaker {
 			"---\n",
 			"<!--",
 			`_header: ""`,
+			`_id: toc`,
 			`_template: "[[${t("TOC")}-${design}]]"`,
 			`_class: toc ${
 				this.userSpecificListClass.TOCPageListClass ||

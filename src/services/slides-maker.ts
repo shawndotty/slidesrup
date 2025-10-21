@@ -2082,7 +2082,7 @@ export class SlidesMaker {
 		tocName: string,
 		design: string
 	): string {
-		const tocEmbed = `---\n\n<!-- slide template="[[${t(
+		const tocEmbed = `---\n\n<!-- slide id="toc" template="[[${t(
 			"TOC"
 		)}-${design}]]" class="${
 			this.userSpecificListClass.TOCPageListClass ||
