@@ -67,7 +67,7 @@ export class MarpSlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
@@ -1705,7 +1705,7 @@ export class MarpSlidesMaker {
 			} else if (
 				/^###\s+/.test(line) &&
 				inH2 &&
-				!line.includes("%%@%%")
+				!/%%[@\?]%%/g.test(line)
 			) {
 				h3Index++;
 				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
@@ -1723,7 +1723,7 @@ export class MarpSlidesMaker {
 		let h3TitleIdx = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
+			if (/^##\s+/.test(line) && !/%%[@\?]%%/g.test(line)) {
 				currentH2Index++;
 				resultLines.push(line);
 				resultLines.push("");
@@ -1745,7 +1745,7 @@ export class MarpSlidesMaker {
 				if (h3s.length > 0) {
 					resultLines.push(...h3s);
 				}
-			} else if (/^###\s+/.test(line) && !line.includes("%%@%%")) {
+			} else if (/^###\s+/.test(line) && !/%%[@\?]%%/g.test(line)) {
 				h3TitleIdx++;
 				resultLines.push(line);
 			} else {
@@ -1783,7 +1783,6 @@ export class MarpSlidesMaker {
 				);
 
 				const template = this._modidySlideTemplate(line, "");
-				console.dir(template);
 				const slideTemplate =
 					(template && `_template: "${template}"`) || "";
 
@@ -2143,7 +2142,9 @@ export class MarpSlidesMaker {
 			}
 		}
 
-		return listClass;
+		const hiddenClass = line.includes("%%?%%") ? `hiddenSlide` : "";
+
+		return listClass + (hiddenClass ? ` ${hiddenClass}` : "");
 	}
 
 	private _cleanLine(line: string): string {
