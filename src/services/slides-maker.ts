@@ -57,7 +57,7 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
@@ -1997,7 +1997,10 @@ export class SlidesMaker {
 		let h3TitleIdx = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (/^##\s+/.test(line) && !line.includes("%%@%%")) {
+			if (
+				/^##\s+/.test(line) &&
+				(!line.includes("%%@%%") || !line.includes("%%?%%"))
+			) {
 				currentH2Index++;
 				resultLines.push(line);
 
