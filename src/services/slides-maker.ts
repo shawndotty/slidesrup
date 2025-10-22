@@ -2021,7 +2021,10 @@ export class SlidesMaker {
 				if (h3s.length > 0) {
 					resultLines.push(...h3s);
 				}
-			} else if (/^###\s+/.test(line) && !line.includes("%%@%%")) {
+			} else if (
+				/^###\s+/.test(line) &&
+				(!line.includes("%%@%%") || !line.includes("%%?%%"))
+			) {
 				h3TitleIdx++;
 				resultLines.push(line);
 			} else {
