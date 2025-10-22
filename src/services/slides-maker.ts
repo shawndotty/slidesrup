@@ -1314,7 +1314,6 @@ export class SlidesMaker {
 	}
 
 	private _convertNotesToMarkdown(content: string): string {
-		console.log("I am here");
 		return content.replace(
 			SlidesMaker.COMMENT_BLOCK_NOTES_REGEX,
 			(match, p1) => {
@@ -1958,6 +1957,7 @@ export class SlidesMaker {
 			? "+"
 			: "-";
 		const lines = content.split("\n");
+		console.dir(lines);
 		const resultLines: string[] = [];
 		let currentH2Index = 0;
 		let h3TitleList: {
@@ -1979,8 +1979,9 @@ export class SlidesMaker {
 			} else if (
 				/^###\s+/.test(line) &&
 				inH2 &&
-				(!line.includes("%%@%%") || !line.includes("%%?%%"))
+				!/%%[@\?]%%/g.test(line)
 			) {
+				console.dir(line);
 				h3Index++;
 				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
 				h3TitleList.push({
@@ -1997,10 +1998,7 @@ export class SlidesMaker {
 		let h3TitleIdx = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (
-				/^##\s+/.test(line) &&
-				(!line.includes("%%@%%") || !line.includes("%%?%%"))
-			) {
+			if (/^##\s+/.test(line) && !/%%[@\?]%%/g.test(line)) {
 				currentH2Index++;
 				resultLines.push(line);
 
@@ -2021,10 +2019,7 @@ export class SlidesMaker {
 				if (h3s.length > 0) {
 					resultLines.push(...h3s);
 				}
-			} else if (
-				/^###\s+/.test(line) &&
-				(!line.includes("%%@%%") || !line.includes("%%?%%"))
-			) {
+			} else if (/^###\s+/.test(line) && !/%%[@\?]%%/g.test(line)) {
 				h3TitleIdx++;
 				resultLines.push(line);
 			} else {
