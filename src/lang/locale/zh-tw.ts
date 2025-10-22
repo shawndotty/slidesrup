@@ -400,6 +400,7 @@ export default {
 	"commentController.anchorHeading": "鎖定標題",
 	"commentController.addNotes": "添加註釋",
 	"commentController.replaceTemplate": "替換模板",
+	"commentController.hideSlide": "隱藏幻燈片",
 	"commentController.addHeadingAliases": "添加標題別名",
 	"commentController.addPageSeparator": "添加頁面分隔符",
 	"commentController.resetCounter": "重置計數器",

@@ -1829,13 +1829,16 @@ export class SlidesMaker {
 								: template
 						}"`) ||
 					"";
+				const hideSlide = line.includes("%%?%%")
+					? `data-visibility="hidden"`
+					: "";
 				if (this.settings.slidesRupContentPageSlideType === "v") {
 					finalLines.push("***");
 				} else {
 					finalLines.push("---");
 				}
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				const counterResetStyle = this._getCounterResetStyle(line);
 				finalLines.push(counterResetStyle);
@@ -1976,7 +1979,7 @@ export class SlidesMaker {
 			} else if (
 				/^###\s+/.test(line) &&
 				inH2 &&
-				!line.includes("%%@%%")
+				(!line.includes("%%@%%") || !line.includes("%%?%%"))
 			) {
 				h3Index++;
 				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
@@ -2052,6 +2055,10 @@ export class SlidesMaker {
 						this.settings.slidesRupDefaultContentListClass
 				);
 
+				const hideSlide = line.includes("%%?%%")
+					? `data-visibility="hidden"`
+					: "";
+
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
 					(template &&
@@ -2063,7 +2070,7 @@ export class SlidesMaker {
 					"";
 
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {

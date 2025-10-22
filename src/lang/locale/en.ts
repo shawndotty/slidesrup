@@ -469,6 +469,7 @@ export default {
 	"commentController.addPageSeparator": "Add Page Separator",
 	"commentController.resetCounter": "Reset Counter",
 	"commentController.useNoNavTemplate": "Use Template Without Nav",
+	"commentController.hideSlide": "Hide Slide",
 	"blockController.block": "Normal Block",
 	"blockController.leftBlock": "Left Aligned Block",
 	"blockController.centerBlock": "Center Aligned Block",
