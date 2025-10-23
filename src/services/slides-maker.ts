@@ -1957,7 +1957,6 @@ export class SlidesMaker {
 			? "+"
 			: "-";
 		const lines = content.split("\n");
-		console.dir(lines);
 		const resultLines: string[] = [];
 		let currentH2Index = 0;
 		let h3TitleList: {
@@ -1981,7 +1980,6 @@ export class SlidesMaker {
 				inH2 &&
 				!/%%[@\?]%%/g.test(line)
 			) {
-				console.dir(line);
 				h3Index++;
 				const h3Title = line.replace(/^###\s+|%%.+%%/g, "").trim();
 				h3TitleList.push({
@@ -2379,6 +2377,11 @@ export class SlidesMaker {
 		const replaceMatches = line.match(
 			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
 		);
+		const counterResetMatch = line.match(/counter-reset-\d{1,}/);
+		let counterResetClass = "";
+		if (counterResetMatch) {
+			counterResetClass = counterResetMatch[0];
+		}
 		let extracted: string[] = [];
 		let merged = "";
 
@@ -2388,7 +2391,9 @@ export class SlidesMaker {
 				.map((m) => m.slice(3, -2).trim())
 				.join(" ");
 			if (replaceContent) {
-				listClass = replaceContent;
+				listClass =
+					replaceContent +
+					(counterResetClass ? ` ${counterResetClass}` : "");
 			}
 		} else if (matches && matches.length > 0) {
 			// 否则，提取普通注释内容，追加到默认 class 后面

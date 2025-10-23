@@ -2122,6 +2122,11 @@ export class MarpSlidesMaker {
 		const replaceMatches = line.match(
 			MarpSlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
 		);
+		const counterResetMatch = line.match(/counter-reset-\d{1,}/);
+		let counterResetClass = "";
+		if (counterResetMatch) {
+			counterResetClass = counterResetMatch[0];
+		}
 		let extracted: string[] = [];
 		let merged = "";
 
@@ -2131,7 +2136,9 @@ export class MarpSlidesMaker {
 				.map((m) => m.slice(3, -2).trim())
 				.join(" ");
 			if (replaceContent) {
-				listClass = replaceContent;
+				listClass =
+					replaceContent +
+					(counterResetClass ? ` ${counterResetClass}` : "");
 			}
 		} else if (matches && matches.length > 0) {
 			// 否则，提取普通注释内容，追加到默认 class 后面
