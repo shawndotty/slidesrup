@@ -71,6 +71,8 @@ export class MarpSlidesMaker {
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
+	private static readonly TAGS_REGEX =
+		/(?<=\s|^)(#(?![0-9]+\s)[\p{L}0-9_/-]+)/gmu;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
@@ -1069,6 +1071,8 @@ export class MarpSlidesMaker {
 
 			(content) => this._processTemplate(content),
 
+			(content) => this._convertTagsToHTML(content),
+
 			(content) => this._convertNotesToMarkdown(content),
 
 			(content) =>
@@ -1156,6 +1160,14 @@ export class MarpSlidesMaker {
 				return `\n<!--\n${p1.trim()}\n-->\n`;
 			}
 		);
+	}
+
+	private _convertTagsToHTML(content: string): string {
+		return content.replace(MarpSlidesMaker.TAGS_REGEX, (match, p1) => {
+			console.dir(match);
+			console.dir(p1);
+			return `<span class="sr-tag">${p1.trim()}</span>`;
+		});
 	}
 
 	private _addBackCoverPage(
