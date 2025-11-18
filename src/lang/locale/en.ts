@@ -470,6 +470,7 @@ export default {
 	"commentController.resetCounter": "Reset Counter",
 	"commentController.useNoNavTemplate": "Use Template Without Nav",
 	"commentController.hideSlide": "Hide Slide",
+	"commentController.addSlideBackground": "Add Slide Background",
 	"blockController.block": "Normal Block",
 	"blockController.leftBlock": "Left Aligned Block",
 	"blockController.centerBlock": "Center Aligned Block",

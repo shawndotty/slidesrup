@@ -57,9 +57,10 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---|bg=)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_BACKGROUND_REGEX = /%%bg=(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
 	private static readonly TAGS_REGEX =
 		/(?<=\s|^)(#(?![0-9]+\s)[\p{L}0-9_/-]+)/gmu;
@@ -1840,6 +1841,11 @@ export class SlidesMaker {
 								: template
 						}"`) ||
 					"";
+
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				const hideSlide = line.includes("%%?%%")
 					? `data-visibility="hidden"`
 					: "";
@@ -1849,7 +1855,7 @@ export class SlidesMaker {
 					finalLines.push("---");
 				}
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				const counterResetStyle = this._getCounterResetStyle(line);
 				finalLines.push(counterResetStyle);
@@ -1946,8 +1952,12 @@ export class SlidesMaker {
 
 				const templateStr = template ? `template="${template}"` : "";
 
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue} chapter-${h2Index}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} ${slideBackground} class="${classValue} chapter-${h2Index}" -->\n`
 				);
 
 				modifiedLines.push(this._cleanLine(line));
@@ -2080,8 +2090,12 @@ export class SlidesMaker {
 						}"`) ||
 					"";
 
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -2374,7 +2388,6 @@ export class SlidesMaker {
 		let extracted: string[] = [];
 
 		if (matches && matches.length > 0) {
-			// 否则，提取普通注释内容，追加到默认 class 后面
 			extracted = matches.map((m) => m.slice(2, -2).trim());
 			if (extracted.length > 0) {
 				template = extracted.join(" ");
@@ -2382,6 +2395,18 @@ export class SlidesMaker {
 		}
 
 		return template;
+	}
+
+	private _modifySlideBackground(line: string, background: string): string {
+		const matches = line.match(SlidesMaker.COMMENT_BLOCK_BACKGROUND_REGEX);
+		let extracted: string[] = [];
+		if (matches && matches.length > 0) {
+			extracted = matches.map((m) => m.slice(5, -2).trim());
+			if (extracted.length > 0) {
+				background = extracted.join(" ");
+			}
+		}
+		return background;
 	}
 
 	private _modidySlideClassList(line: string, listClass: string): string {

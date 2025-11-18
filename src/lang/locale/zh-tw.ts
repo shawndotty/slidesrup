@@ -405,6 +405,7 @@ export default {
 	"commentController.addPageSeparator": "添加頁面分隔符",
 	"commentController.resetCounter": "重置計數器",
 	"commentController.useNoNavTemplate": "使用無導航模板",
+	"commentController.addSlideBackground": "添加幻燈片背景",
 	"blockController.block": "普通Block",
 	"blockController.leftBlock": "左對齊Block",
 	"blockController.centerBlock": "居中對齊Block",

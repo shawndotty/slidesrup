@@ -416,6 +416,7 @@ export default {
 	"commentController.resetCounter": "重置计数器",
 	"commentController.useNoNavTemplate": "使用无导航模板",
 	"commentController.hideSlide": "隐藏幻灯片",
+	"commentController.addSlideBackground": "添加幻灯片背景",
 	"blockController.block": "普通Block",
 	"blockController.leftBlock": "左对齐Block",
 	"blockController.centerBlock": "居中对齐Block",
