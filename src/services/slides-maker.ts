@@ -2331,7 +2331,7 @@ export class SlidesMaker {
 		// Get file cache (this is already cached by Obsidian)
 		const fileCache = this.app.metadataCache.getFileCache(activeFile);
 		const frontmatterAutoConvertLinks =
-			fileCache?.frontmatter?.autoConvertLinks;
+			fileCache?.frontmatter?.slideAutoConvertLinks;
 
 		// Return frontmatter autoConvertLinks if it exists
 		if (
@@ -2352,7 +2352,7 @@ export class SlidesMaker {
 		// Get file cache (this is already cached by Obsidian)
 		const fileCache = this.app.metadataCache.getFileCache(activeFile);
 		const frontmatterEnableParagraphFragments =
-			fileCache?.frontmatter?.enableParagraphFragments;
+			fileCache?.frontmatter?.slideEnableParagraphFragments;
 
 		// Return frontmatter autoConvertLinks if it exists
 		if (
