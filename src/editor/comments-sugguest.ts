@@ -77,12 +77,6 @@ export class CommentsSuggest extends AdvancedSuggest {
 			suggestionText: "?",
 			// description: "Add heading aliases",
 		},
-		{
-			id: "hideSlide",
-			title: t("commentController.hideSlide"),
-			suggestionText: "?",
-			// description: "Add heading aliases",
-		},
 	];
 
 	// Test
