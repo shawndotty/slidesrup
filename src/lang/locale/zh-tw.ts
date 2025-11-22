@@ -412,4 +412,9 @@ export default {
 	"blockController.rightBlock": "右對齊Block",
 	"Get The Latest Version Of Help Docs": "獲取最新的幫助文件",
 	"Help docs updated.": "幫助文件已更新。",
+	WithoutComments: "無註釋",
+	NoteCreated: "筆記已建立：",
+	NoteUpdated: "筆記已更新：",
+	FailedToCreateOrUpdateNote: "建立或更新筆記失敗：",
+	MakeCopyWithoutComments: "建立或更新當前檔案的無註釋副本",
 };

@@ -10,6 +10,7 @@ import { NocoDBSync } from "./db-sync/nocodb-sync";
 import { MyObsidian } from "./db-sync/my-obsidian";
 import { TemplaterService } from "./templater-service";
 import { MarpSlidesService } from "./marp-slides-service";
+import { NoteMaker } from "./note-maker";
 import { VSCodeService } from "./vscode-service";
 
 import {
@@ -20,6 +21,7 @@ import {
 export class CommandService {
 	private slidesMaker: SlidesMaker;
 	private designMaker: DesignMaker;
+	private noteMaker: NoteMaker;
 	private marpSlidesMaker: MarpSlidesMaker;
 	private presentationPluginFolder: string;
 	private revealAddOnsViewName: string;
@@ -39,6 +41,7 @@ export class CommandService {
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
+		this.noteMaker = new NoteMaker(this.app);
 		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
 		this.marpSlidesService = new MarpSlidesService(this.app);
 		if (this.settings.presentationPlugin === "slidesExtended") {
@@ -404,6 +407,14 @@ export class CommandService {
 			name: t("Add Default Marp Themes for VS Code"),
 			callback: async () => {
 				await this.vscodeService.addDefaultMarpThemesForVSCode();
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup: purify-note",
+			name: t("MakeCopyWithoutComments"),
+			callback: async () => {
+				await this.noteMaker.createNoteWithoutComments();
 			},
 		});
 	}

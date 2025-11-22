@@ -423,4 +423,9 @@ export default {
 	"blockController.rightBlock": "右对齐Block",
 	"Get The Latest Version Of Help Docs": "获取最新的帮助文档",
 	"Help docs updated.": "帮助文档已更新。",
+	WithoutComments: "无注释",
+	NoteCreated: "笔记已创建：",
+	NoteUpdated: "笔记已更新：",
+	FailedToCreateOrUpdateNote: "创建或更新笔记失败：",
+	MakeCopyWithoutComments: "创建或更新当前文件的无注释副本",
 };

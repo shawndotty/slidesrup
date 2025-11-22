@@ -478,4 +478,9 @@ export default {
 	"Get The Latest Version Of Help Docs":
 		"Get The Latest Version Of Help Docs",
 	"Help docs updated.": "Help docs updated.",
+	WithoutComments: "withoutComments",
+	NoteCreated: "Note Created: ",
+	NoteUpdated: "Note Updated: ",
+	FailedToCreateOrUpdateNote: "Failed to create or update note: ",
+	MakeCopyWithoutComments: "Create or update a copy without comments",
 };
