@@ -1806,11 +1806,9 @@ export class SlidesMaker {
 					);
 					background = this._modifySlideBackground(nextLine, "");
 				}
-				const slideTemplate = template
-					? `template="${
-							template || `[[${t("BlankPage")}-${design}]]`
-					  }"`
-					: "";
+				const slideTemplate = `template="${
+					template || `[[${t("BlankPage")}-${design}]]`
+				}"`;
 
 				const slideBackground = background ? `bg="${background}"` : "";
 
