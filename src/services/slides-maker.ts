@@ -1257,6 +1257,8 @@ export class SlidesMaker {
 					slideSize,
 					slideNavOn
 				),
+
+			(content) => this._removeCommentLines(content),
 		];
 
 		// 执行处理管道
@@ -1786,16 +1788,34 @@ export class SlidesMaker {
 
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
 		const newLines: string[] = [];
-		for (const line of lines) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
-				newLines.push(
-					`\n<!-- slide template="[[${t(
-						"BlankPage"
-					)}-${design}]]" class="${
+				const nextLine = i + 1 < lines.length ? lines[i + 1] : "";
+				const hasCommentInNextLine = this._isCommentLine(nextLine);
+				let template = "";
+				let classValue = "";
+				let background = "";
+				if (hasCommentInNextLine) {
+					template = this._modidySlideTemplate(nextLine, "");
+					classValue = this._modidySlideClassList(
+						nextLine,
 						this.userSpecificListClass.BlankPageListClass ||
-						this.settings.slidesRupDefaultBlankListClass
-					}" -->`
+							this.settings.slidesRupDefaultBlankListClass
+					);
+					background = this._modifySlideBackground(nextLine, "");
+				}
+				const slideTemplate = template
+					? `template="${
+							template || `[[${t("BlankPage")}-${design}]]`
+					  }"`
+					: "";
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
+				newLines.push(
+					`\n<!-- slide ${slideTemplate} class="${classValue}" ${slideBackground} -->`
 				);
 			} else {
 				newLines.push(line);
@@ -2453,5 +2473,19 @@ export class SlidesMaker {
 				""
 			)
 			.trim();
+	}
+
+	private _isCommentLine(line: string): boolean {
+		if (!line) return false;
+		const trimmed = line.trim();
+		if (!trimmed) return false;
+		if (/^<!--[\s\S]*-->$/.test(trimmed)) return true;
+		if (/^%%[\s\S]*%%$/.test(trimmed)) return true;
+		if (/%%@%%|%%\?%%|%%\|.*%%|%%bg=.*%%/.test(trimmed)) return true;
+		return false;
+	}
+
+	private _removeCommentLines(content: string): string {
+		return content.replace(/%%[\s\S]*?$/gm, "");
 	}
 }
