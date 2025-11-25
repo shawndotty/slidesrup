@@ -417,4 +417,9 @@ export default {
 	NoteUpdated: "筆記已更新：",
 	FailedToCreateOrUpdateNote: "建立或更新筆記失敗：",
 	MakeCopyWithoutComments: "建立或更新當前檔案的無註釋副本",
+	"Help documents updated today": "今天更新的幫助文件",
+	"Help documents updated in the past week": "最近一周更新的幫助文件",
+	"Help documents updated in the past two weeks": "最近两周更新的幫助文件",
+	"Help documents updated in the past month": "最近一個月更新的幫助文件",
+	"All help documents": "所有幫助文件",
 };

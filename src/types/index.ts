@@ -237,3 +237,9 @@ export interface SRSuggestion {
 	description?: string;
 	suggestionText?: string;
 }
+
+export interface DateFilterOption {
+	id: string;
+	name: string;
+	value: number;
+}

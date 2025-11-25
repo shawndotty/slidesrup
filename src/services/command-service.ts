@@ -96,6 +96,7 @@ export class CommandService {
 			baseID?: string;
 			tableID?: string;
 		},
+		filterRecordsByDate: boolean = false,
 		apiKey: string = this.settings.updateAPIKey
 	): Promise<void> {
 		if (!apiKey) {
@@ -128,7 +129,8 @@ export class CommandService {
 			const myObsidian = new MyObsidian(this.app, nocoDBSync);
 			await myObsidian.onlyFetchFromNocoDB(
 				nocoDBSettings.tables[0],
-				this.settings.updateAPIKeyIsValid
+				this.settings.updateAPIKeyIsValid,
+				filterRecordsByDate
 			);
 		});
 	}
@@ -143,13 +145,17 @@ export class CommandService {
 				baseID?: string;
 				tableID?: string;
 			},
-			reloadOB: boolean = false
+			reloadOB: boolean = false,
+			filterRecordsByDate: boolean = false
 		) => {
 			this.addCommand({
 				id,
 				name,
 				callback: async () => {
-					await this.runNocoDBCommand(tableConfig);
+					await this.runNocoDBCommand(
+						tableConfig,
+						filterRecordsByDate
+					);
 					if (reloadOB) {
 						this.app.commands.executeCommandById("app:reload");
 					}
@@ -226,7 +232,9 @@ export class CommandService {
 				tableID: this.settings?.updateIDs?.help?.tableID || "",
 				viewID: this.settings?.updateIDs?.help?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
-			}
+			},
+			false,
+			true
 		);
 
 		this.addCommand({

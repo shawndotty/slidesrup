@@ -13,6 +13,7 @@ export class NocoDB {
 		content: string;
 		subFolder: string;
 		extension: string;
+		updatedIn: string;
 		[key: string]: string;
 	};
 
@@ -27,6 +28,7 @@ export class NocoDB {
 				content: "MD",
 				subFolder: "SubFolder",
 				extension: "Extension",
+				updatedIn: "UpdatedIn",
 			},
 			...(nocoDBSettings.syncSettings?.recordFieldsNames || {}),
 		};

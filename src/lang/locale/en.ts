@@ -483,4 +483,12 @@ export default {
 	NoteUpdated: "Note Updated: ",
 	FailedToCreateOrUpdateNote: "Failed to create or update note: ",
 	MakeCopyWithoutComments: "Create or update a copy without comments",
+	"Help documents updated today": "Help documents updated today",
+	"Help documents updated in the past week":
+		"Help documents updated in the past week",
+	"Help documents updated in the past two weeks":
+		"Help documents updated in the past two weeks",
+	"Help documents updated in the past month":
+		"Help documents updated in the past month",
+	"All help documents": "All help documents",
 };

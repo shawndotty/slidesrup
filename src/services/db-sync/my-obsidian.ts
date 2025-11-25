@@ -16,7 +16,8 @@ export class MyObsidian {
 
 	async onlyFetchFromNocoDB(
 		sourceTable: NocoDBTable,
-		updateAPIKeyIsValid: boolean = false
+		updateAPIKeyIsValid: boolean = false,
+		filterRecordsByDate: boolean = false
 	): Promise<string | undefined> {
 		if (!updateAPIKeyIsValid) {
 			new Notice(
@@ -30,7 +31,8 @@ export class MyObsidian {
 		}
 
 		await this.nocoDBSyncer.createOrUpdateNotesInOBFromSourceTable(
-			sourceTable
+			sourceTable,
+			filterRecordsByDate
 		);
 	}
 
