@@ -79,7 +79,7 @@ export class NocoDBSync {
 		}&${fields
 			.map((f) => `fields%5B%5D=${encodeURIComponent(f)}`)
 			.join("&")}${dateFilterFormula}&offset=`;
-
+		new Notice(t("Getting Data ……"));
 		let records = await this.getAllRecordsFromTable(url);
 
 		if (!records || records.length === 0) {
@@ -158,8 +158,6 @@ export class NocoDBSync {
 		sourceTable: NocoDBTable,
 		filterRecordsByDate: boolean = false
 	): Promise<void> {
-		new Notice(t("Getting Data ……"));
-
 		const { vault } = this.app;
 
 		const directoryRootPath = sourceTable.targetFolderPath;
