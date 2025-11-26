@@ -1,7 +1,13 @@
 import { App, Notice, normalizePath } from "obsidian";
-import { NocoDBTable, RecordFields, Record } from "../../types";
+import {
+	NocoDBTable,
+	RecordFields,
+	Record,
+	DateFilterOption,
+} from "../../types";
 import { t } from "../../lang/helpers";
 import { NocoDB } from "./noco-db";
+import { DateFilterSuggester } from "../../suggesters/date-filter-suggester";
 
 export class NocoDBSync {
 	nocodb: NocoDB;
@@ -13,6 +19,7 @@ export class NocoDBSync {
 	fetchContentFrom: string;
 	subFolder: string;
 	extension: string;
+	updatedIn: string;
 
 	constructor(nocodb: NocoDB, app: any) {
 		this.nocodb = nocodb;
@@ -24,6 +31,7 @@ export class NocoDBSync {
 		this.fetchContentFrom = this.nocodb.recordFieldsNames.content;
 		this.subFolder = this.nocodb.recordFieldsNames.subFolder;
 		this.extension = this.nocodb.recordFieldsNames.extension;
+		this.updatedIn = this.nocodb.recordFieldsNames.updatedIn;
 	}
 
 	getFetchSourceTable(sourceViewID: string): NocoDBTable | undefined {
@@ -33,20 +41,45 @@ export class NocoDBSync {
 			.first();
 	}
 
-	async fetchRecordsFromSource(sourceTable: NocoDBTable): Promise<any[]> {
-		const fields = [
+	async fetchRecordsFromSource(
+		sourceTable: NocoDBTable,
+		filterRecordsByDate: boolean = false
+	): Promise<any[]> {
+		let fields = [
 			this.fetchTitleFrom,
 			this.fetchContentFrom,
 			this.subFolder,
 			this.extension,
 		];
 
+		let dateFilterOption: DateFilterOption | null = null;
+		let dateFilterFormula = "";
+		if (filterRecordsByDate) {
+			fields.push(this.updatedIn);
+			const suggester = new DateFilterSuggester(this.app);
+			dateFilterOption = await new Promise<DateFilterOption>(
+				(resolve) => {
+					suggester.onChooseItem = (item) => {
+						resolve(item);
+						return item;
+					};
+					suggester.open();
+				}
+			);
+			if (dateFilterOption && dateFilterOption.value !== 99) {
+				const formula = `{UpdatedIn} <= ${dateFilterOption.value}`;
+				dateFilterFormula = `&filterByFormula=${encodeURIComponent(
+					formula
+				)}`;
+			}
+		}
+
 		let url = `${this.nocodb.makeApiUrl(sourceTable)}?view=${
 			sourceTable.viewID
 		}&${fields
 			.map((f) => `fields%5B%5D=${encodeURIComponent(f)}`)
-			.join("&")}&offset=`;
-
+			.join("&")}${dateFilterFormula}&offset=`;
+		new Notice(t("Getting Data ……"));
 		let records = await this.getAllRecordsFromTable(url);
 
 		if (!records || records.length === 0) {
@@ -122,16 +155,15 @@ export class NocoDBSync {
 	}
 
 	async createOrUpdateNotesInOBFromSourceTable(
-		sourceTable: NocoDBTable
+		sourceTable: NocoDBTable,
+		filterRecordsByDate: boolean = false
 	): Promise<void> {
-		new Notice(t("Getting Data ……"));
-
 		const { vault } = this.app;
 
 		const directoryRootPath = sourceTable.targetFolderPath;
 
 		let notesToCreateOrUpdate: RecordFields[] = (
-			await this.fetchRecordsFromSource(sourceTable)
+			await this.fetchRecordsFromSource(sourceTable, filterRecordsByDate)
 		).map((note: Record) => note.fields);
 
 		new Notice(

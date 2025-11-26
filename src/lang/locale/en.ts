@@ -470,6 +470,7 @@ export default {
 	"commentController.resetCounter": "Reset Counter",
 	"commentController.useNoNavTemplate": "Use Template Without Nav",
 	"commentController.hideSlide": "Hide Slide",
+	"commentController.addSlideBackground": "Add Slide Background",
 	"blockController.block": "Normal Block",
 	"blockController.leftBlock": "Left Aligned Block",
 	"blockController.centerBlock": "Center Aligned Block",
@@ -477,4 +478,17 @@ export default {
 	"Get The Latest Version Of Help Docs":
 		"Get The Latest Version Of Help Docs",
 	"Help docs updated.": "Help docs updated.",
+	WithoutComments: "withoutComments",
+	NoteCreated: "Note Created: ",
+	NoteUpdated: "Note Updated: ",
+	FailedToCreateOrUpdateNote: "Failed to create or update note: ",
+	MakeCopyWithoutComments: "Create or update a copy without comments",
+	"Help documents updated today": "Help documents updated today",
+	"Help documents updated in the past week":
+		"Help documents updated in the past week",
+	"Help documents updated in the past two weeks":
+		"Help documents updated in the past two weeks",
+	"Help documents updated in the past month":
+		"Help documents updated in the past month",
+	"All help documents": "All help documents",
 };

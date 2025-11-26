@@ -57,10 +57,13 @@ export class SlidesMaker {
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
 	private static readonly COMMENT_BLOCK_REGEX =
-		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---)([^%]*?)\%\%/g;
+		/(?<![-\!@\]])\%\%(?!\!|\[\[|\#|\||@|&|^|\?|---|bg=)([^%]*?)\%\%/g;
 	private static readonly COMMENT_BLOCK_REPLACE_REGEX = /%%\!(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_TEMPLATE_REGEX = /%%\[\[(.*?)%%/g;
+	private static readonly COMMENT_BLOCK_BACKGROUND_REGEX = /%%bg=(.*?)%%/g;
 	private static readonly COMMENT_BLOCK_NOTES_REGEX = /%%\&([\n\s\S]*?)%%/g;
+	private static readonly TAGS_REGEX =
+		/(?<=\s|^)(#(?![0-9]+\s)[\p{L}0-9_/-]+)/gmu;
 
 	private userSpecificListClass: UserSpecificListClassType = {
 		TOCPageListClass: "",
@@ -1235,6 +1238,8 @@ export class SlidesMaker {
 			// 8. 添加段落片段
 			(content) => this._reverseListFragmentIndex(content),
 
+			(content) => this._convertTagsToHTML(content),
+
 			(content) => this._convertNotesToMarkdown(content),
 
 			(content) =>
@@ -1252,6 +1257,8 @@ export class SlidesMaker {
 					slideSize,
 					slideNavOn
 				),
+
+			(content) => this._removeCommentLines(content),
 		];
 
 		// 执行处理管道
@@ -1320,6 +1327,14 @@ export class SlidesMaker {
 				return `\nnote: \n${p1.trim()}\n`;
 			}
 		);
+	}
+
+	private _convertTagsToHTML(content: string): string {
+		return content.replace(SlidesMaker.TAGS_REGEX, (match, p1) => {
+			console.dir(match);
+			console.dir(p1);
+			return `<span class="sr-tag">${p1.trim()}</span>`;
+		});
 	}
 
 	private _addBackCoverPage(
@@ -1773,16 +1788,32 @@ export class SlidesMaker {
 
 	private _addEmptyPageAnnotation(lines: string[], design: string): string[] {
 		const newLines: string[] = [];
-		for (const line of lines) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 			if (/^(-|\*){3,}$/.test(line)) {
 				newLines.push(line);
-				newLines.push(
-					`\n<!-- slide template="[[${t(
-						"BlankPage"
-					)}-${design}]]" class="${
+				const nextLine = i + 1 < lines.length ? lines[i + 1] : "";
+				const hasCommentInNextLine = this._isCommentLine(nextLine);
+				let template = "";
+				let classValue = "";
+				let background = "";
+				if (hasCommentInNextLine) {
+					template = this._modidySlideTemplate(nextLine, "");
+					classValue = this._modidySlideClassList(
+						nextLine,
 						this.userSpecificListClass.BlankPageListClass ||
-						this.settings.slidesRupDefaultBlankListClass
-					}" -->`
+							this.settings.slidesRupDefaultBlankListClass
+					);
+					background = this._modifySlideBackground(nextLine, "");
+				}
+				const slideTemplate = `template="${
+					template || `[[${t("BlankPage")}-${design}]]`
+				}"`;
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
+				newLines.push(
+					`\n<!-- slide ${slideTemplate} class="${classValue}" ${slideBackground} -->`
 				);
 			} else {
 				newLines.push(line);
@@ -1828,6 +1859,11 @@ export class SlidesMaker {
 								: template
 						}"`) ||
 					"";
+
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				const hideSlide = line.includes("%%?%%")
 					? `data-visibility="hidden"`
 					: "";
@@ -1837,7 +1873,7 @@ export class SlidesMaker {
 					finalLines.push("---");
 				}
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				const counterResetStyle = this._getCounterResetStyle(line);
 				finalLines.push(counterResetStyle);
@@ -1934,8 +1970,12 @@ export class SlidesMaker {
 
 				const templateStr = template ? `template="${template}"` : "";
 
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} class="${classValue} chapter-${h2Index}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} ${slideBackground} class="${classValue} chapter-${h2Index}" -->\n`
 				);
 
 				modifiedLines.push(this._cleanLine(line));
@@ -2068,8 +2108,12 @@ export class SlidesMaker {
 						}"`) ||
 					"";
 
+				const background = this._modifySlideBackground(line, "");
+
+				const slideBackground = background ? `bg="${background}"` : "";
+
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -2305,7 +2349,7 @@ export class SlidesMaker {
 		// Get file cache (this is already cached by Obsidian)
 		const fileCache = this.app.metadataCache.getFileCache(activeFile);
 		const frontmatterAutoConvertLinks =
-			fileCache?.frontmatter?.autoConvertLinks;
+			fileCache?.frontmatter?.slideAutoConvertLinks;
 
 		// Return frontmatter autoConvertLinks if it exists
 		if (
@@ -2326,7 +2370,7 @@ export class SlidesMaker {
 		// Get file cache (this is already cached by Obsidian)
 		const fileCache = this.app.metadataCache.getFileCache(activeFile);
 		const frontmatterEnableParagraphFragments =
-			fileCache?.frontmatter?.enableParagraphFragments;
+			fileCache?.frontmatter?.slideEnableParagraphFragments;
 
 		// Return frontmatter autoConvertLinks if it exists
 		if (
@@ -2362,7 +2406,6 @@ export class SlidesMaker {
 		let extracted: string[] = [];
 
 		if (matches && matches.length > 0) {
-			// 否则，提取普通注释内容，追加到默认 class 后面
 			extracted = matches.map((m) => m.slice(2, -2).trim());
 			if (extracted.length > 0) {
 				template = extracted.join(" ");
@@ -2370,6 +2413,18 @@ export class SlidesMaker {
 		}
 
 		return template;
+	}
+
+	private _modifySlideBackground(line: string, background: string): string {
+		const matches = line.match(SlidesMaker.COMMENT_BLOCK_BACKGROUND_REGEX);
+		let extracted: string[] = [];
+		if (matches && matches.length > 0) {
+			extracted = matches.map((m) => m.slice(5, -2).trim());
+			if (extracted.length > 0) {
+				background = extracted.join(" ");
+			}
+		}
+		return background;
 	}
 
 	private _modidySlideClassList(line: string, listClass: string): string {
@@ -2416,5 +2471,19 @@ export class SlidesMaker {
 				""
 			)
 			.trim();
+	}
+
+	private _isCommentLine(line: string): boolean {
+		if (!line) return false;
+		const trimmed = line.trim();
+		if (!trimmed) return false;
+		if (/^<!--[\s\S]*-->$/.test(trimmed)) return true;
+		if (/^%%[\s\S]*%%$/.test(trimmed)) return true;
+		if (/%%@%%|%%\?%%|%%\|.*%%|%%bg=.*%%/.test(trimmed)) return true;
+		return false;
+	}
+
+	private _removeCommentLines(content: string): string {
+		return content.replace(/%%[\s\S]*?$/gm, "");
 	}
 }
