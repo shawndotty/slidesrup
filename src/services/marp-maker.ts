@@ -1890,7 +1890,7 @@ export class MarpSlidesMaker {
 		for (let i = 0; i < contentLines.length; i++) {
 			if (
 				contentLines[i].trim() === "---" ||
-				contentLines[i].trim() === "****"
+				contentLines[i].trim() === "***"
 			) {
 				currentIndex++;
 				if (currentIndex === targetIndex) {
