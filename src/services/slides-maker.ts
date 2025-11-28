@@ -2243,6 +2243,7 @@ export class SlidesMaker {
 		date: string,
 		minimizeMode: boolean = false
 	): string {
+		console.dir(content);
 		const authorTemplate = `::: author\n${author}\n:::\n`;
 		const dateTemplate = `::: date\n${date}\n:::\n`;
 
@@ -2254,9 +2255,24 @@ export class SlidesMaker {
 		if (firstSeparatorLineIndex !== -1) {
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
-			return [...before, authorTemplate, dateTemplate, ...after].join(
+			const authorAndDateContent = [authorTemplate, dateTemplate].join(
 				"\n"
 			);
+			const noteIndex = before.findIndex((line) =>
+				line.trim().toLowerCase().includes("note:")
+			);
+			if (!noteIndex) {
+				return [...before, authorAndDateContent, ...after].join("\n");
+			} else {
+				const modifiedBefore = before.slice(0, noteIndex);
+				const modifiedBeforeAfter = before.slice(noteIndex);
+				return [
+					...modifiedBefore,
+					authorAndDateContent,
+					...modifiedBeforeAfter,
+					...after,
+				].join("\n");
+			}
 		} else {
 			// 如果没有找到 '---'，则直接在内容最前面插入
 			// 根据最小化模式决定模板组合顺序
