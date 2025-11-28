@@ -2055,7 +2055,7 @@ export class SlidesMaker {
 				}
 
 				if (h3s.length > 0) {
-					resultLines.push(...h3s);
+					resultLines.push("::: chapterTOC", ...h3s, ":::");
 				}
 			} else if (/^###\s+/.test(line) && !/%%[@\?]%%/g.test(line)) {
 				h3TitleIdx++;
