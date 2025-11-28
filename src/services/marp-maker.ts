@@ -1038,7 +1038,12 @@ export class MarpSlidesMaker {
 			(content) =>
 				minimizeMode
 					? content
-					: this._addTocSlide(content, tocContent, design),
+					: this._addTocSlide(
+							content,
+							tocContent,
+							design,
+							activeFile
+					  ),
 
 			(content) => content.replace(/%%@%%/g, ""),
 
@@ -1830,7 +1835,8 @@ export class MarpSlidesMaker {
 	private _addTocSlide(
 		content: string,
 		tocContent: string,
-		design: string
+		design: string,
+		activeFile: TFile
 	): string {
 		// 优化: 使用模板字符串拼接,提高可读性和维护性
 		const tocEmbed = [
@@ -1849,17 +1855,20 @@ export class MarpSlidesMaker {
 		].join("\n");
 		const contentLines = content.split("\n");
 
-		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const slideTOCPageNumber = fileCache?.frontmatter?.slideTOCPageNumber;
+
+		const tocPageNumber = !isNaN(slideTOCPageNumber)
+			? slideTOCPageNumber
+			: this.settings.slidesRupDefaultTOCPageNumber;
 
 		let tocIndex = this._findSeparatorIndex(
 			contentLines,
-			tocPageNumber < 2 ? 1 : tocPageNumber - 1
+			tocPageNumber < 2 ? 0 : tocPageNumber - 1
 		);
 
 		if (tocIndex !== -1) {
 			contentLines.splice(tocIndex, 0, tocEmbed);
-		} else {
-			contentLines.unshift(tocEmbed);
 		}
 
 		return contentLines.join("\n");
