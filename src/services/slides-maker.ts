@@ -1201,7 +1201,7 @@ export class SlidesMaker {
 			(content) =>
 				minimizeMode || this.settings.slidesRupDefaultTOCPageNumber < 2
 					? content
-					: this._addTocSlide(content, tocName, design),
+					: this._addTocSlide(content, tocName, design, activeFile),
 
 			(content) => content.replace(/%%@%%/g, ""),
 
@@ -1331,8 +1331,6 @@ export class SlidesMaker {
 
 	private _convertTagsToHTML(content: string): string {
 		return content.replace(SlidesMaker.TAGS_REGEX, (match, p1) => {
-			console.dir(match);
-			console.dir(p1);
 			return `<span class="sr-tag">${p1.trim()}</span>`;
 		});
 	}
@@ -2130,7 +2128,8 @@ export class SlidesMaker {
 	private _addTocSlide(
 		content: string,
 		tocName: string,
-		design: string
+		design: string,
+		activeFile: TFile
 	): string {
 		const tocEmbed = `---\n\n<!-- slide id="toc" template="[[${t(
 			"TOC"
@@ -2140,17 +2139,20 @@ export class SlidesMaker {
 		}" -->\n\n## ${t("TOC")}\n\n![[${tocName}]]\n`;
 		const contentLines = content.split("\n");
 
-		const tocPageNumber = this.settings.slidesRupDefaultTOCPageNumber;
+		const fileCache = this.app.metadataCache.getFileCache(activeFile);
+		const slideTOCPageNumber = fileCache?.frontmatter?.slideTOCPageNumber;
+
+		const tocPageNumber = !isNaN(slideTOCPageNumber)
+			? slideTOCPageNumber
+			: this.settings.slidesRupDefaultTOCPageNumber;
 
 		let tocIndex = this._findSeparatorIndex(
 			contentLines,
-			tocPageNumber < 2 ? 1 : tocPageNumber - 1
+			tocPageNumber < 2 ? 0 : tocPageNumber - 1
 		);
 
 		if (tocIndex !== -1) {
 			contentLines.splice(tocIndex, 0, tocEmbed);
-		} else {
-			contentLines.unshift(tocEmbed);
 		}
 
 		return contentLines.join("\n");
@@ -2172,7 +2174,7 @@ export class SlidesMaker {
 		for (let i = 0; i < contentLines.length; i++) {
 			if (
 				contentLines[i].trim() === "---" ||
-				contentLines[i].trim() === "****"
+				contentLines[i].trim() === "***"
 			) {
 				currentIndex++;
 				if (currentIndex === targetIndex) {
@@ -2180,6 +2182,7 @@ export class SlidesMaker {
 				}
 			}
 		}
+
 		return -1;
 	}
 
@@ -2243,7 +2246,6 @@ export class SlidesMaker {
 		date: string,
 		minimizeMode: boolean = false
 	): string {
-		console.dir(content);
 		const authorTemplate = `::: author\n${author}\n:::\n`;
 		const dateTemplate = `::: date\n${date}\n:::\n`;
 
