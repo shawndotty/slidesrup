@@ -780,9 +780,8 @@ export class SlidesMaker {
 			if (currentLevel === 6) {
 				// H6 转换为粗体文本
 				const h7 = headingMatch[2].replace(/%%.+%%/g, "");
-				lines[
-					i
-				] = `<h6 id="${h7.toLowerCase()}" class="sr-h7">${h7}</h6>`;
+				// lines[i] = `<h6 id="${h7.toLowerCase()}" class="sr-h7">${h7}</h6>`;
+				lines[i] = `___${h7}___`;
 			} else {
 				// 其他标题级别 +1，最大不超过 H6
 				const newLevel = Math.min(currentLevel + 1, 6);
