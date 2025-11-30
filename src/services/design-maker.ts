@@ -181,8 +181,9 @@ export class DesignMaker {
 					const content = await this.app.vault.read(file);
 					// 对于 Markdown 文件，替换内容中的设计名称和图片路径
 					let newContent = content
-						.split(designName)
-						.join(newDesignName);
+						.split(`-${designName}`)
+						.join(`-${newDesignName}`);
+					// 这样处理还是会有隐患，先如此处理，以后再考虑更优化的方案
 
 					// 更新图片引用路径
 					newContent = newContent.replace(
