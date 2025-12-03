@@ -491,4 +491,8 @@ export default {
 	"Help documents updated in the past month":
 		"Help documents updated in the past month",
 	"All help documents": "All help documents",
+	"Update User Permissions": "Update User Permissions",
+	"Update User Permissions Success": "Update User Permissions Success",
+	"Update User Permissions Failed": "Update User Permissions Failed",
+	"Updating User Permissions ...": "Updating User Permissions ...",
 };

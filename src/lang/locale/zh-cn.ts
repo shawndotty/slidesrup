@@ -433,4 +433,8 @@ export default {
 	"Help documents updated in the past two weeks": "最近两周更新的帮助文档",
 	"Help documents updated in the past month": "最近一个月更新的帮助文档",
 	"All help documents": "所有帮助文档",
+	"Update User Permissions": "更新用户权限",
+	"Update User Permissions Success": "更新用户权限成功",
+	"Update User Permissions Failed": "更新用户权限失败",
+	"Updating User Permissions ...": "正在更新用户权限 ...",
 };

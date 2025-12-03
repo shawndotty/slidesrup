@@ -21,7 +21,8 @@ export function createServices(
 		app,
 		settings,
 		templaterService,
-		vscodeService
+		vscodeService,
+		apiService
 	);
 
 	return {

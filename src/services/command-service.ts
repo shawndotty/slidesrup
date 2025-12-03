@@ -1,7 +1,7 @@
 import { App, Notice, Command } from "obsidian";
 import { t } from "../lang/helpers";
 import { SlidesRupSettings, NocoDBSettings } from "../types";
-import { buildFieldNames } from "../utils";
+import { buildFieldNames, isValidEmail } from "../utils";
 import { SlidesMaker } from "./slides-maker";
 import { MarpSlidesMaker } from "./marp-maker";
 import { DesignMaker } from "./design-maker";
@@ -17,6 +17,7 @@ import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
 } from "../constants";
+import { ApiService } from "./api-services";
 
 export class CommandService {
 	private slidesMaker: SlidesMaker;
@@ -37,7 +38,8 @@ export class CommandService {
 		private app: App,
 		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService,
-		private vscodeService: VSCodeService
+		private vscodeService: VSCodeService,
+		private apiService: ApiService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
 		this.designMaker = new DesignMaker(this.app, this.settings);
@@ -425,5 +427,35 @@ export class CommandService {
 				await this.noteMaker.createNoteWithoutComments();
 			},
 		});
+
+		if (
+			this.settings.userChecked &&
+			isValidEmail(this.settings.userEmail)
+		) {
+			this.addCommand({
+				id: "update-user-permissions",
+				name: t("Update User Permissions"),
+				callback: async () => {
+					new Notice(t("Updating User Permissions ..."));
+					await this.executeWithReload(async () => {
+						await this.apiService.getUpdateIDs();
+					});
+					if (this.settings.userChecked) {
+						new Notice(t("Update User Permissions Success"));
+					} else {
+						new Notice(t("Update User Permissions Failed"));
+					}
+				},
+			});
+		}
+	}
+
+	private async executeWithReload(
+		callback: () => Promise<void>
+	): Promise<void> {
+		await callback();
+		setTimeout(() => {
+			this.app.commands.executeCommandById("app:reload");
+		}, 1000);
 	}
 }
