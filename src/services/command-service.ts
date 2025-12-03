@@ -36,6 +36,7 @@ export class CommandService {
 			callback: (evt: MouseEvent) => void
 		) => void,
 		private app: App,
+		private plugin: any,
 		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService,
 		private vscodeService: VSCodeService,
@@ -439,6 +440,7 @@ export class CommandService {
 					new Notice(t("Updating User Permissions ..."));
 					await this.executeWithReload(async () => {
 						await this.apiService.getUpdateIDs();
+						await this.plugin.saveSettings();
 					});
 					if (this.settings.userChecked) {
 						new Notice(t("Update User Permissions Success"));

@@ -19,6 +19,7 @@ export function createServices(
 		plugin.addCommand.bind(plugin),
 		plugin.addRibbonIcon.bind(plugin),
 		app,
+		plugin,
 		settings,
 		templaterService,
 		vscodeService,
