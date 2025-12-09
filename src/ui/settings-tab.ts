@@ -346,9 +346,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		const onColorChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"color"
-				);
+				if (this.plugin.settings.enableSlidesRupColorUserSetting) {
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
+						"color"
+					);
+				}
 			},
 			200,
 			true
@@ -544,9 +546,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		const onFontFamilyChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"fontFamily"
-				);
+				if (this.plugin.settings.enableSlidesRupFontFamilyUserSetting) {
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
+						"fontFamily"
+					);
+				}
 			},
 			200,
 			true
@@ -555,9 +559,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		const onFontSizeChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
-				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"fontSize"
-				);
+				if (this.plugin.settings.enableSlidesRupFontSizeUserSetting) {
+					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
+						"fontSize"
+					);
+				}
 			},
 			200,
 			true
