@@ -155,6 +155,9 @@ ${prefix} h6 {
 			slidesRupStrongColor: string;
 			slidesRupEmColor: string;
 			slidesRupLinkColor: string;
+			slidesRupTaglineColor: string;
+			slidesRupSloganColor: string;
+			slidesRupNavColor: string;
 		},
 		prefix: string = ".reveal"
 	): string {
@@ -194,6 +197,9 @@ ${prefix} a:hover { opacity: 0.8; }`;
 		slidesRupStrongColor: string;
 		slidesRupEmColor: string;
 		slidesRupLinkColor: string;
+		slidesRupTaglineColor: string;
+		slidesRupSloganColor: string;
+		slidesRupNavColor: string;
 	}): string {
 		// 创建颜色变量映射
 		const colorMap = {
@@ -209,6 +215,9 @@ ${prefix} a:hover { opacity: 0.8; }`;
 			strong: colors.slidesRupStrongColor,
 			em: colors.slidesRupEmColor,
 			link: colors.slidesRupLinkColor,
+			tagline: colors.slidesRupTaglineColor,
+			slogan: colors.slidesRupSloganColor,
+			nav: colors.slidesRupNavColor,
 		};
 
 		// 使用数组方法生成CSS变量声明
@@ -239,6 +248,9 @@ ${prefix} a:hover { opacity: 0.8; }`;
 			slidesRupH4Font?: string;
 			slidesRupH5Font?: string;
 			slidesRupH6Font?: string;
+			slidesRupTaglineFont?: string;
+			slidesRupSloganFont?: string;
+			slidesRupNavFont?: string;
 		},
 		prefix: string = ".reveal"
 	): string {
@@ -251,6 +263,9 @@ ${prefix} a:hover { opacity: 0.8; }`;
 			slidesRupH4Font,
 			slidesRupH5Font,
 			slidesRupH6Font,
+			slidesRupTaglineFont,
+			slidesRupSloganFont,
+			slidesRupNavFont,
 		} = fonts;
 
 		const headingFont = this.getFontFamily(slidesRupHeadingFont);
@@ -273,6 +288,15 @@ ${prefix} a:hover { opacity: 0.8; }`;
 		const h6Font = this.getFontFamily(
 			this.getHeadingFontOption(slidesRupH6Font, slidesRupHeadingFont)
 		);
+		const taglineFont = this.getFontFamily(
+			slidesRupTaglineFont || slidesRupMainFont
+		);
+		const sloganFont = this.getFontFamily(
+			slidesRupSloganFont || slidesRupMainFont
+		);
+		const navFont = this.getFontFamily(
+			slidesRupNavFont || slidesRupMainFont
+		);
 
 		return `:root {
     /* 字体族变量 */
@@ -284,6 +308,9 @@ ${prefix} a:hover { opacity: 0.8; }`;
     --r-h4-font: ${h4Font};
     --r-h5-font: ${h5Font};
     --r-h6-font: ${h6Font};
+    --r-tagline-font: ${taglineFont};
+    --r-slogan-font: ${sloganFont};
+    --r-nav-font: ${navFont};
 }
 
 /* 标题字体应用 */
@@ -321,6 +348,9 @@ ${prefix} { font-family: var(--r-main-font); }`;
 			slidesRupH4Size: number;
 			slidesRupH5Size: number;
 			slidesRupH6Size: number;
+			slidesRupTaglineSize: number;
+			slidesRupSloganSize: number;
+			slidesRupNavSize: number;
 		},
 		prefix: string = ".reveal"
 	): string {
@@ -332,6 +362,9 @@ ${prefix} { font-family: var(--r-main-font); }`;
 			slidesRupH4Size,
 			slidesRupH5Size,
 			slidesRupH6Size,
+			slidesRupTaglineSize,
+			slidesRupSloganSize,
+			slidesRupNavSize,
 		} = sizes;
 
 		return `:root {
@@ -343,6 +376,9 @@ ${prefix} { font-family: var(--r-main-font); }`;
     --r-heading4-size: ${slidesRupH4Size}px;
     --r-heading5-size: ${slidesRupH5Size}px;
     --r-heading6-size: ${slidesRupH6Size}px;
+	--r-tagline-size: ${slidesRupTaglineSize}px;
+	--r-slogan-size: ${slidesRupSloganSize}px;
+	--r-nav-size: ${slidesRupNavSize}px;
 }
 
 /* 标题字体大小应用 */
@@ -548,6 +584,9 @@ ${
 					slidesRupStrongColor: this.settings.slidesRupStrongColor,
 					slidesRupEmColor: this.settings.slidesRupEmColor,
 					slidesRupLinkColor: this.settings.slidesRupLinkColor,
+					slidesRupTaglineColor: this.settings.slidesRupTaglineColor,
+					slidesRupSloganColor: this.settings.slidesRupSloganColor,
+					slidesRupNavColor: this.settings.slidesRupNavColor,
 				};
 				this.styleSections.color = this.generateColorSection(colors);
 				this.styleSections.colorMarp = this.generateColorSection(
@@ -565,6 +604,9 @@ ${
 					slidesRupH4Font: this.settings.slidesRupH4Font,
 					slidesRupH5Font: this.settings.slidesRupH5Font,
 					slidesRupH6Font: this.settings.slidesRupH6Font,
+					slidesRupTaglineFont: this.settings.slidesRupTaglineFont,
+					slidesRupSloganFont: this.settings.slidesRupSloganFont,
+					slidesRupNavFont: this.settings.slidesRupNavFont,
 				};
 				this.styleSections.fontFamily =
 					this.generateFontFamilySection(fonts);
@@ -580,6 +622,9 @@ ${
 					slidesRupH4Size: this.settings.slidesRupH4Size,
 					slidesRupH5Size: this.settings.slidesRupH5Size,
 					slidesRupH6Size: this.settings.slidesRupH6Size,
+					slidesRupTaglineSize: this.settings.slidesRupTaglineSize,
+					slidesRupSloganSize: this.settings.slidesRupSloganSize,
+					slidesRupNavSize: this.settings.slidesRupNavSize,
 				};
 				this.styleSections.fontSize =
 					this.generateFontSizeSection(sizes);

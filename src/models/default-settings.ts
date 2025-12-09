@@ -94,6 +94,21 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	slidesRupH4Color: "#444444", // 稍浅黑灰
 	slidesRupH5Color: "#666666", // 中灰
 	slidesRupH6Color: "#888888", // 浅灰
+
+	// Header Settings
+
+	slidesRupTaglineFont: "sysKaiti",
+	slidesRupTaglineSize: 36,
+	slidesRupTaglineColor: "#111111",
+
+	slidesRupSloganFont: "sysKaiti",
+	slidesRupSloganSize: 36,
+	slidesRupSloganColor: "#111111",
+
+	slidesRupNavFont: "sysKaiti",
+	slidesRupNavSize: 36,
+	slidesRupNavColor: "#111111",
+
 	// 正文颜色默认值
 	slidesRupBodyColor: "#111111",
 	slidesRupParagraphColor: "#111111",

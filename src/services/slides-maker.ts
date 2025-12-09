@@ -222,7 +222,7 @@ export class SlidesMaker {
 
 	private _buildLogoOrTagline(value: string) {
 		if (!value) {
-			return "[SlidesRup](#home)";
+			return `<a href="#home" class="logo tagline">SlidesRup</a>`;
 		}
 
 		const isOnlineImage = value.startsWith("http");
@@ -257,7 +257,7 @@ export class SlidesMaker {
 			return `<a href="#home" class="logo">!${value}</a>`;
 		}
 
-		return `[${value}](#home)`;
+		return `<a href="#home" class="logo tagline">${value}</a>`;
 	}
 
 	async getDefaultTemplate(

@@ -99,6 +99,21 @@ export interface SlidesRupSettings {
 	slidesRupH4Color: string;
 	slidesRupH5Color: string;
 	slidesRupH6Color: string;
+
+	// Header Settings
+
+	slidesRupTaglineFont: string;
+	slidesRupTaglineSize: number;
+	slidesRupTaglineColor: string;
+
+	slidesRupSloganFont: string;
+	slidesRupSloganSize: number;
+	slidesRupSloganColor: string;
+
+	slidesRupNavFont: string;
+	slidesRupNavSize: number;
+	slidesRupNavColor: string;
+
 	// 正文颜色
 	slidesRupBodyColor: string;
 	slidesRupParagraphColor: string;

@@ -457,6 +457,36 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 		// 正文颜色设置
 		containerEl.createEl("h3", {
+			text: t("Header Colors"),
+			cls: "slides-rup-title",
+		});
+
+		this.createColorSetting(
+			containerEl,
+			"Tagline Color",
+			"Set the color for tagline text",
+			"slidesRupTaglineColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Slogan Color",
+			"Set the color for slogan text",
+			"slidesRupSloganColor",
+			onColorChange
+		);
+
+		this.createColorSetting(
+			containerEl,
+			"Nav Color",
+			"Set the color for navigation text",
+			"slidesRupNavColor",
+			onColorChange
+		);
+
+		// 正文颜色设置
+		containerEl.createEl("h3", {
 			text: t("Body Colors"),
 			cls: "slides-rup-title",
 		});
@@ -715,6 +745,34 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			onFontFamilyChange
 		);
 
+		// Tagline, Slogan, Nav 字体大小
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"Tagline Font",
+			"Set Tagline Font",
+			"slidesRupTaglineFont",
+			fontOptionsGrouped,
+			onFontFamilyChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"Slogan Font",
+			"Set Slogan Font",
+			"slidesRupSloganFont",
+			fontOptionsGrouped,
+			onFontFamilyChange
+		);
+
+		this.createGroupedDropdownSetting(
+			containerEl,
+			"Nav Font",
+			"Set Nav Font",
+			"slidesRupNavFont",
+			fontOptionsGrouped,
+			onFontFamilyChange
+		);
+
 		containerEl.createEl("h2", {
 			text: t("Font Size"),
 			cls: "slides-rup-title",
@@ -807,6 +865,36 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH6Size",
 			12,
 			36,
+			onFontSizeChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"Tagline Size",
+			"Adjust the font size of Tagline",
+			"slidesRupTaglineSize",
+			12,
+			54,
+			onFontSizeChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"Slogan Size",
+			"Adjust the font size of Slogan",
+			"slidesRupSloganSize",
+			12,
+			54,
+			onFontSizeChange
+		);
+
+		this.createSizeSliderSetting(
+			containerEl,
+			"Nav Size",
+			"Adjust the font size of Nav",
+			"slidesRupNavSize",
+			12,
+			54,
 			onFontSizeChange
 		);
 
@@ -1598,7 +1686,10 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			| "slidesRupH4Size"
 			| "slidesRupH5Size"
 			| "slidesRupH6Size"
-			| "slidesRupMainFontSize",
+			| "slidesRupMainFontSize"
+			| "slidesRupTaglineSize"
+			| "slidesRupSloganSize"
+			| "slidesRupNavSize",
 		min: number,
 		max: number,
 		onChangeCallback: (value: number) => void
