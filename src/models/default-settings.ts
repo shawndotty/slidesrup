@@ -99,15 +99,15 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 
 	slidesRupTaglineFont: "sysKaiti",
 	slidesRupTaglineSize: 36,
-	slidesRupTaglineColor: "#111111",
+	slidesRupTaglineColor: "#ffffff",
 
 	slidesRupSloganFont: "sysKaiti",
 	slidesRupSloganSize: 36,
-	slidesRupSloganColor: "#111111",
+	slidesRupSloganColor: "#ffffff",
 
 	slidesRupNavFont: "sysKaiti",
 	slidesRupNavSize: 36,
-	slidesRupNavColor: "#111111",
+	slidesRupNavColor: "#ffffff",
 
 	// 正文颜色默认值
 	slidesRupBodyColor: "#111111",

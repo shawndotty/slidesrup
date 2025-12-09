@@ -167,12 +167,12 @@ ${prefix} h6 {
 ${colorVariables}
 
 /* Heading Colors */
-${prefix} h1 { color: var(--r-h1-color); }
-${prefix} h2 { color: var(--r-h2-color); }
-${prefix} h3 { color: var(--r-h3-color); }
-${prefix} h4 { color: var(--r-h4-color); }
-${prefix} h5 { color: var(--r-h5-color); }
-${prefix} h6 { color: var(--r-h6-color); }
+${prefix} h1, ${prefix} h1 a { color: var(--r-h1-color); }
+${prefix} h2, ${prefix} h2 a { color: var(--r-h2-color); }
+${prefix} h3, ${prefix} h3 a { color: var(--r-h3-color); }
+${prefix} h4, ${prefix} h4 a { color: var(--r-h4-color); }
+${prefix} h5, ${prefix} h5 a { color: var(--r-h5-color); }
+${prefix} h6, ${prefix} h6 a { color: var(--r-h6-color); }
 
 /* Other Colors */
 ${prefix} { color: var(--r-body-color); }
