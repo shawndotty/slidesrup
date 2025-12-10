@@ -517,4 +517,6 @@ export default {
 	"Update User Permissions Success": "Update User Permissions Success",
 	"Update User Permissions Failed": "Update User Permissions Failed",
 	"Updating User Permissions ...": "Updating User Permissions ...",
+	"Slides Saving Location": "Slides Saving Location",
+	"Slides Basic Settings": "Slides Basic Settings",
 };

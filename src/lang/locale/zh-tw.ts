@@ -459,4 +459,6 @@ export default {
 	"Update User Permissions Success": "更新用戶權限成功",
 	"Update User Permissions Failed": "更新用戶權限失敗",
 	"Updating User Permissions ...": "正在更新用戶權限 ...",
+	"Slides Saving Location": "幻燈片儲存位置",
+	"Slides Basic Settings": "幻燈片基本設定",
 };

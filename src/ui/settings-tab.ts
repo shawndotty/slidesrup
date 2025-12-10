@@ -892,6 +892,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
+		containerEl.createEl("h3", {
+			text: t("Slides Saving Location"),
+			cls: "slides-rup-title",
+		});
+
 		const toggleDefaultLocation = (value: string) => {
 			defaultLocationSetting.settingEl.style.display =
 				value === "assigned" ? "" : "none";
@@ -930,15 +935,21 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
-		this.createToggleSetting(containerEl, {
-			name: "Add Sub Pages When Add Chapter",
-			desc: "Add Sub Pages When Add Chapter",
-			value: this.plugin.settings.addChapterWithSubPages,
-			onChange: async (value) => {
-				this.plugin.settings.addChapterWithSubPages = value;
-				await this.plugin.saveSettings();
-			},
+		// this.createToggleSetting(containerEl, {
+		// 	name: "Add Sub Pages When Add Chapter",
+		// 	desc: "Add Sub Pages When Add Chapter",
+		// 	value: this.plugin.settings.addChapterWithSubPages,
+		// 	onChange: async (value) => {
+		// 		this.plugin.settings.addChapterWithSubPages = value;
+		// 		await this.plugin.saveSettings();
+		// 	},
+		// });
+
+		containerEl.createEl("h3", {
+			text: t("Slides Basic Settings"),
+			cls: "slides-rup-title",
 		});
+
 		this.createDropdownSetting(
 			containerEl,
 			"Default Slide Size",
