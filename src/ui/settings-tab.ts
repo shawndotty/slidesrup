@@ -46,6 +46,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		const tabConfigs = [
 			{
 				title: "Main Setting",
+				init: true,
 				renderMethod: (content: HTMLElement) =>
 					this.renderMainSettings(content),
 			},
@@ -78,7 +79,20 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 		// 使用循环创建标签页
 		tabConfigs.forEach((config) => {
-			tabbedSettings.addTab(t(config.title as any), config.renderMethod);
+			if (config.init) {
+				tabbedSettings.addTab(
+					t(config.title as any),
+					config.renderMethod
+				);
+			} else if (
+				this.plugin.settings.userChecked &&
+				this.plugin.settings.updateAPIKeyIsValid
+			) {
+				tabbedSettings.addTab(
+					t(config.title as any),
+					config.renderMethod
+				);
+			}
 		});
 	}
 
@@ -145,54 +159,6 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Enter the full path to the SlidesRup Framework folder",
 			"slidesRupFrameworkFolder"
 		);
-
-		const toggleDefaultLocation = (value: string) => {
-			defaultLocationSetting.settingEl.style.display =
-				value === "assigned" ? "" : "none";
-		};
-
-		this.createDropdownSetting(
-			containerEl,
-			"New Slide Location Option",
-			"Please select the default new slide location option",
-			"newSlideLocationOption",
-			{
-				current: "Current Folder",
-				decideByUser: "Decide At Creation",
-				assigned: "User Assigned Folder",
-			},
-			toggleDefaultLocation
-		);
-
-		const defaultLocationSetting = this.createFolderSetting(
-			containerEl,
-			"Default New Slide Location",
-			"Please enter the path to the default new slide location",
-			"Enter the full path to the default new slide location",
-			"assignedNewSlideLocation"
-		);
-
-		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);
-
-		this.createToggleSetting(containerEl, {
-			name: "Customize Slide Folder Name",
-			desc: "Use Customize Slide Folder Name",
-			value: this.plugin.settings.customizeSlideFolderName,
-			onChange: async (value) => {
-				this.plugin.settings.customizeSlideFolderName = value;
-				await this.plugin.saveSettings();
-			},
-		});
-
-		this.createToggleSetting(containerEl, {
-			name: "Add Sub Pages When Add Chapter",
-			desc: "Add Sub Pages When Add Chapter",
-			value: this.plugin.settings.addChapterWithSubPages,
-			onChange: async (value) => {
-				this.plugin.settings.addChapterWithSubPages = value;
-				await this.plugin.saveSettings();
-			},
-		});
 	}
 
 	private renderUserSettings(containerEl: HTMLElement): void {
@@ -926,6 +892,53 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	}
 
 	private renderSlideSettings(containerEl: HTMLElement): void {
+		const toggleDefaultLocation = (value: string) => {
+			defaultLocationSetting.settingEl.style.display =
+				value === "assigned" ? "" : "none";
+		};
+
+		this.createDropdownSetting(
+			containerEl,
+			"New Slide Location Option",
+			"Please select the default new slide location option",
+			"newSlideLocationOption",
+			{
+				current: "Current Folder",
+				decideByUser: "Decide At Creation",
+				assigned: "User Assigned Folder",
+			},
+			toggleDefaultLocation
+		);
+
+		const defaultLocationSetting = this.createFolderSetting(
+			containerEl,
+			"Default New Slide Location",
+			"Please enter the path to the default new slide location",
+			"Enter the full path to the default new slide location",
+			"assignedNewSlideLocation"
+		);
+
+		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);
+
+		this.createToggleSetting(containerEl, {
+			name: "Customize Slide Folder Name",
+			desc: "Use Customize Slide Folder Name",
+			value: this.plugin.settings.customizeSlideFolderName,
+			onChange: async (value) => {
+				this.plugin.settings.customizeSlideFolderName = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Add Sub Pages When Add Chapter",
+			desc: "Add Sub Pages When Add Chapter",
+			value: this.plugin.settings.addChapterWithSubPages,
+			onChange: async (value) => {
+				this.plugin.settings.addChapterWithSubPages = value;
+				await this.plugin.saveSettings();
+			},
+		});
 		this.createDropdownSetting(
 			containerEl,
 			"Default Slide Size",
