@@ -26,6 +26,7 @@ function _get_current_lang(): string {
 		const slidesRupRunningLanguage =
 			app.plugins.plugins["slides-rup"]?.settings
 				?.slidesRupRunningLanguage ?? "ob";
+		console.log("slidesRupRunningLanguage: ", slidesRupRunningLanguage);
 		return slidesRupRunningLanguage === "ob"
 			? moment.locale()
 			: slidesRupRunningLanguage;
