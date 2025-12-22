@@ -1685,12 +1685,13 @@ export class SlidesMaker {
 		const processedPages = pages.map((page, pageIndex) => {
 			let fragmentIndex = 0;
 			// 检查页面是否包含4-6级标题或普通段落
-			const hasH4ToH6 = /^#{4,6}\s+[^\n]+$/m.test(page);
+			const hasH4ToH6 = /^#{4,6}\s+[^\n]+$/gm.test(page);
 			// 检查是否包含普通段落文本
 			// 检测是否包含纯文本段落内容(不以特殊字符开头的行)
-			const hasNormalParagraph = /^[^#>\+\*\-\_<\d\s`|![\]{}].+$/m.test(
-				page
-			);
+			const hasNormalParagraph =
+				/^(?!(?:#+\s|[\s]*[*+-]\s|[\s]*\d+\.\s|>|\!\[\[|{|[`]{3,}|\|))[^\s].+$/gm.test(
+					page
+				);
 			// 如果页面不包含需要处理的内容,直接返回
 			if (!hasH4ToH6 && !hasNormalParagraph) {
 				return page;
@@ -1709,7 +1710,7 @@ export class SlidesMaker {
 				//   - \d+\.\s - 有序列表
 				// ([^\n][^\n]*[^\n]) - 匹配非空行的内容
 				// (?=\n|$) - 正向预查，确保后面是换行符或文件结尾
-				/(^|\n)(?!\s*[-*>]|#{1,3}\s|`{3,}|>\s*| {4,})([^\n][^\n]*[^\n])(?=\n|$)/g,
+				/(^|\n)(?!\s*[-*>]\s|#{1,3}\s|`{3,}|>\s*| {4,})([^\n][^\n]*[^\n])(?=\n|$)/g,
 				(match, p1, p2) => {
 					// 跳过特殊内容
 					if (
