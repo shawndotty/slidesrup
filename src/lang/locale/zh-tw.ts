@@ -1,5 +1,8 @@
 // Extract English https://regex101.com/r/e7htWd/1
 export default {
+	LicensePurchaseInfo:
+		"您需要購買許可證才能使用 SlidesRup 的所有功能。請聯繫作者獲取更多信息。",
+	AuthorWechatID: "作者微信ID: johnnylearns",
 	"You must provide an API Key to run this command":
 		"運行此命令必須提供 API 密鑰",
 	"Get The Latest Version Of Sync Scripts": "獲取同步腳本的最新版本",

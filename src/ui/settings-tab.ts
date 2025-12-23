@@ -96,7 +96,22 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		});
 	}
 
+	private renderLicensePurchaseInfo(containerEl: HTMLElement) {
+		const licenseContainer = containerEl.createDiv({
+			cls: "slidesrup-license-container",
+		});
+		licenseContainer.createEl("p", {
+			text: t("LicensePurchaseInfo"),
+		});
+		licenseContainer.createEl("p", {
+			text: t("AuthorWechatID"),
+		});
+	}
+
 	private renderMainSettings(containerEl: HTMLElement): void {
+		if (!this._checkUserType()) {
+			this.renderLicensePurchaseInfo(containerEl);
+		}
 		this.createDropdownSetting(
 			containerEl,
 			"Presentation Plugin",
@@ -1856,5 +1871,16 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				])
 			),
 		};
+	}
+
+	private _checkUserType(): boolean {
+		const { userChecked, updateAPIKeyIsValid, userEmail, updateAPIKey } =
+			this.plugin.settings;
+		return Boolean(
+			userChecked &&
+				updateAPIKeyIsValid &&
+				userEmail &&
+				updateAPIKey?.includes("patquQB1Cd93hSAlC")
+		);
 	}
 }

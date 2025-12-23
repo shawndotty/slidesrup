@@ -57,17 +57,14 @@ export class CommandService {
 	}
 
 	private _checkUserType(): boolean {
-		if (
-			!this.settings.userChecked ||
-			!this.settings.updateAPIKeyIsValid ||
-			!this.settings.userEmail ||
-			!this.settings.updateAPIKey ||
-			!this.settings.updateAPIKey.includes("patquQB1Cd93hSAlC")
-		) {
-			new Notice(t("This Action is only available for Paid Users"));
-			return false;
-		}
-		return true;
+		const { userChecked, updateAPIKeyIsValid, userEmail, updateAPIKey } =
+			this.settings;
+		return Boolean(
+			userChecked &&
+				updateAPIKeyIsValid &&
+				userEmail &&
+				updateAPIKey?.includes("patquQB1Cd93hSAlC")
+		);
 	}
 
 	// 优化：抽取公共逻辑，减少重复代码
@@ -139,6 +136,9 @@ export class CommandService {
 	}
 
 	registerCommands(): void {
+		if (!this._checkUserType()) {
+			return;
+		}
 		const createNocoDBCommand = (
 			id: string,
 			name: string,

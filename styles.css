@@ -320,3 +320,12 @@ h3.slides-rup-title {
 .slides-rup-yaml-editor {
 	margin-bottom: 16px;
 }
+
+
+.ioto-license-container {
+    background-color: var(--background-secondary);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 20px 0;
+}
