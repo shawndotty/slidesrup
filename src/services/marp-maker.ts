@@ -1169,8 +1169,6 @@ export class MarpSlidesMaker {
 
 	private _convertTagsToHTML(content: string): string {
 		return content.replace(MarpSlidesMaker.TAGS_REGEX, (match, p1) => {
-			console.dir(match);
-			console.dir(p1);
 			return `<span class="sr-tag">${p1.trim()}</span>`;
 		});
 	}

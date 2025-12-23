@@ -1843,7 +1843,6 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			const value = target.value;
 			(this.plugin.settings[settingKey] as any) = value;
 			await this.plugin.saveSettings();
-			console.dir(this.plugin.settings);
 			onChangeCallback(value);
 		});
 
