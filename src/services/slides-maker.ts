@@ -1793,7 +1793,9 @@ export class SlidesMaker {
 				const nextLine = i + 1 < lines.length ? lines[i + 1] : "";
 				const hasCommentInNextLine = this._isCommentLine(nextLine);
 				let template = "";
-				let classValue = "";
+				let classValue =
+					this.userSpecificListClass.BlankPageListClass ||
+					this.settings.slidesRupDefaultBlankListClass;
 				let background = "";
 				if (hasCommentInNextLine) {
 					template = this._modidySlideTemplate(nextLine, "");
