@@ -221,7 +221,7 @@ export function getUserDesigns(app: App, slidesRupPath: string) {
 	) {
 		const subFolders = slidesRupUserDesignsFolder.children
 			.filter((file) => file instanceof TFolder)
-			.map((folder) => folder.name.split("-").last() as string);
+			.map((folder) => folder.name.split("-").slice(1).join("-"));
 		userDesigns = subFolders;
 	}
 
