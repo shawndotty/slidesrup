@@ -1,4 +1,4 @@
-# SlidesRup
+# SlidesRup 演示
 
 一个强大的 Obsidian 演示助手插件，提供丰富的演示模板和自定义功能。
 
