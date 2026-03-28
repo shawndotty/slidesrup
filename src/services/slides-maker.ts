@@ -52,7 +52,7 @@ export class SlidesMaker {
 		Object.entries(TEMPLATE_PLACE_HOLDERS).map(([key, value]) => [
 			key,
 			new RegExp(`{{${value}}}`, "g"),
-		])
+		]),
 	);
 	// 优化：定义常用的正则表达式常量，避免重复定义
 	// 修改正则，使其匹配 %% 后面不是 ! 的注释块
@@ -78,14 +78,14 @@ export class SlidesMaker {
 		this.settings = settings;
 		this.userDesigns = getUserDesigns(
 			this.app,
-			this.settings.slidesRupFrameworkFolder
+			this.settings.slidesRupFrameworkFolder,
 		);
 		this.designOptions = getAllDesignsOptions(
 			this.userDesigns,
-			this.defaultDesigns
+			this.defaultDesigns,
 		);
 		this.imageProcessor = new ImageProcessor(
-			new ObsidianUtils(this.app, this.settings)
+			new ObsidianUtils(this.app, this.settings),
 		);
 		this.blockProcessor = new BlockProcessor();
 	}
@@ -105,7 +105,7 @@ export class SlidesMaker {
 				t("Please input slide folder name"),
 				"",
 				true,
-				newSlideContainer
+				newSlideContainer,
 			);
 
 			subFolder = await modal.openAndGetValue();
@@ -133,14 +133,14 @@ export class SlidesMaker {
 
 		const tocTemplate = await this.getFinalTemplate(
 			this.settings.userTocTemplate,
-			toc()
+			toc(),
 		);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			tocName,
 			tocTemplate,
-			false
+			false,
 		);
 
 		const baseLayoutTemplate = await this.getFinalTemplate(
@@ -150,14 +150,14 @@ export class SlidesMaker {
 				toc: tocName,
 				tagline: this.settings.tagline,
 				slogan: this.settings.slogan,
-			}
+			},
 		);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			baseLayoutName,
 			baseLayoutTemplate,
-			false
+			false,
 		);
 
 		const finalTemplate = await this.getFinalTemplate(
@@ -168,18 +168,18 @@ export class SlidesMaker {
 				toc: tocName,
 				presenter: this.settings.presenter,
 				presentDate: moment().format(
-					this.settings.dateFormat || "YYYY-MM-DD"
+					this.settings.dateFormat || "YYYY-MM-DD",
 				),
 				slidesRupPath: this.settings.slidesRupFrameworkFolder,
 				tagline: this.settings.tagline,
 				slogan: this.settings.slogan,
-			}
+			},
 		);
 
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
-			finalTemplate
+			finalTemplate,
 		);
 	}
 
@@ -192,7 +192,7 @@ export class SlidesMaker {
 		// 优化：链式调用，减少中间变量，提升可读性
 		const config = await this._addDesignSetToReplaceConfig(
 			template,
-			replaceConfig
+			replaceConfig,
 		).then(async (cfg) => {
 			return await this._fillTemplateConfig(template, cfg);
 		});
@@ -213,7 +213,7 @@ export class SlidesMaker {
 			if (regex) {
 				finalizedTemplate = finalizedTemplate.replace(
 					regex,
-					value ?? ""
+					value ?? "",
 				);
 			}
 		}
@@ -241,7 +241,7 @@ export class SlidesMaker {
 			".webp",
 		];
 		const isLocalImage = imageExtensions.some((ext) =>
-			value.toLowerCase().endsWith(ext)
+			value.toLowerCase().endsWith(ext),
 		);
 
 		if (isLocalImage) {
@@ -262,11 +262,11 @@ export class SlidesMaker {
 
 	async getDefaultTemplate(
 		template: string,
-		replaceConfig: ReplaceConfig
+		replaceConfig: ReplaceConfig,
 	): Promise<string> {
 		const config = await this._addDesignSetToReplaceConfig(
 			template,
-			replaceConfig
+			replaceConfig,
 		).then(async (cfg) => {
 			return await this._fillTemplateConfig(template, cfg);
 		});
@@ -279,7 +279,7 @@ export class SlidesMaker {
 		defaultTemplate: string | (() => string),
 		replaceConfig: ReplaceConfig = {},
 		contentPageType: number = ContentPageType.None,
-		design: string = ""
+		design: string = "",
 	) {
 		// 优化后的代码，减少重复、提升可读性
 		const getTemplate = async (tpl: string) =>
@@ -304,7 +304,7 @@ export class SlidesMaker {
 					? `-${t("WithoutNav")}`
 					: "";
 			const contentTemplateName = `${t(
-				"ContentPage"
+				"ContentPage",
 			)}${suffix}-${design}.md`;
 			const contentTemplateFile = this.app.vault
 				.getMarkdownFiles()
@@ -334,13 +334,13 @@ export class SlidesMaker {
 			? [
 					this.settings.userChapterAndPagesTemplate,
 					chapterAndPagesTemplate(),
-			  ]
+				]
 			: [this.settings.userChapterTemplate, slideChapterTemplate()];
 
 		const finalTemplate = await this.getFinalTemplate(
 			userTemplate,
 			defaultTemplate,
-			templateConfig
+			templateConfig,
 		);
 
 		await this.addSlidePartial(finalTemplate);
@@ -349,7 +349,7 @@ export class SlidesMaker {
 	async addSlidePage(): Promise<void> {
 		const finalTemplate = await this.getFinalTemplate(
 			this.settings.userPageTemplate,
-			slidePageTemplate()
+			slidePageTemplate(),
 		);
 		await this.addSlidePartial(finalTemplate);
 	}
@@ -358,7 +358,7 @@ export class SlidesMaker {
 		const editor = this.app.workspace.activeEditor?.editor;
 		if (!editor) {
 			new Notice(
-				t("No active editor. Please open a file to add a slide.")
+				t("No active editor. Please open a file to add a slide."),
 			);
 			return;
 		}
@@ -376,7 +376,7 @@ export class SlidesMaker {
 		const modal = new InputModal(
 			this.app,
 			t("Please input slide name"),
-			""
+			"",
 		);
 		return (await modal.openAndGetValue()) || "";
 	}
@@ -385,7 +385,7 @@ export class SlidesMaker {
 		const modal = new InputModal(
 			this.app,
 			t("Please input chapter index number"),
-			""
+			"",
 		);
 		return (await modal.openAndGetValue()) || "";
 	}
@@ -394,7 +394,7 @@ export class SlidesMaker {
 		const modal = new InputModal(
 			this.app,
 			t("Please input page index number"),
-			""
+			"",
 		);
 		return (await modal.openAndGetValue()) || "";
 	}
@@ -403,14 +403,14 @@ export class SlidesMaker {
 		const modal = new InputModal(
 			this.app,
 			t("Please input chapter name"),
-			""
+			"",
 		);
 		return (await modal.openAndGetValue()) || "";
 	}
 
 	private async _addDesignSetToReplaceConfig(
 		template: string,
-		replaceConfig: ReplaceConfig
+		replaceConfig: ReplaceConfig,
 	): Promise<ReplaceConfig> {
 		// 优化：减少变量声明，合并逻辑，提升可读性
 		const config: ReplaceConfig = { ...replaceConfig };
@@ -419,7 +419,7 @@ export class SlidesMaker {
 			let design = this._getSlideDesign();
 			if (!design || design === "none") {
 				const designOption = await this._selectSlideDesign(
-					this.designOptions
+					this.designOptions,
 				);
 				if (!designOption) {
 					new Notice(t("Please select a slide design"));
@@ -439,7 +439,7 @@ export class SlidesMaker {
 	 */
 	private async _fillTemplateConfig(
 		template: string,
-		cfg: ReplaceConfig
+		cfg: ReplaceConfig,
 	): Promise<ReplaceConfig> {
 		const newConfig = { ...cfg };
 
@@ -489,19 +489,19 @@ export class SlidesMaker {
 				const locationSuggester = new SlideLocationSuggester(
 					this.app,
 					currentFolder,
-					assignedNewSlideLocation
+					assignedNewSlideLocation,
 				);
 				const locationOption = await new Promise<SuggesterOption>(
 					(resolve) => {
 						locationSuggester.onChooseItem = (
 							item: SuggesterOption,
-							evt: MouseEvent | KeyboardEvent
+							evt: MouseEvent | KeyboardEvent,
 						) => {
 							resolve(item);
 							return item;
 						};
 						locationSuggester.open();
-					}
+					},
 				);
 				return locationOption ? locationOption.value : null;
 			}
@@ -513,7 +513,7 @@ export class SlidesMaker {
 	}
 
 	private async _selectSlideDesign(
-		options: SuggesterOption[]
+		options: SuggesterOption[],
 	): Promise<SuggesterOption | null> {
 		const suggester = new SlideDesignSuggester(this.app, options);
 		return new Promise((resolve) => {
@@ -588,7 +588,7 @@ export class SlidesMaker {
 			slideName: base,
 			baseLayoutName: `${base}-${t("BaseLayout")}`,
 			baseLayoutWithoutNavName: `${base}-${t("BaseLayout")}-${t(
-				"WithoutNav"
+				"WithoutNav",
 			)}`,
 			tocName: `${base}-${t("TOC")}`,
 			navName: `${base}-${t("Nav")}`,
@@ -603,7 +603,7 @@ export class SlidesMaker {
 		location: string,
 		fileName: string,
 		content: string,
-		open: boolean = true
+		open: boolean = true,
 	): Promise<void> {
 		const filePath = `${location}/${fileName}.md`;
 		let file = this.app.vault.getAbstractFileByPath(filePath);
@@ -635,10 +635,8 @@ export class SlidesMaker {
 			await this._extractContentFromFile(activeFile);
 
 		// Check if content already contains slide annotations
-		if (
-			content.includes("<!-- slide") ||
-			content.includes("_class: cover")
-		) {
+		const hasSlideAnnotationLine = /^\s*<!--\s*slide\b/m.test(content);
+		if (hasSlideAnnotationLine || content.includes("_class: cover")) {
 			new Notice(t("This file is already a slide presentation"));
 			return;
 		}
@@ -727,7 +725,7 @@ export class SlidesMaker {
 				navName,
 				design,
 				logoOrTagline,
-				slogan
+				slogan,
 			);
 
 			// 6. Create BaseLayoutWithoutNav file
@@ -737,7 +735,7 @@ export class SlidesMaker {
 				tocName,
 				design,
 				logoOrTagline,
-				slogan
+				slogan,
 			);
 		}
 
@@ -753,18 +751,18 @@ export class SlidesMaker {
 			slideMode,
 			slideSize,
 			slideSourceMode,
-			slideNavOn
+			slideNavOn,
 		);
 		await this._createAndOpenSlide(
 			newSlideLocation,
 			slideName,
-			processedContent
+			processedContent,
 		);
 	}
 
 	private _regularizeHeadingsForContent(
 		activeFile: TFile,
-		lines: string[]
+		lines: string[],
 	): string[] {
 		// 添加文件名作为 H1 标题
 		const activeFileCache = this.app.metadataCache.getFileCache(activeFile);
@@ -895,8 +893,8 @@ export class SlidesMaker {
 						t("Please input slide folder name"),
 						"",
 						true,
-						slideContainer
-				  ).openAndGetValue()
+						slideContainer,
+					).openAndGetValue()
 				: undefined;
 			if (!subFolder?.trim()) subFolder = t("Slide");
 			newSlideLocation =
@@ -992,7 +990,7 @@ export class SlidesMaker {
 	private async _createTocFile(
 		location: string,
 		tocName: string,
-		lines: string[]
+		lines: string[],
 	): Promise<void> {
 		// Extract H2 headings and create TOC content
 		const listMark = this.settings.slidesRupTurnOnFragmentsInTOCSlide
@@ -1022,7 +1020,7 @@ export class SlidesMaker {
 
 						return `${listMark} [${item.replace(
 							/%%.*?%%/g,
-							""
+							"",
 						)}](#c${idx + 1})`;
 					})
 					.join("\n")
@@ -1037,7 +1035,7 @@ export class SlidesMaker {
 	private async _createNavFile(
 		location: string,
 		navName: string,
-		lines: string[]
+		lines: string[],
 	): Promise<void> {
 		// Extract H2 headings and create TOC content
 
@@ -1079,7 +1077,7 @@ export class SlidesMaker {
 		navName: string,
 		design: string,
 		logoOrTagline: string,
-		slogan: string
+		slogan: string,
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
@@ -1092,13 +1090,13 @@ export class SlidesMaker {
 				slogan: slogan || this.settings.slogan,
 			},
 			ContentPageType.WithNav,
-			design
+			design,
 		);
 		await this._createAndOpenSlide(
 			location,
 			baseLayoutName,
 			baseLayoutTemplate,
-			false
+			false,
 		);
 	}
 
@@ -1111,7 +1109,7 @@ export class SlidesMaker {
 		tocName: string,
 		design: string,
 		logoOrTagline: string,
-		slogan: string
+		slogan: string,
 	): Promise<void> {
 		const baseLayoutTemplate = await this.getFinalTemplate(
 			this.settings.userBaseLayoutTemplate,
@@ -1122,13 +1120,13 @@ export class SlidesMaker {
 				slogan: slogan || this.settings.slogan,
 			},
 			ContentPageType.WithoutNav,
-			design
+			design,
 		);
 		await this._createAndOpenSlide(
 			location,
 			baseLayoutName,
 			baseLayoutTemplate,
-			false
+			false,
 		);
 	}
 	/**
@@ -1148,7 +1146,7 @@ export class SlidesMaker {
 			h: number;
 		},
 		slideSourceMode: number,
-		slideNavOn: boolean
+		slideNavOn: boolean,
 	): Promise<string> {
 		// 创建处理管道，每个步骤返回处理后的内容
 		type ProcessStep = (content: string) => string | Promise<string>;
@@ -1171,8 +1169,8 @@ export class SlidesMaker {
 					: this._addChapterSlideAnnotations(
 							content,
 							design,
-							simpleMode
-					  ),
+							simpleMode,
+						),
 
 			// 4. 添加 H3 链接到章节
 			(content) =>
@@ -1184,8 +1182,8 @@ export class SlidesMaker {
 					? content
 					: this._addPageSlideAnnotations(
 							content,
-							baseLayoutWithoutNavName
-					  ),
+							baseLayoutWithoutNavName,
+						),
 
 			// 6. 添加子页面注释
 			(content) =>
@@ -1193,8 +1191,8 @@ export class SlidesMaker {
 					? content
 					: this._addSubPageAnnotation(
 							content.split("\n"),
-							baseLayoutWithoutNavName
-					  ).join("\n"),
+							baseLayoutWithoutNavName,
+						).join("\n"),
 
 			// 7. 添加目录幻灯片
 			(content) =>
@@ -1254,7 +1252,7 @@ export class SlidesMaker {
 					activeFile,
 					slideMode,
 					slideSize,
-					slideNavOn
+					slideNavOn,
 				),
 
 			(content) => this._removeCommentLines(content),
@@ -1273,10 +1271,10 @@ export class SlidesMaker {
 		content: string,
 		design: string,
 		activeFile: TFile,
-		minimizeMode: boolean = false
+		minimizeMode: boolean = false,
 	): string {
 		const coverSlide = `<!-- slide id="home" template="[[${t(
-			"Cover"
+			"Cover",
 		)}-${design}]]" -->`;
 		const oburi = this._getOBURI(activeFile);
 
@@ -1286,7 +1284,7 @@ export class SlidesMaker {
 			this._addLinkToH1(content, oburi),
 			author,
 			date,
-			minimizeMode
+			minimizeMode,
 		);
 		return `${coverSlide}\n\n${newContent}`;
 	}
@@ -1307,7 +1305,7 @@ export class SlidesMaker {
 					headingResult =
 						headingMatch[1] +
 						`<a href="${oburi}%23${encodeURIComponent(
-							headingContent
+							headingContent,
 						)}">${headingContent}</a>`;
 					// 可在这里使用 headingContent 做进一步处理
 				}
@@ -1324,7 +1322,7 @@ export class SlidesMaker {
 			SlidesMaker.COMMENT_BLOCK_NOTES_REGEX,
 			(match, p1) => {
 				return `\nnote: \n${p1.trim()}\n`;
-			}
+			},
 		);
 	}
 
@@ -1337,7 +1335,7 @@ export class SlidesMaker {
 	private _addBackCoverPage(
 		content: string,
 		design: string,
-		activeFile: TFile
+		activeFile: TFile,
 	): string {
 		const lbnl = this._getLastButNotLeast(activeFile);
 		const { author, date } = this._getAuthorAndDate(activeFile);
@@ -1384,7 +1382,7 @@ export class SlidesMaker {
 			w: number;
 			h: number;
 		},
-		slideNavOn: boolean
+		slideNavOn: boolean,
 	): string {
 		const userFrontmatter =
 			this.settings.slidesRupUserSpecificFrontmatterOptions || "";
@@ -1420,7 +1418,7 @@ export class SlidesMaker {
 			/(?<!!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
 			(match, name, link) => {
 				return `<a href="${link}" data-preview-link>${name}</a>`;
-			}
+			},
 		);
 	}
 
@@ -1466,7 +1464,7 @@ export class SlidesMaker {
 						break;
 				}
 				return `<u class="sr-tooltip ${type}" data-sr-tooltip="${tooltip.trim()}">${content}</u>`;
-			}
+			},
 		);
 	}
 
@@ -1567,8 +1565,8 @@ export class SlidesMaker {
 				marker.type === "code"
 					? `__CODE_BLOCK_${i}__`
 					: marker.type === "math"
-					? `__MATH_BLOCK_${i}__`
-					: `__HTML_BLOCK_${i}__`;
+						? `__MATH_BLOCK_${i}__`
+						: `__HTML_BLOCK_${i}__`;
 
 			processedText =
 				processedText.substring(0, marker.start) +
@@ -1585,12 +1583,12 @@ export class SlidesMaker {
 				marker.type === "code"
 					? `__CODE_BLOCK_${index}__`
 					: marker.type === "math"
-					? `__MATH_BLOCK_${index}__`
-					: `__HTML_BLOCK_${index}__`;
+						? `__MATH_BLOCK_${index}__`
+						: `__HTML_BLOCK_${index}__`;
 
 			processedText = processedText.replace(
 				placeholder,
-				() => marker.content
+				() => marker.content,
 			);
 		});
 
@@ -1646,14 +1644,14 @@ export class SlidesMaker {
 				const escapedItem = item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 				const regex = new RegExp(
 					`${escapedItem}(?!.*<!-- element:)`,
-					"g"
+					"g",
 				);
 				processedPage = processedPage.replace(
 					regex,
 					`${item.replace(
 						/<!--.*?-->/g,
-						""
-					)} <!-- element: class="fragment" data-fragment-index="${fragmentIndex}" -->`
+						"",
+					)} <!-- element: class="fragment" data-fragment-index="${fragmentIndex}" -->`,
 				);
 			});
 
@@ -1690,7 +1688,7 @@ export class SlidesMaker {
 			// 检测是否包含纯文本段落内容(不以特殊字符开头的行)
 			const hasNormalParagraph =
 				/^(?!(?:#+\s|[\s]*[*+-]\s|[\s]*\d+\.\s|>|\!\[\[|{|[`]{3,}|\|))[^\s].+$/gm.test(
-					page
+					page,
 				);
 			// 如果页面不包含需要处理的内容,直接返回
 			if (!hasH4ToH6 && !hasNormalParagraph) {
@@ -1753,16 +1751,16 @@ export class SlidesMaker {
 							? match
 									.replace(
 										/class="([^"']*)"/,
-										`class="fragment $1"`
+										`class="fragment $1"`,
 									)
 									.replace(
 										/-->\s*$/,
-										` data-fragment-index="${fragmentIndex++}" -->`
+										` data-fragment-index="${fragmentIndex++}" -->`,
 									)
 							: match.replace(
 									/<!-- element:/,
-									`<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" `
-							  );
+									`<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" `,
+								);
 
 						return match;
 					}
@@ -1772,7 +1770,7 @@ export class SlidesMaker {
 					}
 
 					return `${p1}${p2}\n<!-- element: class="fragment" data-fragment-index="${fragmentIndex++}" -->`;
-				}
+				},
 			);
 		});
 
@@ -1802,7 +1800,7 @@ export class SlidesMaker {
 					classValue = this._modidySlideClassList(
 						nextLine,
 						this.userSpecificListClass.BlankPageListClass ||
-							this.settings.slidesRupDefaultBlankListClass
+							this.settings.slidesRupDefaultBlankListClass,
 					);
 					background = this._modifySlideBackground(nextLine, "");
 				}
@@ -1813,7 +1811,7 @@ export class SlidesMaker {
 				const slideBackground = background ? `bg="${background}"` : "";
 
 				newLines.push(
-					`\n<!-- slide ${slideTemplate} class="${classValue}" ${slideBackground} -->`
+					`\n<!-- slide ${slideTemplate} class="${classValue}" ${slideBackground} -->`,
 				);
 			} else {
 				newLines.push(line);
@@ -1824,7 +1822,7 @@ export class SlidesMaker {
 
 	private _addSubPageAnnotation(
 		lines: string[],
-		baseLayoutWithoutNavName: string
+		baseLayoutWithoutNavName: string,
 	): string[] {
 		let currentChapterIndex = 0;
 		let pageIndexInChapter = 0;
@@ -1848,7 +1846,7 @@ export class SlidesMaker {
 				const classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ContentPageListClass ||
-						this.settings.slidesRupDefaultContentListClass
+						this.settings.slidesRupDefaultContentListClass,
 				);
 				const template = this._modidySlideTemplate(line, "");
 				const slideTemplate =
@@ -1873,7 +1871,7 @@ export class SlidesMaker {
 					finalLines.push("---");
 				}
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}s${subPageIndex}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`,
 				);
 				const counterResetStyle = this._getCounterResetStyle(line);
 				finalLines.push(counterResetStyle);
@@ -1944,7 +1942,7 @@ export class SlidesMaker {
 	private _addChapterSlideAnnotations(
 		content: string,
 		design: string,
-		simpleMode: boolean = false
+		simpleMode: boolean = false,
 	): string {
 		let h2Index = 0;
 		const modifiedLines: string[] = [];
@@ -1960,12 +1958,12 @@ export class SlidesMaker {
 				const classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ChapterPageListClass ||
-						this.settings.slidesRupDefaultChapterListClass
+						this.settings.slidesRupDefaultChapterListClass,
 				);
 
 				const template = this._modidySlideTemplate(
 					line,
-					defaultTemplate
+					defaultTemplate,
 				);
 
 				const templateStr = template ? `template="${template}"` : "";
@@ -1975,7 +1973,7 @@ export class SlidesMaker {
 				const slideBackground = background ? `bg="${background}"` : "";
 
 				modifiedLines.push(
-					`\n<!-- slide id="c${h2Index}" ${templateStr} ${slideBackground} class="${classValue} chapter-${h2Index}" -->\n`
+					`\n<!-- slide id="c${h2Index}" ${templateStr} ${slideBackground} class="${classValue} chapter-${h2Index}" -->\n`,
 				);
 
 				modifiedLines.push(this._cleanLine(line));
@@ -2073,7 +2071,7 @@ export class SlidesMaker {
 	 */
 	private _addPageSlideAnnotations(
 		content: string,
-		baseLayoutWithoutNavName: string
+		baseLayoutWithoutNavName: string,
 	): string {
 		const lines = content.split("\n");
 		let currentChapterIndex = 0;
@@ -2091,7 +2089,7 @@ export class SlidesMaker {
 				let classValue = this._modidySlideClassList(
 					line,
 					this.userSpecificListClass.ContentPageListClass ||
-						this.settings.slidesRupDefaultContentListClass
+						this.settings.slidesRupDefaultContentListClass,
 				);
 
 				const hideSlide = line.includes("%%?%%")
@@ -2113,7 +2111,7 @@ export class SlidesMaker {
 				const slideBackground = background ? `bg="${background}"` : "";
 
 				finalLines.push(
-					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`
+					`\n<!-- slide id="c${currentChapterIndex}p${pageIndexInChapter}" ${slideTemplate} ${slideBackground} class="${chapterClass} ${classValue}" ${hideSlide} -->\n`,
 				);
 				finalLines.push(this._cleanLine(line));
 			} else {
@@ -2131,10 +2129,10 @@ export class SlidesMaker {
 		content: string,
 		tocName: string,
 		design: string,
-		activeFile: TFile
+		activeFile: TFile,
 	): string {
 		const tocEmbed = `---\n\n<!-- slide id="toc" template="[[${t(
-			"TOC"
+			"TOC",
 		)}-${design}]]" class="${
 			this.userSpecificListClass.TOCPageListClass ||
 			this.settings.slidesRupDefaultTOCListClass
@@ -2150,7 +2148,7 @@ export class SlidesMaker {
 
 		let tocIndex = this._findSeparatorIndex(
 			contentLines,
-			tocPageNumber < 2 ? 0 : tocPageNumber - 1
+			tocPageNumber < 2 ? 0 : tocPageNumber - 1,
 		);
 
 		if (tocIndex !== -1) {
@@ -2168,7 +2166,7 @@ export class SlidesMaker {
 	 */
 	private _findSeparatorIndex(
 		contentLines: string[],
-		targetIndex: number = 1
+		targetIndex: number = 1,
 	): number {
 		if (targetIndex < 1) return -1;
 
@@ -2200,7 +2198,7 @@ export class SlidesMaker {
 		const encodedPath = encodeURIComponent(file.path);
 		// 构建 Obsidian URI
 		const uri = `obsidian://open?vault=${encodeURIComponent(
-			vaultName
+			vaultName,
 		)}&file=${encodedPath}`;
 		return uri;
 	}
@@ -2237,7 +2235,7 @@ export class SlidesMaker {
 			this.settings.presenter ||
 			"";
 		const date = moment(
-			fileCache?.frontmatter?.slideDate || Date.now()
+			fileCache?.frontmatter?.slideDate || Date.now(),
 		).format(this.settings.dateFormat || "YYYY-MM-DD");
 		return { author, date };
 	}
@@ -2246,7 +2244,7 @@ export class SlidesMaker {
 		content: string,
 		author: string,
 		date: string,
-		minimizeMode: boolean = false
+		minimizeMode: boolean = false,
 	): string {
 		const authorTemplate = `::: author\n${author}\n:::\n`;
 		const dateTemplate = `::: date\n${date}\n:::\n`;
@@ -2254,16 +2252,16 @@ export class SlidesMaker {
 		const contentLines = content.split("\n");
 		// 在 contentLines 中查找第一个 '---'，并在其前面插入 authorTemplate 和 dateTemplate
 		const firstSeparatorLineIndex = contentLines.findIndex(
-			(line) => line.trim() === "---" || line.trim() === "***"
+			(line) => line.trim() === "---" || line.trim() === "***",
 		);
 		if (firstSeparatorLineIndex !== -1) {
 			const before = contentLines.slice(0, firstSeparatorLineIndex);
 			const after = contentLines.slice(firstSeparatorLineIndex);
 			const authorAndDateContent = [authorTemplate, dateTemplate].join(
-				"\n"
+				"\n",
 			);
 			const noteIndex = before.findIndex((line) =>
-				line.trim().toLowerCase().includes("note:")
+				line.trim().toLowerCase().includes("note:"),
 			);
 			if (!noteIndex) {
 				return [...before, authorAndDateContent, ...after].join("\n");
@@ -2299,7 +2297,7 @@ export class SlidesMaker {
 			typeof this.app.metadataCache.getFileCache(activeFile)?.frontmatter
 				?.slideDesign === "string"
 				? // 这里的!是TypeScript的非空断言（Non-null Assertion Operator），用于告诉编译器在此处对象不会为null或undefined，跳过类型检查。
-				  this.app.metadataCache
+					this.app.metadataCache
 						.getFileCache(activeFile)!
 						.frontmatter!.slideDesign!.trim()
 				: "";
@@ -2343,7 +2341,7 @@ export class SlidesMaker {
 	}
 
 	private _getSlideSize(
-		activeFile?: TFile | null
+		activeFile?: TFile | null,
 	): { w: number; h: number } | null {
 		if (!activeFile) return null;
 		const frontmatter =
@@ -2450,7 +2448,7 @@ export class SlidesMaker {
 	private _modidySlideClassList(line: string, listClass: string): string {
 		const matches = line.match(SlidesMaker.COMMENT_BLOCK_REGEX);
 		const replaceMatches = line.match(
-			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX
+			SlidesMaker.COMMENT_BLOCK_REPLACE_REGEX,
 		);
 		const counterResetMatch = line.match(/counter-reset-\d{1,}/);
 		let counterResetClass = "";
@@ -2488,7 +2486,7 @@ export class SlidesMaker {
 		return line
 			.replace(
 				/%%(?!\!|\[\[)[\s\S]*?%%|%%\!.*?%%|%%\[\[.*?%%|%%---%%/g,
-				""
+				"",
 			)
 			.trim();
 	}
