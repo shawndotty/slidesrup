@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	customizeSlideFolderName: true,
 	addChapterWithSubPages: true,
 	presentationPlugin: "slidesExtended",
+	pluginDownloadSource: "gitee",
 	updateIDs: {
 		style: {
 			baseID: "",
