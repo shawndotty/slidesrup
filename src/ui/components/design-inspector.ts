@@ -39,15 +39,18 @@ function createTextField(
 export function renderDesignInspector(options: {
 	container: HTMLElement;
 	block: DesignCanvasBlock | null;
+	showTitle?: boolean;
 	onPatchBlock: (patcher: (block: DesignGridBlock) => void) => void;
 }): void {
-	const { container, block, onPatchBlock } = options;
+	const { container, block, onPatchBlock, showTitle = true } = options;
 	container.empty();
 
-	container.createEl("h3", {
-		text: t("Block Inspector"),
-		cls: "slides-rup-design-maker-section-title",
-	});
+	if (showTitle) {
+		container.createEl("h3", {
+			text: t("Block Inspector"),
+			cls: "slides-rup-design-maker-section-title",
+		});
+	}
 
 	if (!block) {
 		container.createEl("p", {
@@ -82,12 +85,16 @@ export function renderDesignInspector(options: {
 	});
 	createNumberField(container, "Width", block.rect.width, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.width = Math.round(Math.max(1, Math.min(100, value)));
+			nextBlock.rect.width = Math.round(
+				Math.max(1, Math.min(100, value)),
+			);
 		});
 	});
 	createNumberField(container, "Height", block.rect.height, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.height = Math.round(Math.max(1, Math.min(100, value)));
+			nextBlock.rect.height = Math.round(
+				Math.max(1, Math.min(100, value)),
+			);
 		});
 	});
 	createTextField(container, "CSS Class", block.className, (value) => {

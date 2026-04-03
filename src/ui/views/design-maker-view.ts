@@ -30,6 +30,10 @@ export class DesignMakerView extends ItemView {
 	private centerStageEl: HTMLElement | null = null;
 	private canvasEl: HTMLElement | null = null;
 	private toolbarEl: HTMLElement | null = null;
+	private inspectorPanelEl: HTMLDetailsElement | null = null;
+	private themePanelEl: HTMLDetailsElement | null = null;
+	private pageSourcePanelEl: HTMLDetailsElement | null = null;
+	private cssSourcePanelEl: HTMLDetailsElement | null = null;
 	private inspectorEl: HTMLElement | null = null;
 	private themeEl: HTMLElement | null = null;
 	private previewEl: HTMLElement | null = null;
@@ -38,6 +42,12 @@ export class DesignMakerView extends ItemView {
 	private pageSourceValue = "";
 	private cssSourceValue = "";
 	private activeCenterTab: "design" | "preview" = "design";
+	private rightPanelState = {
+		inspector: true,
+		theme: true,
+		pageSource: false,
+		cssSource: false,
+	};
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -148,10 +158,26 @@ export class DesignMakerView extends ItemView {
 			"slides-rup-design-maker-toolbar-panel",
 		);
 		const right = layout.createDiv("slides-rup-design-maker-sidepanel");
-		this.inspectorEl = right.createDiv("slides-rup-design-maker-panel");
-		this.themeEl = right.createDiv("slides-rup-design-maker-panel");
-		this.pageSourceEl = right.createDiv("slides-rup-design-maker-panel");
-		this.cssSourceEl = right.createDiv("slides-rup-design-maker-panel");
+		this.inspectorEl = this._createCollapsiblePanel(
+			right,
+			"Block Inspector",
+			"inspector",
+		);
+		this.themeEl = this._createCollapsiblePanel(
+			right,
+			"Design Theme",
+			"theme",
+		);
+		this.pageSourceEl = this._createCollapsiblePanel(
+			right,
+			"Page Source",
+			"pageSource",
+		);
+		this.cssSourceEl = this._createCollapsiblePanel(
+			right,
+			"Theme CSS",
+			"cssSource",
+		);
 	}
 
 	private _render(): void {
@@ -229,6 +255,7 @@ export class DesignMakerView extends ItemView {
 		renderDesignInspector({
 			container: this.inspectorEl!,
 			block: this._getSelectedBlock(),
+			showTitle: false,
 			onPatchBlock: (patcher) => {
 				const block = this._getSelectedBlock();
 				if (!block || block.type !== "grid") return;
@@ -241,6 +268,7 @@ export class DesignMakerView extends ItemView {
 		renderDesignThemePanel({
 			container: this.themeEl!,
 			theme: this.draft.theme,
+			showTitle: false,
 			onChange: (patch) => {
 				this.draft!.theme = {
 					...this.draft!.theme,
@@ -251,9 +279,13 @@ export class DesignMakerView extends ItemView {
 		});
 
 		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
+			this.pageSourcePanelEl?.removeClass("is-hidden");
+			this.cssSourcePanelEl?.removeClass("is-hidden");
 			this._renderPageSourceEditor();
 			this._renderCssSourceEditor();
 		} else {
+			this.pageSourcePanelEl?.addClass("is-hidden");
+			this.cssSourcePanelEl?.addClass("is-hidden");
 			this.pageSourceEl!.empty();
 			this.cssSourceEl!.empty();
 		}
@@ -388,10 +420,6 @@ export class DesignMakerView extends ItemView {
 
 	private _renderPageSourceEditor(): void {
 		this.pageSourceEl!.empty();
-		this.pageSourceEl!.createEl("h3", {
-			text: t("Page Source"),
-			cls: "slides-rup-design-maker-section-title",
-		});
 		const textarea = this.pageSourceEl!.createEl("textarea", {
 			text: this.pageSourceValue,
 			cls: "slides-rup-design-maker-textarea",
@@ -422,10 +450,6 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCssSourceEditor(): void {
 		this.cssSourceEl!.empty();
-		this.cssSourceEl!.createEl("h3", {
-			text: t("Theme CSS"),
-			cls: "slides-rup-design-maker-section-title",
-		});
 		const textarea = this.cssSourceEl!.createEl("textarea", {
 			text: this.cssSourceValue,
 			cls: "slides-rup-design-maker-textarea",
@@ -495,6 +519,8 @@ export class DesignMakerView extends ItemView {
 		this._renderCenterTabs();
 		this.canvasEl?.removeClass("is-hidden");
 		this.previewEl?.addClass("is-hidden");
+		this.pageSourcePanelEl?.addClass("is-hidden");
+		this.cssSourcePanelEl?.addClass("is-hidden");
 		this.canvasEl?.createEl("p", {
 			text: message,
 			cls: "slides-rup-design-maker-empty-text",
@@ -508,6 +534,10 @@ export class DesignMakerView extends ItemView {
 			this.centerStageEl &&
 			this.canvasEl &&
 			this.toolbarEl &&
+			this.inspectorPanelEl &&
+			this.themePanelEl &&
+			this.pageSourcePanelEl &&
+			this.cssSourcePanelEl &&
 			this.inspectorEl &&
 			this.themeEl &&
 			this.previewEl &&
@@ -518,6 +548,10 @@ export class DesignMakerView extends ItemView {
 			this.contentEl.contains(this.centerStageEl) &&
 			this.contentEl.contains(this.canvasEl) &&
 			this.contentEl.contains(this.toolbarEl) &&
+			this.contentEl.contains(this.inspectorPanelEl) &&
+			this.contentEl.contains(this.themePanelEl) &&
+			this.contentEl.contains(this.pageSourcePanelEl) &&
+			this.contentEl.contains(this.cssSourcePanelEl) &&
 			this.contentEl.contains(this.inspectorEl) &&
 			this.contentEl.contains(this.themeEl) &&
 			this.contentEl.contains(this.previewEl) &&
@@ -532,10 +566,50 @@ export class DesignMakerView extends ItemView {
 		this.centerStageEl = null;
 		this.canvasEl = null;
 		this.toolbarEl = null;
+		this.inspectorPanelEl = null;
+		this.themePanelEl = null;
+		this.pageSourcePanelEl = null;
+		this.cssSourcePanelEl = null;
 		this.inspectorEl = null;
 		this.themeEl = null;
 		this.previewEl = null;
 		this.pageSourceEl = null;
 		this.cssSourceEl = null;
+	}
+
+	private _createCollapsiblePanel(
+		parent: HTMLElement,
+		title: string,
+		key: keyof DesignMakerView["rightPanelState"],
+	): HTMLElement {
+		const panel = parent.createEl("details", {
+			cls: "slides-rup-design-maker-collapse-panel",
+		});
+		panel.open = this.rightPanelState[key];
+		panel.addEventListener("toggle", () => {
+			this.rightPanelState[key] = panel.open;
+		});
+		panel.createEl("summary", {
+			text: t(title as any),
+			cls: "slides-rup-design-maker-collapse-summary",
+		});
+		const content = panel.createDiv(
+			"slides-rup-design-maker-collapse-content",
+		);
+		switch (key) {
+			case "inspector":
+				this.inspectorPanelEl = panel;
+				break;
+			case "theme":
+				this.themePanelEl = panel;
+				break;
+			case "pageSource":
+				this.pageSourcePanelEl = panel;
+				break;
+			case "cssSource":
+				this.cssSourcePanelEl = panel;
+				break;
+		}
+		return content;
 	}
 }

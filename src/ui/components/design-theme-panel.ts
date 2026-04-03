@@ -4,15 +4,18 @@ import { ThemeStyleDraft } from "src/types/design-maker";
 export function renderDesignThemePanel(options: {
 	container: HTMLElement;
 	theme: ThemeStyleDraft;
+	showTitle?: boolean;
 	onChange: (patch: Partial<ThemeStyleDraft>) => void;
 }): void {
-	const { container, theme, onChange } = options;
+	const { container, theme, onChange, showTitle = true } = options;
 	container.empty();
 
-	container.createEl("h3", {
-		text: t("Design Theme"),
-		cls: "slides-rup-design-maker-section-title",
-	});
+	if (showTitle) {
+		container.createEl("h3", {
+			text: t("Design Theme"),
+			cls: "slides-rup-design-maker-section-title",
+		});
+	}
 
 	const fields: Array<{
 		key: keyof ThemeStyleDraft;

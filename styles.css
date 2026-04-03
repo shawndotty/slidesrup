@@ -381,6 +381,27 @@ h3.slides-rup-title {
 	overflow: auto;
 }
 
+.slides-rup-design-maker-collapse-panel {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+}
+
+.slides-rup-design-maker-collapse-summary {
+	cursor: pointer;
+	padding: 12px 14px;
+	font-weight: 600;
+	list-style: none;
+}
+
+.slides-rup-design-maker-collapse-summary::-webkit-details-marker {
+	display: none;
+}
+
+.slides-rup-design-maker-collapse-content {
+	padding: 0 12px 12px 12px;
+}
+
 .slides-rup-design-maker-main {
 	min-width: 0;
 	display: flex;
