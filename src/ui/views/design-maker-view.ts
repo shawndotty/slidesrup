@@ -101,13 +101,21 @@ export class DesignMakerView extends ItemView {
 		);
 	}
 
-	private async _loadDraft(): Promise<void> {
+	private async _loadDraft(options?: {
+		keepActivePage?: boolean;
+	}): Promise<void> {
 		if (!this.designState?.designPath) return;
+		const keepActivePage = options?.keepActivePage === true;
+		const previousPageType = this.activePageType;
 		try {
 			this.draft = await this.designMaker.loadDesignDraft(
 				this.designState.designPath,
 			);
-			this.activePageType = "cover";
+			if (keepActivePage && this.draft.pages[previousPageType]) {
+				this.activePageType = previousPageType;
+			} else {
+				this.activePageType = "cover";
+			}
 			this.selectedBlockId = null;
 			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 			this.cssSourceValue = this.draft.theme.rawCss || "";
@@ -141,14 +149,14 @@ export class DesignMakerView extends ItemView {
 			if (!this.draft) return;
 			this.draft.theme.rawCss = this.cssSourceValue;
 			await this.designMaker.saveDesignDraft(this.draft);
-			await this._loadDraft();
+			await this._loadDraft({ keepActivePage: true });
 		});
 
 		const reloadButton = actions.createEl("button", {
 			text: t("Reload Design"),
 		});
 		reloadButton.addEventListener("click", async () => {
-			await this._loadDraft();
+			await this._loadDraft({ keepActivePage: true });
 		});
 
 		const layout = this.contentEl.createDiv(
