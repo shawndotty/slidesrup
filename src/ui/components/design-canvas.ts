@@ -1,5 +1,6 @@
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, DesignGridBlock } from "src/types/design-maker";
+import { renderBlockContent } from "./design-block-renderer";
 
 type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 
@@ -93,7 +94,14 @@ export function renderDesignCanvas(options: {
 	page.blocks.forEach((block) => {
 		if (block.type === "raw") {
 			const raw = canvas.createDiv("slides-rup-design-maker-raw-block");
-			raw.setText(block.raw);
+			const result = renderBlockContent(raw, block.raw);
+			if (result.hidden) {
+				raw.remove();
+				return;
+			}
+			if (!result.rendered) {
+				raw.setText(result.textContent);
+			}
 			return;
 		}
 
@@ -105,7 +113,14 @@ export function renderDesignCanvas(options: {
 		el.style.top = `${block.rect.y}%`;
 		el.style.width = `${block.rect.width}%`;
 		el.style.height = `${block.rect.height}%`;
-		el.setText(block.content || t("Empty Block"));
+		const result = renderBlockContent(el, block.content || "");
+		if (result.hidden) {
+			el.remove();
+			return;
+		}
+		if (!result.rendered) {
+			el.setText(result.textContent || t("Empty Block"));
+		}
 
 		const resizeHandle = el.createDiv("slides-rup-design-maker-resize");
 

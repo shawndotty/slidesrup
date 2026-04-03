@@ -1,5 +1,6 @@
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
+import { renderBlockContent } from "./design-block-renderer";
 
 export function renderDesignPreview(options: {
 	container: HTMLElement;
@@ -27,7 +28,14 @@ export function renderDesignPreview(options: {
 	page.blocks.forEach((block) => {
 		if (block.type === "raw") {
 			const raw = preview.createDiv("slides-rup-design-maker-preview-raw");
-			raw.setText(block.raw);
+			const result = renderBlockContent(raw, block.raw);
+			if (result.hidden) {
+				raw.remove();
+				return;
+			}
+			if (!result.rendered) {
+				raw.setText(result.textContent);
+			}
 			return;
 		}
 		const el = preview.createDiv("slides-rup-design-maker-preview-block");
@@ -38,6 +46,13 @@ export function renderDesignPreview(options: {
 		el.style.height = `${block.rect.height}%`;
 		if (block.className.trim()) el.addClass(...block.className.trim().split(/\s+/));
 		if (block.style.trim()) el.style.cssText += `;${block.style}`;
-		el.setText(block.content);
+		const result = renderBlockContent(el, block.content);
+		if (result.hidden) {
+			el.remove();
+			return;
+		}
+		if (!result.rendered) {
+			el.setText(result.textContent);
+		}
 	});
 }

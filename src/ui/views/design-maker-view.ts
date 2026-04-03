@@ -75,18 +75,25 @@ export class DesignMakerView extends ItemView {
 
 	private async _loadDraft(): Promise<void> {
 		if (!this.designState?.designPath) return;
-		this.draft = await this.designMaker.loadDesignDraft(
-			this.designState.designPath,
-		);
-		this.activePageType = "cover";
-		this.selectedBlockId = null;
-		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
-		this.cssSourceValue = this.draft.theme.rawCss || "";
-		this._render();
+		try {
+			this.draft = await this.designMaker.loadDesignDraft(
+				this.designState.designPath,
+			);
+			this.activePageType = "cover";
+			this.selectedBlockId = null;
+			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
+			this.cssSourceValue = this.draft.theme.rawCss || "";
+			this._render();
+		} catch (error) {
+			this.draft = null;
+			new Notice(`${t("Failed to load design")}${error}`);
+			this._render();
+		}
 	}
 
 	private _ensureLayout(): void {
-		if (this.pageListEl) return;
+		if (this._hasLayout()) return;
+		this._resetLayoutRefs();
 		this.contentEl.empty();
 		this.contentEl.addClass("slides-rup-design-maker-view");
 
@@ -128,10 +135,9 @@ export class DesignMakerView extends ItemView {
 		this._ensureLayout();
 		if (!this.pageListEl || !this.canvasEl || !this.inspectorEl) return;
 		if (!this.draft) {
-			this.contentEl.empty();
-			this.contentEl.createEl("p", {
-				text: t("No design loaded"),
-			});
+			this._renderEmptyState(
+				this.designState?.designPath ? t("Loading design") : t("No design loaded"),
+			);
 			return;
 		}
 
@@ -396,5 +402,44 @@ export class DesignMakerView extends ItemView {
 
 	private _syncPageSource(): void {
 		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
+	}
+
+	private _renderEmptyState(message: string): void {
+		[
+			this.pageListEl,
+			this.canvasEl,
+			this.inspectorEl,
+			this.themeEl,
+			this.previewEl,
+			this.pageSourceEl,
+			this.cssSourceEl,
+		].forEach((element) => element?.empty());
+		this.canvasEl?.createEl("p", {
+			text: message,
+			cls: "slides-rup-design-maker-empty-text",
+		});
+	}
+
+	private _hasLayout(): boolean {
+		return Boolean(
+			this.pageListEl &&
+				this.canvasEl &&
+				this.inspectorEl &&
+				this.themeEl &&
+				this.previewEl &&
+				this.pageSourceEl &&
+				this.cssSourceEl &&
+				this.contentEl.contains(this.pageListEl),
+		);
+	}
+
+	private _resetLayoutRefs(): void {
+		this.pageListEl = null;
+		this.canvasEl = null;
+		this.inspectorEl = null;
+		this.themeEl = null;
+		this.previewEl = null;
+		this.pageSourceEl = null;
+		this.cssSourceEl = null;
 	}
 }
