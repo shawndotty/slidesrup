@@ -12,7 +12,7 @@ function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
 	const contentMap: Record<InsertBlockKind, string> = {
 		grid: "",
 		text: "Editable text",
-		image: "![](https://via.placeholder.com/800x450)",
+		image: "![](https://placehold.co/800x450)",
 		placeholder: "{{LOGO_OR_TAGLINE}}",
 		content: "<% content %>",
 	};
@@ -89,7 +89,9 @@ export function renderDesignCanvas(options: {
 		const deleteButton = toolbar.createEl("button", {
 			text: t("Delete Block"),
 		});
-		deleteButton.addEventListener("click", () => onDeleteBlock(selectedBlockId));
+		deleteButton.addEventListener("click", () =>
+			onDeleteBlock(selectedBlockId),
+		);
 	}
 
 	const canvas = container.createDiv("slides-rup-design-maker-canvas");
@@ -134,7 +136,11 @@ export function renderDesignCanvas(options: {
 		});
 
 		el.addEventListener("mousedown", (event) => {
-			if ((event.target as HTMLElement).classList.contains("slides-rup-design-maker-resize")) {
+			if (
+				(event.target as HTMLElement).classList.contains(
+					"slides-rup-design-maker-resize",
+				)
+			) {
 				return;
 			}
 			event.preventDefault();
@@ -146,19 +152,27 @@ export function renderDesignCanvas(options: {
 			const startRect = { ...block.rect };
 
 			const onMove = (moveEvent: MouseEvent) => {
-				const deltaX = ((moveEvent.clientX - startX) / bounds.width) * 100;
-				const deltaY = ((moveEvent.clientY - startY) / bounds.height) * 100;
+				const deltaX =
+					((moveEvent.clientX - startX) / bounds.width) * 100;
+				const deltaY =
+					((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
 					nextBlock.rect.x = toInt(
 						Math.max(
 							0,
-							Math.min(100 - nextBlock.rect.width, startRect.x + deltaX),
+							Math.min(
+								100 - nextBlock.rect.width,
+								startRect.x + deltaX,
+							),
 						),
 					);
 					nextBlock.rect.y = toInt(
 						Math.max(
 							0,
-							Math.min(100 - nextBlock.rect.height, startRect.y + deltaY),
+							Math.min(
+								100 - nextBlock.rect.height,
+								startRect.y + deltaY,
+							),
 						),
 					);
 				});
@@ -183,19 +197,27 @@ export function renderDesignCanvas(options: {
 			const startRect = { ...block.rect };
 
 			const onMove = (moveEvent: MouseEvent) => {
-				const deltaX = ((moveEvent.clientX - startX) / bounds.width) * 100;
-				const deltaY = ((moveEvent.clientY - startY) / bounds.height) * 100;
+				const deltaX =
+					((moveEvent.clientX - startX) / bounds.width) * 100;
+				const deltaY =
+					((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
 					nextBlock.rect.width = toInt(
 						Math.max(
 							5,
-							Math.min(100 - nextBlock.rect.x, startRect.width + deltaX),
+							Math.min(
+								100 - nextBlock.rect.x,
+								startRect.width + deltaX,
+							),
 						),
 					);
 					nextBlock.rect.height = toInt(
 						Math.max(
 							5,
-							Math.min(100 - nextBlock.rect.y, startRect.height + deltaY),
+							Math.min(
+								100 - nextBlock.rect.y,
+								startRect.height + deltaY,
+							),
 						),
 					);
 				});
