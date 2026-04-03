@@ -20,9 +20,9 @@ import { t } from "../lang/helpers";
 export function isValidApiKey(apiKey: string): boolean {
 	return Boolean(
 		apiKey &&
-			apiKey.length >= 82 &&
-			apiKey.includes("pat") &&
-			apiKey.includes(".")
+		apiKey.length >= 82 &&
+		apiKey.includes("pat") &&
+		apiKey.includes("."),
 	);
 }
 
@@ -34,7 +34,7 @@ export function getAppInstance(): App {
 		return (window as any).app as App;
 	} else {
 		throw new Error(
-			"无法获取 Obsidian App 实例：window.obsidianApp 和 window.app 均未定义"
+			"无法获取 Obsidian App 实例：window.obsidianApp 和 window.app 均未定义",
 		);
 	}
 }
@@ -69,7 +69,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function buildFieldNames(
 	forceDefaultFetchFields: boolean = false,
-	slidesRupRunningLanguage = "ob"
+	slidesRupRunningLanguage = "ob",
 ) {
 	if (forceDefaultFetchFields) {
 		return {
@@ -141,7 +141,7 @@ export function get_active_note_folder_path(app: App): string | null {
 		return null;
 	}
 	const parent = app.vault.getAbstractFileByPath(
-		activeNote.parent?.path || ""
+		activeNote.parent?.path || "",
 	);
 	if (parent && parent.path) {
 		return parent.path;
@@ -157,7 +157,7 @@ export function get_active_note_folder_path(app: App): string | null {
  */
 export async function get_list_items_from_note(
 	app: App,
-	file: TFile
+	file: TFile,
 ): Promise<string[]> {
 	const content = await app.vault.read(file);
 	const lines = content.split("\n");
@@ -175,7 +175,7 @@ export async function get_list_items_from_note(
 
 export function get_tfiles_from_folder(
 	app: App,
-	folder_str: string
+	folder_str: string,
 ): Array<TFile> {
 	const folder = resolve_tfolder(app, folder_str);
 
@@ -199,7 +199,7 @@ export function getTimeStamp() {
 
 export async function createPathIfNeeded(
 	app: App,
-	folderPath: string
+	folderPath: string,
 ): Promise<void> {
 	const { vault } = app;
 	const normalized = normalizePath(folderPath);
@@ -212,7 +212,7 @@ export async function createPathIfNeeded(
 export function getUserDesigns(app: App, slidesRupPath: string) {
 	const slidesRupUserDesignsPath = `${slidesRupPath}/${REVEAL_USER_DESIGN_FOLDER}`;
 	const slidesRupUserDesignsFolder = app.vault.getAbstractFileByPath(
-		slidesRupUserDesignsPath
+		slidesRupUserDesignsPath,
 	);
 	let userDesigns: Array<string> = [];
 	if (
@@ -230,11 +230,28 @@ export function getUserDesigns(app: App, slidesRupPath: string) {
 
 export function getAllDesignsOptions(
 	defaultDesigns: string[],
-	userDesigns: string[]
+	userDesigns: string[],
 ) {
 	return userDesigns.concat(defaultDesigns).map((design, index) => ({
 		id: `"${design}"`,
 		name: `${index + 1}. ${t("Slide Design")} ${design}`,
 		value: design,
 	}));
+}
+
+export function compareVersions(v1: string, v2: string): number {
+	// -1 if v1 < v2
+	// 0 if v1 == v2
+	// 1 if v1 > v2
+	const v1Parts = v1.split(".").map(Number);
+	const v2Parts = v2.split(".").map(Number);
+
+	for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+		const part1 = v1Parts[i] || 0;
+		const part2 = v2Parts[i] || 0;
+
+		if (part1 > part2) return 1;
+		if (part1 < part2) return -1;
+	}
+	return 0;
 }

@@ -5,10 +5,11 @@ import {
 	Setting,
 	setIcon,
 	TFolder,
+	Notice,
 } from "obsidian";
 import { t } from "../lang/helpers";
 import SlidesRup from "../main";
-import { isValidApiKey, isValidEmail } from "../utils";
+import { isValidApiKey, isValidEmail, compareVersions } from "../utils";
 import { ApiService } from "../services/api-services";
 import { FolderSuggest } from "./pickers/folder-picker";
 import { FileSuggest, FileSuggestMode } from "./pickers/file-picker";
@@ -21,6 +22,8 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "../constants";
 import { markdown } from "@codemirror/lang-markdown";
+import { GithubService } from "../services/github-service";
+import { GiteeService } from "../services/gitee-service";
 
 type SettingsKeys = keyof SlidesRup["settings"];
 
@@ -82,7 +85,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			if (config.init) {
 				tabbedSettings.addTab(
 					t(config.title as any),
-					config.renderMethod
+					config.renderMethod,
 				);
 			} else if (
 				this.plugin.settings.userChecked &&
@@ -90,7 +93,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			) {
 				tabbedSettings.addTab(
 					t(config.title as any),
-					config.renderMethod
+					config.renderMethod,
 				);
 			}
 		});
@@ -112,6 +115,107 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		if (!this._checkUserType()) {
 			this.renderLicensePurchaseInfo(containerEl);
 		}
+
+		const currentVersion = this.plugin.manifest.version;
+
+		const versionSetting = new Setting(containerEl)
+			.setName(`${t("Current Version")}: ${currentVersion}`)
+			.setDesc(t("Check for Updates"))
+			.addButton((button) => {
+				button
+					.setButtonText(t("Check for Updates"))
+					.onClick(async () => {
+						button.setButtonText(t("Checking..."));
+						button.setDisabled(true);
+						const source =
+							this.plugin.settings.pluginDownloadSource ||
+							"github";
+						const repoUrl =
+							source === "github"
+								? "https://github.com/shawndotty/slidesrup"
+								: "https://gitee.com/johnnylearns/slidesrup";
+						const latestVersion =
+							source === "github"
+								? await GithubService.getLatestPluginVersion(
+										repoUrl,
+									)
+								: await GiteeService.getLatestPluginVersion(
+										repoUrl,
+									);
+
+						button.setDisabled(false);
+
+						if (!latestVersion) {
+							button.setButtonText(t("Check for Updates"));
+							new Notice(t("Failed to check for updates"));
+							return;
+						}
+
+						const cmp = compareVersions(
+							currentVersion,
+							latestVersion,
+						);
+
+						if (cmp === 0) {
+							versionSetting.setDesc(t("Already up to date"));
+							button.setButtonText(t("Check for Updates"));
+						} else if (cmp < 0) {
+							versionSetting.setDesc(
+								`${t("Update available")}: ${latestVersion}`,
+							);
+							versionSetting.controlEl.empty();
+							versionSetting.addButton((b) => {
+								b.setButtonText(t("Start Update"))
+									.setCta()
+									.onClick(async () => {
+										b.setButtonText(t("Updating..."));
+										b.setDisabled(true);
+										if (source === "github") {
+											await GithubService.installPluginFrom(
+												this.app,
+												repoUrl,
+											);
+										} else {
+											await GiteeService.installPluginFrom(
+												this.app,
+												repoUrl,
+											);
+										}
+										b.setButtonText(t("Updated"));
+										b.setDisabled(false);
+										new Notice(
+											t(
+												"Restart Obsidian to apply changes",
+											),
+										);
+									});
+							});
+						} else {
+							versionSetting.setDesc(
+								t("You are using a development version"),
+							);
+							button.setButtonText(t("Check for Updates"));
+						}
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t("Plugin Download Source"))
+			.setDesc(t("Choose where to download and update plugins"))
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption("github", t("GitHub"))
+					.addOption("gitee", t("Gitee"))
+					.setValue(
+						this.plugin.settings.pluginDownloadSource || "github",
+					)
+					.onChange(async (value) => {
+						this.plugin.settings.pluginDownloadSource =
+							value as any;
+						await this.plugin.saveSettings();
+					});
+			});
+
 		this.createDropdownSetting(
 			containerEl,
 			"Presentation Plugin",
@@ -120,7 +224,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			{
 				slidesExtended: "Slides Extended",
 				advancedSlides: "Advanced Slides",
-			}
+			},
 		);
 		this.createValidatedInput({
 			containerEl,
@@ -141,7 +245,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			containerEl,
 			name: t("Your Email Address"),
 			description: t(
-				"Please enter the email you provided when you purchase this product"
+				"Please enter the email you provided when you purchase this product",
 			),
 			placeholder: t("Enter your email"),
 			reload: true,
@@ -164,7 +268,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				"zh-cn": "Chinese",
 				"zh-tw": "Chinses Traditional",
 				en: "English",
-			}
+			},
 		);
 
 		this.createFolderSetting(
@@ -172,7 +276,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"SlidesRup Framework Folder",
 			"Please enter the path to the SlidesRup Framework Folder",
 			"Enter the full path to the SlidesRup Framework folder",
-			"slidesRupFrameworkFolder"
+			"slidesRupFrameworkFolder",
 		);
 	}
 
@@ -187,7 +291,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default Design",
 			"Please select your default design",
 			"defaultDesign",
-			this.getDefaultDesignOptions()
+			this.getDefaultDesignOptions(),
 		);
 
 		this.createDropdownSetting(
@@ -197,7 +301,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupUserDesigns",
 			this.getUserDesignOptions(),
 			undefined,
-			false
+			false,
 		);
 
 		if (
@@ -227,11 +331,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings();
 
 									await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-										"userCss"
+										"userCss",
 									);
 								});
 						});
-				}
+				},
 			);
 		}
 
@@ -255,7 +359,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Templates Folder",
 			"Please enter the path to your own templates",
 			"Choose your templates folder",
-			"templatesFolder"
+			"templatesFolder",
 		);
 
 		this.createFileSetting(
@@ -263,7 +367,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Slide Template",
 			"Please choose your personal slide template",
 			"Choose your personal slide template",
-			"userSlideTemplate"
+			"userSlideTemplate",
 		);
 
 		this.createFileSetting(
@@ -271,7 +375,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Base Layout Template",
 			"Please choose your personal base layout template",
 			"Choose your personal base layout template",
-			"userBaseLayoutTemplate"
+			"userBaseLayoutTemplate",
 		);
 
 		this.createFileSetting(
@@ -279,7 +383,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User TOC Template",
 			"Please choose your personal TOC template",
 			"Choose your personal TOC template",
-			"userTocTemplate"
+			"userTocTemplate",
 		);
 
 		this.createFileSetting(
@@ -287,7 +391,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Chapter Template",
 			"Please choose your personal chapter template",
 			"Choose your personal chapter template",
-			"userChapterTemplate"
+			"userChapterTemplate",
 		);
 
 		this.createFileSetting(
@@ -295,7 +399,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Chapter With Sub Pages Template",
 			"Please choose your personal chapter with sub pages template",
 			"Choose your personal chapter with sub pages template",
-			"userChapterAndPagesTemplate"
+			"userChapterAndPagesTemplate",
 		);
 
 		this.createFileSetting(
@@ -303,7 +407,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"User Page Template",
 			"Please choose your personal page template",
 			"Choose your personal page template",
-			"userPageTemplate"
+			"userPageTemplate",
 		);
 	}
 
@@ -317,11 +421,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			async () => {
 				await this.plugin.saveSettings();
 				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"hsl"
+					"hsl",
 				);
 			},
 			200,
-			true
+			true,
 		);
 
 		const onColorChange = debounce(
@@ -329,12 +433,12 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (this.plugin.settings.enableSlidesRupColorUserSetting) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"color"
+						"color",
 					);
 				}
 			},
 			200,
-			true
+			true,
 		);
 
 		this.createColorSetting(
@@ -342,7 +446,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Theme Color",
 			"Set the theme color",
 			"slidesRupThemeColor",
-			onThemeColorChanges
+			onThemeColorChanges,
 		);
 
 		this.createDropdownSetting(
@@ -354,7 +458,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				none: "Decide At Creation",
 				light: "Light Mode",
 				dark: "Dark Mode",
-			}
+			},
 		);
 
 		// 标题颜色设置
@@ -372,14 +476,14 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (value) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"color"
+						"color",
 					);
 				} else {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
-						"color"
+						"color",
 					);
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
-						"colorMarp"
+						"colorMarp",
 					);
 				}
 			},
@@ -395,7 +499,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H1 Color",
 			"Set the color for H1 headings",
 			"slidesRupH1Color",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -403,7 +507,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H2 Color",
 			"Set the color for H2 headings",
 			"slidesRupH2Color",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -411,7 +515,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H3 Color",
 			"Set the color for H3 headings",
 			"slidesRupH3Color",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -419,7 +523,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H4 Color",
 			"Set the color for H4 headings",
 			"slidesRupH4Color",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -427,7 +531,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H5 Color",
 			"Set the color for H5 headings",
 			"slidesRupH5Color",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -435,7 +539,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"H6 Color",
 			"Set the color for H6 headings",
 			"slidesRupH6Color",
-			onColorChange
+			onColorChange,
 		);
 
 		// 正文颜色设置
@@ -449,7 +553,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Tagline Color",
 			"Set the color for tagline text",
 			"slidesRupTaglineColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -457,7 +561,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Slogan Color",
 			"Set the color for slogan text",
 			"slidesRupSloganColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -465,7 +569,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Nav Color",
 			"Set the color for navigation text",
 			"slidesRupNavColor",
-			onColorChange
+			onColorChange,
 		);
 
 		// 正文颜色设置
@@ -479,7 +583,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Body Color",
 			"Set the color for body text",
 			"slidesRupBodyColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -487,7 +591,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Paragraph Color",
 			"Set the color for paragraphs",
 			"slidesRupParagraphColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -495,7 +599,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"List Color",
 			"Set the color for lists",
 			"slidesRupListColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -503,7 +607,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Strong Color",
 			"Set the color for strong/bold text",
 			"slidesRupStrongColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -511,7 +615,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Emphasis Color",
 			"Set the color for emphasis/italic text",
 			"slidesRupEmColor",
-			onColorChange
+			onColorChange,
 		);
 
 		this.createColorSetting(
@@ -519,7 +623,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Link Color",
 			"Set the color for links",
 			"slidesRupLinkColor",
-			onColorChange
+			onColorChange,
 		);
 	}
 
@@ -529,12 +633,12 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (this.plugin.settings.enableSlidesRupFontFamilyUserSetting) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"fontFamily"
+						"fontFamily",
 					);
 				}
 			},
 			200,
-			true
+			true,
 		);
 
 		const onFontSizeChange = debounce(
@@ -542,23 +646,23 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (this.plugin.settings.enableSlidesRupFontSizeUserSetting) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"fontSize"
+						"fontSize",
 					);
 				}
 			},
 			200,
-			true
+			true,
 		);
 
 		const onHeadingTextTransformChange = debounce(
 			async () => {
 				await this.plugin.saveSettings();
 				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"headingTransform"
+					"headingTransform",
 				);
 			},
 			200,
-			true
+			true,
 		);
 		// Obsidian 的 Setting API（即 addDropdown）本身并不支持原生的分组（optgroup）功能。
 		// 如果需要分组效果，需要自定义实现，或者直接操作 DOM。
@@ -649,11 +753,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (value) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"fontFamily"
+						"fontFamily",
 					);
 				} else {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
-						"fontFamily"
+						"fontFamily",
 					);
 				}
 			},
@@ -665,7 +769,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set Main Font",
 			"slidesRupMainFont",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -674,7 +778,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set Heading Font",
 			"slidesRupHeadingFont",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		// 各级标题字体（H1-H6）
@@ -684,7 +788,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H1 Font",
 			"slidesRupH1Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -693,7 +797,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H2 Font",
 			"slidesRupH2Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -702,7 +806,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H3 Font",
 			"slidesRupH3Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -711,7 +815,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H4 Font",
 			"slidesRupH4Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -720,7 +824,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H5 Font",
 			"slidesRupH5Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -729,7 +833,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set H6 Font",
 			"slidesRupH6Font",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		// Tagline, Slogan, Nav 字体大小
@@ -739,7 +843,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set Tagline Font",
 			"slidesRupTaglineFont",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -748,7 +852,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set Slogan Font",
 			"slidesRupSloganFont",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		this.createGroupedDropdownSetting(
@@ -757,7 +861,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Set Nav Font",
 			"slidesRupNavFont",
 			fontOptionsGrouped,
-			onFontFamilyChange
+			onFontFamilyChange,
 		);
 
 		containerEl.createEl("h2", {
@@ -774,11 +878,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (value) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"fontSize"
+						"fontSize",
 					);
 				} else {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
-						"fontSize"
+						"fontSize",
 					);
 				}
 			},
@@ -791,7 +895,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupMainFontSize",
 			12,
 			72,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		// 各级标题字号设置（H1-H6）
@@ -802,7 +906,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH1Size",
 			12,
 			180,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -812,7 +916,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH2Size",
 			12,
 			144,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -822,7 +926,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH3Size",
 			12,
 			108,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -832,7 +936,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH4Size",
 			12,
 			72,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -842,7 +946,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH5Size",
 			12,
 			54,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -852,7 +956,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupH6Size",
 			12,
 			36,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -862,7 +966,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupTaglineSize",
 			12,
 			54,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -872,7 +976,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupSloganSize",
 			12,
 			54,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		this.createSizeSliderSetting(
@@ -882,7 +986,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"slidesRupNavSize",
 			12,
 			54,
-			onFontSizeChange
+			onFontSizeChange,
 		);
 
 		// 标题文字变换设置
@@ -902,7 +1006,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				uppercase: "Uppercase",
 				lowercase: "Lowercase",
 			},
-			onHeadingTextTransformChange
+			onHeadingTextTransformChange,
 		);
 	}
 
@@ -927,7 +1031,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				decideByUser: "Decide At Creation",
 				assigned: "User Assigned Folder",
 			},
-			toggleDefaultLocation
+			toggleDefaultLocation,
 		);
 
 		const defaultLocationSetting = this.createFolderSetting(
@@ -935,7 +1039,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default New Slide Location",
 			"Please enter the path to the default new slide location",
 			"Enter the full path to the default new slide location",
-			"assignedNewSlideLocation"
+			"assignedNewSlideLocation",
 		);
 
 		toggleDefaultLocation(this.plugin.settings.newSlideLocationOption);
@@ -975,7 +1079,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				"p9-16": "Presentation 9:16",
 				a4v: "A4 Vertical",
 				a4h: "A4 Horizontal",
-			}
+			},
 		);
 
 		this.createTextSetting(containerEl, {
@@ -1050,7 +1154,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			{
 				h: "Horizontal",
 				v: "Vertical",
-			}
+			},
 		);
 
 		this.createDropdownSetting(
@@ -1062,7 +1166,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				default: "Default",
 				linear: "Linear",
 				grid: "Grid",
-			}
+			},
 		);
 
 		this.createTextSetting(containerEl, {
@@ -1149,7 +1253,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default TOC Page List Class",
 			"Please select the default list class for TOC pages",
 			"slidesRupDefaultTOCListClass",
-			defaultListClassOptions
+			defaultListClassOptions,
 		);
 
 		this.createDropdownSetting(
@@ -1157,7 +1261,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default Chapter Page List Class",
 			"Please select the default list class for chapter pages",
 			"slidesRupDefaultChapterListClass",
-			defaultListClassOptions
+			defaultListClassOptions,
 		);
 
 		this.createDropdownSetting(
@@ -1165,7 +1269,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default Content Page List Class",
 			"Please select the default list class for content pages",
 			"slidesRupDefaultContentListClass",
-			defaultListClassOptions
+			defaultListClassOptions,
 		);
 
 		this.createDropdownSetting(
@@ -1173,7 +1277,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default Blank Page List Class",
 			"Please select the default list class for blank pages",
 			"slidesRupDefaultBlankListClass",
-			defaultListClassOptions
+			defaultListClassOptions,
 		);
 
 		this.createDropdownSetting(
@@ -1181,7 +1285,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"Default BackCover Page List Class",
 			"Please select the default list class for backcover page",
 			"slidesRupDefaultBackCoverListClass",
-			defaultListClassOptions
+			defaultListClassOptions,
 		);
 
 		this.createTextSetting(containerEl, {
@@ -1258,11 +1362,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 				if (value) {
 					await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-						"userStyle"
+						"userStyle",
 					);
 				} else {
 					await this.plugin.services.slidesRupStyleService.clearStyleSection(
-						"userStyle"
+						"userStyle",
 					);
 				}
 			},
@@ -1308,11 +1412,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				this.plugin.settings.customCss = newCss;
 				this.plugin.saveSettings();
 				this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"userStyle"
+					"userStyle",
 				);
 			},
 			500,
-			true
+			true,
 		);
 
 		new Setting(containerEl)
@@ -1322,7 +1426,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 		// 创建一个 div 元素作为 CodeMirror 的容器
 		const editorContainerForMarpCss = containerEl.createDiv(
-			"slides-rup-css-editor"
+			"slides-rup-css-editor",
 		);
 
 		new EditorView({
@@ -1357,11 +1461,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				this.plugin.settings.customMarpCss = newCss;
 				this.plugin.saveSettings();
 				this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"userStyleMarp"
+					"userStyleMarp",
 				);
 			},
 			500,
-			true
+			true,
 		);
 
 		this.createTextAreaSetting(containerEl, {
@@ -1396,7 +1500,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		// 添加 Advanced Slides YAML 参考链接
 
 		const yamlEditorContainer = containerEl.createDiv(
-			"slides-rup-yaml-editor"
+			"slides-rup-yaml-editor",
 		);
 		new EditorView({
 			state: EditorState.create({
@@ -1430,7 +1534,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				this.plugin.saveSettings();
 			},
 			500,
-			true
+			true,
 		);
 
 		containerEl.createEl("a", {
@@ -1443,7 +1547,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	// 通用方法：创建切换设置项
 	private createToggleSetting(
 		content: HTMLElement,
-		config: SettingConfig
+		config: SettingConfig,
 	): void {
 		new Setting(content)
 			.setName(t(config.name as any))
@@ -1455,7 +1559,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 	private createTextSetting(
 		content: HTMLElement,
-		config: SettingConfig
+		config: SettingConfig,
 	): void {
 		new Setting(content)
 			.setName(t(config.name as any))
@@ -1467,7 +1571,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 	private createTextAreaSetting(
 		content: HTMLElement,
-		config: SettingConfig
+		config: SettingConfig,
 	): void {
 		new Setting(content)
 			.setName(t(config.name as any))
@@ -1480,7 +1584,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 	private createBaseSetting(
 		containerEl: HTMLElement,
 		nameKey: string,
-		descKey: string
+		descKey: string,
 	): Setting {
 		return new Setting(containerEl)
 			.setName(t(nameKey as any))
@@ -1492,7 +1596,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		nameKey: string,
 		descKey: string,
 		placeholderKey: string,
-		settingKey: SettingsKeys
+		settingKey: SettingsKeys,
 	): Setting {
 		return this.createBaseSetting(containerEl, nameKey, descKey).addSearch(
 			(text) => {
@@ -1503,7 +1607,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 						(this.plugin.settings[settingKey] as any) = value;
 						await this.plugin.saveSettings();
 					});
-			}
+			},
 		);
 	}
 
@@ -1512,14 +1616,14 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		nameKey: string,
 		descKey: string,
 		placeholderKey: string,
-		settingKey: SettingsKeys
+		settingKey: SettingsKeys,
 	) {
 		this.createBaseSetting(containerEl, nameKey, descKey).addSearch(
 			(text) => {
 				new FileSuggest(
 					text.inputEl,
 					this.plugin,
-					FileSuggestMode.TemplateFiles
+					FileSuggestMode.TemplateFiles,
 				);
 				text.setPlaceholder(t(placeholderKey as any))
 					.setValue(this.plugin.settings[settingKey] as string)
@@ -1527,7 +1631,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 						(this.plugin.settings[settingKey] as any) = value;
 						await this.plugin.saveSettings();
 					});
-			}
+			},
 		);
 	}
 
@@ -1538,19 +1642,22 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		settingKey: SettingsKeys,
 		options: Record<string, string>,
 		onChangeCallback?: (value: string) => void,
-		translateOptions: boolean = true
+		translateOptions: boolean = true,
 	): Setting {
 		if (translateOptions) {
-			options = Object.entries(options).reduce((acc, [key, valueKey]) => {
-				acc[key] = t(valueKey as any);
-				return acc;
-			}, {} as Record<string, string>);
+			options = Object.entries(options).reduce(
+				(acc, [key, valueKey]) => {
+					acc[key] = t(valueKey as any);
+					return acc;
+				},
+				{} as Record<string, string>,
+			);
 		}
 
 		return this.createBaseSetting(
 			containerEl,
 			nameKey,
-			descKey
+			descKey,
 		).addDropdown((dropdown) => {
 			dropdown
 				.addOptions(options)
@@ -1584,13 +1691,13 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				let statusEl: HTMLElement | null = null;
 
 				const updateVisualState = (
-					state: "valid" | "invalid" | "loading" | "idle"
+					state: "valid" | "invalid" | "loading" | "idle",
 				) => {
 					// Clear previous state
 					statusEl?.remove();
 					text.inputEl.classList.remove(
 						"valid-input",
-						"invalid-input"
+						"invalid-input",
 					);
 
 					switch (state) {
@@ -1649,7 +1756,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 					try {
 						await options.remoteValidator();
 						updateVisualState(
-							options.getIsValid() ? "valid" : "invalid"
+							options.getIsValid() ? "valid" : "invalid",
 						);
 					} catch (error) {
 						console.error("Validation error:", error);
@@ -1687,12 +1794,12 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			label: string;
 			options: Record<string, string>;
 		}>,
-		onChangeCallback?: (value: string) => void
+		onChangeCallback?: (value: string) => void,
 	): Setting {
 		return this.createBaseSetting(
 			containerEl,
 			nameKey,
-			descKey
+			descKey,
 		).addDropdown((dropdown) => {
 			// 先清空默认选项
 			dropdown.selectEl.innerHTML = "";
@@ -1737,7 +1844,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			| "slidesRupNavSize",
 		min: number,
 		max: number,
-		onChangeCallback: (value: number) => void
+		onChangeCallback: (value: number) => void,
 	) {
 		const setting = new Setting(containerEl)
 			.setName(t(nameKey as any))
@@ -1784,7 +1891,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 
 		// 获取框架文件夹
 		const slidesRupUserDesignsFolder = this.app.vault.getAbstractFileByPath(
-			slidesRupUserDesignsPath
+			slidesRupUserDesignsPath,
 		);
 
 		if (
@@ -1812,7 +1919,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		nameKey: string,
 		descKey: string,
 		settingKey: SettingsKeys,
-		onChangeCallback: (value: string) => void
+		onChangeCallback: (value: string) => void,
 	) {
 		const setting = new Setting(containerEl)
 			.setName(t(nameKey as any))
@@ -1867,7 +1974,7 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				DEFAULT_DESIGNS.map((letter) => [
 					letter,
 					`Slide Design ${letter.toUpperCase()}`,
-				])
+				]),
 			),
 		};
 	}
@@ -1877,9 +1984,9 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			this.plugin.settings;
 		return Boolean(
 			userChecked &&
-				updateAPIKeyIsValid &&
-				userEmail &&
-				updateAPIKey?.includes("patquQB1Cd93hSAlC")
+			updateAPIKeyIsValid &&
+			userEmail &&
+			updateAPIKey?.includes("patquQB1Cd93hSAlC"),
 		);
 	}
 }

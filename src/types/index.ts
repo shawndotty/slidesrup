@@ -60,6 +60,7 @@ export interface SlidesRupSettings {
 	addChapterWithSubPages: boolean;
 	demoFolder: string;
 	presentationPlugin: string;
+	pluginDownloadSource: string;
 	updateIDs: {
 		style?: AirtableIds;
 		marpTheme?: AirtableIds;
