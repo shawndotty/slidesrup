@@ -626,6 +626,8 @@ export default {
 	"Create New Design In Design Maker": "Create New Design In Design Maker",
 	"Load Existing Design In Design Maker": "Load Existing Design In Design Maker",
 	"No existing user designs found": "No existing user designs found",
+	Design: "Design",
+	Preview: "Preview",
 	"Placeholder Category Layout": "Layout",
 	"Placeholder Category Navigation": "Navigation",
 	"Placeholder Category Metadata": "Metadata",

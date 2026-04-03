@@ -7,14 +7,17 @@ export function renderDesignPreview(options: {
 	page: DesignPageDraft;
 	theme: ThemeStyleDraft;
 	selectedBlockId: string | null;
+	showTitle?: boolean;
 }): void {
-	const { container, page, theme, selectedBlockId } = options;
+	const { container, page, theme, selectedBlockId, showTitle = true } = options;
 	container.empty();
 
-	container.createEl("h3", {
-		text: t("Live Preview"),
-		cls: "slides-rup-design-maker-section-title",
-	});
+	if (showTitle) {
+		container.createEl("h3", {
+			text: t("Live Preview"),
+			cls: "slides-rup-design-maker-section-title",
+		});
+	}
 
 	const preview = container.createDiv("slides-rup-design-maker-preview");
 	preview.style.setProperty("--sr-dm-primary", theme.primaryColor);

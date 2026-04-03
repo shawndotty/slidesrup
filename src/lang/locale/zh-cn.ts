@@ -562,6 +562,8 @@ export default {
 	"Create New Design In Design Maker": "在 Design Maker 中新建设计",
 	"Load Existing Design In Design Maker": "在 Design Maker 中加载现有设计",
 	"No existing user designs found": "没有找到可加载的用户设计",
+	Design: "设计",
+	Preview: "预览",
 	"Placeholder Category Layout": "布局",
 	"Placeholder Category Navigation": "导航",
 	"Placeholder Category Metadata": "元信息",

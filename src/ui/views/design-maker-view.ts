@@ -13,7 +13,10 @@ import { renderDesignPageList } from "../components/design-page-list";
 import { renderDesignThemePanel } from "../components/design-theme-panel";
 import { renderDesignPreview } from "../components/design-preview";
 import { renderDesignInspector } from "../components/design-inspector";
-import { renderDesignCanvas } from "../components/design-canvas";
+import {
+	renderDesignCanvas,
+	renderDesignToolbar,
+} from "../components/design-canvas";
 
 export class DesignMakerView extends ItemView {
 	private plugin: any;
@@ -23,7 +26,10 @@ export class DesignMakerView extends ItemView {
 	private activePageType: DesignPageType = "cover";
 	private selectedBlockId: string | null = null;
 	private pageListEl: HTMLElement | null = null;
+	private centerTabsEl: HTMLElement | null = null;
+	private centerStageEl: HTMLElement | null = null;
 	private canvasEl: HTMLElement | null = null;
+	private toolbarEl: HTMLElement | null = null;
 	private inspectorEl: HTMLElement | null = null;
 	private themeEl: HTMLElement | null = null;
 	private previewEl: HTMLElement | null = null;
@@ -31,6 +37,7 @@ export class DesignMakerView extends ItemView {
 	private cssSourceEl: HTMLElement | null = null;
 	private pageSourceValue = "";
 	private cssSourceValue = "";
+	private activeCenterTab: "design" | "preview" = "design";
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -55,10 +62,7 @@ export class DesignMakerView extends ItemView {
 		this._render();
 	}
 
-	async setState(
-		state: DesignMakerViewState,
-		result: any,
-	): Promise<void> {
+	async setState(state: DesignMakerViewState, result: any): Promise<void> {
 		this.designState = state;
 		await this._loadDraft();
 		await super.setState(state, result);
@@ -97,11 +101,15 @@ export class DesignMakerView extends ItemView {
 		this.contentEl.empty();
 		this.contentEl.addClass("slides-rup-design-maker-view");
 
-		const header = this.contentEl.createDiv("slides-rup-design-maker-header");
+		const header = this.contentEl.createDiv(
+			"slides-rup-design-maker-header",
+		);
 		const title = header.createEl("h2", { text: t("Design Maker") });
 		title.addClass("slides-rup-design-maker-title");
 
-		const actions = header.createDiv("slides-rup-design-maker-header-actions");
+		const actions = header.createDiv(
+			"slides-rup-design-maker-header-actions",
+		);
 		const saveButton = actions.createEl("button", {
 			text: t("Save and Apply"),
 		});
@@ -119,14 +127,29 @@ export class DesignMakerView extends ItemView {
 			await this._loadDraft();
 		});
 
-		const layout = this.contentEl.createDiv("slides-rup-design-maker-layout");
+		const layout = this.contentEl.createDiv(
+			"slides-rup-design-maker-layout",
+		);
 		this.pageListEl = layout.createDiv("slides-rup-design-maker-sidebar");
 		const center = layout.createDiv("slides-rup-design-maker-main");
-		this.canvasEl = center.createDiv("slides-rup-design-maker-canvas-panel");
+		this.centerTabsEl = center.createDiv(
+			"slides-rup-design-maker-center-tabs",
+		);
+		this.centerStageEl = center.createDiv(
+			"slides-rup-design-maker-center-stage",
+		);
+		this.canvasEl = this.centerStageEl.createDiv(
+			"slides-rup-design-maker-canvas-panel",
+		);
+		this.previewEl = this.centerStageEl.createDiv(
+			"slides-rup-design-maker-panel",
+		);
+		this.toolbarEl = center.createDiv(
+			"slides-rup-design-maker-toolbar-panel",
+		);
 		const right = layout.createDiv("slides-rup-design-maker-sidepanel");
 		this.inspectorEl = right.createDiv("slides-rup-design-maker-panel");
 		this.themeEl = right.createDiv("slides-rup-design-maker-panel");
-		this.previewEl = right.createDiv("slides-rup-design-maker-panel");
 		this.pageSourceEl = right.createDiv("slides-rup-design-maker-panel");
 		this.cssSourceEl = right.createDiv("slides-rup-design-maker-panel");
 	}
@@ -136,7 +159,9 @@ export class DesignMakerView extends ItemView {
 		if (!this.pageListEl || !this.canvasEl || !this.inspectorEl) return;
 		if (!this.draft) {
 			this._renderEmptyState(
-				this.designState?.designPath ? t("Loading design") : t("No design loaded"),
+				this.designState?.designPath
+					? t("Loading design")
+					: t("No design loaded"),
 			);
 			return;
 		}
@@ -148,58 +173,55 @@ export class DesignMakerView extends ItemView {
 			onSelect: (pageType) => {
 				this.activePageType = pageType;
 				this.selectedBlockId = null;
-				this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
-				this._render();
-			},
-		});
-
-		renderDesignCanvas({
-			container: this.canvasEl,
-			page: this._getCurrentPage(),
-			selectedBlockId: this.selectedBlockId,
-			onSelect: (blockId) => {
-				this.selectedBlockId = blockId;
-				this._renderRightPanel();
-			},
-			onPatchBlock: (blockId, patcher) => {
-				this._patchBlockById(blockId, patcher);
-				this._renderCanvasAndPreview();
-			},
-			onAddBlock: (block) => {
-				this._getCurrentPage().blocks.push(block);
-				this.selectedBlockId = block.id;
-				this._syncPageSource();
-				this._render();
-			},
-			onDeleteBlock: (blockId) => {
-				const page = this._getCurrentPage();
-				page.blocks = page.blocks.filter((block) => block.id !== blockId);
-				if (this.selectedBlockId === blockId) this.selectedBlockId = null;
-				this._syncPageSource();
-				this._render();
-			},
-			onDuplicateBlock: (blockId) => {
-				const target = this._getCurrentPage().blocks.find(
-					(block) => block.id === blockId && block.type === "grid",
+				this.pageSourceValue = generatePageMarkdown(
+					this._getCurrentPage(),
 				);
-				if (!target || target.type !== "grid") return;
-				const nextBlock: DesignGridBlock = {
-					...target,
-					id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-					rect: {
-						...target.rect,
-						x: Math.min(100 - target.rect.width, target.rect.x + 4),
-						y: Math.min(100 - target.rect.height, target.rect.y + 4),
-					},
-				};
-				this._getCurrentPage().blocks.push(nextBlock);
-				this.selectedBlockId = nextBlock.id;
-				this._syncPageSource();
 				this._render();
 			},
 		});
 
+		this._renderCenterPanel();
 		this._renderRightPanel();
+	}
+
+	private _renderCenterPanel(): void {
+		this._renderCenterTabs();
+		this._renderToolbar();
+		if (this.activeCenterTab === "design") {
+			this.canvasEl?.removeClass("is-hidden");
+			this.previewEl?.addClass("is-hidden");
+			this._renderCanvasOnly();
+			return;
+		}
+		this.canvasEl?.addClass("is-hidden");
+		this.previewEl?.removeClass("is-hidden");
+		this._renderPreviewOnly(false);
+	}
+
+	private _renderCenterTabs(): void {
+		if (!this.centerTabsEl) return;
+		this.centerTabsEl.empty();
+		const designButton = this.centerTabsEl.createEl("button", {
+			text: t("Design"),
+			cls: "slides-rup-design-maker-tab-button",
+		});
+		const previewButton = this.centerTabsEl.createEl("button", {
+			text: t("Preview"),
+			cls: "slides-rup-design-maker-tab-button",
+		});
+		if (this.activeCenterTab === "design") {
+			designButton.addClass("is-active");
+		} else {
+			previewButton.addClass("is-active");
+		}
+		designButton.addEventListener("click", () => {
+			this.activeCenterTab = "design";
+			this._renderCenterPanel();
+		});
+		previewButton.addEventListener("click", () => {
+			this.activeCenterTab = "preview";
+			this._renderCenterPanel();
+		});
 	}
 
 	private _renderRightPanel(): void {
@@ -224,11 +246,10 @@ export class DesignMakerView extends ItemView {
 					...this.draft!.theme,
 					...patch,
 				};
-				this._renderPreviewOnly();
+				this._renderPreviewOnly(false);
 			},
 		});
 
-		this._renderPreviewOnly();
 		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
 			this._renderPageSourceEditor();
 			this._renderCssSourceEditor();
@@ -240,6 +261,15 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCanvasAndPreview(): void {
 		this._syncPageSource();
+		this._renderCanvasOnly();
+		this._renderPreviewOnly(false);
+		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
+			this._renderPageSourceEditor();
+		}
+		this._renderToolbar();
+	}
+
+	private _renderCanvasOnly(): void {
 		renderDesignCanvas({
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
@@ -259,9 +289,10 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onDeleteBlock: (blockId) => {
-				this._getCurrentPage().blocks = this._getCurrentPage().blocks.filter(
-					(block) => block.id !== blockId,
-				);
+				this._getCurrentPage().blocks =
+					this._getCurrentPage().blocks.filter(
+						(block) => block.id !== blockId,
+					);
 				this.selectedBlockId = null;
 				this._syncPageSource();
 				this._render();
@@ -277,26 +308,72 @@ export class DesignMakerView extends ItemView {
 					rect: {
 						...target.rect,
 						x: Math.min(100 - target.rect.width, target.rect.x + 3),
-						y: Math.min(100 - target.rect.height, target.rect.y + 3),
+						y: Math.min(
+							100 - target.rect.height,
+							target.rect.y + 3,
+						),
 					},
 				});
 				this._syncPageSource();
 				this._render();
 			},
 		});
-		this._renderPreviewOnly();
-		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
-			this._renderPageSourceEditor();
-		}
 	}
 
-	private _renderPreviewOnly(): void {
+	private _renderToolbar(): void {
+		if (!this.toolbarEl) return;
+		renderDesignToolbar({
+			container: this.toolbarEl,
+			selectedBlockId: this.selectedBlockId,
+			onAddBlock: (block) => {
+				this._getCurrentPage().blocks.push(block);
+				this.selectedBlockId = block.id;
+				this._syncPageSource();
+				this._render();
+			},
+			onDeleteBlock: (blockId) => {
+				const page = this._getCurrentPage();
+				page.blocks = page.blocks.filter(
+					(block) => block.id !== blockId,
+				);
+				if (this.selectedBlockId === blockId)
+					this.selectedBlockId = null;
+				this._syncPageSource();
+				this._render();
+			},
+			onDuplicateBlock: (blockId) => {
+				const target = this._getCurrentPage().blocks.find(
+					(block) => block.id === blockId && block.type === "grid",
+				);
+				if (!target || target.type !== "grid") return;
+				const nextBlock: DesignGridBlock = {
+					...target,
+					id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+					rect: {
+						...target.rect,
+						x: Math.min(100 - target.rect.width, target.rect.x + 4),
+						y: Math.min(
+							100 - target.rect.height,
+							target.rect.y + 4,
+						),
+					},
+				};
+				this._getCurrentPage().blocks.push(nextBlock);
+				this.selectedBlockId = nextBlock.id;
+				this._syncPageSource();
+				this._render();
+			},
+		});
+	}
+
+	private _renderPreviewOnly(showTitle: boolean = true): void {
 		if (!this.draft) return;
 		renderDesignPreview({
 			container: this.previewEl!,
 			page: this._getCurrentPage(),
 			theme: this.draft.theme,
 			selectedBlockId: this.selectedBlockId,
+			showTitle,
 		});
 		const previewCanvas = this.previewEl!.querySelector(
 			".slides-rup-design-maker-preview",
@@ -408,12 +485,16 @@ export class DesignMakerView extends ItemView {
 		[
 			this.pageListEl,
 			this.canvasEl,
+			this.toolbarEl,
 			this.inspectorEl,
 			this.themeEl,
 			this.previewEl,
 			this.pageSourceEl,
 			this.cssSourceEl,
 		].forEach((element) => element?.empty());
+		this._renderCenterTabs();
+		this.canvasEl?.removeClass("is-hidden");
+		this.previewEl?.addClass("is-hidden");
 		this.canvasEl?.createEl("p", {
 			text: message,
 			cls: "slides-rup-design-maker-empty-text",
@@ -423,19 +504,34 @@ export class DesignMakerView extends ItemView {
 	private _hasLayout(): boolean {
 		return Boolean(
 			this.pageListEl &&
-				this.canvasEl &&
-				this.inspectorEl &&
-				this.themeEl &&
-				this.previewEl &&
-				this.pageSourceEl &&
-				this.cssSourceEl &&
-				this.contentEl.contains(this.pageListEl),
+			this.centerTabsEl &&
+			this.centerStageEl &&
+			this.canvasEl &&
+			this.toolbarEl &&
+			this.inspectorEl &&
+			this.themeEl &&
+			this.previewEl &&
+			this.pageSourceEl &&
+			this.cssSourceEl &&
+			this.contentEl.contains(this.pageListEl) &&
+			this.contentEl.contains(this.centerTabsEl) &&
+			this.contentEl.contains(this.centerStageEl) &&
+			this.contentEl.contains(this.canvasEl) &&
+			this.contentEl.contains(this.toolbarEl) &&
+			this.contentEl.contains(this.inspectorEl) &&
+			this.contentEl.contains(this.themeEl) &&
+			this.contentEl.contains(this.previewEl) &&
+			this.contentEl.contains(this.pageSourceEl) &&
+			this.contentEl.contains(this.cssSourceEl),
 		);
 	}
 
 	private _resetLayoutRefs(): void {
 		this.pageListEl = null;
+		this.centerTabsEl = null;
+		this.centerStageEl = null;
 		this.canvasEl = null;
+		this.toolbarEl = null;
 		this.inspectorEl = null;
 		this.themeEl = null;
 		this.previewEl = null;

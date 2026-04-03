@@ -383,6 +383,40 @@ h3.slides-rup-title {
 
 .slides-rup-design-maker-main {
 	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.slides-rup-design-maker-center-tabs {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.slides-rup-design-maker-tab-button {
+	min-width: 88px;
+}
+
+.slides-rup-design-maker-tab-button.is-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.slides-rup-design-maker-center-stage {
+	min-height: 0;
+}
+
+.slides-rup-design-maker-toolbar-panel {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	padding: 12px;
+}
+
+.is-hidden {
+	display: none;
 }
 
 .slides-rup-design-maker-section-title {

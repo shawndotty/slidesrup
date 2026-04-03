@@ -39,25 +39,16 @@ function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
 	};
 }
 
-export function renderDesignCanvas(options: {
+export function renderDesignToolbar(options: {
 	container: HTMLElement;
-	page: DesignPageDraft;
 	selectedBlockId: string | null;
-	onSelect: (blockId: string | null) => void;
-	onPatchBlock: (
-		blockId: string,
-		patcher: (block: DesignGridBlock) => void,
-	) => void;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onDeleteBlock: (blockId: string) => void;
 	onDuplicateBlock: (blockId: string) => void;
 }): void {
 	const {
 		container,
-		page,
 		selectedBlockId,
-		onSelect,
-		onPatchBlock,
 		onAddBlock,
 		onDeleteBlock,
 		onDuplicateBlock,
@@ -93,6 +84,33 @@ export function renderDesignCanvas(options: {
 			onDeleteBlock(selectedBlockId),
 		);
 	}
+}
+
+export function renderDesignCanvas(options: {
+	container: HTMLElement;
+	page: DesignPageDraft;
+	selectedBlockId: string | null;
+	onSelect: (blockId: string | null) => void;
+	onPatchBlock: (
+		blockId: string,
+		patcher: (block: DesignGridBlock) => void,
+	) => void;
+	onAddBlock: (block: DesignGridBlock) => void;
+	onDeleteBlock: (blockId: string) => void;
+	onDuplicateBlock: (blockId: string) => void;
+}): void {
+	const {
+		container,
+		page,
+		selectedBlockId,
+		onSelect,
+		onPatchBlock,
+		onAddBlock,
+		onDeleteBlock,
+		onDuplicateBlock,
+	} = options;
+
+	container.empty();
 
 	const canvas = container.createDiv("slides-rup-design-maker-canvas");
 	canvas.addEventListener("click", () => onSelect(null));
