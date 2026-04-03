@@ -650,16 +650,21 @@ h3.slides-rup-title {
 }
 
 .slides-rup-design-maker-rendered-svg {
-	display: flex;
-	align-items: stretch;
-	justify-content: stretch;
+	position: relative;
+	display: block;
 	pointer-events: none;
 }
 
 .slides-rup-design-maker-rendered-svg svg {
-	width: 100%;
-	height: 100%;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
 	display: block;
+}
+
+.slides-rup-design-maker-has-svg-content {
+	padding: 0;
 }
 
 .slides-rup-design-maker-rendered-svg .has-dark-fill-color {

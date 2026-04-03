@@ -59,6 +59,7 @@ function looksLikeImageResource(target: string): boolean {
 }
 
 function renderSvg(container: HTMLElement, markup: string): boolean {
+	container.addClass("slides-rup-design-maker-has-svg-content");
 	const wrapper = container.createDiv("slides-rup-design-maker-rendered-svg");
 	wrapper.innerHTML = markup;
 	return true;
