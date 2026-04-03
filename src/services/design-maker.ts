@@ -9,7 +9,10 @@ import {
 	getAllDesignsOptions,
 } from "src/utils";
 import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "src/constants";
-import { SlideDesignSuggester } from "../suggesters/suggesters";
+import {
+	DesignMakerModeSuggester,
+	SlideDesignSuggester,
+} from "../suggesters/suggesters";
 import { VSCodeService } from "./vscode-service";
 import {
 	DESIGN_MAKER_VIEW_TYPE,
@@ -95,19 +98,48 @@ export class DesignMaker {
 			new Notice(t("Enable Design Maker"));
 			return;
 		}
+		const mode = await this._selectDesignMakerMode();
+		if (!mode) return;
+		if (mode.value === "load") {
+			await this._openExistingDesignInMaker();
+			return;
+		}
+		await this._createAndOpenDesignInMaker();
+	}
+
+	private async _createAndOpenDesignInMaker(): Promise<void> {
 		const options = this.getDesignOptions();
 		const sourceDesign = await this._selectSlideDesign(options);
 		if (!sourceDesign) return;
 		const defaultName = `${sourceDesign.value}-Design`;
-		const designName = normalizeDesignName(
-			await this._getDesignName(defaultName),
-		);
+		const designName = normalizeDesignName(await this._getDesignName(defaultName));
 		if (!designName) return;
-		const designPath = await this.cloneDesignFromSource(
-			sourceDesign.value,
-			designName,
-		);
+		const designPath = await this.cloneDesignFromSource(sourceDesign.value, designName);
 		if (!designPath) return;
+		await this._openDesignMakerLeaf(designPath, designName);
+	}
+
+	private async _openExistingDesignInMaker(): Promise<void> {
+		const userDesignOptions = this.getUserDesignOptions();
+		if (userDesignOptions.length === 0) {
+			new Notice(t("No existing user designs found"));
+			return;
+		}
+		const design = await this._selectSlideDesign(userDesignOptions);
+		if (!design) return;
+		const designPath = `${this.userDesignPath}/Design-${design.value}`;
+		const folder = this.app.vault.getAbstractFileByPath(designPath);
+		if (!(folder instanceof TFolder)) {
+			new Notice(`${t("Cann't find the source folder")}${designPath}`);
+			return;
+		}
+		await this._openDesignMakerLeaf(designPath, design.value);
+	}
+
+	private async _openDesignMakerLeaf(
+		designPath: string,
+		designName: string,
+	): Promise<void> {
 		if (!this.plugin) {
 			await this._revealNewDesign(designPath);
 			return;
@@ -130,6 +162,18 @@ export class DesignMaker {
 			this.settings.slidesRupFrameworkFolder,
 		);
 		return getAllDesignsOptions(this.defaultDesigns, this.userDesigns);
+	}
+
+	getUserDesignOptions(): Array<SuggesterOption> {
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.slidesRupFrameworkFolder,
+		);
+		return this.userDesigns.map((design, index) => ({
+			id: `user-design-${design}`,
+			name: `${index + 1}. ${t("Slide Design")} ${design}`,
+			value: design,
+		}));
 	}
 
 	async cloneDesignFromSource(
@@ -349,6 +393,17 @@ export class DesignMaker {
 		options: SuggesterOption[]
 	): Promise<SuggesterOption | null> {
 		const suggester = new SlideDesignSuggester(this.app, options);
+		return new Promise((resolve) => {
+			suggester.onChooseItem = (item: SuggesterOption) => {
+				resolve(item);
+				return item;
+			};
+			suggester.open();
+		});
+	}
+
+	private async _selectDesignMakerMode(): Promise<SuggesterOption | null> {
+		const suggester = new DesignMakerModeSuggester(this.app);
 		return new Promise((resolve) => {
 			suggester.onChooseItem = (item: SuggesterOption) => {
 				resolve(item);

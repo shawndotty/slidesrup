@@ -44,3 +44,21 @@ export class SlideModeSuggester extends BaseSuggester {
 		]);
 	}
 }
+
+export class DesignMakerModeSuggester extends BaseSuggester {
+	constructor(app: App) {
+		super(app);
+		this.setOptions([
+			{
+				id: "create",
+				name: t("Create New Design In Design Maker"),
+				value: "create",
+			},
+			{
+				id: "load",
+				name: t("Load Existing Design In Design Maker"),
+				value: "load",
+			},
+		]);
+	}
+}
