@@ -89,6 +89,7 @@ export function renderDesignToolbar(options: {
 export function renderDesignCanvas(options: {
 	container: HTMLElement;
 	page: DesignPageDraft;
+	themeRawCss?: string;
 	selectedBlockId: string | null;
 	onSelect: (blockId: string | null) => void;
 	onPatchBlock: (
@@ -102,6 +103,7 @@ export function renderDesignCanvas(options: {
 	const {
 		container,
 		page,
+		themeRawCss = "",
 		selectedBlockId,
 		onSelect,
 		onPatchBlock,
@@ -113,6 +115,10 @@ export function renderDesignCanvas(options: {
 	container.empty();
 
 	const canvas = container.createDiv("slides-rup-design-maker-canvas");
+	if (themeRawCss.trim()) {
+		const styleEl = canvas.createEl("style");
+		styleEl.textContent = themeRawCss;
+	}
 	canvas.addEventListener("click", () => onSelect(null));
 
 	page.blocks.forEach((block) => {

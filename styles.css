@@ -662,6 +662,22 @@ h3.slides-rup-title {
 	display: block;
 }
 
+.slides-rup-design-maker-rendered-svg .has-dark-fill-color {
+	fill: var(--sr-dm-primary);
+}
+
+.slides-rup-design-maker-rendered-svg .has-dark-fill-color-lighter {
+	fill: color-mix(in srgb, var(--sr-dm-primary) 75%, #ffffff 25%);
+}
+
+.slides-rup-design-maker-rendered-svg .has-dark-stroke-color {
+	stroke: var(--sr-dm-primary);
+}
+
+.slides-rup-design-maker-rendered-svg .has-dark-stroke-color-lighter {
+	stroke: color-mix(in srgb, var(--sr-dm-primary) 75%, #ffffff 25%);
+}
+
 .slides-rup-design-maker-rendered-image {
 	display: block;
 	object-fit: contain;

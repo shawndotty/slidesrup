@@ -305,6 +305,7 @@ export class DesignMakerView extends ItemView {
 		renderDesignCanvas({
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
+			themeRawCss: this.draft?.theme.rawCss || "",
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
 				this.selectedBlockId = blockId;

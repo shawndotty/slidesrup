@@ -27,6 +27,10 @@ export function renderDesignPreview(options: {
 	preview.style.setProperty("--sr-dm-heading-font", theme.headingFont);
 	preview.style.setProperty("--sr-dm-body-font", theme.bodyFont);
 	preview.classList.toggle("is-dark", theme.mode === "dark");
+	if (theme.rawCss.trim()) {
+		const styleEl = preview.createEl("style");
+		styleEl.textContent = theme.rawCss;
+	}
 
 	page.blocks.forEach((block) => {
 		if (block.type === "raw") {
