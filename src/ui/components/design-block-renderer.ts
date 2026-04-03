@@ -14,6 +14,18 @@ function stripHtmlComments(content: string): string {
 	return content.replace(/<!--[\s\S]*?-->/g, "").trim();
 }
 
+function extractStyleBlocks(content: string): string[] {
+	const matches = content.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || [];
+	return matches
+		.map((item) =>
+			item
+				.replace(/^<style\b[^>]*>/i, "")
+				.replace(/<\/style>$/i, "")
+				.trim(),
+		)
+		.filter(Boolean);
+}
+
 function stripStyleBlocks(content: string): string {
 	return content.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").trim();
 }
@@ -28,8 +40,22 @@ function extractImageUrl(content: string): string | null {
 	const markdownImageMatch = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
 	if (markdownImageMatch?.[1]) return markdownImageMatch[1];
 	const obsidianImageMatch = content.match(/!\[\[([^|\]]+)/);
-	if (obsidianImageMatch?.[1]) return obsidianImageMatch[1];
+	if (
+		obsidianImageMatch?.[1] &&
+		looksLikeImageResource(obsidianImageMatch[1])
+	) {
+		return obsidianImageMatch[1];
+	}
 	return null;
+}
+
+function extractObsidianEmbedTarget(content: string): string | null {
+	const obsidianEmbedMatch = content.match(/!\[\[([^|\]]+)/);
+	return obsidianEmbedMatch?.[1]?.trim() || null;
+}
+
+function looksLikeImageResource(target: string): boolean {
+	return /\.(png|jpg|jpeg|gif|svg|webp|bmp|avif)$/i.test(target.trim());
 }
 
 function renderSvg(container: HTMLElement, markup: string): boolean {
@@ -45,6 +71,16 @@ function renderImage(container: HTMLElement, url: string): boolean {
 	img.src = url;
 	img.alt = "";
 	return true;
+}
+
+function injectHiddenStyles(
+	container: HTMLElement,
+	styleBlocks: string[],
+): void {
+	styleBlocks.forEach((styleText) => {
+		const styleEl = container.createEl("style");
+		styleEl.textContent = styleText;
+	});
 }
 
 function extractPlaceholderTokens(content: string): string[] {
@@ -155,7 +191,11 @@ export function renderBlockContent(
 		};
 	}
 
+	const styleBlocks = extractStyleBlocks(contentWithoutComments);
 	const normalizedContent = stripStyleBlocks(contentWithoutComments);
+	if (styleBlocks.length > 0) {
+		injectHiddenStyles(container, styleBlocks);
+	}
 
 	const svgMarkup = extractSvgMarkup(contentWithoutComments);
 	if (svgMarkup) {
@@ -184,8 +224,13 @@ export function renderBlockContent(
 	}
 
 	const tokens = extractPlaceholderTokens(normalizedContent);
+	const embedTarget = extractObsidianEmbedTarget(normalizedContent);
+	if (embedTarget && !looksLikeImageResource(embedTarget)) {
+		tokens.push(embedTarget);
+	}
 	const remainingText = normalizedContent
 		.replace(/<%[\s\S]*?%>|\{\{[\s\S]*?\}\}/g, "")
+		.replace(/!\[\[[^|\]]+(?:\|[^\]]+)?\]\]/g, "")
 		.trim();
 	if (tokens.length > 0 && !remainingText) {
 		return {

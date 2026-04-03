@@ -54,6 +54,15 @@ export function getDesignPageLabel(type: DesignPageType): string {
 	return t((getDesignPageDefinition(type)?.labelKey || "Slide") as any);
 }
 
+export function getDesignPageDisplayName(fileName: string): string {
+	const normalizedFileName = fileName.replace(/\.[^/.]+$/, "");
+	const lastHyphenIndex = normalizedFileName.lastIndexOf("-");
+	if (lastHyphenIndex === -1) {
+		return normalizedFileName;
+	}
+	return normalizedFileName.slice(0, lastHyphenIndex);
+}
+
 export function getDesignPageFileName(
 	type: DesignPageType,
 	designName: string,

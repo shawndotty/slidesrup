@@ -5,7 +5,10 @@ import {
 	DesignPageType,
 	ThemeStyleDraft,
 } from "src/types/design-maker";
-import { getDesignPageFileName, getDesignPageLabel } from "./design-maker-schema";
+import {
+	getDesignPageDisplayName,
+	getDesignPageFileName,
+} from "./design-maker-schema";
 
 let blockSeed = 0;
 
@@ -125,6 +128,7 @@ export function parseDesignPageDraft(
 	filePath: string,
 	markdown: string,
 ): DesignPageDraft {
+	const fileName = getDesignPageFileName(pageType, designName);
 	const blocks: DesignCanvasBlock[] = [];
 	const gridRegex = /<grid\b([^>]*)>([\s\S]*?)<\/grid>/g;
 	let cursor = 0;
@@ -144,8 +148,8 @@ export function parseDesignPageDraft(
 
 	return {
 		type: pageType,
-		label: getDesignPageLabel(pageType),
-		fileName: getDesignPageFileName(pageType, designName),
+		label: getDesignPageDisplayName(fileName),
+		fileName,
 		filePath,
 		blocks,
 		rawMarkdown: markdown,
