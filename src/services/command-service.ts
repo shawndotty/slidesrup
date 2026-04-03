@@ -43,7 +43,7 @@ export class CommandService {
 		private apiService: ApiService
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
-		this.designMaker = new DesignMaker(this.app, this.settings);
+		this.designMaker = new DesignMaker(this.app, this.settings, this.plugin);
 		this.noteMaker = new NoteMaker(this.app);
 		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
 		this.marpSlidesService = new MarpSlidesService(this.app);
@@ -396,6 +396,18 @@ export class CommandService {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
 						this.designMaker.makeNewDesignFromCurrentDesign()
+					);
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:open-design-maker",
+			name: t("Open Design Maker"),
+			callback: async () => {
+				if (this._checkUserType()) {
+					await this._templaterTriggerSwitch(() =>
+						this.designMaker.openDesignMaker(),
 					);
 				}
 			},

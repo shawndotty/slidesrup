@@ -329,3 +329,189 @@ h3.slides-rup-title {
     text-align: center;
     margin: 20px 0;
 }
+
+.slides-rup-design-maker-view {
+	height: 100%;
+	padding: 16px;
+}
+
+.slides-rup-design-maker-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+	gap: 12px;
+}
+
+.slides-rup-design-maker-title {
+	margin: 0;
+}
+
+.slides-rup-design-maker-header-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.slides-rup-design-maker-layout {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr) 360px;
+	gap: 16px;
+	height: calc(100% - 64px);
+}
+
+.slides-rup-design-maker-sidebar,
+.slides-rup-design-maker-sidepanel,
+.slides-rup-design-maker-canvas-panel {
+	min-height: 0;
+}
+
+.slides-rup-design-maker-sidebar,
+.slides-rup-design-maker-panel,
+.slides-rup-design-maker-canvas-panel {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	padding: 12px;
+}
+
+.slides-rup-design-maker-sidepanel {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	overflow: auto;
+}
+
+.slides-rup-design-maker-main {
+	min-width: 0;
+}
+
+.slides-rup-design-maker-section-title {
+	margin: 0 0 10px 0;
+	font-size: 14px;
+}
+
+.slides-rup-design-maker-page-item {
+	display: block;
+	width: 100%;
+	text-align: left;
+	margin-bottom: 8px;
+}
+
+.slides-rup-design-maker-page-item.is-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.slides-rup-design-maker-page-item.has-warning::after {
+	content: "•";
+	color: var(--text-warning);
+	float: right;
+}
+
+.slides-rup-design-maker-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.slides-rup-design-maker-canvas {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background:
+		linear-gradient(var(--background-modifier-border) 1px, transparent 1px),
+		linear-gradient(90deg, var(--background-modifier-border) 1px, transparent 1px),
+		var(--background-primary);
+	background-size: 5% 5%;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.slides-rup-design-maker-block,
+.slides-rup-design-maker-preview-block {
+	position: absolute;
+	border: 1px solid var(--interactive-accent);
+	background: rgba(var(--interactive-accent-rgb), 0.08);
+	border-radius: 10px;
+	padding: 8px;
+	overflow: hidden;
+	cursor: move;
+	white-space: pre-wrap;
+}
+
+.slides-rup-design-maker-block.is-selected,
+.slides-rup-design-maker-preview-block.is-selected {
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.35);
+}
+
+.slides-rup-design-maker-resize {
+	position: absolute;
+	right: 4px;
+	bottom: 4px;
+	width: 12px;
+	height: 12px;
+	border-radius: 999px;
+	background: var(--interactive-accent);
+	cursor: nwse-resize;
+}
+
+.slides-rup-design-maker-raw-block,
+.slides-rup-design-maker-preview-raw {
+	margin: 8px;
+	padding: 8px;
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: 8px;
+	white-space: pre-wrap;
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.slides-rup-design-maker-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.slides-rup-design-maker-input,
+.slides-rup-design-maker-textarea {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.slides-rup-design-maker-textarea {
+	min-height: 120px;
+	resize: vertical;
+}
+
+.slides-rup-design-maker-preview {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	border-radius: 12px;
+	overflow: hidden;
+	background: var(--sr-dm-background, #ffffff);
+	color: var(--sr-dm-text, #111111);
+	font-family: var(--sr-dm-body-font, inherit);
+}
+
+.slides-rup-design-maker-preview.is-dark {
+	background: #111827;
+	color: #f8fafc;
+}
+
+.slides-rup-design-maker-inline-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 8px;
+}
+
+.slides-rup-design-maker-empty-text {
+	color: var(--text-muted);
+	margin: 0;
+}

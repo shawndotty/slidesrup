@@ -158,4 +158,9 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 
 	userAddedListClasses: "",
 	userAddedColumnClasses: "",
+	enableDesignMaker: true,
+	designMakerDefaultBaseDesign: "A",
+	designMakerShowAdvancedSourceEditor: true,
+	designMakerSyncVsCodeThemeOnSave: true,
+	designMakerPreviewScale: 100,
 };

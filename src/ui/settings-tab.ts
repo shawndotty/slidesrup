@@ -340,6 +340,64 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		}
 
 		containerEl.createEl("h2", {
+			text: t("Design Maker"),
+			cls: "slides-rup-title",
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Enable Design Maker",
+			desc: "Enable the visual Design Maker workspace",
+			value: this.plugin.settings.enableDesignMaker,
+			onChange: async (value) => {
+				this.plugin.settings.enableDesignMaker = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createDropdownSetting(
+			containerEl,
+			"Default Design Maker Base Design",
+			"Please select the default design used by Design Maker",
+			"designMakerDefaultBaseDesign",
+			this.getDefaultDesignOptions(),
+		);
+
+		this.createToggleSetting(containerEl, {
+			name: "Show Design Maker Advanced Source Editor",
+			desc: "Show the fallback source editor in Design Maker",
+			value: this.plugin.settings.designMakerShowAdvancedSourceEditor,
+			onChange: async (value) => {
+				this.plugin.settings.designMakerShowAdvancedSourceEditor = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Auto sync VS Code theme after saving",
+			desc: "Sync the Marp theme to VS Code after Design Maker saves",
+			value: this.plugin.settings.designMakerSyncVsCodeThemeOnSave,
+			onChange: async (value) => {
+				this.plugin.settings.designMakerSyncVsCodeThemeOnSave = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Design Maker Preview Scale",
+			desc: "Adjust the preview scale in Design Maker",
+			value: `${this.plugin.settings.designMakerPreviewScale}`,
+			onChange: async (value) => {
+				const nextValue = Number(value || 100);
+				this.plugin.settings.designMakerPreviewScale = Number.isFinite(
+					nextValue,
+				)
+					? nextValue
+					: 100;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		containerEl.createEl("h2", {
 			text: t("User Templates"),
 			cls: "slides-rup-title",
 		});

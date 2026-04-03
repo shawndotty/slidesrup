@@ -167,6 +167,11 @@ export interface SlidesRupSettings {
 
 	userAddedListClasses: string;
 	userAddedColumnClasses: string;
+	enableDesignMaker: boolean;
+	designMakerDefaultBaseDesign: string;
+	designMakerShowAdvancedSourceEditor: boolean;
+	designMakerSyncVsCodeThemeOnSave: boolean;
+	designMakerPreviewScale: number;
 }
 
 export interface NocoDBTable {

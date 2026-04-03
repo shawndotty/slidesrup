@@ -1,21 +1,31 @@
-import { App, Editor, Notice, TFile, moment, TFolder } from "obsidian";
+import { App, Notice, TFile, TFolder } from "obsidian";
 import { t } from "../lang/helpers";
 import { SlidesRupSettings } from "src/types";
 import { SuggesterOption } from "../suggesters/base-suggester";
 import { InputModal } from "src/ui/modals/input-modal";
 import {
 	createPathIfNeeded,
-	get_tfiles_from_folder,
 	getUserDesigns,
 	getAllDesignsOptions,
 } from "src/utils";
-import {
-	TEMPLATE_PLACE_HOLDERS,
-	DEFAULT_DESIGNS,
-	REVEAL_USER_DESIGN_FOLDER,
-} from "src/constants";
+import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "src/constants";
 import { SlideDesignSuggester } from "../suggesters/suggesters";
 import { VSCodeService } from "./vscode-service";
+import {
+	DESIGN_MAKER_VIEW_TYPE,
+	DesignDraft,
+	DesignPageDraft,
+	DesignPageType,
+} from "src/types/design-maker";
+import {
+	DESIGN_PAGE_DEFINITIONS,
+	getDesignPageFileName,
+	getDesignThemeFileName,
+	inferDesignNameFromPath,
+	normalizeDesignName,
+} from "./design-maker-schema";
+import { parseDesignPageDraft, parseThemeDraft } from "./design-maker-parser";
+import { generatePageMarkdown, generateThemeCss } from "./design-maker-generator";
 
 export class DesignMaker {
 	private app: App;
@@ -26,258 +36,313 @@ export class DesignMaker {
 	private userDesigns: Array<string> = [];
 	private designOptions: Array<SuggesterOption> = [];
 	private vscodeService: VSCodeService;
+	private plugin: any;
 
-	constructor(app: App, settings: SlidesRupSettings) {
+	constructor(app: App, settings: SlidesRupSettings, plugin?: any) {
 		this.app = app;
 		this.settings = settings;
+		this.plugin = plugin;
 		this.userDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}`;
 		this.vscodeService = new VSCodeService(this.app, this.settings);
 	}
 
 	async makeNewBlankDesign() {
-		const designName = await this._getDesignName();
+		const designName = normalizeDesignName(await this._getDesignName());
 		if (!designName) return;
-
-		const trimedDesignName = designName.trim();
-
-		const newDesignFolderName = `Design-${trimedDesignName}`;
+		const newDesignFolderName = `Design-${designName}`;
 		const newDesignPath = `${this.userDesignPath}/${newDesignFolderName}`;
+		if (await this.app.vault.adapter.exists(newDesignPath)) {
+			new Notice(t("Design already exists"));
+			return;
+		}
 
 		await createPathIfNeeded(this.app, newDesignPath);
-
-		const newDesignFiles = [
-			`${t("Cover")}-${trimedDesignName}`,
-			`${t("BackCover")}-${trimedDesignName}`,
-			`${t("TOC")}-${trimedDesignName}`,
-			`${t("Chapter")}-${trimedDesignName}`,
-			`${t("ContentPage")}-${trimedDesignName}`,
-			`${t("BlankPage")}-${trimedDesignName}`,
-			`sr-design-${trimedDesignName.toLowerCase()}`,
-		];
-
-		// Optimized approach:
-		const fileCreationPromises = newDesignFiles.map(async (fileName) => {
-			const filePath = `${newDesignPath}/${fileName}.md`;
-			try {
-				return await this.app.vault.create(filePath, `<% content %>`);
-			} catch (error) {
-				new Notice(
-					`${t("Cann't create file")}${filePath}\n${t(
-						"Error Info"
-					)}${error}`
+		await Promise.all(
+			DESIGN_PAGE_DEFINITIONS.map(async (page) => {
+				const filePath = `${newDesignPath}/${page.getFileName(designName)}`;
+				await this.app.vault.create(
+					filePath,
+					this._getDefaultPageContent(page.type),
 				);
-				return null;
-			}
-		});
-
-		await Promise.allSettled(fileCreationPromises);
-
-		const marpThemesFolder = `${this.settings.slidesRupFrameworkFolder}/MarpThemes`;
-		const marpThemePath = `${marpThemesFolder}/sr-design-${trimedDesignName.toLowerCase()}.css`;
-		const defaultThemeContent = [
-			`/* @theme sr-design-${trimedDesignName.toLowerCase()} */`,
-			'@import "sr-base"',
-		].join("\n");
-
-		await this.app.vault.create(marpThemePath, defaultThemeContent);
-
-		await this.vscodeService.addNewMarpThemeForVSCode(
-			trimedDesignName.toLowerCase()
+			}),
 		);
-
+		const marpThemePath = `${this.settings.slidesRupFrameworkFolder}/MarpThemes/${getDesignThemeFileName(
+			designName,
+		)}`;
+		await this._writeOrCreateFile(
+			marpThemePath,
+			generateThemeCss(parseThemeDraft(designName, ""), designName),
+		);
+		await this.vscodeService.addNewMarpThemeForVSCode(designName.toLowerCase());
 		await this._revealNewDesign(newDesignPath);
 	}
 
 	async makeNewDesignFromCurrentDesign() {
-		this.userDesigns = getUserDesigns(
-			this.app,
-			this.settings.slidesRupFrameworkFolder
-		);
-		this.designOptions = getAllDesignsOptions(
-			this.defaultDesigns,
-			this.userDesigns
-		);
+		this.designOptions = this.getDesignOptions();
 		const design = await this._selectSlideDesign(this.designOptions);
 		if (!design) return;
-
-		const designName = design.value;
-		const isDefaultDesign = this.defaultDesigns.includes(designName);
-		const originalDesignPath = `${this.settings.slidesRupFrameworkFolder}/${
-			isDefaultDesign ? "Designs" : DesignMaker.MY_DESIGN_FOLDER
-		}/Design-${designName}`;
-
-		const marpThemesFolder = `${this.settings.slidesRupFrameworkFolder}/MarpThemes`;
-
-		const newDesignName = await this._getDesignName();
-
-		const newMarpThemePath = `${marpThemesFolder}/sr-design-${newDesignName.toLowerCase()}.css`;
-
-		const originalMarpThemePath = `${marpThemesFolder}/sr-design-${designName.toLowerCase()}.css`;
-
+		const newDesignName = normalizeDesignName(await this._getDesignName());
 		if (!newDesignName) return;
-		const newDesignPath = `${this.settings.slidesRupFrameworkFolder}/${DesignMaker.MY_DESIGN_FOLDER}/Design-${newDesignName}`;
-		await createPathIfNeeded(this.app, newDesignPath);
+		const newDesignPath = await this.cloneDesignFromSource(
+			design.value,
+			newDesignName,
+		);
+		if (newDesignPath) await this._revealNewDesign(newDesignPath);
+	}
 
-		// 使用 Obsidian API 复制 originalDesignPath 下的所有文件到 newDesignPath，并重命名文件名中的 -designName 为 -newDesignName
+	async openDesignMaker(): Promise<void> {
+		if (!this.settings.enableDesignMaker) {
+			new Notice(t("Enable Design Maker"));
+			return;
+		}
+		const options = this.getDesignOptions();
+		const sourceDesign = await this._selectSlideDesign(options);
+		if (!sourceDesign) return;
+		const defaultName = `${sourceDesign.value}-Design`;
+		const designName = normalizeDesignName(
+			await this._getDesignName(defaultName),
+		);
+		if (!designName) return;
+		const designPath = await this.cloneDesignFromSource(
+			sourceDesign.value,
+			designName,
+		);
+		if (!designPath) return;
+		if (!this.plugin) {
+			await this._revealNewDesign(designPath);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf("tab");
+		await leaf.setViewState({
+			type: DESIGN_MAKER_VIEW_TYPE,
+			active: true,
+			state: {
+				designPath,
+				designName,
+			},
+		});
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	getDesignOptions(): Array<SuggesterOption> {
+		this.userDesigns = getUserDesigns(
+			this.app,
+			this.settings.slidesRupFrameworkFolder,
+		);
+		return getAllDesignsOptions(this.defaultDesigns, this.userDesigns);
+	}
+
+	async cloneDesignFromSource(
+		sourceDesignName: string,
+		newDesignName: string,
+	): Promise<string | null> {
+		const originalDesignPath = this._getDesignSourcePath(sourceDesignName);
 		const originalFolder =
 			this.app.vault.getAbstractFileByPath(originalDesignPath);
 		if (!originalFolder || !(originalFolder instanceof TFolder)) {
-			new Notice(
-				`${t("Cann't find the source folder")}${originalDesignPath}`
-			);
-			return;
+			new Notice(`${t("Cann't find the source folder")}${originalDesignPath}`);
+			return null;
 		}
-
-		// 获取所有文件（包括 Markdown 和图片文件）
+		const newDesignPath = `${this.userDesignPath}/Design-${newDesignName}`;
+		if (await this.app.vault.adapter.exists(newDesignPath)) {
+			new Notice(t("Design already exists"));
+			return null;
+		}
+		await createPathIfNeeded(this.app, newDesignPath);
 		const filesToCopy = originalFolder.children.filter(
-			(f) => f instanceof TFile
+			(file) => file instanceof TFile,
 		) as TFile[];
-
-		// 创建图片文件夹
-		const imagesFolder = `${newDesignPath}`;
-		await createPathIfNeeded(this.app, imagesFolder);
-
 		for (const file of filesToCopy) {
-			const originalFileName = file.name;
-			let newFileName = originalFileName;
-			let newFilePath = "";
-
-			// 判断是否为图片文件
-			const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
-				originalFileName
-			);
-
-			if (isImage) {
-				// 图片文件：放入 images 文件夹并重命名
-				newFileName = originalFileName.replace(
-					new RegExp(`${designName}`, "g"),
-					newDesignName
-				);
-				newFilePath = `${imagesFolder}/${newFileName}`;
-
-				try {
-					// 使用 adapter API 复制二进制文件
-					const originalFilePath = file.path;
-					await this.app.vault.adapter.copy(
-						originalFilePath,
-						newFilePath
-					);
-				} catch (error) {
-					new Notice(
-						`${t(
-							"Cann't copy the source file"
-						)}${originalFileName}\n${t("Error Info")}${error}`
-					);
-				}
-			} else {
-				// Markdown 文件：直接放在设计文件夹下
-				newFileName = originalFileName.replace(
-					`-${designName}`,
-					`-${newDesignName}`
-				);
-				newFilePath = `${newDesignPath}/${newFileName}`;
-
-				try {
-					const content = await this.app.vault.read(file);
-					// 对于 Markdown 文件，替换内容中的设计名称和图片路径
-					let newContent = content
-						.split(`-${designName}`)
-						.join(`-${newDesignName}`);
-					// 这样处理还是会有隐患，先如此处理，以后再考虑更优化的方案
-
-					// 更新图片引用路径
-					newContent = newContent.replace(
-						/!\[(.*?)\]\((.*?)\)/g,
-						(match, alt, path) => {
-							// 如果是相对路径的图片引用，更新路径
-							if (
-								!path.startsWith("http") &&
-								!path.startsWith("/")
-							) {
-								// 提取文件名
-								const imgFileName = path.split("/").pop();
-								if (imgFileName) {
-									// 更新为新的图片路径
-									return `![${alt}](images/${imgFileName})`;
-								}
-							}
-							return match;
-						}
-					);
-
-					await this.app.vault.create(newFilePath, newContent);
-				} catch (error) {
-					new Notice(
-						`${t(
-							"Cann't copy the source file"
-						)}${originalFileName}\n${t("Error Info")}${error}`
-					);
-				}
-			}
+			await this._copyDesignFile(file, sourceDesignName, newDesignName, newDesignPath);
 		}
-		// 复制 Marp 主题文件
-		if (originalMarpThemePath) {
-			await this.app.vault.adapter.copy(
-				originalMarpThemePath,
-				newMarpThemePath
-			);
+		await this._copyDesignTheme(sourceDesignName, newDesignName);
+		return newDesignPath;
+	}
 
-			// 读取并更新主题文件内容
-			const themeContent = await this.app.vault.adapter.read(
-				newMarpThemePath
+	async loadDesignDraft(designPath: string): Promise<DesignDraft> {
+		const designName = inferDesignNameFromPath(designPath);
+		const pages = {} as Record<DesignPageType, DesignPageDraft>;
+		for (const definition of DESIGN_PAGE_DEFINITIONS) {
+			const fileName = getDesignPageFileName(definition.type, designName);
+			const filePath = `${designPath}/${fileName}`;
+			const markdown = await this._readFileIfExists(
+				filePath,
+				this._getDefaultPageContent(definition.type),
 			);
-			const updatedThemeContent = themeContent
-				.replace(
-					new RegExp(`sr-design-${designName.toLowerCase()}`, "g"),
-					`sr-design-${newDesignName.toLowerCase()}`
-				)
-				.replace(
-					new RegExp(`\-${designName.toUpperCase()}`, "g"),
-					`-${newDesignName.toUpperCase()}`
-				);
-			await this.app.vault.adapter.write(
-				newMarpThemePath,
-				updatedThemeContent
+			pages[definition.type] = parseDesignPageDraft(
+				definition.type,
+				designName,
+				filePath,
+				markdown,
 			);
+		}
+		const cssContent = await this._readFileIfExists(
+			`${this.settings.slidesRupFrameworkFolder}/MarpThemes/${getDesignThemeFileName(
+				designName,
+			)}`,
+			"",
+		);
+		return {
+			designName,
+			designPath,
+			sourceDesignName: designName,
+			pages,
+			theme: parseThemeDraft(designName, cssContent),
+		};
+	}
 
+	async saveDesignDraft(draft: DesignDraft): Promise<void> {
+		for (const definition of DESIGN_PAGE_DEFINITIONS) {
+			const page = draft.pages[definition.type];
+			page.rawMarkdown = generatePageMarkdown(page);
+			await this._writeOrCreateFile(page.filePath, page.rawMarkdown);
+		}
+		const themePath = `${this.settings.slidesRupFrameworkFolder}/MarpThemes/${getDesignThemeFileName(
+			draft.designName,
+		)}`;
+		await this._writeOrCreateFile(
+			themePath,
+			generateThemeCss(draft.theme, draft.designName),
+		);
+		if (this.settings.designMakerSyncVsCodeThemeOnSave) {
 			await this.vscodeService.addNewMarpThemeForVSCode(
-				newDesignName.toLowerCase()
+				draft.designName.toLowerCase(),
 			);
 		}
-		await this._revealNewDesign(newDesignPath);
+		new Notice(t("Design Maker saved"));
+	}
+
+	reparsePage(
+		designName: string,
+		pageType: DesignPageType,
+		filePath: string,
+		rawMarkdown: string,
+	): DesignPageDraft {
+		return parseDesignPageDraft(pageType, designName, filePath, rawMarkdown);
 	}
 
 	private async _revealNewDesign(path: string) {
-		// 创建成功后高亮新建的设计文件夹（使用 Obsidian API 打开新建文件夹并选中第一个文件）
 		const folder = this.app.vault.getAbstractFileByPath(path);
 		if (folder && folder instanceof TFolder) {
-			// 获取文件浏览器
 			const fileExplorerLeaves =
 				this.app.workspace.getLeavesOfType("file-explorer");
-			// 检查是否存在可用叶子节点
 			if (fileExplorerLeaves.length === 0) {
-				// 若不存在，创建新的文件浏览器标签
 				const leaf = this.app.workspace.getLeaf("tab");
 				await leaf.setViewState({ type: "file-explorer" });
 				fileExplorerLeaves.push(leaf);
 			}
-			// 获取首个文件浏览器视图实例
 			const fileExplorerView = fileExplorerLeaves[0].view as any;
-
-			// 强制激活文件浏览器标签（确保视图可见）
 			this.app.workspace.revealLeaf(fileExplorerLeaves[0]);
-
 			fileExplorerView.revealInFolder(folder);
 		}
 	}
 
-	private async _getDesignName(): Promise<string> {
+	private async _getDesignName(defaultValue: string = ""): Promise<string> {
 		const modal = new InputModal(
 			this.app,
 			t("Please input your design name"),
-			""
+			defaultValue,
 		);
 		return (await modal.openAndGetValue()) || "";
+	}
+
+	private _getDefaultPageContent(pageType: DesignPageType): string {
+		if (pageType === "content" || pageType === "contentWithoutNav") {
+			return `<grid drag="100 80" drop="0 10" class="content" align="topleft" pad="40px">\n<% content %>\n</grid>`;
+		}
+		if (pageType === "cover") {
+			return `<grid drag="100 100" drop="0 0" class="bg-with-front-color" align="left" pad="120px">\n<% content %>\n</grid>`;
+		}
+		return `<grid drag="100 100" drop="0 0" class="bg-with-front-color" align="left" pad="80px">\n<% content %>\n</grid>`;
+	}
+
+	private _getDesignSourcePath(designName: string): string {
+		const folderName = this.defaultDesigns.includes(designName)
+			? "Designs"
+			: DesignMaker.MY_DESIGN_FOLDER;
+		return `${this.settings.slidesRupFrameworkFolder}/${folderName}/Design-${designName}`;
+	}
+
+	private async _copyDesignFile(
+		file: TFile,
+		sourceDesignName: string,
+		newDesignName: string,
+		newDesignPath: string,
+	): Promise<void> {
+		const originalFileName = file.name;
+		const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(originalFileName);
+		const newFileName = originalFileName.replace(
+			new RegExp(sourceDesignName, "g"),
+			newDesignName,
+		);
+		const newFilePath = `${newDesignPath}/${newFileName}`;
+		if (isImage) {
+			await this.app.vault.adapter.copy(file.path, newFilePath);
+			return;
+		}
+		const content = await this.app.vault.read(file);
+		const nextContent = content
+			.split(`-${sourceDesignName}`)
+			.join(`-${newDesignName}`)
+			.split(`sr-design-${sourceDesignName.toLowerCase()}`)
+			.join(`sr-design-${newDesignName.toLowerCase()}`);
+		await this._writeOrCreateFile(newFilePath, nextContent);
+	}
+
+	private async _copyDesignTheme(
+		sourceDesignName: string,
+		newDesignName: string,
+	): Promise<void> {
+		const originalThemePath = `${this.settings.slidesRupFrameworkFolder}/MarpThemes/${getDesignThemeFileName(
+			sourceDesignName,
+		)}`;
+		const newThemePath = `${this.settings.slidesRupFrameworkFolder}/MarpThemes/${getDesignThemeFileName(
+			newDesignName,
+		)}`;
+		if (await this.app.vault.adapter.exists(originalThemePath)) {
+			const themeContent = await this.app.vault.adapter.read(originalThemePath);
+			const updatedThemeContent = themeContent
+				.replace(
+					new RegExp(`sr-design-${sourceDesignName.toLowerCase()}`, "g"),
+					`sr-design-${newDesignName.toLowerCase()}`,
+				)
+				.replace(
+					new RegExp(`-${sourceDesignName.toUpperCase()}`, "g"),
+					`-${newDesignName.toUpperCase()}`,
+				);
+			await this._writeOrCreateFile(newThemePath, updatedThemeContent);
+		} else {
+			await this._writeOrCreateFile(
+				newThemePath,
+				generateThemeCss(parseThemeDraft(newDesignName, ""), newDesignName),
+			);
+		}
+		await this.vscodeService.addNewMarpThemeForVSCode(newDesignName.toLowerCase());
+	}
+
+	private async _readFileIfExists(
+		filePath: string,
+		fallback: string,
+	): Promise<string> {
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile) {
+			return this.app.vault.read(file);
+		}
+		return fallback;
+	}
+
+	private async _writeOrCreateFile(
+		filePath: string,
+		content: string,
+	): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile) {
+			await this.app.vault.modify(file, content);
+			return;
+		}
+		const folderPath = filePath.split("/").slice(0, -1).join("/");
+		await createPathIfNeeded(this.app, folderPath);
+		await this.app.vault.create(filePath, content);
 	}
 
 	private async _selectSlideDesign(
