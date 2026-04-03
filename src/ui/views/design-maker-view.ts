@@ -306,6 +306,8 @@ export class DesignMakerView extends ItemView {
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
 			themeRawCss: this.draft?.theme.rawCss || "",
+			slideBaseWidth: this._getSlideBaseWidth(),
+			slideBaseHeight: this._getSlideBaseHeight(),
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
 				this.selectedBlockId = blockId;
@@ -407,16 +409,24 @@ export class DesignMakerView extends ItemView {
 			theme: this.draft.theme,
 			selectedBlockId: this.selectedBlockId,
 			showTitle,
+			previewScale: this.plugin.settings.designMakerPreviewScale,
+			slideBaseWidth: this._getSlideBaseWidth(),
+			slideBaseHeight: this._getSlideBaseHeight(),
 		});
-		const previewCanvas = this.previewEl!.querySelector(
-			".slides-rup-design-maker-preview",
-		) as HTMLElement | null;
-		if (previewCanvas) {
-			previewCanvas.style.transform = `scale(${
-				this.plugin.settings.designMakerPreviewScale / 100
-			})`;
-			previewCanvas.style.transformOrigin = "top left";
-		}
+	}
+
+	private _getSlideBaseWidth(): number {
+		const value = Number(
+			this.plugin.settings.designMakerSlideBaseWidth || 1920,
+		);
+		return Number.isFinite(value) && value > 0 ? value : 1920;
+	}
+
+	private _getSlideBaseHeight(): number {
+		const value = Number(
+			this.plugin.settings.designMakerSlideBaseHeight || 1080,
+		);
+		return Number.isFinite(value) && value > 0 ? value : 1080;
 	}
 
 	private _renderPageSourceEditor(): void {

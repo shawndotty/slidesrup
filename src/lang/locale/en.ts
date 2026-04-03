@@ -583,6 +583,12 @@ export default {
 	"Design Maker Preview Scale": "Design Maker Preview Scale",
 	"Adjust the preview scale in Design Maker":
 		"Adjust the preview scale in Design Maker",
+	"Design Maker Slide Base Width": "Design Maker Slide Base Width",
+	"Set the logical slide width used by Design Maker rendering":
+		"Set the logical slide width used by Design Maker rendering",
+	"Design Maker Slide Base Height": "Design Maker Slide Base Height",
+	"Set the logical slide height used by Design Maker rendering":
+		"Set the logical slide height used by Design Maker rendering",
 	"Design Maker saved": "Design Maker saved",
 	"Design already exists": "Design already exists",
 	"Save and Apply": "Save and Apply",

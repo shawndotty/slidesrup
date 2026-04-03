@@ -163,4 +163,6 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	designMakerShowAdvancedSourceEditor: true,
 	designMakerSyncVsCodeThemeOnSave: true,
 	designMakerPreviewScale: 100,
+	designMakerSlideBaseWidth: 1920,
+	designMakerSlideBaseHeight: 1080,
 };

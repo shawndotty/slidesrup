@@ -172,6 +172,8 @@ export interface SlidesRupSettings {
 	designMakerShowAdvancedSourceEditor: boolean;
 	designMakerSyncVsCodeThemeOnSave: boolean;
 	designMakerPreviewScale: number;
+	designMakerSlideBaseWidth: number;
+	designMakerSlideBaseHeight: number;
 }
 
 export interface NocoDBTable {

@@ -397,6 +397,34 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createTextSetting(containerEl, {
+			name: "Design Maker Slide Base Width",
+			desc: "Set the logical slide width used by Design Maker rendering",
+			value: `${this.plugin.settings.designMakerSlideBaseWidth}`,
+			onChange: async (value) => {
+				const nextValue = Number(value || 1920);
+				this.plugin.settings.designMakerSlideBaseWidth =
+					Number.isFinite(nextValue) && nextValue > 0
+						? Math.round(nextValue)
+						: 1920;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Design Maker Slide Base Height",
+			desc: "Set the logical slide height used by Design Maker rendering",
+			value: `${this.plugin.settings.designMakerSlideBaseHeight}`,
+			onChange: async (value) => {
+				const nextValue = Number(value || 1080);
+				this.plugin.settings.designMakerSlideBaseHeight =
+					Number.isFinite(nextValue) && nextValue > 0
+						? Math.round(nextValue)
+						: 1080;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		containerEl.createEl("h2", {
 			text: t("User Templates"),
 			cls: "slides-rup-title",

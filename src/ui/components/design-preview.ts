@@ -2,14 +2,45 @@ import { t } from "src/lang/helpers";
 import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 
+const DESIGN_MAKER_SLIDE_WIDTH = 1920;
+const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
+
+function applySlideBaselineScale(
+	slideEl: HTMLElement,
+	frameEl: HTMLElement,
+	baseWidth: number,
+	baseHeight: number,
+): void {
+	const frameRect = frameEl.getBoundingClientRect();
+	if (!frameRect.width || !frameRect.height) return;
+	const scale = Math.min(
+		frameRect.width / baseWidth,
+		frameRect.height / baseHeight,
+	);
+	slideEl.style.transform = `scale(${scale})`;
+	slideEl.style.transformOrigin = "top left";
+}
+
 export function renderDesignPreview(options: {
 	container: HTMLElement;
 	page: DesignPageDraft;
 	theme: ThemeStyleDraft;
 	selectedBlockId: string | null;
 	showTitle?: boolean;
+	previewScale?: number;
+	slideBaseWidth?: number;
+	slideBaseHeight?: number;
 }): void {
-	const { container, page, theme, selectedBlockId, showTitle = true } = options;
+	const {
+		container,
+		page,
+		theme,
+		selectedBlockId,
+		showTitle = true,
+		previewScale = 100,
+		slideBaseWidth = DESIGN_MAKER_SLIDE_WIDTH,
+		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
+	} = options;
 	container.empty();
 
 	if (showTitle) {
@@ -19,7 +50,11 @@ export function renderDesignPreview(options: {
 		});
 	}
 
-	const preview = container.createDiv("slides-rup-design-maker-preview");
+	const frame = container.createDiv("slides-rup-design-maker-preview-frame");
+	frame.style.aspectRatio = `${slideBaseWidth} / ${slideBaseHeight}`;
+	const preview = frame.createDiv("slides-rup-design-maker-preview");
+	preview.style.width = `${slideBaseWidth}px`;
+	preview.style.height = `${slideBaseHeight}px`;
 	preview.style.setProperty("--sr-dm-primary", theme.primaryColor);
 	preview.style.setProperty("--sr-dm-secondary", theme.secondaryColor);
 	preview.style.setProperty("--sr-dm-background", theme.backgroundColor);
@@ -62,4 +97,7 @@ export function renderDesignPreview(options: {
 			el.setText(result.textContent);
 		}
 	});
+	applySlideBaselineScale(preview, frame, slideBaseWidth, slideBaseHeight);
+	const appliedScale = Number.isFinite(previewScale) ? previewScale / 100 : 1;
+	preview.style.transform += ` scale(${appliedScale})`;
 }

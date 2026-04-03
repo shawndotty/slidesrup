@@ -519,6 +519,12 @@ export default {
 		"Design Maker 保存后同步 Marp 主题到 VS Code",
 	"Design Maker Preview Scale": "Design Maker 预览缩放",
 	"Adjust the preview scale in Design Maker": "调整 Design Maker 中的预览缩放",
+	"Design Maker Slide Base Width": "Design Maker 逻辑基准宽度",
+	"Set the logical slide width used by Design Maker rendering":
+		"设置 Design Maker 渲染使用的逻辑幻灯片宽度",
+	"Design Maker Slide Base Height": "Design Maker 逻辑基准高度",
+	"Set the logical slide height used by Design Maker rendering":
+		"设置 Design Maker 渲染使用的逻辑幻灯片高度",
 	"Design Maker saved": "Design Maker 已保存",
 	"Design already exists": "设计已存在",
 	"Save and Apply": "保存并应用",

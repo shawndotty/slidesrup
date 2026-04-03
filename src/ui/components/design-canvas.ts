@@ -3,6 +3,8 @@ import { DesignPageDraft, DesignGridBlock } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 
 type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
+const DESIGN_MAKER_SLIDE_WIDTH = 1920;
+const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
 
 function toInt(value: number): number {
 	return Math.round(value);
@@ -37,6 +39,22 @@ function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
 		justifyContent: "",
 		extraAttributes: {},
 	};
+}
+
+function applySlideBaselineScale(
+	slideEl: HTMLElement,
+	frameEl: HTMLElement,
+	baseWidth: number,
+	baseHeight: number,
+): void {
+	const frameRect = frameEl.getBoundingClientRect();
+	if (!frameRect.width || !frameRect.height) return;
+	const scale = Math.min(
+		frameRect.width / baseWidth,
+		frameRect.height / baseHeight,
+	);
+	slideEl.style.transform = `scale(${scale})`;
+	slideEl.style.transformOrigin = "top left";
 }
 
 export function renderDesignToolbar(options: {
@@ -90,6 +108,8 @@ export function renderDesignCanvas(options: {
 	container: HTMLElement;
 	page: DesignPageDraft;
 	themeRawCss?: string;
+	slideBaseWidth?: number;
+	slideBaseHeight?: number;
 	selectedBlockId: string | null;
 	onSelect: (blockId: string | null) => void;
 	onPatchBlock: (
@@ -104,6 +124,8 @@ export function renderDesignCanvas(options: {
 		container,
 		page,
 		themeRawCss = "",
+		slideBaseWidth = DESIGN_MAKER_SLIDE_WIDTH,
+		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
 		selectedBlockId,
 		onSelect,
 		onPatchBlock,
@@ -113,8 +135,11 @@ export function renderDesignCanvas(options: {
 	} = options;
 
 	container.empty();
-
-	const canvas = container.createDiv("slides-rup-design-maker-canvas");
+	const frame = container.createDiv("slides-rup-design-maker-canvas-frame");
+	frame.style.aspectRatio = `${slideBaseWidth} / ${slideBaseHeight}`;
+	const canvas = frame.createDiv("slides-rup-design-maker-canvas");
+	canvas.style.width = `${slideBaseWidth}px`;
+	canvas.style.height = `${slideBaseHeight}px`;
 	if (themeRawCss.trim()) {
 		const styleEl = canvas.createEl("style");
 		styleEl.textContent = themeRawCss;
@@ -256,4 +281,5 @@ export function renderDesignCanvas(options: {
 			document.addEventListener("mouseup", onUp);
 		});
 	});
+	applySlideBaselineScale(canvas, frame, slideBaseWidth, slideBaseHeight);
 }
