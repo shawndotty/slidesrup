@@ -1,5 +1,3 @@
-import { t } from "src/lang/helpers";
-
 export interface BlockRenderResult {
 	rendered: boolean;
 	hidden: boolean;
@@ -8,7 +6,6 @@ export interface BlockRenderResult {
 
 interface PlaceholderMeta {
 	icon: string;
-	categoryKey: string;
 	className: string;
 	label: string;
 }
@@ -65,14 +62,20 @@ function normalizePlaceholderLabel(token: string): string {
 		.trim();
 }
 
+function toDisplayPlaceholderLabel(label: string): string {
+	if (!label) return "";
+	const normalized = label.replace(/\s+/g, " ").trim();
+	if (normalized.toLowerCase() === "toc") return "TOC";
+	return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getPlaceholderMeta(token: string): PlaceholderMeta {
 	const normalized = normalizePlaceholderLabel(token).toLowerCase();
 	if (normalized.includes("content")) {
 		return {
 			icon: "▣",
-			categoryKey: "Placeholder Category Layout",
 			className: "is-layout",
-			label: normalizePlaceholderLabel(token),
+			label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token)),
 		};
 	}
 	if (
@@ -83,9 +86,8 @@ function getPlaceholderMeta(token: string): PlaceholderMeta {
 	) {
 		return {
 			icon: "☰",
-			categoryKey: "Placeholder Category Navigation",
 			className: "is-navigation",
-			label: normalizePlaceholderLabel(token),
+			label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token)),
 		};
 	}
 	if (
@@ -95,9 +97,8 @@ function getPlaceholderMeta(token: string): PlaceholderMeta {
 	) {
 		return {
 			icon: "◔",
-			categoryKey: "Placeholder Category Metadata",
 			className: "is-metadata",
-			label: normalizePlaceholderLabel(token),
+			label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token)),
 		};
 	}
 	if (
@@ -109,42 +110,33 @@ function getPlaceholderMeta(token: string): PlaceholderMeta {
 	) {
 		return {
 			icon: "✦",
-			categoryKey: "Placeholder Category Branding",
 			className: "is-branding",
-			label: normalizePlaceholderLabel(token),
+			label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token)),
 		};
 	}
 	return {
 		icon: "◇",
-		categoryKey: "Placeholder Category Variable",
 		className: "is-variable",
-		label: normalizePlaceholderLabel(token),
+		label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token)),
 	};
 }
 
 function renderPlaceholders(container: HTMLElement, tokens: string[]): boolean {
-	const wrapper = container.createDiv("slides-rup-design-maker-placeholder-stack");
+	const wrapper = container.createDiv(
+		"slides-rup-design-maker-placeholder-stack",
+	);
 	tokens.forEach((token) => {
 		const meta = getPlaceholderMeta(token);
 		const chip = wrapper.createDiv(
 			`slides-rup-design-maker-placeholder-chip ${meta.className}`,
 		);
-		const header = chip.createDiv("slides-rup-design-maker-placeholder-header");
-		header.createDiv({
+		chip.createDiv({
 			cls: "slides-rup-design-maker-placeholder-icon",
 			text: meta.icon,
-		});
-		header.createDiv({
-			cls: "slides-rup-design-maker-placeholder-category",
-			text: t(meta.categoryKey as any),
 		});
 		chip.createDiv({
 			cls: "slides-rup-design-maker-placeholder-label",
 			text: meta.label,
-		});
-		chip.createDiv({
-			cls: "slides-rup-design-maker-placeholder-token",
-			text: token,
 		});
 	});
 	return true;
