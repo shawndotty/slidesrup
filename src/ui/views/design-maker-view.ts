@@ -42,6 +42,10 @@ export class DesignMakerView extends ItemView {
 	private pageSourceValue = "";
 	private cssSourceValue = "";
 	private activeCenterTab: "design" | "preview" = "design";
+	private resizeObserver: ResizeObserver | null = null;
+	private resizeRafId: number | null = null;
+	private lastCenterStageWidth = 0;
+	private lastCenterStageHeight = 0;
 	private rightPanelState = {
 		inspector: true,
 		theme: true,
@@ -70,6 +74,16 @@ export class DesignMakerView extends ItemView {
 	async onOpen(): Promise<void> {
 		this._ensureLayout();
 		this._render();
+		this._setupResizeObserver();
+	}
+
+	async onClose(): Promise<void> {
+		this.resizeObserver?.disconnect();
+		this.resizeObserver = null;
+		if (this.resizeRafId !== null) {
+			cancelAnimationFrame(this.resizeRafId);
+			this.resizeRafId = null;
+		}
 	}
 
 	async setState(state: DesignMakerViewState, result: any): Promise<void> {
@@ -178,6 +192,7 @@ export class DesignMakerView extends ItemView {
 			"Theme CSS",
 			"cssSource",
 		);
+		this._setupResizeObserver();
 	}
 
 	private _render(): void {
@@ -413,6 +428,34 @@ export class DesignMakerView extends ItemView {
 			slideBaseWidth: this._getSlideBaseWidth(),
 			slideBaseHeight: this._getSlideBaseHeight(),
 		});
+	}
+
+	private _setupResizeObserver(): void {
+		if (!this.centerStageEl) return;
+		this.resizeObserver?.disconnect();
+		this.resizeObserver = new ResizeObserver((entries) => {
+			const entry = entries[0];
+			if (!entry || !this.draft) return;
+			const width = Math.round(entry.contentRect.width);
+			const height = Math.round(entry.contentRect.height);
+			if (
+				width === this.lastCenterStageWidth &&
+				height === this.lastCenterStageHeight
+			) {
+				return;
+			}
+			this.lastCenterStageWidth = width;
+			this.lastCenterStageHeight = height;
+			if (this.resizeRafId !== null) {
+				cancelAnimationFrame(this.resizeRafId);
+			}
+			this.resizeRafId = requestAnimationFrame(() => {
+				this.resizeRafId = null;
+				this._renderCanvasOnly();
+				this._renderPreviewOnly(false);
+			});
+		});
+		this.resizeObserver.observe(this.centerStageEl);
 	}
 
 	private _getSlideBaseWidth(): number {
