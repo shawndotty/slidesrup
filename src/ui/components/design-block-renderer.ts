@@ -17,6 +17,10 @@ function stripHtmlComments(content: string): string {
 	return content.replace(/<!--[\s\S]*?-->/g, "").trim();
 }
 
+function stripStyleBlocks(content: string): string {
+	return content.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+}
+
 function extractSvgMarkup(content: string): string | null {
 	const matches = content.match(/<svg[\s\S]*?<\/svg>/gi);
 	if (!matches || matches.length === 0) return null;
@@ -150,8 +154,8 @@ export function renderBlockContent(
 	container: HTMLElement,
 	content: string,
 ): BlockRenderResult {
-	const normalizedContent = stripHtmlComments(content);
-	if (!normalizedContent) {
+	const contentWithoutComments = stripHtmlComments(content);
+	if (!contentWithoutComments) {
 		return {
 			rendered: false,
 			hidden: true,
@@ -159,12 +163,22 @@ export function renderBlockContent(
 		};
 	}
 
-	const svgMarkup = extractSvgMarkup(normalizedContent);
+	const normalizedContent = stripStyleBlocks(contentWithoutComments);
+
+	const svgMarkup = extractSvgMarkup(contentWithoutComments);
 	if (svgMarkup) {
 		return {
 			rendered: renderSvg(container, svgMarkup),
 			hidden: false,
-			textContent: normalizedContent,
+			textContent: normalizedContent || "",
+		};
+	}
+
+	if (!normalizedContent) {
+		return {
+			rendered: false,
+			hidden: true,
+			textContent: "",
 		};
 	}
 
