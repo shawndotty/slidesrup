@@ -11,10 +11,13 @@ function createNumberField(
 	row.createEl("label", { text: t(label as any) });
 	const input = row.createEl("input", {
 		type: "number",
-		value: `${value}`,
+		value: `${Math.round(value)}`,
 		cls: "slides-rup-design-maker-input",
 	});
-	input.addEventListener("input", () => onChange(Number(input.value || 0)));
+	input.step = "1";
+	input.addEventListener("input", () =>
+		onChange(Math.round(Number(input.value || 0))),
+	);
 }
 
 function createTextField(
@@ -69,22 +72,22 @@ export function renderDesignInspector(options: {
 
 	createNumberField(container, "X", block.rect.x, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.x = Math.max(0, Math.min(100, value));
+			nextBlock.rect.x = Math.round(Math.max(0, Math.min(100, value)));
 		});
 	});
 	createNumberField(container, "Y", block.rect.y, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.y = Math.max(0, Math.min(100, value));
+			nextBlock.rect.y = Math.round(Math.max(0, Math.min(100, value)));
 		});
 	});
 	createNumberField(container, "Width", block.rect.width, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.width = Math.max(1, Math.min(100, value));
+			nextBlock.rect.width = Math.round(Math.max(1, Math.min(100, value)));
 		});
 	});
 	createNumberField(container, "Height", block.rect.height, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.height = Math.max(1, Math.min(100, value));
+			nextBlock.rect.height = Math.round(Math.max(1, Math.min(100, value)));
 		});
 	});
 	createTextField(container, "CSS Class", block.className, (value) => {

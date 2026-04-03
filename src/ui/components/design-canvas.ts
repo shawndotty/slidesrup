@@ -4,6 +4,10 @@ import { renderBlockContent } from "./design-block-renderer";
 
 type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 
+function toInt(value: number): number {
+	return Math.round(value);
+}
+
 function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
 	const contentMap: Record<InsertBlockKind, string> = {
 		grid: "",
@@ -145,13 +149,17 @@ export function renderDesignCanvas(options: {
 				const deltaX = ((moveEvent.clientX - startX) / bounds.width) * 100;
 				const deltaY = ((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
-					nextBlock.rect.x = Math.max(
-						0,
-						Math.min(100 - nextBlock.rect.width, startRect.x + deltaX),
+					nextBlock.rect.x = toInt(
+						Math.max(
+							0,
+							Math.min(100 - nextBlock.rect.width, startRect.x + deltaX),
+						),
 					);
-					nextBlock.rect.y = Math.max(
-						0,
-						Math.min(100 - nextBlock.rect.height, startRect.y + deltaY),
+					nextBlock.rect.y = toInt(
+						Math.max(
+							0,
+							Math.min(100 - nextBlock.rect.height, startRect.y + deltaY),
+						),
 					);
 				});
 			};
@@ -178,13 +186,17 @@ export function renderDesignCanvas(options: {
 				const deltaX = ((moveEvent.clientX - startX) / bounds.width) * 100;
 				const deltaY = ((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
-					nextBlock.rect.width = Math.max(
-						5,
-						Math.min(100 - nextBlock.rect.x, startRect.width + deltaX),
+					nextBlock.rect.width = toInt(
+						Math.max(
+							5,
+							Math.min(100 - nextBlock.rect.x, startRect.width + deltaX),
+						),
 					);
-					nextBlock.rect.height = Math.max(
-						5,
-						Math.min(100 - nextBlock.rect.y, startRect.height + deltaY),
+					nextBlock.rect.height = toInt(
+						Math.max(
+							5,
+							Math.min(100 - nextBlock.rect.y, startRect.height + deltaY),
+						),
 					);
 				});
 			};

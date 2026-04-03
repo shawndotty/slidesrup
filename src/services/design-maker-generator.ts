@@ -5,10 +5,14 @@ import {
 	ThemeStyleDraft,
 } from "src/types/design-maker";
 
+function formatRectValue(value: number): string {
+	return `${Math.round(value)}`;
+}
+
 function serializeAttributes(block: DesignGridBlock): string {
 	const attrs: Record<string, string> = {
-		drag: `${block.rect.width} ${block.rect.height}`,
-		drop: `${block.rect.x} ${block.rect.y}`,
+		drag: `${formatRectValue(block.rect.width)} ${formatRectValue(block.rect.height)}`,
+		drop: `${formatRectValue(block.rect.x)} ${formatRectValue(block.rect.y)}`,
 	};
 
 	if (block.className.trim()) attrs.class = block.className.trim();

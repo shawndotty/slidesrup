@@ -18,6 +18,10 @@ function clamp(value: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, value));
 }
 
+function clampInt(value: number, min: number, max: number): number {
+	return Math.round(clamp(value, min, max));
+}
+
 function parsePair(
 	value: string,
 	fallbackA: number,
@@ -77,10 +81,10 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		type: "grid",
 		role: inferRole(content),
 		rect: {
-			x: clamp(x, 0, 100),
-			y: clamp(y, 0, 100),
-			width: clamp(width, 1, 100),
-			height: clamp(height, 1, 100),
+			x: clampInt(x, 0, 100),
+			y: clampInt(y, 0, 100),
+			width: clampInt(width, 1, 100),
+			height: clampInt(height, 1, 100),
 		},
 		content: content.trim(),
 		className: attrs.class || "",
