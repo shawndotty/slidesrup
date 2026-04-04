@@ -356,24 +356,7 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onDuplicateBlock: (blockId) => {
-				const target = this._getCurrentPage().blocks.find(
-					(block) => block.id === blockId && block.type === "grid",
-				);
-				if (!target || target.type !== "grid") return;
-				this._getCurrentPage().blocks.push({
-					...target,
-					id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-					rect: {
-						...target.rect,
-						x: Math.min(100 - target.rect.width, target.rect.x + 3),
-						y: Math.min(
-							100 - target.rect.height,
-							target.rect.y + 3,
-						),
-					},
-				});
-				this._syncPageSource();
-				this._render();
+				this._duplicateGridBlock(blockId, 3);
 			},
 		});
 	}
@@ -383,7 +366,19 @@ export class DesignMakerView extends ItemView {
 		renderDesignToolbar({
 			container: this.toolbarEl,
 			selectedBlockId: this.selectedBlockId,
+			hasFootnotesBlock: this._hasFootnotesBlock(),
 			onAddBlock: (block) => {
+				this._getCurrentPage().blocks.push(block);
+				this.selectedBlockId = block.id;
+				this._syncPageSource();
+				this._render();
+			},
+			onAddFootnotes: () => {
+				if (this._hasFootnotesBlock()) {
+					new Notice(t("Footnotes block already exists"));
+					return;
+				}
+				const block = this._createFootnotesBlock();
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
@@ -400,26 +395,7 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onDuplicateBlock: (blockId) => {
-				const target = this._getCurrentPage().blocks.find(
-					(block) => block.id === blockId && block.type === "grid",
-				);
-				if (!target || target.type !== "grid") return;
-				const nextBlock: DesignGridBlock = {
-					...target,
-					id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-					rect: {
-						...target.rect,
-						x: Math.min(100 - target.rect.width, target.rect.x + 4),
-						y: Math.min(
-							100 - target.rect.height,
-							target.rect.y + 4,
-						),
-					},
-				};
-				this._getCurrentPage().blocks.push(nextBlock);
-				this.selectedBlockId = nextBlock.id;
-				this._syncPageSource();
-				this._render();
+				this._duplicateGridBlock(blockId, 4);
 			},
 		});
 	}
@@ -561,6 +537,67 @@ export class DesignMakerView extends ItemView {
 		if (!block || block.type !== "grid") return;
 		patcher(block);
 		this._syncPageSource();
+	}
+
+	private _isFootnotesBlock(block: DesignGridBlock): boolean {
+		return (
+			block.className.trim().split(/\s+/).includes("footnotes") ||
+			block.content.includes("<%? footnotes %>")
+		);
+	}
+
+	private _hasFootnotesBlock(): boolean {
+		return this._getCurrentPage().blocks.some(
+			(block) => block.type === "grid" && this._isFootnotesBlock(block),
+		);
+	}
+
+	private _createFootnotesBlock(): DesignGridBlock {
+		return {
+			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+			type: "grid",
+			role: "placeholder",
+			rect: {
+				x: 0,
+				y: 92,
+				width: 100,
+				height: 8,
+			},
+			content: "<%? footnotes %>",
+			className: "footnotes",
+			style: "",
+			pad: "0 40px",
+			align: "topleft",
+			flow: "",
+			filter: "",
+			justifyContent: "",
+			extraAttributes: {},
+		};
+	}
+
+	private _duplicateGridBlock(blockId: string, offset: number): void {
+		const page = this._getCurrentPage();
+		const target = page.blocks.find(
+			(block) => block.id === blockId && block.type === "grid",
+		);
+		if (!target || target.type !== "grid") return;
+		if (this._isFootnotesBlock(target)) {
+			new Notice(t("Footnotes block already exists"));
+			return;
+		}
+		const nextBlock: DesignGridBlock = {
+			...target,
+			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+			rect: {
+				...target.rect,
+				x: Math.min(100 - target.rect.width, target.rect.x + offset),
+				y: Math.min(100 - target.rect.height, target.rect.y + offset),
+			},
+		};
+		page.blocks.push(nextBlock);
+		this.selectedBlockId = nextBlock.id;
+		this._syncPageSource();
+		this._render();
 	}
 
 	private _syncPageSource(): void {

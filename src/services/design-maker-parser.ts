@@ -74,6 +74,55 @@ function createRawBlock(raw: string): DesignCanvasBlock | null {
 	};
 }
 
+function createFootnotesBlock(): DesignGridBlock {
+	return {
+		id: nextBlockId("grid"),
+		type: "grid",
+		role: "placeholder",
+		rect: {
+			x: 0,
+			y: 92,
+			width: 100,
+			height: 8,
+		},
+		content: "<%? footnotes %>",
+		className: "footnotes",
+		style: "",
+		pad: "0 40px",
+		align: "topleft",
+		flow: "",
+		filter: "",
+		justifyContent: "",
+		extraAttributes: {},
+	};
+}
+
+function appendRawBlocksAndFootnotes(
+	raw: string,
+	blocks: DesignCanvasBlock[],
+	state: {
+		hasFootnotesBlock: boolean;
+	},
+): void {
+	const normalizedRaw = raw.trim();
+	if (!normalizedRaw) return;
+	const footnotesRegex = /<%\?\s*footnotes\s*%>/g;
+	if (!footnotesRegex.test(normalizedRaw)) {
+		const rawBlock = createRawBlock(raw);
+		if (rawBlock) blocks.push(rawBlock);
+		return;
+	}
+	const segments = normalizedRaw.split(footnotesRegex);
+	segments.forEach((segment, index) => {
+		const rawBlock = createRawBlock(segment);
+		if (rawBlock) blocks.push(rawBlock);
+		if (index < segments.length - 1 && !state.hasFootnotesBlock) {
+			blocks.push(createFootnotesBlock());
+			state.hasFootnotesBlock = true;
+		}
+	});
+}
+
 function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 	const attrs = parseAttributes(attrSource);
 	const [width, height] = parsePair(attrs.drag || "", 100, 30);
@@ -130,21 +179,22 @@ export function parseDesignPageDraft(
 ): DesignPageDraft {
 	const fileName = getDesignPageFileName(pageType, designName);
 	const blocks: DesignCanvasBlock[] = [];
+	const footnotesState = {
+		hasFootnotesBlock: false,
+	};
 	const gridRegex = /<grid\b([^>]*)>([\s\S]*?)<\/grid>/g;
 	let cursor = 0;
 	let match = gridRegex.exec(markdown);
 
 	while (match) {
 		const before = markdown.slice(cursor, match.index);
-		const rawBlock = createRawBlock(before);
-		if (rawBlock) blocks.push(rawBlock);
+		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
 		blocks.push(createGridBlock(match[1], match[2]));
 		cursor = match.index + match[0].length;
 		match = gridRegex.exec(markdown);
 	}
 
-	const tail = createRawBlock(markdown.slice(cursor));
-	if (tail) blocks.push(tail);
+	appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
 
 	return {
 		type: pageType,

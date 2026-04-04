@@ -60,14 +60,18 @@ function applySlideBaselineScale(
 export function renderDesignToolbar(options: {
 	container: HTMLElement;
 	selectedBlockId: string | null;
+	hasFootnotesBlock: boolean;
 	onAddBlock: (block: DesignGridBlock) => void;
+	onAddFootnotes: () => void;
 	onDeleteBlock: (blockId: string) => void;
 	onDuplicateBlock: (blockId: string) => void;
 }): void {
 	const {
 		container,
 		selectedBlockId,
+		hasFootnotesBlock,
 		onAddBlock,
+		onAddFootnotes,
 		onDeleteBlock,
 		onDuplicateBlock,
 	} = options;
@@ -87,6 +91,11 @@ export function renderDesignToolbar(options: {
 			onAddBlock(createTemplateBlock(kind as InsertBlockKind)),
 		);
 	});
+	const footnotesButton = toolbar.createEl("button", {
+		text: t("Add Footnotes"),
+	});
+	footnotesButton.disabled = hasFootnotesBlock;
+	footnotesButton.addEventListener("click", () => onAddFootnotes());
 
 	if (selectedBlockId) {
 		const duplicateButton = toolbar.createEl("button", {
