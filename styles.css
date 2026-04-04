@@ -541,6 +541,11 @@ h3.slides-rup-title {
 	animation: slides-rup-design-maker-deselect-glow 150ms ease-out;
 }
 
+.slides-rup-design-maker-block.is-delete-pending,
+.slides-rup-design-maker-preview-block.is-delete-pending {
+	animation: slides-rup-design-maker-delete-pulse 100ms ease-out;
+}
+
 @keyframes slides-rup-design-maker-deselect-glow {
 	0% {
 		border-color: var(--interactive-accent);
@@ -551,6 +556,21 @@ h3.slides-rup-title {
 	100% {
 		border-color: rgba(var(--interactive-accent-rgb), 0.45);
 		box-shadow: 0 0 0 0 rgba(var(--interactive-accent-rgb), 0);
+	}
+}
+
+@keyframes slides-rup-design-maker-delete-pulse {
+	0% {
+		border-color: var(--interactive-accent);
+		box-shadow:
+			0 0 0 2px rgba(var(--interactive-accent-rgb), 0.55),
+			0 0 0 4px rgba(var(--interactive-accent-rgb), 0.2);
+	}
+	100% {
+		border-color: rgba(239, 68, 68, 0.95);
+		box-shadow:
+			0 0 0 2px rgba(239, 68, 68, 0.5),
+			0 0 0 6px rgba(239, 68, 68, 0.2);
 	}
 }
 

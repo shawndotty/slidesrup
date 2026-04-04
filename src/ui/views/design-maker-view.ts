@@ -46,6 +46,9 @@ export class DesignMakerView extends ItemView {
 	private resizeRafId: number | null = null;
 	private lastCenterStageWidth = 0;
 	private lastCenterStageHeight = 0;
+	private readonly _onWindowKeyDown = (event: KeyboardEvent) => {
+		this._handleWindowKeyDown(event);
+	};
 	private rightPanelState = {
 		inspector: true,
 		theme: true,
@@ -75,9 +78,11 @@ export class DesignMakerView extends ItemView {
 		this._ensureLayout();
 		this._render();
 		this._setupResizeObserver();
+		window.addEventListener("keydown", this._onWindowKeyDown);
 	}
 
 	async onClose(): Promise<void> {
+		window.removeEventListener("keydown", this._onWindowKeyDown);
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		if (this.resizeRafId !== null) {
@@ -350,13 +355,7 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onDeleteBlock: (blockId) => {
-				this._getCurrentPage().blocks =
-					this._getCurrentPage().blocks.filter(
-						(block) => block.id !== blockId,
-					);
-				this.selectedBlockId = null;
-				this._syncPageSource();
-				this._render();
+				this._deleteBlockById(blockId);
 			},
 			onDuplicateBlock: (blockId) => {
 				this._duplicateGridBlock(blockId, 3);
@@ -400,14 +399,7 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onDeleteBlock: (blockId) => {
-				const page = this._getCurrentPage();
-				page.blocks = page.blocks.filter(
-					(block) => block.id !== blockId,
-				);
-				if (this.selectedBlockId === blockId)
-					this.selectedBlockId = null;
-				this._syncPageSource();
-				this._render();
+				this._deleteBlockById(blockId);
 			},
 			onDuplicateBlock: (blockId) => {
 				this._duplicateGridBlock(blockId, 4);
@@ -697,6 +689,68 @@ export class DesignMakerView extends ItemView {
 		this.selectedBlockId = nextBlock.id;
 		this._syncPageSource();
 		this._render();
+	}
+
+	private _deleteBlockById(blockId: string): void {
+		const page = this._getCurrentPage();
+		page.blocks = page.blocks.filter((block) => block.id !== blockId);
+		if (this.selectedBlockId === blockId) {
+			this.selectedBlockId = null;
+		}
+		this._syncPageSource();
+		this._render();
+	}
+
+	private _handleWindowKeyDown(event: KeyboardEvent): void {
+		if (event.defaultPrevented) return;
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (event.key !== "Backspace" && event.key !== "Delete") return;
+		const activeView =
+			this.app.workspace.getActiveViewOfType(DesignMakerView);
+		if (activeView !== this) return;
+		if (!this.selectedBlockId || !this.draft) return;
+		const target = event.target as HTMLElement | null;
+		if (this._isTypingElement(target)) return;
+		event.preventDefault();
+		this._deleteSelectedBlockWithPulse(this.selectedBlockId);
+	}
+
+	private _deleteSelectedBlockWithPulse(blockId: string): void {
+		const pulseSelectors = [
+			".slides-rup-design-maker-block",
+			".slides-rup-design-maker-preview-block",
+		];
+		const roots = [this.canvasEl, this.previewEl].filter(
+			(element): element is HTMLElement => Boolean(element),
+		);
+		roots.forEach((root) => {
+			pulseSelectors.forEach((selector) => {
+				const target = root.querySelector(
+					`${selector}[data-block-id="${blockId}"]`,
+				) as HTMLElement | null;
+				if (target) {
+					target.removeClass("is-delete-pending");
+					target.addClass("is-delete-pending");
+				}
+			});
+		});
+		window.setTimeout(() => {
+			this._deleteBlockById(blockId);
+		}, 100);
+	}
+
+	private _isTypingElement(target: HTMLElement | null): boolean {
+		if (!target) return false;
+		const tagName = target.tagName;
+		if (
+			tagName === "INPUT" ||
+			tagName === "TEXTAREA" ||
+			tagName === "SELECT"
+		) {
+			return true;
+		}
+		if (target.isContentEditable) return true;
+		return Boolean(target.closest('[contenteditable="true"]'));
 	}
 
 	private _syncPageSource(): void {
