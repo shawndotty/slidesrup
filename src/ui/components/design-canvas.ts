@@ -7,6 +7,27 @@ type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
 
+export function applyBlockRectStyles(el: HTMLElement, block: DesignGridBlock) {
+	if (block.rect.x < 0) {
+		el.style.right = `${Math.abs(block.rect.x)}%`;
+		el.style.left = "";
+	} else {
+		el.style.left = `${block.rect.x}%`;
+		el.style.right = "";
+	}
+
+	if (block.rect.y < 0) {
+		el.style.bottom = `${Math.abs(block.rect.y)}%`;
+		el.style.top = "";
+	} else {
+		el.style.top = `${block.rect.y}%`;
+		el.style.bottom = "";
+	}
+
+	el.style.width = `${block.rect.width}%`;
+	el.style.height = `${block.rect.height}%`;
+}
+
 export function applyGridFlexStyles(el: HTMLElement, block: DesignGridBlock) {
 	el.style.display = "flex";
 	
@@ -258,10 +279,7 @@ export function renderDesignCanvas(options: {
 		if (block.id === selectedBlockId) {
 			el.addClass("is-selected");
 		}
-		el.style.left = `${block.rect.x}%`;
-		el.style.top = `${block.rect.y}%`;
-		el.style.width = `${block.rect.width}%`;
-		el.style.height = `${block.rect.height}%`;
+		applyBlockRectStyles(el, block);
 		if (block.className && block.className.trim()) {
 			el.addClass(...block.className.trim().split(/\s+/));
 		}

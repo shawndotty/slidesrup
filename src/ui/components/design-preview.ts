@@ -2,7 +2,7 @@ import { App } from "obsidian";
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
-import { applyGridFlexStyles } from "./design-canvas";
+import { applyBlockRectStyles, applyGridFlexStyles } from "./design-canvas";
 
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
@@ -100,10 +100,7 @@ export function renderDesignPreview(options: {
 		const el = preview.createDiv("slides-rup-design-maker-preview-block");
 		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) el.addClass("is-selected");
-		el.style.left = `${block.rect.x}%`;
-		el.style.top = `${block.rect.y}%`;
-		el.style.width = `${block.rect.width}%`;
-		el.style.height = `${block.rect.height}%`;
+		applyBlockRectStyles(el, block);
 		if (block.className && block.className.trim()) {
 			el.addClass(...block.className.trim().split(/\s+/));
 		}

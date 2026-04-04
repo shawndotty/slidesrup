@@ -28,7 +28,10 @@ import {
 	normalizeDesignName,
 } from "./design-maker-schema";
 import { parseDesignPageDraft, parseThemeDraft } from "./design-maker-parser";
-import { generatePageMarkdown, generateThemeCss } from "./design-maker-generator";
+import {
+	generatePageMarkdown,
+	generateThemeCss,
+} from "./design-maker-generator";
 
 export class DesignMaker {
 	private app: App;
@@ -76,7 +79,9 @@ export class DesignMaker {
 			marpThemePath,
 			generateThemeCss(parseThemeDraft(designName, ""), designName),
 		);
-		await this.vscodeService.addNewMarpThemeForVSCode(designName.toLowerCase());
+		await this.vscodeService.addNewMarpThemeForVSCode(
+			designName.toLowerCase(),
+		);
 		await this._revealNewDesign(newDesignPath);
 	}
 
@@ -107,19 +112,28 @@ export class DesignMaker {
 		await this._createAndOpenDesignInMaker(existingLeaf);
 	}
 
-	private async _createAndOpenDesignInMaker(existingLeaf?: WorkspaceLeaf): Promise<void> {
+	private async _createAndOpenDesignInMaker(
+		existingLeaf?: WorkspaceLeaf,
+	): Promise<void> {
 		const options = this.getDesignOptions();
 		const sourceDesign = await this._selectSlideDesign(options);
 		if (!sourceDesign) return;
-		const defaultName = `${sourceDesign.value}-Design`;
-		const designName = normalizeDesignName(await this._getDesignName(defaultName));
+		const defaultName = `${sourceDesign.value}-Copy`;
+		const designName = normalizeDesignName(
+			await this._getDesignName(defaultName),
+		);
 		if (!designName) return;
-		const designPath = await this.cloneDesignFromSource(sourceDesign.value, designName);
+		const designPath = await this.cloneDesignFromSource(
+			sourceDesign.value,
+			designName,
+		);
 		if (!designPath) return;
 		await this._openDesignMakerLeaf(designPath, designName, existingLeaf);
 	}
 
-	private async _openExistingDesignInMaker(existingLeaf?: WorkspaceLeaf): Promise<void> {
+	private async _openExistingDesignInMaker(
+		existingLeaf?: WorkspaceLeaf,
+	): Promise<void> {
 		const userDesignOptions = this.getUserDesignOptions();
 		if (userDesignOptions.length === 0) {
 			new Notice(t("No existing user designs found"));
@@ -187,7 +201,9 @@ export class DesignMaker {
 		const originalFolder =
 			this.app.vault.getAbstractFileByPath(originalDesignPath);
 		if (!originalFolder || !(originalFolder instanceof TFolder)) {
-			new Notice(`${t("Cann't find the source folder")}${originalDesignPath}`);
+			new Notice(
+				`${t("Cann't find the source folder")}${originalDesignPath}`,
+			);
 			return null;
 		}
 		const newDesignPath = `${this.userDesignPath}/Design-${newDesignName}`;
@@ -200,7 +216,12 @@ export class DesignMaker {
 			(file) => file instanceof TFile,
 		) as TFile[];
 		for (const file of filesToCopy) {
-			await this._copyDesignFile(file, sourceDesignName, newDesignName, newDesignPath);
+			await this._copyDesignFile(
+				file,
+				sourceDesignName,
+				newDesignName,
+				newDesignPath,
+			);
 		}
 		await this._copyDesignTheme(sourceDesignName, newDesignName);
 		return newDesignPath;
@@ -265,7 +286,12 @@ export class DesignMaker {
 		filePath: string,
 		rawMarkdown: string,
 	): DesignPageDraft {
-		return parseDesignPageDraft(pageType, designName, filePath, rawMarkdown);
+		return parseDesignPageDraft(
+			pageType,
+			designName,
+			filePath,
+			rawMarkdown,
+		);
 	}
 
 	private async _revealNewDesign(path: string) {
@@ -317,7 +343,9 @@ export class DesignMaker {
 		newDesignPath: string,
 	): Promise<void> {
 		const originalFileName = file.name;
-		const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(originalFileName);
+		const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
+			originalFileName,
+		);
 		const newFileName = originalFileName.replace(
 			new RegExp(sourceDesignName, "g"),
 			newDesignName,
@@ -347,10 +375,14 @@ export class DesignMaker {
 			newDesignName,
 		)}`;
 		if (await this.app.vault.adapter.exists(originalThemePath)) {
-			const themeContent = await this.app.vault.adapter.read(originalThemePath);
+			const themeContent =
+				await this.app.vault.adapter.read(originalThemePath);
 			const updatedThemeContent = themeContent
 				.replace(
-					new RegExp(`sr-design-${sourceDesignName.toLowerCase()}`, "g"),
+					new RegExp(
+						`sr-design-${sourceDesignName.toLowerCase()}`,
+						"g",
+					),
 					`sr-design-${newDesignName.toLowerCase()}`,
 				)
 				.replace(
@@ -361,10 +393,15 @@ export class DesignMaker {
 		} else {
 			await this._writeOrCreateFile(
 				newThemePath,
-				generateThemeCss(parseThemeDraft(newDesignName, ""), newDesignName),
+				generateThemeCss(
+					parseThemeDraft(newDesignName, ""),
+					newDesignName,
+				),
 			);
 		}
-		await this.vscodeService.addNewMarpThemeForVSCode(newDesignName.toLowerCase());
+		await this.vscodeService.addNewMarpThemeForVSCode(
+			newDesignName.toLowerCase(),
+		);
 	}
 
 	private async _readFileIfExists(
@@ -393,7 +430,7 @@ export class DesignMaker {
 	}
 
 	private async _selectSlideDesign(
-		options: SuggesterOption[]
+		options: SuggesterOption[],
 	): Promise<SuggesterOption | null> {
 		const suggester = new SlideDesignSuggester(this.app, options);
 		return new Promise((resolve) => {
