@@ -537,7 +537,6 @@ h3.slides-rup-title {
 	width: 100%;
 	aspect-ratio: 16 / 9;
 	overflow: hidden;
-	border-radius: 12px;
 }
 
 .slides-rup-design-maker-canvas {
@@ -565,8 +564,6 @@ h3.slides-rup-title {
 	position: absolute;
 	border: 1px solid rgba(var(--interactive-accent-rgb), 0.45);
 	background: rgba(var(--interactive-accent-rgb), 0.08);
-	border-radius: 10px;
-	padding: 8px;
 	overflow: hidden;
 	cursor: move;
 	white-space: pre-wrap;
@@ -659,7 +656,6 @@ h3.slides-rup-title {
 	margin: 8px;
 	padding: 8px;
 	border: 1px dashed var(--background-modifier-border);
-	border-radius: 8px;
 	white-space: pre-wrap;
 	font-size: 12px;
 	color: var(--text-muted);
