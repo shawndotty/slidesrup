@@ -594,6 +594,7 @@ export default {
 	"Save and Apply": "Save and Apply",
 	"Reload Design": "Reload Design",
 	"Design Pages": "Design Pages",
+	"Load Design": "Load Design",
 	"Contains source only blocks": "Contains source only blocks",
 	"Design Theme": "Design Theme",
 	"Primary Color": "Primary Color",

@@ -146,10 +146,11 @@ export class DesignMakerView extends ItemView {
 		const isDark = document.body.classList.contains("theme-dark");
 		const cssFileName = isDark ? "main-dark.css" : "main.css";
 		const cssPath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles/${cssFileName}`;
-		
+
 		try {
 			if (await this.app.vault.adapter.exists(cssPath)) {
-				this.presentationCss = await this.app.vault.adapter.read(cssPath);
+				this.presentationCss =
+					await this.app.vault.adapter.read(cssPath);
 			} else {
 				this.presentationCss = "";
 			}
@@ -174,6 +175,7 @@ export class DesignMakerView extends ItemView {
 		const actions = header.createDiv(
 			"slides-rup-design-maker-header-actions",
 		);
+
 		const saveButton = actions.createEl("button", {
 			text: t("Save and Apply"),
 		});
@@ -189,6 +191,13 @@ export class DesignMakerView extends ItemView {
 		});
 		reloadButton.addEventListener("click", async () => {
 			await this._loadDraft({ keepActivePage: true });
+		});
+
+		const loadButton = actions.createEl("button", {
+			text: t("Load Design"),
+		});
+		loadButton.addEventListener("click", async () => {
+			await this.designMaker.openDesignMaker(this.leaf);
 		});
 
 		const layout = this.contentEl.createDiv(

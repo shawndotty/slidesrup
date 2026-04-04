@@ -530,6 +530,7 @@ export default {
 	"Save and Apply": "儲存並套用",
 	"Reload Design": "重新載入設計",
 	"Design Pages": "設計頁面",
+	"Load Design": "匯入設計",
 	"Contains source only blocks": "包含僅支援原始碼編輯的區塊",
 	"Design Theme": "設計主題",
 	"Primary Color": "主色",

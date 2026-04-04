@@ -1,4 +1,4 @@
-import { App, Notice, TFile, TFolder } from "obsidian";
+import { App, Notice, TFile, TFolder, WorkspaceLeaf } from "obsidian";
 import { t } from "../lang/helpers";
 import { SlidesRupSettings } from "src/types";
 import { SuggesterOption } from "../suggesters/base-suggester";
@@ -93,7 +93,7 @@ export class DesignMaker {
 		if (newDesignPath) await this._revealNewDesign(newDesignPath);
 	}
 
-	async openDesignMaker(): Promise<void> {
+	async openDesignMaker(existingLeaf?: WorkspaceLeaf): Promise<void> {
 		if (!this.settings.enableDesignMaker) {
 			new Notice(t("Enable Design Maker"));
 			return;
@@ -101,13 +101,13 @@ export class DesignMaker {
 		const mode = await this._selectDesignMakerMode();
 		if (!mode) return;
 		if (mode.value === "load") {
-			await this._openExistingDesignInMaker();
+			await this._openExistingDesignInMaker(existingLeaf);
 			return;
 		}
-		await this._createAndOpenDesignInMaker();
+		await this._createAndOpenDesignInMaker(existingLeaf);
 	}
 
-	private async _createAndOpenDesignInMaker(): Promise<void> {
+	private async _createAndOpenDesignInMaker(existingLeaf?: WorkspaceLeaf): Promise<void> {
 		const options = this.getDesignOptions();
 		const sourceDesign = await this._selectSlideDesign(options);
 		if (!sourceDesign) return;
@@ -116,10 +116,10 @@ export class DesignMaker {
 		if (!designName) return;
 		const designPath = await this.cloneDesignFromSource(sourceDesign.value, designName);
 		if (!designPath) return;
-		await this._openDesignMakerLeaf(designPath, designName);
+		await this._openDesignMakerLeaf(designPath, designName, existingLeaf);
 	}
 
-	private async _openExistingDesignInMaker(): Promise<void> {
+	private async _openExistingDesignInMaker(existingLeaf?: WorkspaceLeaf): Promise<void> {
 		const userDesignOptions = this.getUserDesignOptions();
 		if (userDesignOptions.length === 0) {
 			new Notice(t("No existing user designs found"));
@@ -133,18 +133,19 @@ export class DesignMaker {
 			new Notice(`${t("Cann't find the source folder")}${designPath}`);
 			return;
 		}
-		await this._openDesignMakerLeaf(designPath, design.value);
+		await this._openDesignMakerLeaf(designPath, design.value, existingLeaf);
 	}
 
 	private async _openDesignMakerLeaf(
 		designPath: string,
 		designName: string,
+		existingLeaf?: WorkspaceLeaf,
 	): Promise<void> {
 		if (!this.plugin) {
 			await this._revealNewDesign(designPath);
 			return;
 		}
-		const leaf = this.app.workspace.getLeaf("tab");
+		const leaf = existingLeaf || this.app.workspace.getLeaf("tab");
 		await leaf.setViewState({
 			type: DESIGN_MAKER_VIEW_TYPE,
 			active: true,
@@ -153,7 +154,9 @@ export class DesignMaker {
 				designName,
 			},
 		});
-		this.app.workspace.revealLeaf(leaf);
+		if (!existingLeaf) {
+			this.app.workspace.revealLeaf(leaf);
+		}
 	}
 
 	getDesignOptions(): Array<SuggesterOption> {
