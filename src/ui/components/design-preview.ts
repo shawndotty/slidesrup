@@ -1,3 +1,4 @@
+import { App } from "obsidian";
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
@@ -22,6 +23,7 @@ function applySlideBaselineScale(
 }
 
 export function renderDesignPreview(options: {
+	app: App;
 	container: HTMLElement;
 	page: DesignPageDraft;
 	theme: ThemeStyleDraft;
@@ -32,6 +34,7 @@ export function renderDesignPreview(options: {
 	slideBaseHeight?: number;
 }): void {
 	const {
+		app,
 		container,
 		page,
 		theme,
@@ -70,7 +73,10 @@ export function renderDesignPreview(options: {
 	page.blocks.forEach((block) => {
 		if (block.type === "raw") {
 			const raw = preview.createDiv("slides-rup-design-maker-preview-raw");
-			const result = renderBlockContent(raw, block.raw);
+			const result = renderBlockContent(raw, block.raw, {
+				app,
+				sourcePath: page.filePath,
+			});
 			if (result.hidden) {
 				raw.remove();
 				return;
@@ -89,7 +95,10 @@ export function renderDesignPreview(options: {
 		el.style.height = `${block.rect.height}%`;
 		if (block.className.trim()) el.addClass(...block.className.trim().split(/\s+/));
 		if (block.style.trim()) el.style.cssText += `;${block.style}`;
-		const result = renderBlockContent(el, block.content);
+		const result = renderBlockContent(el, block.content, {
+			app,
+			sourcePath: page.filePath,
+		});
 		if (result.hidden) {
 			el.remove();
 			return;

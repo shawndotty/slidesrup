@@ -331,6 +331,7 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCanvasOnly(): void {
 		renderDesignCanvas({
+			app: this.app,
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
 			themeRawCss: this.draft?.theme.rawCss || "",
@@ -410,6 +411,7 @@ export class DesignMakerView extends ItemView {
 	private _renderPreviewOnly(showTitle: boolean = true): void {
 		if (!this.draft) return;
 		renderDesignPreview({
+			app: this.app,
 			container: this.previewEl!,
 			page: this._getCurrentPage(),
 			theme: this.draft.theme,

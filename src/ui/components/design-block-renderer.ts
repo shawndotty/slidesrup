@@ -1,7 +1,14 @@
+import { App, TFile } from "obsidian";
+
 export interface BlockRenderResult {
 	rendered: boolean;
 	hidden: boolean;
 	textContent: string;
+}
+
+interface RenderContext {
+	app?: App;
+	sourcePath?: string;
 }
 
 interface PlaceholderMeta {
@@ -56,6 +63,37 @@ function extractObsidianEmbedTarget(content: string): string | null {
 
 function looksLikeImageResource(target: string): boolean {
 	return /\.(png|jpg|jpeg|gif|svg|webp|bmp|avif)$/i.test(target.trim());
+}
+
+function resolveObsidianImageUrl(
+	target: string,
+	context?: RenderContext,
+): string {
+	const normalized = target.trim();
+	if (!normalized) return normalized;
+	if (
+		/^https?:\/\//i.test(normalized) ||
+		/^data:/i.test(normalized) ||
+		/^file:/i.test(normalized) ||
+		normalized.startsWith("/")
+	) {
+		return normalized;
+	}
+	const app = context?.app;
+	if (!app) return normalized;
+	const sourcePath = context?.sourcePath || "";
+	const linked = app.metadataCache.getFirstLinkpathDest(
+		normalized,
+		sourcePath,
+	);
+	if (linked instanceof TFile) {
+		return app.vault.getResourcePath(linked);
+	}
+	const direct = app.vault.getAbstractFileByPath(normalized);
+	if (direct instanceof TFile) {
+		return app.vault.getResourcePath(direct);
+	}
+	return normalized;
 }
 
 function renderSvg(container: HTMLElement, markup: string): boolean {
@@ -182,6 +220,7 @@ function renderPlaceholders(container: HTMLElement, tokens: string[]): boolean {
 export function renderBlockContent(
 	container: HTMLElement,
 	content: string,
+	context?: RenderContext,
 ): BlockRenderResult {
 	const contentWithoutComments = stripHtmlComments(content);
 	if (!contentWithoutComments) {
@@ -218,7 +257,10 @@ export function renderBlockContent(
 	const imageUrl = extractImageUrl(normalizedContent);
 	if (imageUrl) {
 		return {
-			rendered: renderImage(container, imageUrl),
+			rendered: renderImage(
+				container,
+				resolveObsidianImageUrl(imageUrl, context),
+			),
 			hidden: false,
 			textContent: normalizedContent,
 		};

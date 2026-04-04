@@ -1,3 +1,4 @@
+import { App } from "obsidian";
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, DesignGridBlock } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
@@ -123,6 +124,7 @@ export function renderDesignToolbar(options: {
 }
 
 export function renderDesignCanvas(options: {
+	app: App;
 	container: HTMLElement;
 	page: DesignPageDraft;
 	themeRawCss?: string;
@@ -139,6 +141,7 @@ export function renderDesignCanvas(options: {
 	onDuplicateBlock: (blockId: string) => void;
 }): void {
 	const {
+		app,
 		container,
 		page,
 		themeRawCss = "",
@@ -167,7 +170,10 @@ export function renderDesignCanvas(options: {
 	page.blocks.forEach((block) => {
 		if (block.type === "raw") {
 			const raw = canvas.createDiv("slides-rup-design-maker-raw-block");
-			const result = renderBlockContent(raw, block.raw);
+			const result = renderBlockContent(raw, block.raw, {
+				app,
+				sourcePath: page.filePath,
+			});
 			if (result.hidden) {
 				raw.remove();
 				return;
@@ -187,7 +193,10 @@ export function renderDesignCanvas(options: {
 		el.style.top = `${block.rect.y}%`;
 		el.style.width = `${block.rect.width}%`;
 		el.style.height = `${block.rect.height}%`;
-		const result = renderBlockContent(el, block.content || "");
+		const result = renderBlockContent(el, block.content || "", {
+			app,
+			sourcePath: page.filePath,
+		});
 		if (result.hidden) {
 			el.remove();
 			return;
