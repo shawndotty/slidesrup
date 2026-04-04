@@ -38,6 +38,12 @@ function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
 		flow: "",
 		filter: "",
 		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
 		extraAttributes: {},
 	};
 }

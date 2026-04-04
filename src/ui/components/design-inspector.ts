@@ -36,6 +36,56 @@ function createTextField(
 	input.addEventListener("input", () => onChange(input.value));
 }
 
+function createSelectField(
+	container: HTMLElement,
+	label: string,
+	value: string,
+	options: { value: string; label: string }[],
+	onChange: (value: string) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const select = row.createEl("select", {
+		cls: "slides-rup-design-maker-input",
+	});
+	options.forEach((opt) => {
+		const optionEl = select.createEl("option", {
+			value: opt.value,
+			text: opt.label,
+		});
+		if (opt.value === value) {
+			optionEl.selected = true;
+		}
+	});
+	select.addEventListener("change", () => onChange(select.value));
+}
+
+function createRangeField(
+	container: HTMLElement,
+	label: string,
+	value: number,
+	min: number,
+	max: number,
+	step: number,
+	onChange: (value: number) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const input = row.createEl("input", {
+		type: "number",
+		value: `${value}`,
+		cls: "slides-rup-design-maker-input",
+	});
+	input.min = `${min}`;
+	input.max = `${max}`;
+	input.step = `${step}`;
+	input.addEventListener("input", () => {
+		let val = Number(input.value);
+		if (isNaN(val)) val = min;
+		onChange(Math.min(max, Math.max(min, val)));
+	});
+}
+
 export function renderDesignInspector(options: {
 	container: HTMLElement;
 	block: DesignCanvasBlock | null;
@@ -107,9 +157,154 @@ export function renderDesignInspector(options: {
 			nextBlock.pad = value;
 		});
 	});
-	createTextField(container, "Align", block.align, (value) => {
+	createTextField(container, "Background", block.bg, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.align = value;
+			nextBlock.bg = value;
+		});
+	});
+	createTextField(container, "Border", block.border, (value) => {
+		onPatchBlock((nextBlock) => {
+			nextBlock.border = value;
+		});
+	});
+	createSelectField(
+		container,
+		"Flow",
+		block.flow,
+		[
+			{ value: "", label: "Default" },
+			{ value: "col", label: "Column" },
+			{ value: "row", label: "Row" },
+		],
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.flow = value;
+			});
+		},
+	);
+	createSelectField(
+		container,
+		"Align",
+		block.align,
+		[
+			{ value: "", label: "Default" },
+			{ value: "left", label: "Left" },
+			{ value: "right", label: "Right" },
+			{ value: "center", label: "Center" },
+			{ value: "justify", label: "Justify" },
+			{ value: "block", label: "Block" },
+			{ value: "top", label: "Top" },
+			{ value: "bottom", label: "Bottom" },
+			{ value: "topleft", label: "Top Left" },
+			{ value: "topright", label: "Top Right" },
+			{ value: "bottomleft", label: "Bottom Left" },
+			{ value: "bottomright", label: "Bottom Right" },
+			{ value: "stretch", label: "Stretch" },
+		],
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.align = value;
+			});
+		},
+	);
+	createSelectField(
+		container,
+		"Justify Content",
+		block.justifyContent,
+		[
+			{ value: "", label: "Default" },
+			{ value: "start", label: "Start" },
+			{ value: "end", label: "End" },
+			{ value: "center", label: "Center" },
+			{ value: "space-between", label: "Space Between" },
+			{ value: "space-around", label: "Space Around" },
+			{ value: "space-evenly", label: "Space Evenly" },
+		],
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.justifyContent = value;
+			});
+		},
+	);
+	createSelectField(
+		container,
+		"Animation",
+		block.animate,
+		[
+			{ value: "", label: "None" },
+			{ value: "fadeIn", label: "Fade In" },
+			{ value: "fadeOut", label: "Fade Out" },
+			{ value: "slideRightIn", label: "Slide Right In" },
+			{ value: "slideLeftIn", label: "Slide Left In" },
+			{ value: "slideUpIn", label: "Slide Up In" },
+			{ value: "slideDownIn", label: "Slide Down In" },
+			{ value: "slideRightOut", label: "Slide Right Out" },
+			{ value: "slideLeftOut", label: "Slide Left Out" },
+			{ value: "slideUpOut", label: "Slide Up Out" },
+			{ value: "slideDownOut", label: "Slide Down Out" },
+			{ value: "scaleUp", label: "Scale Up" },
+			{ value: "scaleUpOut", label: "Scale Up Out" },
+			{ value: "scaleDown", label: "Scale Down" },
+			{ value: "scaleDownOut", label: "Scale Down Out" },
+			{ value: "slower", label: "Slower" },
+			{ value: "faster", label: "Faster" },
+		],
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.animate = value;
+			});
+		},
+	);
+	createSelectField(
+		container,
+		"Filter",
+		block.filter,
+		[
+			{ value: "", label: "None" },
+			{ value: "blur", label: "Blur" },
+			{ value: "bright", label: "Bright" },
+			{ value: "contrast", label: "Contrast" },
+			{ value: "grayscale", label: "Grayscale" },
+			{ value: "hue", label: "Hue" },
+			{ value: "invert", label: "Invert" },
+			{ value: "saturate", label: "Saturate" },
+			{ value: "sepia", label: "Sepia" },
+		],
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.filter = value;
+			});
+		},
+	);
+	createRangeField(
+		container,
+		"Opacity",
+		block.opacity ? Number(block.opacity) : 1,
+		0,
+		1,
+		0.1,
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.opacity = value === 1 ? "" : value.toString();
+			});
+		},
+	);
+	createRangeField(
+		container,
+		"Rotate",
+		block.rotate ? Number(block.rotate) : 0,
+		0,
+		360,
+		1,
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.rotate = value === 0 ? "" : value.toString();
+			});
+		},
+	);
+	createTextField(container, "Fragment", block.frag, (value) => {
+		onPatchBlock((nextBlock) => {
+			nextBlock.frag = value;
 		});
 	});
 	createTextField(container, "Inline Style", block.style, (value) => {

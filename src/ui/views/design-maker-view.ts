@@ -694,6 +694,12 @@ export class DesignMakerView extends ItemView {
 			flow: "",
 			filter: "",
 			justifyContent: "",
+			bg: "",
+			border: "",
+			animate: "",
+			opacity: "",
+			rotate: "",
+			frag: "",
 			extraAttributes: {},
 		};
 	}
@@ -717,6 +723,12 @@ export class DesignMakerView extends ItemView {
 			flow: "",
 			filter: "",
 			justifyContent: "center",
+			bg: "",
+			border: "",
+			animate: "",
+			opacity: "",
+			rotate: "",
+			frag: "",
 			extraAttributes: {},
 		};
 	}

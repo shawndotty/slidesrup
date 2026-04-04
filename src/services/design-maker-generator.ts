@@ -21,6 +21,12 @@ function serializeAttributes(block: DesignGridBlock): string {
 	if (block.style.trim()) attrs.style = block.style.trim();
 	if (block.flow.trim()) attrs.flow = block.flow.trim();
 	if (block.filter.trim()) attrs.filter = block.filter.trim();
+	if (block.bg.trim()) attrs.bg = block.bg.trim();
+	if (block.border.trim()) attrs.border = block.border.trim();
+	if (block.animate.trim()) attrs.animate = block.animate.trim();
+	if (block.opacity.trim()) attrs.opacity = block.opacity.trim();
+	if (block.rotate.trim()) attrs.rotate = block.rotate.trim();
+	if (block.frag.trim()) attrs.frag = block.frag.trim();
 	if (block.justifyContent.trim()) {
 		attrs["justify-content"] = block.justifyContent.trim();
 	}

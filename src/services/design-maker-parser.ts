@@ -171,6 +171,12 @@ function createFootnotesBlock(): DesignGridBlock {
 		flow: "",
 		filter: "",
 		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
 		extraAttributes: {},
 	};
 }
@@ -194,6 +200,12 @@ function createSideBarBlock(): DesignGridBlock {
 		flow: "",
 		filter: "",
 		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
 		extraAttributes: {},
 	};
 }
@@ -263,6 +275,12 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		flow: attrs.flow || "",
 		filter: attrs.filter || "",
 		justifyContent: attrs["justify-content"] || "",
+		bg: attrs.bg || "",
+		border: attrs.border || "",
+		animate: attrs.animate || "",
+		opacity: attrs.opacity || "",
+		rotate: attrs.rotate || "",
+		frag: attrs.frag || "",
 		extraAttributes: Object.entries(attrs).reduce(
 			(result, [key, value]) => {
 				if (
@@ -276,6 +294,12 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 						"flow",
 						"filter",
 						"justify-content",
+						"bg",
+						"border",
+						"animate",
+						"opacity",
+						"rotate",
+						"frag",
 					].includes(key)
 				) {
 					return result;

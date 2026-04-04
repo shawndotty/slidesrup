@@ -36,6 +36,12 @@ export interface DesignGridBlock {
 	flow: string;
 	filter: string;
 	justifyContent: string;
+	bg: string;
+	border: string;
+	animate: string;
+	opacity: string;
+	rotate: string;
+	frag: string;
 	extraAttributes: Record<string, string>;
 	hiddenInDesign?: boolean;
 }
