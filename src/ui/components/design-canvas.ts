@@ -209,6 +209,14 @@ export function renderDesignCanvas(options: {
 		el.style.top = `${block.rect.y}%`;
 		el.style.width = `${block.rect.width}%`;
 		el.style.height = `${block.rect.height}%`;
+		if (block.className && block.className.trim()) {
+			el.addClass(...block.className.trim().split(/\s+/));
+		}
+		if (block.bg && block.bg.trim()) el.style.backgroundColor = block.bg;
+		if (block.border && block.border.trim()) el.style.border = block.border;
+		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
+		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
+		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content || "", {
 			app,
 			sourcePath: page.filePath,
