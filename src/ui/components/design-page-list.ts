@@ -11,7 +11,7 @@ export function renderDesignPageList(options: {
 	container.empty();
 
 	container.createEl("h3", {
-		text: t("Design Pages"),
+		text: `${t("Design Pages")} - ${draft.designName}`,
 		cls: "slides-rup-design-maker-section-title",
 	});
 
