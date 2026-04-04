@@ -528,7 +528,7 @@ h3.slides-rup-title {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-	margin-bottom: 12px;
+	/* margin-bottom: 12px; */
 }
 
 .slides-rup-design-maker-canvas-frame,
