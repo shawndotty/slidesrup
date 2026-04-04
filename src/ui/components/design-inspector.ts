@@ -255,27 +255,11 @@ export function renderDesignInspector(options: {
 			});
 		},
 	);
-	createSelectField(
-		container,
-		"Filter",
-		block.filter,
-		[
-			{ value: "", label: "None" },
-			{ value: "blur", label: "Blur" },
-			{ value: "bright", label: "Bright" },
-			{ value: "contrast", label: "Contrast" },
-			{ value: "grayscale", label: "Grayscale" },
-			{ value: "hue", label: "Hue" },
-			{ value: "invert", label: "Invert" },
-			{ value: "saturate", label: "Saturate" },
-			{ value: "sepia", label: "Sepia" },
-		],
-		(value) => {
-			onPatchBlock((nextBlock) => {
-				nextBlock.filter = value;
-			});
-		},
-	);
+	createTextField(container, "Filter", block.filter, (value) => {
+		onPatchBlock((nextBlock) => {
+			nextBlock.filter = value;
+		});
+	});
 	createRangeField(
 		container,
 		"Opacity",

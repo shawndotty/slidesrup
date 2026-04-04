@@ -695,13 +695,6 @@ export default {
 	"Scale Down Out": "Scale Down Out",
 	Slower: "Slower",
 	Faster: "Faster",
-	Blur: "Blur",
-	Bright: "Bright",
-	Contrast: "Contrast",
-	Grayscale: "Grayscale",
-	Invert: "Invert",
-	Saturate: "Saturate",
-	Sepia: "Sepia",
 	Filter: "Filter",
 	Align: "Align",
 };

@@ -632,13 +632,6 @@ export default {
 	"Scale Down Out": "縮小並退出",
 	Slower: "更慢",
 	Faster: "更快",
-	Blur: "模糊",
-	Bright: "高亮",
-	Contrast: "對比度",
-	Grayscale: "灰度",
-	Invert: "反色",
-	Saturate: "飽和度",
-	Sepia: "褐色",
 	Filter: "濾鏡",
 	Align: "對齊",
 };

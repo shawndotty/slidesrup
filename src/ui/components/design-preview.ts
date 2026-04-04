@@ -110,6 +110,7 @@ export function renderDesignPreview(options: {
 		if (block.border && block.border.trim()) el.style.border = block.border;
 		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
 		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
+		if (block.filter && block.filter.trim()) el.style.filter = block.filter;
 		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content, {
 			app,
