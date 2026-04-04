@@ -125,12 +125,12 @@ export function renderDesignInspector(options: {
 
 	createNumberField(container, "X", block.rect.x, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.x = Math.round(Math.max(0, Math.min(100, value)));
+			nextBlock.rect.x = Math.round(Math.max(-100, Math.min(100, value)));
 		});
 	});
 	createNumberField(container, "Y", block.rect.y, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.y = Math.round(Math.max(0, Math.min(100, value)));
+			nextBlock.rect.y = Math.round(Math.max(-100, Math.min(100, value)));
 		});
 	});
 	createNumberField(container, "Width", block.rect.width, (value) => {

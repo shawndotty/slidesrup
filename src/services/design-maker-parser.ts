@@ -262,8 +262,8 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		type: "grid",
 		role: inferRole(content),
 		rect: {
-			x: clampInt(x, 0, 100),
-			y: clampInt(y, 0, 100),
+			x: clampInt(x, -100, 100),
+			y: clampInt(y, -100, 100),
 			width: clampInt(width, 1, 100),
 			height: clampInt(height, 1, 100),
 		},
