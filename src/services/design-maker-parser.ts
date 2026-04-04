@@ -12,6 +12,18 @@ import {
 
 let blockSeed = 0;
 
+interface GridSegment {
+	attrSource: string;
+	content: string;
+	start: number;
+	end: number;
+}
+
+interface TextRange {
+	start: number;
+	end: number;
+}
+
 function nextBlockId(prefix: string): string {
 	blockSeed += 1;
 	return `${prefix}-${blockSeed}`;
@@ -54,6 +66,72 @@ function parseAttributes(raw: string): Record<string, string> {
 		match = attrRegex.exec(raw);
 	}
 	return attrs;
+}
+
+function parseGridSegments(source: string): {
+	segments: GridSegment[];
+	topLevelRanges: TextRange[];
+} {
+	const segments: GridSegment[] = [];
+	const topLevelRanges: TextRange[] = [];
+	const stack: Array<{
+		attrSource: string;
+		start: number;
+		openEnd: number;
+	}> = [];
+	const tokenRegex = /<grid\b([^>]*)>|<\/grid>/g;
+	let match = tokenRegex.exec(source);
+	while (match) {
+		const token = match[0];
+		if (token.startsWith("<grid")) {
+			stack.push({
+				attrSource: match[1] || "",
+				start: match.index,
+				openEnd: tokenRegex.lastIndex,
+			});
+		} else {
+			const opening = stack.pop();
+			if (!opening) {
+				match = tokenRegex.exec(source);
+				continue;
+			}
+			const segment: GridSegment = {
+				attrSource: opening.attrSource,
+				content: source.slice(opening.openEnd, match.index),
+				start: opening.start,
+				end: tokenRegex.lastIndex,
+			};
+			segments.push(segment);
+			if (stack.length === 0) {
+				topLevelRanges.push({
+					start: opening.start,
+					end: tokenRegex.lastIndex,
+				});
+			}
+		}
+		match = tokenRegex.exec(source);
+	}
+	segments.sort((a, b) => a.start - b.start);
+	topLevelRanges.sort((a, b) => a.start - b.start);
+	return {
+		segments,
+		topLevelRanges,
+	};
+}
+
+function stripNestedGridMarkup(content: string): string {
+	const { topLevelRanges } = parseGridSegments(content);
+	if (topLevelRanges.length === 0) {
+		return content.trim();
+	}
+	let cursor = 0;
+	let result = "";
+	topLevelRanges.forEach((range) => {
+		result += content.slice(cursor, range.start);
+		cursor = range.end;
+	});
+	result += content.slice(cursor);
+	return result.trim();
 }
 
 function inferRole(content: string): DesignGridBlock["role"] {
@@ -165,6 +243,7 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 	const attrs = parseAttributes(attrSource);
 	const [width, height] = parsePair(attrs.drag || "", 100, 30);
 	const [x, y] = parsePair(attrs.drop || "", 0, 0);
+	const cleanedContent = stripNestedGridMarkup(content);
 
 	return {
 		id: nextBlockId("grid"),
@@ -176,7 +255,7 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 			width: clampInt(width, 1, 100),
 			height: clampInt(height, 1, 100),
 		},
-		content: content.trim(),
+		content: cleanedContent,
 		className: attrs.class || "",
 		style: attrs.style || "",
 		pad: attrs.pad || "",
@@ -221,17 +300,39 @@ export function parseDesignPageDraft(
 		hasFootnotesBlock: false,
 		hasSideBarBlock: false,
 	};
-	const gridRegex = /<grid\b([^>]*)>([\s\S]*?)<\/grid>/g;
-	let cursor = 0;
-	let match = gridRegex.exec(markdown);
-
-	while (match) {
-		const before = markdown.slice(cursor, match.index);
-		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
-		blocks.push(createGridBlock(match[1], match[2]));
-		cursor = match.index + match[0].length;
-		match = gridRegex.exec(markdown);
+	const { segments, topLevelRanges } = parseGridSegments(markdown);
+	if (segments.length === 0) {
+		appendRawBlocksAndFootnotes(markdown, blocks, footnotesState);
+		return {
+			type: pageType,
+			label: getDesignPageDisplayName(fileName),
+			fileName,
+			filePath,
+			blocks,
+			rawMarkdown: markdown,
+			hasUnsupportedContent: blocks.some((block) => block.type === "raw"),
+		};
 	}
+
+	let cursor = 0;
+	let segmentCursor = 0;
+	topLevelRanges.forEach((range) => {
+		const before = markdown.slice(cursor, range.start);
+		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
+		while (
+			segmentCursor < segments.length &&
+			segments[segmentCursor].start < range.end
+		) {
+			const segment = segments[segmentCursor];
+			if (segment.start >= range.start) {
+				blocks.push(
+					createGridBlock(segment.attrSource, segment.content),
+				);
+			}
+			segmentCursor += 1;
+		}
+		cursor = range.end;
+	});
 
 	appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
 
