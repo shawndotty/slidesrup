@@ -2,6 +2,7 @@ import { App } from "obsidian";
 import { t } from "src/lang/helpers";
 import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
+import { applyGridFlexStyles } from "./design-canvas";
 
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
@@ -111,6 +112,9 @@ export function renderDesignPreview(options: {
 		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
 		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
 		if (block.filter && block.filter.trim()) el.style.filter = block.filter;
+		if (block.type === "grid") {
+			applyGridFlexStyles(el, block);
+		}
 		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content, {
 			app,

@@ -7,6 +7,59 @@ type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
 
+export function applyGridFlexStyles(el: HTMLElement, block: DesignGridBlock) {
+	el.style.display = "flex";
+	
+	const flow = block.flow.trim().toLowerCase();
+	const isRow = flow === "row";
+	el.style.flexDirection = isRow ? "row" : "column";
+	
+	if (block.pad && block.pad.trim()) {
+		el.style.padding = block.pad.trim();
+	}
+	
+	let explicitJustify = false;
+	if (block.justifyContent && block.justifyContent.trim()) {
+		el.style.justifyContent = block.justifyContent.trim();
+		explicitJustify = true;
+	} else {
+		el.style.justifyContent = "center";
+	}
+
+	el.style.alignItems = "center";
+
+	if (block.align && block.align.trim()) {
+		const align = block.align.trim().toLowerCase();
+		
+		if (align.includes("left")) {
+			el.style.alignItems = isRow ? "center" : "flex-start";
+			el.style.textAlign = "left";
+			if (isRow && !explicitJustify) el.style.justifyContent = "flex-start";
+		} else if (align.includes("right")) {
+			el.style.alignItems = isRow ? "center" : "flex-end";
+			el.style.textAlign = "right";
+			if (isRow && !explicitJustify) el.style.justifyContent = "flex-end";
+		} else if (align === "center") {
+			el.style.alignItems = "center";
+			el.style.textAlign = "center";
+		} else if (align === "stretch") {
+			el.style.alignItems = "stretch";
+		} else if (align === "justify") {
+			el.style.textAlign = "justify";
+		}
+		
+		if (!explicitJustify) {
+			if (align.includes("top")) {
+				if (isRow) el.style.alignItems = "flex-start";
+				else el.style.justifyContent = "flex-start";
+			} else if (align.includes("bottom")) {
+				if (isRow) el.style.alignItems = "flex-end";
+				else el.style.justifyContent = "flex-end";
+			}
+		}
+	}
+}
+
 function toInt(value: number): number {
 	return Math.round(value);
 }
@@ -217,6 +270,7 @@ export function renderDesignCanvas(options: {
 		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
 		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
 		if (block.filter && block.filter.trim()) el.style.filter = block.filter;
+		applyGridFlexStyles(el, block);
 		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content || "", {
 			app,
