@@ -174,6 +174,10 @@ export function renderDesignCanvas(options: {
 	canvas.addEventListener("click", () => onSelect(null));
 
 	page.blocks.forEach((block) => {
+		if (block.hiddenInDesign) {
+			return;
+		}
+
 		if (block.type === "raw") {
 			const raw = canvas.createDiv("slides-rup-design-maker-raw-block");
 			const result = renderBlockContent(raw, block.raw, {

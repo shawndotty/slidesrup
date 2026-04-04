@@ -77,6 +77,10 @@ export function renderDesignPreview(options: {
 	}
 
 	page.blocks.forEach((block) => {
+		if (block.hiddenInDesign) {
+			return;
+		}
+
 		if (block.type === "raw") {
 			const raw = preview.createDiv("slides-rup-design-maker-preview-raw");
 			const result = renderBlockContent(raw, block.raw, {

@@ -260,6 +260,7 @@ export class DesignMakerView extends ItemView {
 			container: this.pageListEl,
 			draft: this.draft,
 			activePageType: this.activePageType,
+			selectedBlockId: this.selectedBlockId,
 			onSelect: (pageType) => {
 				this.activePageType = pageType;
 				this.selectedBlockId = null;
@@ -267,6 +268,24 @@ export class DesignMakerView extends ItemView {
 					this._getCurrentPage(),
 				);
 				this._render();
+			},
+			onSelectBlock: (blockId) => {
+				const previousBlockId = this.selectedBlockId;
+				this.selectedBlockId = blockId;
+				this._applySelectionVisualTransition(previousBlockId, blockId);
+				this._renderToolbar();
+				this._renderRightPanel();
+				this._render();
+			},
+			onToggleBlockVisibility: (blockId, hidden) => {
+				const block = this._getCurrentPage().blocks.find(
+					(b) => b.id === blockId,
+				);
+				if (block) {
+					block.hiddenInDesign = hidden;
+					this._renderCanvasAndPreview();
+					this._render(); // update eye icon in list
+				}
 			},
 		});
 

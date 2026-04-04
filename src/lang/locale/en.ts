@@ -596,6 +596,8 @@ export default {
 	"Design Pages": "Design Pages",
 	"Load Design": "Load Design",
 	"Contains source only blocks": "Contains source only blocks",
+	"Show Block": "Show Block",
+	"Hide Block": "Hide Block",
 	"Design Theme": "Design Theme",
 	"Primary Color": "Primary Color",
 	"Secondary Color": "Secondary Color",

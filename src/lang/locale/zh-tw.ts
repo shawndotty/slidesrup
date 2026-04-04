@@ -532,6 +532,8 @@ export default {
 	"Design Pages": "設計頁面",
 	"Load Design": "匯入設計",
 	"Contains source only blocks": "包含僅支援原始碼編輯的區塊",
+	"Show Block": "顯示區塊",
+	"Hide Block": "隱藏區塊",
 	"Design Theme": "設計主題",
 	"Primary Color": "主色",
 	"Secondary Color": "輔助色",

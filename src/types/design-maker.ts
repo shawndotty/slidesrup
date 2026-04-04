@@ -37,12 +37,14 @@ export interface DesignGridBlock {
 	filter: string;
 	justifyContent: string;
 	extraAttributes: Record<string, string>;
+	hiddenInDesign?: boolean;
 }
 
 export interface DesignRawBlock {
 	id: string;
 	type: "raw";
 	raw: string;
+	hiddenInDesign?: boolean;
 }
 
 export type DesignCanvasBlock = DesignGridBlock | DesignRawBlock;
