@@ -144,13 +144,16 @@ export class DesignMakerView extends ItemView {
 				? SLIDES_EXTENDED_PLUGIN_FOLDER
 				: ADVANCED_SLIDES_PLUGIN_FOLDER;
 		const isDark = document.body.classList.contains("theme-dark");
-		const cssFileName = isDark ? "main-dark.css" : "main.css";
-		const cssPath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles/${cssFileName}`;
+		const themeCSSFileName = isDark ? "color-dark.css" : "color-light.css";
+		const themeCSSPath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles/${themeCSSFileName}`;
+		const pageDesignCSSPath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles/page-design.css`;
 
 		try {
-			if (await this.app.vault.adapter.exists(cssPath)) {
-				this.presentationCss =
-					await this.app.vault.adapter.read(cssPath);
+			if (await this.app.vault.adapter.exists(themeCSSPath)) {
+				this.presentationCss +=
+					await this.app.vault.adapter.read(pageDesignCSSPath);
+				this.presentationCss +=
+					await this.app.vault.adapter.read(themeCSSPath);
 			} else {
 				this.presentationCss = "";
 			}
