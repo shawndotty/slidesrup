@@ -97,30 +97,68 @@ function createFootnotesBlock(): DesignGridBlock {
 	};
 }
 
+function createSideBarBlock(): DesignGridBlock {
+	return {
+		id: nextBlockId("grid"),
+		type: "grid",
+		role: "placeholder",
+		rect: {
+			x: 95,
+			y: 35,
+			width: 5,
+			height: 30,
+		},
+		content: "![[SR-SideBar]]",
+		className: "sr-sidebar",
+		style: "",
+		pad: "0",
+		align: "topleft",
+		flow: "",
+		filter: "",
+		justifyContent: "",
+		extraAttributes: {},
+	};
+}
+
 function appendRawBlocksAndFootnotes(
 	raw: string,
 	blocks: DesignCanvasBlock[],
 	state: {
 		hasFootnotesBlock: boolean;
+		hasSideBarBlock: boolean;
 	},
 ): void {
 	const normalizedRaw = raw.trim();
 	if (!normalizedRaw) return;
-	const footnotesRegex = /<%\?\s*footnotes\s*%>/g;
-	if (!footnotesRegex.test(normalizedRaw)) {
+	const specialRegex =
+		/<%\?\s*footnotes\s*%>|!\[\[\s*SR-SideBar(?:\|[^\]]+)?\s*\]\]/g;
+	if (!specialRegex.test(normalizedRaw)) {
 		const rawBlock = createRawBlock(raw);
 		if (rawBlock) blocks.push(rawBlock);
 		return;
 	}
-	const segments = normalizedRaw.split(footnotesRegex);
-	segments.forEach((segment, index) => {
+	specialRegex.lastIndex = 0;
+	let lastIndex = 0;
+	let match = specialRegex.exec(normalizedRaw);
+	while (match) {
+		const segment = normalizedRaw.slice(lastIndex, match.index);
 		const rawBlock = createRawBlock(segment);
 		if (rawBlock) blocks.push(rawBlock);
-		if (index < segments.length - 1 && !state.hasFootnotesBlock) {
-			blocks.push(createFootnotesBlock());
-			state.hasFootnotesBlock = true;
+		const token = match[0];
+		if (token.includes("footnotes")) {
+			if (!state.hasFootnotesBlock) {
+				blocks.push(createFootnotesBlock());
+				state.hasFootnotesBlock = true;
+			}
+		} else if (!state.hasSideBarBlock) {
+			blocks.push(createSideBarBlock());
+			state.hasSideBarBlock = true;
 		}
-	});
+		lastIndex = match.index + token.length;
+		match = specialRegex.exec(normalizedRaw);
+	}
+	const tail = createRawBlock(normalizedRaw.slice(lastIndex));
+	if (tail) blocks.push(tail);
 }
 
 function createGridBlock(attrSource: string, content: string): DesignGridBlock {
@@ -181,6 +219,7 @@ export function parseDesignPageDraft(
 	const blocks: DesignCanvasBlock[] = [];
 	const footnotesState = {
 		hasFootnotesBlock: false,
+		hasSideBarBlock: false,
 	};
 	const gridRegex = /<grid\b([^>]*)>([\s\S]*?)<\/grid>/g;
 	let cursor = 0;

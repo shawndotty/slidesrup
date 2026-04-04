@@ -61,8 +61,10 @@ export function renderDesignToolbar(options: {
 	container: HTMLElement;
 	selectedBlockId: string | null;
 	hasFootnotesBlock: boolean;
+	hasSideBarBlock: boolean;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onAddFootnotes: () => void;
+	onAddSideBar: () => void;
 	onDeleteBlock: (blockId: string) => void;
 	onDuplicateBlock: (blockId: string) => void;
 }): void {
@@ -70,8 +72,10 @@ export function renderDesignToolbar(options: {
 		container,
 		selectedBlockId,
 		hasFootnotesBlock,
+		hasSideBarBlock,
 		onAddBlock,
 		onAddFootnotes,
+		onAddSideBar,
 		onDeleteBlock,
 		onDuplicateBlock,
 	} = options;
@@ -96,6 +100,11 @@ export function renderDesignToolbar(options: {
 	});
 	footnotesButton.disabled = hasFootnotesBlock;
 	footnotesButton.addEventListener("click", () => onAddFootnotes());
+	const sideBarButton = toolbar.createEl("button", {
+		text: t("Add SR-SideBar"),
+	});
+	sideBarButton.disabled = hasSideBarBlock;
+	sideBarButton.addEventListener("click", () => onAddSideBar());
 
 	if (selectedBlockId) {
 		const duplicateButton = toolbar.createEl("button", {

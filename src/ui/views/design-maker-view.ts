@@ -367,6 +367,7 @@ export class DesignMakerView extends ItemView {
 			container: this.toolbarEl,
 			selectedBlockId: this.selectedBlockId,
 			hasFootnotesBlock: this._hasFootnotesBlock(),
+			hasSideBarBlock: this._hasSideBarBlock(),
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
@@ -379,6 +380,17 @@ export class DesignMakerView extends ItemView {
 					return;
 				}
 				const block = this._createFootnotesBlock();
+				this._getCurrentPage().blocks.push(block);
+				this.selectedBlockId = block.id;
+				this._syncPageSource();
+				this._render();
+			},
+			onAddSideBar: () => {
+				if (this._hasSideBarBlock()) {
+					new Notice(t("SR-SideBar block already exists"));
+					return;
+				}
+				const block = this._createSideBarBlock();
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
@@ -546,9 +558,22 @@ export class DesignMakerView extends ItemView {
 		);
 	}
 
+	private _isSideBarBlock(block: DesignGridBlock): boolean {
+		return (
+			block.className.trim().split(/\s+/).includes("sr-sidebar") ||
+			block.content.includes("![[SR-SideBar]]")
+		);
+	}
+
 	private _hasFootnotesBlock(): boolean {
 		return this._getCurrentPage().blocks.some(
 			(block) => block.type === "grid" && this._isFootnotesBlock(block),
+		);
+	}
+
+	private _hasSideBarBlock(): boolean {
+		return this._getCurrentPage().blocks.some(
+			(block) => block.type === "grid" && this._isSideBarBlock(block),
 		);
 	}
 
@@ -575,6 +600,29 @@ export class DesignMakerView extends ItemView {
 		};
 	}
 
+	private _createSideBarBlock(): DesignGridBlock {
+		return {
+			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+			type: "grid",
+			role: "placeholder",
+			rect: {
+				x: 95,
+				y: 35,
+				width: 5,
+				height: 30,
+			},
+			content: "![[SR-SideBar]]",
+			className: "sr-sidebar",
+			style: "",
+			pad: "0",
+			align: "center",
+			flow: "",
+			filter: "",
+			justifyContent: "center",
+			extraAttributes: {},
+		};
+	}
+
 	private _duplicateGridBlock(blockId: string, offset: number): void {
 		const page = this._getCurrentPage();
 		const target = page.blocks.find(
@@ -583,6 +631,10 @@ export class DesignMakerView extends ItemView {
 		if (!target || target.type !== "grid") return;
 		if (this._isFootnotesBlock(target)) {
 			new Notice(t("Footnotes block already exists"));
+			return;
+		}
+		if (this._isSideBarBlock(target)) {
+			new Notice(t("SR-SideBar block already exists"));
 			return;
 		}
 		const nextBlock: DesignGridBlock = {
