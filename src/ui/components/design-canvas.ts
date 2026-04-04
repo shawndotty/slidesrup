@@ -128,6 +128,7 @@ export function renderDesignCanvas(options: {
 	container: HTMLElement;
 	page: DesignPageDraft;
 	themeRawCss?: string;
+	presentationCss?: string;
 	slideBaseWidth?: number;
 	slideBaseHeight?: number;
 	selectedBlockId: string | null;
@@ -145,6 +146,7 @@ export function renderDesignCanvas(options: {
 		container,
 		page,
 		themeRawCss = "",
+		presentationCss = "",
 		slideBaseWidth = DESIGN_MAKER_SLIDE_WIDTH,
 		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
 		selectedBlockId,
@@ -161,6 +163,10 @@ export function renderDesignCanvas(options: {
 	const canvas = frame.createDiv("slides-rup-design-maker-canvas");
 	canvas.style.width = `${slideBaseWidth}px`;
 	canvas.style.height = `${slideBaseHeight}px`;
+	if (presentationCss.trim()) {
+		const styleEl = canvas.createEl("style");
+		styleEl.textContent = presentationCss;
+	}
 	if (themeRawCss.trim()) {
 		const styleEl = canvas.createEl("style");
 		styleEl.textContent = themeRawCss;

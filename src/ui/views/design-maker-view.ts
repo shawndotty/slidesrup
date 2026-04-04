@@ -17,12 +17,17 @@ import {
 	renderDesignCanvas,
 	renderDesignToolbar,
 } from "../components/design-canvas";
+import {
+	SLIDES_EXTENDED_PLUGIN_FOLDER,
+	ADVANCED_SLIDES_PLUGIN_FOLDER,
+} from "src/constants";
 
 export class DesignMakerView extends ItemView {
 	private plugin: any;
 	private designMaker: DesignMaker;
 	private designState: DesignMakerViewState | null = null;
 	private draft: DesignDraft | null = null;
+	private presentationCss: string = "";
 	private activePageType: DesignPageType = "cover";
 	private selectedBlockId: string | null = null;
 	private pageListEl: HTMLElement | null = null;
@@ -124,11 +129,33 @@ export class DesignMakerView extends ItemView {
 			this.selectedBlockId = null;
 			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 			this.cssSourceValue = this.draft.theme.rawCss || "";
+			await this._loadPresentationCss();
 			this._render();
 		} catch (error) {
 			this.draft = null;
 			new Notice(`${t("Failed to load design")}${error}`);
 			this._render();
+		}
+	}
+
+	private async _loadPresentationCss(): Promise<void> {
+		const pluginFolder =
+			this.plugin.settings.presentationPlugin === "slidesExtended"
+				? SLIDES_EXTENDED_PLUGIN_FOLDER
+				: ADVANCED_SLIDES_PLUGIN_FOLDER;
+		const isDark = document.body.classList.contains("theme-dark");
+		const cssFileName = isDark ? "main-dark.css" : "main.css";
+		const cssPath = `${this.app.vault.configDir}/${pluginFolder}/dist/Styles/${cssFileName}`;
+		
+		try {
+			if (await this.app.vault.adapter.exists(cssPath)) {
+				this.presentationCss = await this.app.vault.adapter.read(cssPath);
+			} else {
+				this.presentationCss = "";
+			}
+		} catch (e) {
+			console.error("Failed to load presentation css", e);
+			this.presentationCss = "";
 		}
 	}
 
@@ -335,6 +362,7 @@ export class DesignMakerView extends ItemView {
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
 			themeRawCss: this.draft?.theme.rawCss || "",
+			presentationCss: this.presentationCss,
 			slideBaseWidth: this._getSlideBaseWidth(),
 			slideBaseHeight: this._getSlideBaseHeight(),
 			selectedBlockId: this.selectedBlockId,
@@ -415,6 +443,7 @@ export class DesignMakerView extends ItemView {
 			container: this.previewEl!,
 			page: this._getCurrentPage(),
 			theme: this.draft.theme,
+			presentationCss: this.presentationCss,
 			selectedBlockId: this.selectedBlockId,
 			showTitle,
 			previewScale: this.plugin.settings.designMakerPreviewScale,

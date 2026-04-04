@@ -27,6 +27,7 @@ export function renderDesignPreview(options: {
 	container: HTMLElement;
 	page: DesignPageDraft;
 	theme: ThemeStyleDraft;
+	presentationCss?: string;
 	selectedBlockId: string | null;
 	showTitle?: boolean;
 	previewScale?: number;
@@ -38,6 +39,7 @@ export function renderDesignPreview(options: {
 		container,
 		page,
 		theme,
+		presentationCss = "",
 		selectedBlockId,
 		showTitle = true,
 		previewScale = 100,
@@ -65,6 +67,10 @@ export function renderDesignPreview(options: {
 	preview.style.setProperty("--sr-dm-heading-font", theme.headingFont);
 	preview.style.setProperty("--sr-dm-body-font", theme.bodyFont);
 	preview.classList.toggle("is-dark", theme.mode === "dark");
+	if (presentationCss.trim()) {
+		const styleEl = preview.createEl("style");
+		styleEl.textContent = presentationCss;
+	}
 	if (theme.rawCss.trim()) {
 		const styleEl = preview.createEl("style");
 		styleEl.textContent = theme.rawCss;
