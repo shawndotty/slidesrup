@@ -297,7 +297,9 @@ export function renderDesignInspector(options: {
 		});
 	});
 
-	const contentRow = container.createDiv("slides-rup-design-maker-field");
+	const contentRow = container.createDiv(
+		"slides-rup-design-maker-field is-stacked",
+	);
 	contentRow.createEl("label", { text: t("Block Content") });
 	const textarea = contentRow.createEl("textarea", {
 		text: block.content,
