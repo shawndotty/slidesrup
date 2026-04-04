@@ -179,6 +179,7 @@ export function renderDesignCanvas(options: {
 		}
 
 		const el = canvas.createDiv("slides-rup-design-maker-block");
+		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) {
 			el.addClass("is-selected");
 		}

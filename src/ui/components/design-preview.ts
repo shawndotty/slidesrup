@@ -81,6 +81,7 @@ export function renderDesignPreview(options: {
 			return;
 		}
 		const el = preview.createDiv("slides-rup-design-maker-preview-block");
+		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) el.addClass("is-selected");
 		el.style.left = `${block.rect.x}%`;
 		el.style.top = `${block.rect.y}%`;

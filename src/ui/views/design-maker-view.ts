@@ -333,7 +333,10 @@ export class DesignMakerView extends ItemView {
 			slideBaseHeight: this._getSlideBaseHeight(),
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
+				const previousBlockId = this.selectedBlockId;
 				this.selectedBlockId = blockId;
+				this._applySelectionVisualTransition(previousBlockId, blockId);
+				this._renderToolbar();
 				this._renderRightPanel();
 			},
 			onPatchBlock: (blockId, patcher) => {
@@ -452,6 +455,50 @@ export class DesignMakerView extends ItemView {
 			});
 		});
 		this.resizeObserver.observe(this.centerStageEl);
+	}
+
+	private _applySelectionVisualTransition(
+		previousBlockId: string | null,
+		nextBlockId: string | null,
+	): void {
+		const updateSelection = (root: HTMLElement, selector: string) => {
+			if (previousBlockId && previousBlockId !== nextBlockId) {
+				const previousEl = root.querySelector(
+					`${selector}[data-block-id="${previousBlockId}"]`,
+				) as HTMLElement | null;
+				if (previousEl) {
+					previousEl.removeClass("is-selected");
+					previousEl.addClass("is-deselecting");
+					window.setTimeout(
+						() => previousEl.removeClass("is-deselecting"),
+						150,
+					);
+				}
+			}
+			if (nextBlockId) {
+				const nextEl = root.querySelector(
+					`${selector}[data-block-id="${nextBlockId}"]`,
+				) as HTMLElement | null;
+				if (nextEl) {
+					nextEl.removeClass("is-deselecting");
+					nextEl.addClass("is-selected");
+				}
+			}
+		};
+
+		const canvas = this.canvasEl?.querySelector(
+			".slides-rup-design-maker-canvas",
+		) as HTMLElement | null;
+		const preview = this.previewEl?.querySelector(
+			".slides-rup-design-maker-preview",
+		) as HTMLElement | null;
+		if (!canvas || !preview) {
+			this._renderCanvasOnly();
+			this._renderPreviewOnly(false);
+			return;
+		}
+		updateSelection(canvas, ".slides-rup-design-maker-block");
+		updateSelection(preview, ".slides-rup-design-maker-preview-block");
 	}
 
 	private _getSlideBaseWidth(): number {
