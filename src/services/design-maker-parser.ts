@@ -264,8 +264,8 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		rect: {
 			x: clampInt(x, -100, 100),
 			y: clampInt(y, -100, 100),
-			width: clampInt(width, 1, 100),
-			height: clampInt(height, 1, 100),
+			width: Math.max(1, Math.round(width)),
+			height: Math.max(1, Math.round(height)),
 		},
 		content: cleanedContent,
 		className: attrs.class || "",

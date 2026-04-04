@@ -135,16 +135,12 @@ export function renderDesignInspector(options: {
 	});
 	createNumberField(container, "Width", block.rect.width, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.width = Math.round(
-				Math.max(1, Math.min(100, value)),
-			);
+			nextBlock.rect.width = Math.round(Math.max(1, value));
 		});
 	});
 	createNumberField(container, "Height", block.rect.height, (value) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.height = Math.round(
-				Math.max(1, Math.min(100, value)),
-			);
+			nextBlock.rect.height = Math.round(Math.max(1, value));
 		});
 	});
 	createTextField(container, "CSS Class", block.className, (value) => {

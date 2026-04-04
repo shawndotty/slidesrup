@@ -30,15 +30,15 @@ export function applyBlockRectStyles(el: HTMLElement, block: DesignGridBlock) {
 
 export function applyGridFlexStyles(el: HTMLElement, block: DesignGridBlock) {
 	el.style.display = "flex";
-	
+
 	const flow = block.flow.trim().toLowerCase();
 	const isRow = flow === "row";
 	el.style.flexDirection = isRow ? "row" : "column";
-	
+
 	if (block.pad && block.pad.trim()) {
 		el.style.padding = block.pad.trim();
 	}
-	
+
 	let explicitJustify = false;
 	if (block.justifyContent && block.justifyContent.trim()) {
 		el.style.justifyContent = block.justifyContent.trim();
@@ -51,11 +51,12 @@ export function applyGridFlexStyles(el: HTMLElement, block: DesignGridBlock) {
 
 	if (block.align && block.align.trim()) {
 		const align = block.align.trim().toLowerCase();
-		
+
 		if (align.includes("left")) {
 			el.style.alignItems = isRow ? "center" : "flex-start";
 			el.style.textAlign = "left";
-			if (isRow && !explicitJustify) el.style.justifyContent = "flex-start";
+			if (isRow && !explicitJustify)
+				el.style.justifyContent = "flex-start";
 		} else if (align.includes("right")) {
 			el.style.alignItems = isRow ? "center" : "flex-end";
 			el.style.textAlign = "right";
@@ -68,7 +69,7 @@ export function applyGridFlexStyles(el: HTMLElement, block: DesignGridBlock) {
 		} else if (align === "justify") {
 			el.style.textAlign = "justify";
 		}
-		
+
 		if (!explicitJustify) {
 			if (align.includes("top")) {
 				if (isRow) el.style.alignItems = "flex-start";
@@ -285,11 +286,14 @@ export function renderDesignCanvas(options: {
 		}
 		if (block.bg && block.bg.trim()) el.style.backgroundColor = block.bg;
 		if (block.border && block.border.trim()) el.style.border = block.border;
-		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
-		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
+		if (block.opacity && block.opacity.trim())
+			el.style.opacity = block.opacity;
+		if (block.rotate && block.rotate.trim())
+			el.style.transform = `rotate(${block.rotate}deg)`;
 		if (block.filter && block.filter.trim()) el.style.filter = block.filter;
 		applyGridFlexStyles(el, block);
-		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
+		if (block.style && block.style.trim())
+			el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content || "", {
 			app,
 			sourcePath: page.filePath,
@@ -332,22 +336,10 @@ export function renderDesignCanvas(options: {
 					((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
 					nextBlock.rect.x = toInt(
-						Math.max(
-							0,
-							Math.min(
-								100 - nextBlock.rect.width,
-								startRect.x + deltaX,
-							),
-						),
+						Math.max(-100, Math.min(100, startRect.x + deltaX)),
 					);
 					nextBlock.rect.y = toInt(
-						Math.max(
-							0,
-							Math.min(
-								100 - nextBlock.rect.height,
-								startRect.y + deltaY,
-							),
-						),
+						Math.max(-100, Math.min(100, startRect.y + deltaY)),
 					);
 				});
 			};
@@ -377,22 +369,10 @@ export function renderDesignCanvas(options: {
 					((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
 					nextBlock.rect.width = toInt(
-						Math.max(
-							5,
-							Math.min(
-								100 - nextBlock.rect.x,
-								startRect.width + deltaX,
-							),
-						),
+						Math.max(5, startRect.width + deltaX),
 					);
 					nextBlock.rect.height = toInt(
-						Math.max(
-							5,
-							Math.min(
-								100 - nextBlock.rect.y,
-								startRect.height + deltaY,
-							),
-						),
+						Math.max(5, startRect.height + deltaY),
 					);
 				});
 			};
