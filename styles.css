@@ -483,12 +483,20 @@ h3.slides-rup-title {
 	position: relative;
 	width: 1920px;
 	height: 1080px;
-	background:
-		linear-gradient(var(--background-modifier-border) 1px, transparent 1px),
-		linear-gradient(90deg, var(--background-modifier-border) 1px, transparent 1px),
-		var(--background-primary);
-	background-size: 5% 5%;
+	background:  var(--background-primary);
 	overflow: hidden;
+}
+
+.slides-rup-design-maker-canvas::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: 
+		linear-gradient(rgba(var(--interactive-accent-rgb), 0.12) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(var(--interactive-accent-rgb), 0.12) 1px, transparent 1px);
+	background-size: 5% 5%;
+	pointer-events: none;
+	z-index: 4;
 }
 
 .slides-rup-design-maker-block,
