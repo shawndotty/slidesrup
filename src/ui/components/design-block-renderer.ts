@@ -226,7 +226,7 @@ export function renderBlockContent(
 	if (!contentWithoutComments) {
 		return {
 			rendered: false,
-			hidden: true,
+			hidden: false,
 			textContent: "",
 		};
 	}
@@ -249,7 +249,7 @@ export function renderBlockContent(
 	if (!normalizedContent) {
 		return {
 			rendered: false,
-			hidden: true,
+			hidden: false,
 			textContent: "",
 		};
 	}
