@@ -11,6 +11,7 @@ import {
 	formatRectInputValue,
 	parseRectInputValue,
 	parseThemeDraft,
+	normalizeCoordinateString,
 } from "../services/design-maker-parser";
 import {
 	generateDesignMakerRuntimeCss,
@@ -314,7 +315,7 @@ function testDesignTemplateUnitConsistency() {
 		"Should detect percent unit from bare numbers",
 	);
 
-	// Test the specific user case: drag in px, drop in percent (unitless)
+	// Test the specific user case: drag in px, drop in mixed units
 	const mixedUserMarkdown = `<grid drag="200px 200px" drop="45 20">\n</grid>`;
 	const mixedUserPage = parseDesignPageDraft(
 		"content",
@@ -338,16 +339,34 @@ function testDesignTemplateUnitConsistency() {
 		200,
 		"Height should be parsed as 200px",
 	);
-	// 45% of 1920 = 864, 20% of 1080 = 216
 	assert.strictEqual(
 		mixedUserGrid.rect.x,
-		864,
-		"X should be parsed as 45% of 1920 = 864px",
+		45,
+		"X should be parsed as 45px due to pure number normalization",
 	);
 	assert.strictEqual(
 		mixedUserGrid.rect.y,
-		216,
-		"Y should be parsed as 20% of 1080 = 216px",
+		20,
+		"Y should be parsed as 20px due to pure number normalization",
+	);
+
+	const mixedPercentMarkdown = `<grid drag="200px 200px" drop="50% 100">\n</grid>`;
+	const mixedPercentPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		mixedPercentMarkdown,
+	);
+	const mixedPercentGrid = mixedPercentPage.blocks[0] as any;
+	assert.strictEqual(
+		mixedPercentGrid.rect.x,
+		960,
+		"X should be 960px (50% of 1920)",
+	);
+	assert.strictEqual(
+		mixedPercentGrid.rect.y,
+		100,
+		"Y should be 100px due to pure number normalization",
 	);
 
 	const mixedMarkdown = `<grid drag="80px 100px" drop="0px 0px">\n</grid>\n\n<grid drag="100 80" drop="0 0">\n</grid>`;
@@ -419,6 +438,42 @@ function testDesignTemplateUnitConsistency() {
 	});
 	assert.deepStrictEqual(parseRectInputValue("100"), {
 		value: 100,
+		rectUnit: "percent",
+	});
+
+	// Test the new normalization function and parsing logic
+	assert.strictEqual(
+		normalizeCoordinateString("100"),
+		"100px",
+		"Should add px to pure number",
+	);
+	assert.strictEqual(
+		normalizeCoordinateString("100px"),
+		"100px",
+		"Should keep px unchanged",
+	);
+	assert.strictEqual(
+		normalizeCoordinateString("50%"),
+		"50%",
+		"Should keep percent unchanged",
+	);
+	assert.strictEqual(
+		normalizeCoordinateString("50% 100"),
+		"50% 100px",
+		"Should handle mixed units correctly",
+	);
+
+	// Test the new defaultUnitForUnitless in parseRectInputValue
+	assert.deepStrictEqual(parseRectInputValue("100", "px"), {
+		value: 100,
+		rectUnit: "px",
+	});
+	assert.deepStrictEqual(parseRectInputValue("100", "percent"), {
+		value: 100,
+		rectUnit: "percent",
+	});
+	assert.deepStrictEqual(parseRectInputValue("50%", "px"), {
+		value: 50,
 		rectUnit: "percent",
 	});
 

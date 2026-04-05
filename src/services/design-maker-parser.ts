@@ -50,6 +50,24 @@ function detectExplicitRectUnit(value: string): DesignRectUnit | null {
 	return null;
 }
 
+/**
+ * Represents the unit type for a design block's dimensions and coordinates.
+ * - 'px': Absolute pixel values (e.g., 100px)
+ * - 'percent': Relative percentage values based on slide dimensions (e.g., 50%)
+ */
+export function normalizeCoordinateString(value: string): string {
+	if (!value) return value;
+	const parts = value.trim().split(/\s+/);
+	return parts
+		.map((part) => {
+			if (/^-?\d+(?:\.\d+)?$/.test(part)) {
+				return `${part}px`;
+			}
+			return part;
+		})
+		.join(" ");
+}
+
 export function formatRectInputValue(
 	value: number,
 	rectUnit: DesignRectUnit,
@@ -58,8 +76,14 @@ export function formatRectInputValue(
 	return rectUnit === "px" ? `${rounded}px` : `${rounded}`;
 }
 
+/**
+ * Parses an input string into a numeric value and its detected unit.
+ * @param raw The raw input string from the inspector (e.g. '100px', '50%')
+ * @param defaultUnitForUnitless The unit to assign if the input is a pure number.
+ */
 export function parseRectInputValue(
 	raw: string,
+	defaultUnitForUnitless: DesignRectUnit = "percent",
 ): { value: number; rectUnit: DesignRectUnit } | null {
 	const trimmed = raw.trim();
 	if (!trimmed) return null;
@@ -68,9 +92,14 @@ export function parseRectInputValue(
 		if (!Number.isFinite(num)) return null;
 		return { value: num, rectUnit: "px" };
 	}
+	if (trimmed.endsWith("%")) {
+		const num = Number(trimmed.slice(0, -1).trim());
+		if (!Number.isFinite(num)) return null;
+		return { value: num, rectUnit: "percent" };
+	}
 	const num = Number(trimmed);
 	if (!Number.isFinite(num)) return null;
-	return { value: num, rectUnit: "percent" };
+	return { value: num, rectUnit: defaultUnitForUnitless };
 }
 
 function parsePair(
@@ -422,7 +451,13 @@ function createGridBlock(
 		rectUnit,
 		warnings,
 	);
-	const [x, y] = parsePair(attrs.drop || "", 0, 0, rectUnit, warnings);
+
+	// Normalize the drop attribute (x and y) to add 'px' to pure numbers only if the block operates in px mode
+	const normalizedDrop =
+		rectUnit === "px"
+			? normalizeCoordinateString(attrs.drop || "")
+			: attrs.drop || "";
+	const [x, y] = parsePair(normalizedDrop, 0, 0, rectUnit, warnings);
 	const cleanedContent = stripNestedGridMarkup(content);
 
 	// Parse children recursively

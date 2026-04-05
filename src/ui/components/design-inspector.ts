@@ -59,7 +59,8 @@ function createRectField(
 		cls: "slides-rup-design-maker-input",
 	});
 	input.addEventListener("input", () => {
-		const parsed = parseRectInputValue(input.value);
+		const defaultUnit = rectUnit === "px" ? "px" : "percent";
+		const parsed = parseRectInputValue(input.value, defaultUnit);
 		if (!parsed) return;
 		onChange(Math.round(parsed.value));
 	});
@@ -203,7 +204,7 @@ export function renderDesignInspector(options: {
 	const rectUnit: DesignRectUnit =
 		block.extraAttributes.rectUnit === "px" ? "px" : "percent";
 
-	createNumberField(container, "X", displayX, (value) => {
+	createRectField(container, "X", displayX, rectUnit, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(value, displayY);
 		} else {
@@ -212,7 +213,7 @@ export function renderDesignInspector(options: {
 			});
 		}
 	});
-	createNumberField(container, "Y", displayY, (value) => {
+	createRectField(container, "Y", displayY, rectUnit, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(displayX, value);
 		} else {
