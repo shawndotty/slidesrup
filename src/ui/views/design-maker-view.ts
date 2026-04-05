@@ -1,6 +1,9 @@
 import { ItemView, Notice, WorkspaceLeaf } from "obsidian";
 import { t } from "src/lang/helpers";
-import { generatePageMarkdown } from "src/services/design-maker-generator";
+import {
+	generateDesignMakerRuntimeCss,
+	generatePageMarkdown,
+} from "src/services/design-maker-generator";
 import { DesignMaker } from "src/services/design-maker";
 import {
 	DESIGN_MAKER_VIEW_TYPE,
@@ -460,11 +463,14 @@ export class DesignMakerView extends ItemView {
 	}
 
 	private _renderCanvasOnly(): void {
+		const themeRawCss = this.draft
+			? generateDesignMakerRuntimeCss(this.draft.theme)
+			: "";
 		renderDesignCanvas({
 			app: this.app,
 			container: this.canvasEl!,
 			page: this._getCurrentPage(),
-			themeRawCss: this.draft?.theme.rawCss || "",
+			themeRawCss,
 			presentationCss: this.presentationCss,
 			slideBaseWidth: this._getSlideBaseWidth(),
 			slideBaseHeight: this._getSlideBaseHeight(),
@@ -541,11 +547,15 @@ export class DesignMakerView extends ItemView {
 
 	private _renderPreviewOnly(showTitle: boolean = true): void {
 		if (!this.draft) return;
+		const theme = {
+			...this.draft.theme,
+			rawCss: generateDesignMakerRuntimeCss(this.draft.theme),
+		};
 		renderDesignPreview({
 			app: this.app,
 			container: this.previewEl!,
 			page: this._getCurrentPage(),
-			theme: this.draft.theme,
+			theme,
 			presentationCss: this.presentationCss,
 			selectedBlockId: this.selectedBlockId,
 			showTitle,

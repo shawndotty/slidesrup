@@ -136,6 +136,49 @@ h6 {
 	return `${header.join("\n")}\n\n${generatedCss}\n\n${theme.rawCss.trim()}\n`;
 }
 
+export function generateDesignMakerRuntimeCss(theme: ThemeStyleDraft): string {
+	const root =
+		":where(.slides-rup-design-maker-canvas, .slides-rup-design-maker-preview)";
+	const generatedCss = `
+${root} {
+	--sr-dm-primary: ${theme.primaryColor};
+	--sr-dm-secondary: ${theme.secondaryColor};
+	--sr-dm-background: ${theme.backgroundColor};
+	--sr-dm-text: ${theme.textColor};
+	--sr-dm-heading-font: ${theme.headingFont};
+	--sr-dm-body-font: ${theme.bodyFont};
+	--sr-dm-heading-scale: ${theme.headingScale};
+	--sr-dm-body-scale: ${theme.bodyScale};
+	--sr-dm-radius: ${theme.borderRadius}px;
+	--sr-dm-shadow-opacity: ${theme.shadowOpacity};
+	--sr-dm-mode: ${theme.mode};
+}
+
+${root} .bg-with-back-color {
+	background: var(--sr-dm-primary);
+	color: #ffffff;
+}
+
+${root} .bg-with-front-color {
+	background: color-mix(in srgb, var(--sr-dm-background) 90%, var(--sr-dm-secondary) 10%);
+	color: var(--sr-dm-text);
+	border-radius: var(--sr-dm-radius);
+	box-shadow: 0 18px 40px rgba(15, 23, 42, var(--sr-dm-shadow-opacity));
+}
+
+${root} .has-dark-background {
+	color: #ffffff;
+}
+
+${root} .has-light-background {
+	color: var(--sr-dm-text);
+}
+`.trim();
+
+	const tail = theme.rawCss?.trim() ? `\n\n${theme.rawCss.trim()}\n` : "\n";
+	return `${generatedCss}${tail}`;
+}
+
 export function syncDraftRawMarkdown(draft: DesignDraft): DesignDraft {
 	const nextPages = { ...draft.pages };
 	Object.values(nextPages).forEach((page) => {
