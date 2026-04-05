@@ -429,6 +429,28 @@ h3.slides-rup-title {
 	min-height: 0;
 }
 
+.slides-rup-design-maker-canvas-controls-panel {
+	display: flex;
+	justify-content: flex-end;
+	padding: 8px 0;
+}
+
+.slides-rup-design-maker-canvas-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	padding: 6px 8px;
+}
+
+.slides-rup-design-maker-zoom-label {
+	min-width: 56px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
 .slides-rup-design-maker-toolbar-panel {
 	background: var(--background-secondary);
 	border: 1px solid var(--background-modifier-border);

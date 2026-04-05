@@ -41,6 +41,7 @@ export class DesignMakerView extends ItemView {
 	private centerTabsEl: HTMLElement | null = null;
 	private centerStageEl: HTMLElement | null = null;
 	private canvasEl: HTMLElement | null = null;
+	private canvasControlsEl: HTMLElement | null = null;
 	private toolbarEl: HTMLElement | null = null;
 	private inspectorPanelEl: HTMLDetailsElement | null = null;
 	private themePanelEl: HTMLDetailsElement | null = null;
@@ -246,6 +247,9 @@ export class DesignMakerView extends ItemView {
 		this.previewEl = this.centerStageEl.createDiv(
 			"slides-rup-design-maker-panel",
 		);
+		this.canvasControlsEl = center.createDiv(
+			"slides-rup-design-maker-canvas-controls-panel",
+		);
 		this.toolbarEl = center.createDiv(
 			"slides-rup-design-maker-toolbar-panel",
 		);
@@ -332,15 +336,18 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCenterPanel(): void {
 		this._renderCenterTabs();
-		this._renderToolbar();
 		if (this.activeCenterTab === "design") {
 			this.canvasEl?.removeClass("is-hidden");
 			this.previewEl?.addClass("is-hidden");
+			this._renderCanvasControls();
+			this._renderToolbar();
 			this._renderCanvasOnly();
 			return;
 		}
 		this.canvasEl?.addClass("is-hidden");
 		this.previewEl?.removeClass("is-hidden");
+		this.canvasControlsEl?.addClass("is-hidden");
+		this._renderToolbar();
 		this._renderPreviewOnly(false);
 	}
 
@@ -482,6 +489,7 @@ export class DesignMakerView extends ItemView {
 		this._syncPageSource();
 		this._renderCanvasOnly();
 		this._renderPreviewOnly(false);
+		this._renderCanvasControls();
 		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
 			this._renderPageSourceEditor();
 		}
@@ -512,12 +520,7 @@ export class DesignMakerView extends ItemView {
 				this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
 				this.canvasPanX = panX;
 				this.canvasPanY = panY;
-				const label = this.toolbarEl?.querySelector(
-					".slides-rup-design-maker-zoom-label",
-				) as HTMLElement | null;
-				if (label) {
-					label.textContent = `${this.canvasZoomPercent}%`;
-				}
+				this._updateCanvasZoomLabel();
 			},
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
@@ -542,6 +545,48 @@ export class DesignMakerView extends ItemView {
 		});
 	}
 
+	private _renderCanvasControls(): void {
+		if (!this.canvasControlsEl) return;
+		if (this.activeCenterTab !== "design") {
+			this.canvasControlsEl.empty();
+			this.canvasControlsEl.addClass("is-hidden");
+			return;
+		}
+		this.canvasControlsEl.removeClass("is-hidden");
+		this.canvasControlsEl.empty();
+
+		const controls = this.canvasControlsEl.createDiv(
+			"slides-rup-design-maker-canvas-controls",
+		);
+		const zoomOutButton = controls.createEl("button", { text: "-" });
+		zoomOutButton.addEventListener("click", () =>
+			this._setCanvasZoomPercent(this.canvasZoomPercent - 10, "center"),
+		);
+
+		const zoomLabel = controls.createDiv(
+			"slides-rup-design-maker-zoom-label",
+		);
+		zoomLabel.setText(`${this.canvasZoomPercent}%`);
+
+		const zoomInButton = controls.createEl("button", { text: "+" });
+		zoomInButton.addEventListener("click", () =>
+			this._setCanvasZoomPercent(this.canvasZoomPercent + 10, "center"),
+		);
+
+		const zoomResetButton = controls.createEl("button", { text: "100%" });
+		zoomResetButton.addEventListener("click", () =>
+			this._setCanvasZoomPercent(100, "center"),
+		);
+	}
+
+	private _updateCanvasZoomLabel(): void {
+		const label = this.canvasControlsEl?.querySelector(
+			".slides-rup-design-maker-zoom-label",
+		) as HTMLElement | null;
+		if (!label) return;
+		label.textContent = `${this.canvasZoomPercent}%`;
+	}
+
 	private _renderToolbar(): void {
 		if (!this.toolbarEl) return;
 		renderDesignToolbar({
@@ -549,10 +594,6 @@ export class DesignMakerView extends ItemView {
 			selectedBlockId: this.selectedBlockId,
 			hasFootnotesBlock: this._hasFootnotesBlock(),
 			hasSideBarBlock: this._hasSideBarBlock(),
-			canvasZoomPercent: this.canvasZoomPercent,
-			onZoomChange: (zoomPercent) => {
-				this._setCanvasZoomPercent(zoomPercent, "center");
-			},
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
@@ -668,7 +709,7 @@ export class DesignMakerView extends ItemView {
 	): void {
 		if (!this.canvasEl) {
 			this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
-			this._renderToolbar();
+			this._renderCanvasControls();
 			return;
 		}
 		const frame = this.canvasEl.querySelector(
@@ -676,7 +717,7 @@ export class DesignMakerView extends ItemView {
 		) as HTMLElement | null;
 		if (!frame) {
 			this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
-			this._renderToolbar();
+			this._renderCanvasControls();
 			return;
 		}
 
@@ -718,7 +759,7 @@ export class DesignMakerView extends ItemView {
 
 		this.canvasZoomPercent = nextZoomPercent;
 		this._renderCanvasOnly();
-		this._renderToolbar();
+		this._renderCanvasControls();
 	}
 
 	private _applySelectionVisualTransition(
@@ -1262,6 +1303,7 @@ export class DesignMakerView extends ItemView {
 		[
 			this.pageListEl,
 			this.canvasEl,
+			this.canvasControlsEl,
 			this.toolbarEl,
 			this.inspectorEl,
 			this.themeEl,
@@ -1286,6 +1328,7 @@ export class DesignMakerView extends ItemView {
 			this.centerTabsEl &&
 			this.centerStageEl &&
 			this.canvasEl &&
+			this.canvasControlsEl &&
 			this.toolbarEl &&
 			this.inspectorPanelEl &&
 			this.themePanelEl &&
@@ -1300,6 +1343,7 @@ export class DesignMakerView extends ItemView {
 			this.contentEl.contains(this.centerTabsEl) &&
 			this.contentEl.contains(this.centerStageEl) &&
 			this.contentEl.contains(this.canvasEl) &&
+			this.contentEl.contains(this.canvasControlsEl) &&
 			this.contentEl.contains(this.toolbarEl) &&
 			this.contentEl.contains(this.inspectorPanelEl) &&
 			this.contentEl.contains(this.themePanelEl) &&
@@ -1318,6 +1362,7 @@ export class DesignMakerView extends ItemView {
 		this.centerTabsEl = null;
 		this.centerStageEl = null;
 		this.canvasEl = null;
+		this.canvasControlsEl = null;
 		this.toolbarEl = null;
 		this.inspectorPanelEl = null;
 		this.themePanelEl = null;

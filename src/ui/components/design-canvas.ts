@@ -208,8 +208,6 @@ export function renderDesignToolbar(options: {
 	selectedBlockId: string | null;
 	hasFootnotesBlock: boolean;
 	hasSideBarBlock: boolean;
-	canvasZoomPercent: number;
-	onZoomChange: (zoomPercent: number) => void;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onAddFootnotes: () => void;
 	onAddSideBar: () => void;
@@ -221,8 +219,6 @@ export function renderDesignToolbar(options: {
 		selectedBlockId,
 		hasFootnotesBlock,
 		hasSideBarBlock,
-		canvasZoomPercent,
-		onZoomChange,
 		onAddBlock,
 		onAddFootnotes,
 		onAddSideBar,
@@ -264,19 +260,6 @@ export function renderDesignToolbar(options: {
 	});
 	sideBarButton.disabled = hasSideBarBlock;
 	sideBarButton.addEventListener("click", () => onAddSideBar());
-
-	const zoomLabel = toolbar.createDiv("slides-rup-design-maker-zoom-label");
-	zoomLabel.setText(`${clampCanvasZoomPercent(canvasZoomPercent)}%`);
-	const zoomOutButton = toolbar.createEl("button", { text: "-" });
-	zoomOutButton.addEventListener("click", () =>
-		onZoomChange(clampCanvasZoomPercent(canvasZoomPercent - 10)),
-	);
-	const zoomResetButton = toolbar.createEl("button", { text: "100%" });
-	zoomResetButton.addEventListener("click", () => onZoomChange(100));
-	const zoomInButton = toolbar.createEl("button", { text: "+" });
-	zoomInButton.addEventListener("click", () =>
-		onZoomChange(clampCanvasZoomPercent(canvasZoomPercent + 10)),
-	);
 
 	if (selectedBlockId) {
 		const duplicateButton = toolbar.createEl("button", {
