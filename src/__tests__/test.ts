@@ -23,6 +23,10 @@ import {
 	computePanForZoom,
 } from "../ui/components/design-canvas";
 import {
+	computeThumbnailVirtualWindow,
+	getNextThumbnailIndex,
+} from "../ui/components/design-thumbnail-nav";
+import {
 	clampImagePickerPosition,
 	computeImagePickerPlacement,
 	getNextPickerSelectionIndex,
@@ -807,6 +811,12 @@ function testInspectorLocaleKeysCompleteness() {
 		"Unpin picker",
 		"Close picker",
 		"Enter to insert · Esc to close",
+		"Slide Thumbnails",
+		"Switch to page",
+		"Previous thumbnails",
+		"Next thumbnails",
+		"Loading page preview",
+		"Preview unavailable",
 	];
 	requiredKeys.forEach((key) => {
 		assert.ok(
@@ -823,6 +833,74 @@ function testInspectorLocaleKeysCompleteness() {
 		);
 	});
 	console.log("testInspectorLocaleKeysCompleteness passed");
+}
+
+function testThumbnailVirtualizationMath() {
+	const nonVirtualWindow = computeThumbnailVirtualWindow({
+		total: 7,
+		containerWidth: 800,
+		scrollLeft: 0,
+	});
+	assert.strictEqual(nonVirtualWindow.virtualized, false);
+	assert.strictEqual(nonVirtualWindow.start, 0);
+	assert.strictEqual(nonVirtualWindow.end, 7);
+
+	const virtualWindowStart = computeThumbnailVirtualWindow({
+		total: 120,
+		containerWidth: 560,
+		scrollLeft: 0,
+	});
+	assert.strictEqual(virtualWindowStart.virtualized, true);
+	assert.strictEqual(virtualWindowStart.start, 0);
+	assert.ok(
+		virtualWindowStart.end < 120,
+		"Virtualized window should not render all thumbnails at once",
+	);
+
+	const virtualWindowMiddle = computeThumbnailVirtualWindow({
+		total: 120,
+		containerWidth: 560,
+		scrollLeft: 4200,
+	});
+	assert.strictEqual(virtualWindowMiddle.virtualized, true);
+	assert.ok(
+		virtualWindowMiddle.start > 0,
+		"Scrolled window should start after index 0",
+	);
+	assert.ok(
+		virtualWindowMiddle.end <= 120,
+		"Window end should stay inside item bounds",
+	);
+	console.log("testThumbnailVirtualizationMath passed");
+}
+
+function testThumbnailKeyboardIndexMath() {
+	assert.strictEqual(
+		getNextThumbnailIndex({ currentIndex: 0, direction: -1, total: 7 }),
+		0,
+		"Left at first page should stay at first page",
+	);
+	assert.strictEqual(
+		getNextThumbnailIndex({ currentIndex: 6, direction: 1, total: 7 }),
+		6,
+		"Right at last page should stay at last page",
+	);
+	assert.strictEqual(
+		getNextThumbnailIndex({ currentIndex: 3, direction: 1, total: 7 }),
+		4,
+		"Right should move to next page",
+	);
+	assert.strictEqual(
+		getNextThumbnailIndex({
+			currentIndex: 0,
+			direction: -1,
+			total: 7,
+			wrap: true,
+		}),
+		6,
+		"Wrap mode should jump from first to last",
+	);
+	console.log("testThumbnailKeyboardIndexMath passed");
 }
 
 function runTests() {
@@ -854,6 +932,8 @@ function runTests() {
 		testInsertLocalImageEmbed();
 		testImagePickerPlacementAndSelection();
 		testInspectorLocaleKeysCompleteness();
+		testThumbnailVirtualizationMath();
+		testThumbnailKeyboardIndexMath();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

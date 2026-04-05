@@ -18,6 +18,10 @@ import { renderDesignPageList } from "../components/design-page-list";
 import { renderDesignThemePanel } from "../components/design-theme-panel";
 import { renderDesignPreview } from "../components/design-preview";
 import {
+	getNextThumbnailIndex,
+	renderDesignThumbnailNav,
+} from "../components/design-thumbnail-nav";
+import {
 	renderDesignInspector,
 	syncInspectorRectFields,
 } from "../components/design-inspector";
@@ -45,6 +49,7 @@ export class DesignMakerView extends ItemView {
 	private centerTabsEl: HTMLElement | null = null;
 	private centerStageEl: HTMLElement | null = null;
 	private canvasEl: HTMLElement | null = null;
+	private thumbnailNavEl: HTMLElement | null = null;
 	private centerControlsEl: HTMLElement | null = null;
 	private canvasControlsEl: HTMLElement | null = null;
 	private centerActionsEl: HTMLElement | null = null;
@@ -72,6 +77,7 @@ export class DesignMakerView extends ItemView {
 	private canvasPanX = 0;
 	private canvasPanY = 0;
 	private previewZoomPercent = 100;
+	private thumbnailNavScrollLeft = 0;
 	private isSpaceKeyDown = false;
 	private readonly _onWindowKeyUp = (event: KeyboardEvent) => {
 		this._handleWindowKeyUp(event);
@@ -229,6 +235,9 @@ export class DesignMakerView extends ItemView {
 		this.previewEl = this.centerStageEl.createDiv(
 			"slides-rup-design-maker-panel",
 		);
+		this.thumbnailNavEl = center.createDiv(
+			"slides-rup-design-maker-thumbnail-nav-panel",
+		);
 		this.centerControlsEl = center.createDiv(
 			"slides-rup-design-maker-center-controls-panel",
 		);
@@ -283,12 +292,7 @@ export class DesignMakerView extends ItemView {
 			activePageType: this.activePageType,
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (pageType) => {
-				this.activePageType = pageType;
-				this.selectedBlockId = null;
-				this.pageSourceValue = generatePageMarkdown(
-					this._getCurrentPage(),
-				);
-				this._render();
+				this._setActivePage(pageType);
 			},
 			onSelectBlock: (blockId) => {
 				this._setSelectedBlockId(blockId);
@@ -324,6 +328,7 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCenterPanel(): void {
 		this._renderToolbar();
+		this._renderThumbnailNav();
 		this._renderCenterControls();
 		if (this.activeCenterTab === "design") {
 			this.canvasEl?.removeClass("is-hidden");
@@ -453,6 +458,22 @@ export class DesignMakerView extends ItemView {
 			this.pageSourceEl!.empty();
 			this.cssSourceEl!.empty();
 		}
+	}
+
+	private _renderThumbnailNav(): void {
+		if (!this.thumbnailNavEl || !this.draft) return;
+		renderDesignThumbnailNav({
+			container: this.thumbnailNavEl,
+			pages: this._getOrderedPages(),
+			activePageType: this.activePageType,
+			initialScrollLeft: this.thumbnailNavScrollLeft,
+			onScrollLeftChange: (scrollLeft) => {
+				this.thumbnailNavScrollLeft = scrollLeft;
+			},
+			onSelect: (pageType) => {
+				this._setActivePage(pageType);
+			},
+		});
 	}
 
 	private _renderCanvasAndPreview(): void {
@@ -977,6 +998,36 @@ export class DesignMakerView extends ItemView {
 		return this.draft.pages[this.activePageType];
 	}
 
+	private _getOrderedPages() {
+		if (!this.draft) return [];
+		return Object.values(this.draft.pages);
+	}
+
+	private _setActivePage(pageType: DesignPageType): void {
+		if (!this.draft) return;
+		if (this.activePageType === pageType) return;
+		this.activePageType = pageType;
+		this.selectedBlockId = null;
+		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
+		this._render();
+	}
+
+	private _switchActivePage(direction: -1 | 1): void {
+		if (!this.draft) return;
+		const pages = this._getOrderedPages();
+		if (pages.length === 0) return;
+		const currentIndex = pages.findIndex(
+			(page) => page.type === this.activePageType,
+		);
+		const nextIndex = getNextThumbnailIndex({
+			currentIndex,
+			direction,
+			total: pages.length,
+		});
+		if (nextIndex < 0 || nextIndex === currentIndex) return;
+		this._setActivePage(pages[nextIndex].type);
+	}
+
 	private _getSelectedBlock() {
 		if (!this.selectedBlockId) return null;
 		return (
@@ -1391,6 +1442,11 @@ export class DesignMakerView extends ItemView {
 		}
 
 		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+			event.preventDefault();
+			this._switchActivePage(event.key === "ArrowLeft" ? -1 : 1);
+			return;
+		}
 		if (event.key !== "Backspace" && event.key !== "Delete") return;
 		if (!this.selectedBlockId || !this.draft) return;
 		event.preventDefault();
@@ -1459,6 +1515,7 @@ export class DesignMakerView extends ItemView {
 		[
 			this.pageListEl,
 			this.canvasEl,
+			this.thumbnailNavEl,
 			this.centerControlsEl,
 			this.canvasControlsEl,
 			this.centerActionsEl,
@@ -1486,6 +1543,7 @@ export class DesignMakerView extends ItemView {
 			this.centerTabsEl &&
 			this.centerStageEl &&
 			this.canvasEl &&
+			this.thumbnailNavEl &&
 			this.centerControlsEl &&
 			this.canvasControlsEl &&
 			this.centerActionsEl &&
@@ -1503,6 +1561,7 @@ export class DesignMakerView extends ItemView {
 			this.contentEl.contains(this.centerTabsEl) &&
 			this.contentEl.contains(this.centerStageEl) &&
 			this.contentEl.contains(this.canvasEl) &&
+			this.contentEl.contains(this.thumbnailNavEl) &&
 			this.contentEl.contains(this.centerControlsEl) &&
 			this.contentEl.contains(this.canvasControlsEl) &&
 			this.contentEl.contains(this.centerActionsEl) &&
@@ -1524,6 +1583,7 @@ export class DesignMakerView extends ItemView {
 		this.centerTabsEl = null;
 		this.centerStageEl = null;
 		this.canvasEl = null;
+		this.thumbnailNavEl = null;
 		this.centerControlsEl = null;
 		this.canvasControlsEl = null;
 		this.centerActionsEl = null;
