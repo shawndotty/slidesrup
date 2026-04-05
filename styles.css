@@ -597,7 +597,59 @@ h3.slides-rup-title {
 	white-space: nowrap;
 }
 
-.slides-rup-design-maker-layer-toggle {
+.slides-rup-design-maker-coords-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+	padding: 0 4px;
+}
+
+.slides-rup-design-maker-coords-header strong {
+	font-size: 13px;
+	color: var(--text-normal);
+}
+
+.slides-rup-design-maker-coords-toggle {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	background: var(--background-modifier-form-field);
+	padding: 4px 6px;
+	border-radius: 14px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.slides-rup-design-maker-coords-toggle button {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: 12px;
+	padding: 2px 10px;
+	font-size: 11px;
+	font-weight: 600;
+	transition: all 0.2s ease;
+	cursor: pointer;
+	min-height: 20px;
+	min-width: 44px;
+	line-height: 1;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slides-rup-design-maker-coords-toggle button:hover {
+	background: var(--interactive-accent-hover);
+}
+
+.slides-rup-design-maker-coords-toggle span {
+	font-weight: 500;
+	color: var(--text-muted);
+	transition: opacity 0.2s ease;
+	font-size: 11px;
+	padding: 0 4px;
+}
+
+.slides-rup-design-maker-layer-item .slides-rup-design-maker-layer-toggle {
 	background: transparent;
 	box-shadow: none;
 	border: none;
@@ -607,14 +659,15 @@ h3.slides-rup-title {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	border-radius: 4px;
 }
 
-.slides-rup-design-maker-layer-toggle:hover {
+.slides-rup-design-maker-layer-item .slides-rup-design-maker-layer-toggle:hover {
 	color: var(--text-normal);
 	background: var(--background-modifier-hover);
 }
 
-.slides-rup-design-maker-layer-toggle svg {
+.slides-rup-design-maker-layer-item .slides-rup-design-maker-layer-toggle svg {
 	width: 14px;
 	height: 14px;
 }

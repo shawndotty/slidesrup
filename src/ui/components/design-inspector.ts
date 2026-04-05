@@ -169,19 +169,22 @@ export function renderDesignInspector(options: {
 	const coordsHeader = container.createDiv(
 		"slides-rup-design-maker-coords-header",
 	);
-	coordsHeader.style.display = "flex";
-	coordsHeader.style.justifyContent = "space-between";
-	coordsHeader.style.alignItems = "center";
-	coordsHeader.style.marginBottom = "8px";
 	coordsHeader.createEl("strong", { text: t("Coordinates" as any) });
 
-	const toggleContainer = coordsHeader.createDiv();
-	const relativeLabel = toggleContainer.createSpan({ text: "Rel " });
-	const toggleBtn = toggleContainer.createEl("button", {
-		text: isGlobalCoords ? "Global" : "Relative",
-		cls: "slides-rup-design-maker-layer-toggle",
+	const toggleContainer = coordsHeader.createDiv(
+		"slides-rup-design-maker-coords-toggle",
+	);
+	const relativeLabel = toggleContainer.createSpan({
+		text: t("Rel" as any),
+		cls: "slides-rup-design-maker-coords-label",
 	});
-	const globalLabel = toggleContainer.createSpan({ text: " Glob" });
+	const toggleBtn = toggleContainer.createEl("button", {
+		text: isGlobalCoords ? t("Glob" as any) : t("Rel" as any),
+	});
+	const globalLabel = toggleContainer.createSpan({
+		text: t("Glob" as any),
+		cls: "slides-rup-design-maker-coords-label",
+	});
 
 	relativeLabel.style.opacity = isGlobalCoords ? "0.5" : "1";
 	globalLabel.style.opacity = isGlobalCoords ? "1" : "0.5";
