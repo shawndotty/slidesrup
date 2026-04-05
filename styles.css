@@ -356,7 +356,7 @@ h3.slides-rup-title {
 	display: grid;
 	grid-template-columns: 220px minmax(0, 1fr) 360px;
 	gap: 16px;
-	height: calc(100% - 64px);
+	height: 100%;
 }
 
 .slides-rup-design-maker-sidebar,
@@ -373,6 +373,14 @@ h3.slides-rup-title {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 12px;
 	padding: 12px;
+}
+
+.slides-rup-design-maker-panel,
+.slides-rup-design-maker-canvas-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 }
 
 .slides-rup-design-maker-sidepanel {
