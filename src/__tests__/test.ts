@@ -14,6 +14,11 @@ import {
 	generateDesignMakerRuntimeCss,
 	generatePageMarkdown,
 } from "../services/design-maker-generator";
+import {
+	clampCanvasZoomPercent,
+	computeCanvasTransform,
+	computePanForZoom,
+} from "../ui/components/design-canvas";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -224,6 +229,36 @@ function testNestedBlockVisibilityToggle() {
 	console.log("testNestedBlockVisibilityToggle passed");
 }
 
+function testCanvasZoomTransformMath() {
+	assert.strictEqual(clampCanvasZoomPercent(0), 25);
+	assert.strictEqual(clampCanvasZoomPercent(500), 400);
+	assert.strictEqual(clampCanvasZoomPercent(123.4), 123);
+
+	const transform = computeCanvasTransform({
+		frameWidth: 960,
+		frameHeight: 540,
+		baseWidth: 1920,
+		baseHeight: 1080,
+		zoomPercent: 200,
+		panX: 10,
+		panY: 20,
+	});
+	assert.strictEqual(transform.scale, 1);
+	assert.strictEqual(transform.transform, "translate(10px, 20px) scale(1)");
+
+	const nextPan = computePanForZoom({
+		cursorX: 100,
+		cursorY: 100,
+		panX: 0,
+		panY: 0,
+		currentScale: 1,
+		nextScale: 2,
+	});
+	assert.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
+
+	console.log("testCanvasZoomTransformMath passed");
+}
+
 function runTests() {
 	try {
 		testNestedGridSerialization();
@@ -232,6 +267,7 @@ function runTests() {
 		testDesignMakerRuntimeCssHasHelperClasses();
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
+		testCanvasZoomTransformMath();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

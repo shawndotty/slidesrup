@@ -18,6 +18,9 @@ import { renderDesignThemePanel } from "../components/design-theme-panel";
 import { renderDesignPreview } from "../components/design-preview";
 import { renderDesignInspector } from "../components/design-inspector";
 import {
+	clampCanvasZoomPercent,
+	computeCanvasTransform,
+	computePanForZoom,
 	renderDesignCanvas,
 	renderDesignToolbar,
 } from "../components/design-canvas";
@@ -58,6 +61,13 @@ export class DesignMakerView extends ItemView {
 	private lastCenterStageHeight = 0;
 	private lastSelectionVisualBlockId: string | null = null;
 	private readonly _syncSelectionVisualsDebounced: () => void;
+	private canvasZoomPercent = 100;
+	private canvasPanX = 0;
+	private canvasPanY = 0;
+	private isSpaceKeyDown = false;
+	private readonly _onWindowKeyUp = (event: KeyboardEvent) => {
+		this._handleWindowKeyUp(event);
+	};
 	private readonly _onWindowKeyDown = (event: KeyboardEvent) => {
 		this._handleWindowKeyDown(event);
 	};
@@ -98,10 +108,12 @@ export class DesignMakerView extends ItemView {
 		this._render();
 		this._setupResizeObserver();
 		window.addEventListener("keydown", this._onWindowKeyDown);
+		window.addEventListener("keyup", this._onWindowKeyUp);
 	}
 
 	async onClose(): Promise<void> {
 		window.removeEventListener("keydown", this._onWindowKeyDown);
+		window.removeEventListener("keyup", this._onWindowKeyUp);
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		if (this.resizeRafId !== null) {
@@ -488,6 +500,25 @@ export class DesignMakerView extends ItemView {
 			presentationCss: this.presentationCss,
 			slideBaseWidth: this._getSlideBaseWidth(),
 			slideBaseHeight: this._getSlideBaseHeight(),
+			canvasZoomPercent: this.canvasZoomPercent,
+			canvasPanX: this.canvasPanX,
+			canvasPanY: this.canvasPanY,
+			isPanKeyDown: () => this.isSpaceKeyDown,
+			onPanChange: (panX, panY) => {
+				this.canvasPanX = panX;
+				this.canvasPanY = panY;
+			},
+			onZoomChange: (zoomPercent, panX, panY) => {
+				this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
+				this.canvasPanX = panX;
+				this.canvasPanY = panY;
+				const label = this.toolbarEl?.querySelector(
+					".slides-rup-design-maker-zoom-label",
+				) as HTMLElement | null;
+				if (label) {
+					label.textContent = `${this.canvasZoomPercent}%`;
+				}
+			},
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
 				this._setSelectedBlockId(blockId);
@@ -518,6 +549,10 @@ export class DesignMakerView extends ItemView {
 			selectedBlockId: this.selectedBlockId,
 			hasFootnotesBlock: this._hasFootnotesBlock(),
 			hasSideBarBlock: this._hasSideBarBlock(),
+			canvasZoomPercent: this.canvasZoomPercent,
+			onZoomChange: (zoomPercent) => {
+				this._setCanvasZoomPercent(zoomPercent, "center");
+			},
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
@@ -597,10 +632,93 @@ export class DesignMakerView extends ItemView {
 			this.resizeRafId = requestAnimationFrame(() => {
 				this.resizeRafId = null;
 				this._renderCanvasOnly();
+				this._applyCanvasTransform();
 				this._renderPreviewOnly(false);
 			});
 		});
 		this.resizeObserver.observe(this.centerStageEl);
+	}
+
+	private _applyCanvasTransform(): void {
+		if (!this.canvasEl) return;
+		const frame = this.canvasEl.querySelector(
+			".slides-rup-design-maker-canvas-frame",
+		) as HTMLElement | null;
+		const canvas = this.canvasEl.querySelector(
+			".slides-rup-design-maker-canvas",
+		) as HTMLElement | null;
+		if (!frame || !canvas) return;
+		const rect = frame.getBoundingClientRect();
+		const { transform } = computeCanvasTransform({
+			frameWidth: rect.width,
+			frameHeight: rect.height,
+			baseWidth: this._getSlideBaseWidth(),
+			baseHeight: this._getSlideBaseHeight(),
+			zoomPercent: this.canvasZoomPercent,
+			panX: this.canvasPanX,
+			panY: this.canvasPanY,
+		});
+		canvas.style.transform = transform;
+		canvas.style.transformOrigin = "top left";
+	}
+
+	private _setCanvasZoomPercent(
+		zoomPercent: number,
+		anchor: "center" | "none" = "none",
+	): void {
+		if (!this.canvasEl) {
+			this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
+			this._renderToolbar();
+			return;
+		}
+		const frame = this.canvasEl.querySelector(
+			".slides-rup-design-maker-canvas-frame",
+		) as HTMLElement | null;
+		if (!frame) {
+			this.canvasZoomPercent = clampCanvasZoomPercent(zoomPercent);
+			this._renderToolbar();
+			return;
+		}
+
+		const rect = frame.getBoundingClientRect();
+		const current = computeCanvasTransform({
+			frameWidth: rect.width,
+			frameHeight: rect.height,
+			baseWidth: this._getSlideBaseWidth(),
+			baseHeight: this._getSlideBaseHeight(),
+			zoomPercent: this.canvasZoomPercent,
+			panX: this.canvasPanX,
+			panY: this.canvasPanY,
+		});
+		const nextZoomPercent = clampCanvasZoomPercent(zoomPercent);
+		const next = computeCanvasTransform({
+			frameWidth: rect.width,
+			frameHeight: rect.height,
+			baseWidth: this._getSlideBaseWidth(),
+			baseHeight: this._getSlideBaseHeight(),
+			zoomPercent: nextZoomPercent,
+			panX: this.canvasPanX,
+			panY: this.canvasPanY,
+		});
+
+		if (anchor === "center") {
+			const cursorX = rect.width / 2;
+			const cursorY = rect.height / 2;
+			const nextPan = computePanForZoom({
+				cursorX,
+				cursorY,
+				panX: this.canvasPanX,
+				panY: this.canvasPanY,
+				currentScale: current.scale,
+				nextScale: next.scale,
+			});
+			this.canvasPanX = nextPan.panX;
+			this.canvasPanY = nextPan.panY;
+		}
+
+		this.canvasZoomPercent = nextZoomPercent;
+		this._renderCanvasOnly();
+		this._renderToolbar();
 	}
 
 	private _applySelectionVisualTransition(
@@ -1061,14 +1179,23 @@ export class DesignMakerView extends ItemView {
 
 	private _handleWindowKeyDown(event: KeyboardEvent): void {
 		if (event.defaultPrevented) return;
-		if (event.metaKey || event.ctrlKey || event.altKey) return;
-		if (event.key !== "Backspace" && event.key !== "Delete") return;
 		const activeView =
 			this.app.workspace.getActiveViewOfType(DesignMakerView);
 		if (activeView !== this) return;
-		if (!this.selectedBlockId || !this.draft) return;
 		const target = event.target as HTMLElement | null;
 		if (this._isTypingElement(target)) return;
+
+		if (event.code === "Space") {
+			if (this.isSpaceKeyDown) return;
+			event.preventDefault();
+			this.isSpaceKeyDown = true;
+			this._updatePanModeClass();
+			return;
+		}
+
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (event.key !== "Backspace" && event.key !== "Delete") return;
+		if (!this.selectedBlockId || !this.draft) return;
 		event.preventDefault();
 		this._deleteSelectedBlockWithPulse(this.selectedBlockId);
 	}
@@ -1097,6 +1224,17 @@ export class DesignMakerView extends ItemView {
 		}, 100);
 	}
 
+	private _handleWindowKeyUp(event: KeyboardEvent): void {
+		if (event.defaultPrevented) return;
+		const activeView =
+			this.app.workspace.getActiveViewOfType(DesignMakerView);
+		if (activeView !== this) return;
+		if (event.code !== "Space") return;
+		if (!this.isSpaceKeyDown) return;
+		this.isSpaceKeyDown = false;
+		this._updatePanModeClass();
+	}
+
 	private _isTypingElement(target: HTMLElement | null): boolean {
 		if (!target) return false;
 		const tagName = target.tagName;
@@ -1109,6 +1247,11 @@ export class DesignMakerView extends ItemView {
 		}
 		if (target.isContentEditable) return true;
 		return Boolean(target.closest('[contenteditable="true"]'));
+	}
+
+	private _updatePanModeClass(): void {
+		if (!this.canvasEl) return;
+		this.canvasEl.classList.toggle("is-pan-ready", this.isSpaceKeyDown);
 	}
 
 	private _syncPageSource(): void {

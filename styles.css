@@ -572,6 +572,16 @@ h3.slides-rup-title {
 		box-shadow 150ms ease;
 }
 
+.slides-rup-design-maker-canvas-panel.is-pan-ready .slides-rup-design-maker-canvas,
+.slides-rup-design-maker-canvas-panel.is-pan-ready .slides-rup-design-maker-block {
+	cursor: grab;
+}
+
+.slides-rup-design-maker-canvas-frame.is-panning .slides-rup-design-maker-canvas,
+.slides-rup-design-maker-canvas-frame.is-panning .slides-rup-design-maker-block {
+	cursor: grabbing;
+}
+
 .slides-rup-design-maker-block > *,
 .slides-rup-design-maker-preview-block > *,
 .slides-rup-design-maker-raw-block > *,

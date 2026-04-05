@@ -11,6 +11,64 @@ type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
 
+export function clampCanvasZoomPercent(value: number): number {
+	if (!Number.isFinite(value)) return 100;
+	return Math.max(25, Math.min(400, Math.round(value)));
+}
+
+export function computeBaselineScale(options: {
+	frameWidth: number;
+	frameHeight: number;
+	baseWidth: number;
+	baseHeight: number;
+}): number {
+	const { frameWidth, frameHeight, baseWidth, baseHeight } = options;
+	if (!frameWidth || !frameHeight || !baseWidth || !baseHeight) return 1;
+	return Math.min(frameWidth / baseWidth, frameHeight / baseHeight);
+}
+
+export function computeCanvasTransform(options: {
+	frameWidth: number;
+	frameHeight: number;
+	baseWidth: number;
+	baseHeight: number;
+	zoomPercent: number;
+	panX: number;
+	panY: number;
+}): { scale: number; transform: string } {
+	const zoomPercent = clampCanvasZoomPercent(options.zoomPercent);
+	const zoomScale = zoomPercent / 100;
+	const baselineScale = computeBaselineScale(options);
+	const scale = baselineScale * zoomScale;
+	const panX = Number.isFinite(options.panX) ? options.panX : 0;
+	const panY = Number.isFinite(options.panY) ? options.panY : 0;
+	return {
+		scale,
+		transform: `translate(${panX}px, ${panY}px) scale(${scale})`,
+	};
+}
+
+export function computePanForZoom(options: {
+	cursorX: number;
+	cursorY: number;
+	panX: number;
+	panY: number;
+	currentScale: number;
+	nextScale: number;
+}): { panX: number; panY: number } {
+	const { cursorX, cursorY, panX, panY, currentScale, nextScale } = options;
+	if (!Number.isFinite(currentScale) || currentScale <= 0) {
+		return { panX, panY };
+	}
+	const ratio = nextScale / currentScale;
+	const nextPanX = cursorX - ratio * (cursorX - panX);
+	const nextPanY = cursorY - ratio * (cursorY - panY);
+	return {
+		panX: Number.isFinite(nextPanX) ? nextPanX : panX,
+		panY: Number.isFinite(nextPanY) ? nextPanY : panY,
+	};
+}
+
 export function applyBlockRectStyles(el: HTMLElement, block: DesignGridBlock) {
 	if (block.rect.x < 0) {
 		el.style.right = `${Math.abs(block.rect.x)}%`;
@@ -135,10 +193,12 @@ function applySlideBaselineScale(
 ): void {
 	const frameRect = frameEl.getBoundingClientRect();
 	if (!frameRect.width || !frameRect.height) return;
-	const scale = Math.min(
-		frameRect.width / baseWidth,
-		frameRect.height / baseHeight,
-	);
+	const scale = computeBaselineScale({
+		frameWidth: frameRect.width,
+		frameHeight: frameRect.height,
+		baseWidth,
+		baseHeight,
+	});
 	slideEl.style.transform = `scale(${scale})`;
 	slideEl.style.transformOrigin = "top left";
 }
@@ -148,6 +208,8 @@ export function renderDesignToolbar(options: {
 	selectedBlockId: string | null;
 	hasFootnotesBlock: boolean;
 	hasSideBarBlock: boolean;
+	canvasZoomPercent: number;
+	onZoomChange: (zoomPercent: number) => void;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onAddFootnotes: () => void;
 	onAddSideBar: () => void;
@@ -159,6 +221,8 @@ export function renderDesignToolbar(options: {
 		selectedBlockId,
 		hasFootnotesBlock,
 		hasSideBarBlock,
+		canvasZoomPercent,
+		onZoomChange,
 		onAddBlock,
 		onAddFootnotes,
 		onAddSideBar,
@@ -201,6 +265,19 @@ export function renderDesignToolbar(options: {
 	sideBarButton.disabled = hasSideBarBlock;
 	sideBarButton.addEventListener("click", () => onAddSideBar());
 
+	const zoomLabel = toolbar.createDiv("slides-rup-design-maker-zoom-label");
+	zoomLabel.setText(`${clampCanvasZoomPercent(canvasZoomPercent)}%`);
+	const zoomOutButton = toolbar.createEl("button", { text: "-" });
+	zoomOutButton.addEventListener("click", () =>
+		onZoomChange(clampCanvasZoomPercent(canvasZoomPercent - 10)),
+	);
+	const zoomResetButton = toolbar.createEl("button", { text: "100%" });
+	zoomResetButton.addEventListener("click", () => onZoomChange(100));
+	const zoomInButton = toolbar.createEl("button", { text: "+" });
+	zoomInButton.addEventListener("click", () =>
+		onZoomChange(clampCanvasZoomPercent(canvasZoomPercent + 10)),
+	);
+
 	if (selectedBlockId) {
 		const duplicateButton = toolbar.createEl("button", {
 			text: t("Duplicate Block"),
@@ -225,6 +302,12 @@ export function renderDesignCanvas(options: {
 	presentationCss?: string;
 	slideBaseWidth?: number;
 	slideBaseHeight?: number;
+	canvasZoomPercent?: number;
+	canvasPanX?: number;
+	canvasPanY?: number;
+	isPanKeyDown?: () => boolean;
+	onPanChange?: (panX: number, panY: number) => void;
+	onZoomChange?: (zoomPercent: number, panX: number, panY: number) => void;
 	selectedBlockId: string | null;
 	onSelect: (blockId: string | null) => void;
 	onPatchBlock: (
@@ -243,6 +326,12 @@ export function renderDesignCanvas(options: {
 		presentationCss = "",
 		slideBaseWidth = DESIGN_MAKER_SLIDE_WIDTH,
 		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
+		canvasZoomPercent = 100,
+		canvasPanX = 0,
+		canvasPanY = 0,
+		isPanKeyDown = () => false,
+		onPanChange,
+		onZoomChange,
 		selectedBlockId,
 		onSelect,
 		onPatchBlock,
@@ -250,6 +339,10 @@ export function renderDesignCanvas(options: {
 		onDeleteBlock,
 		onDuplicateBlock,
 	} = options;
+
+	let zoomPercent = canvasZoomPercent;
+	let panX = canvasPanX;
+	let panY = canvasPanY;
 
 	container.empty();
 	const frame = container.createDiv("slides-rup-design-maker-canvas-frame");
@@ -266,6 +359,108 @@ export function renderDesignCanvas(options: {
 		styleEl.textContent = themeRawCss;
 	}
 	canvas.addEventListener("click", () => onSelect(null));
+
+	const applyCanvasTransform = () => {
+		const rect = frame.getBoundingClientRect();
+		const { transform } = computeCanvasTransform({
+			frameWidth: rect.width,
+			frameHeight: rect.height,
+			baseWidth: slideBaseWidth,
+			baseHeight: slideBaseHeight,
+			zoomPercent,
+			panX,
+			panY,
+		});
+		canvas.style.transform = transform;
+		canvas.style.transformOrigin = "top left";
+	};
+	applyCanvasTransform();
+
+	frame.addEventListener(
+		"wheel",
+		(e: WheelEvent) => {
+			if (!onZoomChange) return;
+			if (!e.ctrlKey && !e.metaKey) return;
+			e.preventDefault();
+			const rect = frame.getBoundingClientRect();
+			const cursorX = e.clientX - rect.left;
+			const cursorY = e.clientY - rect.top;
+			const current = computeCanvasTransform({
+				frameWidth: rect.width,
+				frameHeight: rect.height,
+				baseWidth: slideBaseWidth,
+				baseHeight: slideBaseHeight,
+				zoomPercent,
+				panX,
+				panY,
+			});
+			const step = e.deltaY < 0 ? 10 : -10;
+			const nextZoomPercent = clampCanvasZoomPercent(zoomPercent + step);
+			const nextScale = computeCanvasTransform({
+				frameWidth: rect.width,
+				frameHeight: rect.height,
+				baseWidth: slideBaseWidth,
+				baseHeight: slideBaseHeight,
+				zoomPercent: nextZoomPercent,
+				panX,
+				panY,
+			}).scale;
+			const nextPan = computePanForZoom({
+				cursorX,
+				cursorY,
+				panX,
+				panY,
+				currentScale: current.scale,
+				nextScale,
+			});
+			zoomPercent = nextZoomPercent;
+			panX = nextPan.panX;
+			panY = nextPan.panY;
+			applyCanvasTransform();
+			onZoomChange(nextZoomPercent, panX, panY);
+		},
+		{ passive: false },
+	);
+
+	let isPanning = false;
+	let panStartX = 0;
+	let panStartY = 0;
+	let panStartOffsetX = 0;
+	let panStartOffsetY = 0;
+	frame.addEventListener(
+		"mousedown",
+		(e: MouseEvent) => {
+			if (!onPanChange) return;
+			if (e.button !== 0) return;
+			if (!isPanKeyDown()) return;
+			e.preventDefault();
+			e.stopPropagation();
+			isPanning = true;
+			panStartX = e.clientX;
+			panStartY = e.clientY;
+			panStartOffsetX = panX;
+			panStartOffsetY = panY;
+			frame.addClass("is-panning");
+			const onMove = (moveEvent: MouseEvent) => {
+				if (!isPanning) return;
+				const dx = moveEvent.clientX - panStartX;
+				const dy = moveEvent.clientY - panStartY;
+				panX = panStartOffsetX + dx;
+				panY = panStartOffsetY + dy;
+				applyCanvasTransform();
+				onPanChange(panX, panY);
+			};
+			const onUp = () => {
+				isPanning = false;
+				frame.removeClass("is-panning");
+				document.removeEventListener("mousemove", onMove);
+				document.removeEventListener("mouseup", onUp);
+			};
+			document.addEventListener("mousemove", onMove);
+			document.addEventListener("mouseup", onUp);
+		},
+		true,
+	);
 
 	canvas.addEventListener("dragover", (e) => {
 		e.preventDefault();
@@ -439,5 +634,5 @@ export function renderDesignCanvas(options: {
 
 	page.blocks.forEach((block) => renderBlock(canvas, block));
 
-	applySlideBaselineScale(canvas, frame, slideBaseWidth, slideBaseHeight);
+	applyCanvasTransform();
 }
