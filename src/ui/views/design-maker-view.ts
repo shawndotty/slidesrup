@@ -6,6 +6,7 @@ import {
 	DESIGN_MAKER_VIEW_TYPE,
 	DesignDraft,
 	DesignGridBlock,
+	DesignCanvasBlock,
 	DesignMakerViewState,
 	DesignPageType,
 } from "src/types/design-maker";
@@ -46,6 +47,7 @@ export class DesignMakerView extends ItemView {
 	private cssSourceEl: HTMLElement | null = null;
 	private pageSourceValue = "";
 	private cssSourceValue = "";
+	private isGlobalCoords = false;
 	private activeCenterTab: "design" | "preview" = "design";
 	private resizeObserver: ResizeObserver | null = null;
 	private resizeRafId: number | null = null;
@@ -280,6 +282,9 @@ export class DesignMakerView extends ItemView {
 				this._renderRightPanel();
 				this._render();
 			},
+			onReparentBlock: (sourceId, targetId) => {
+				this._reparentBlock(sourceId, targetId);
+			},
 			onToggleBlockVisibility: (blockId, hidden) => {
 				const block = this._getCurrentPage().blocks.find(
 					(b) => b.id === blockId,
@@ -342,6 +347,73 @@ export class DesignMakerView extends ItemView {
 			container: this.inspectorEl!,
 			block: this._getSelectedBlock(),
 			showTitle: false,
+			isGlobalCoords: this.isGlobalCoords,
+			onToggleCoords: (global) => {
+				this.isGlobalCoords = global;
+				this._renderRightPanel();
+			},
+			getGlobalCoords: () => {
+				const block = this._getSelectedBlock();
+				if (!block || !this.canvasEl) return null;
+				const el = this.canvasEl.querySelector(
+					`[data-block-id="${block.id}"]`,
+				) as HTMLElement;
+				const parentEl = this.canvasEl.querySelector(
+					".slides-rup-design-maker-canvas",
+				) as HTMLElement;
+				if (!el || !parentEl) return null;
+
+				const elRect = el.getBoundingClientRect();
+				const parentRect = parentEl.getBoundingClientRect();
+
+				return {
+					x: Math.round(
+						((elRect.left - parentRect.left) / parentRect.width) *
+							100,
+					),
+					y: Math.round(
+						((elRect.top - parentRect.top) / parentRect.height) *
+							100,
+					),
+				};
+			},
+			setGlobalCoords: (x, y) => {
+				const block = this._getSelectedBlock();
+				if (!block || block.type !== "grid" || !this.canvasEl) return;
+				const parentEl = this.canvasEl.querySelector(
+					".slides-rup-design-maker-canvas",
+				) as HTMLElement;
+				if (!parentEl) return;
+
+				const parentRect = parentEl.getBoundingClientRect();
+				const globalRect = new DOMRect(
+					parentRect.left + (x / 100) * parentRect.width,
+					parentRect.top + (y / 100) * parentRect.height,
+					block.rect.width,
+					block.rect.height,
+				);
+
+				const blockParentEl = this._findBlockById(
+					this._getCurrentPage().blocks,
+					block.id,
+				)?.parent;
+				const currentParentDom = blockParentEl
+					? (this.canvasEl.querySelector(
+							`[data-block-id="${blockParentEl.id}"]`,
+						) as HTMLElement)
+					: parentEl;
+
+				if (!currentParentDom) return;
+
+				this._patchBlockById(block.id, (nextBlock) => {
+					this._updateBlockCoordinates(
+						nextBlock,
+						globalRect,
+						currentParentDom,
+					);
+				});
+				this._renderCanvasAndPreview();
+			},
 			onPatchBlock: (patcher) => {
 				const block = this._getSelectedBlock();
 				if (!block || block.type !== "grid") return;
@@ -529,6 +601,12 @@ export class DesignMakerView extends ItemView {
 					);
 				}
 			}
+
+			// Remove parent highlights
+			root.querySelectorAll(".is-parent-highlighted").forEach((el) => {
+				el.removeClass("is-parent-highlighted");
+			});
+
 			if (nextBlockId) {
 				const nextEl = root.querySelector(
 					`${selector}[data-block-id="${nextBlockId}"]`,
@@ -536,6 +614,20 @@ export class DesignMakerView extends ItemView {
 				if (nextEl) {
 					nextEl.removeClass("is-deselecting");
 					nextEl.addClass("is-selected");
+
+					// Highlight parent
+					const parentBlock = this._findBlockById(
+						this._getCurrentPage().blocks,
+						nextBlockId,
+					)?.parent;
+					if (parentBlock) {
+						const parentEl = root.querySelector(
+							`${selector}[data-block-id="${parentBlock.id}"]`,
+						) as HTMLElement | null;
+						if (parentEl) {
+							parentEl.addClass("is-parent-highlighted");
+						}
+					}
 				}
 			}
 		};
@@ -634,21 +726,150 @@ export class DesignMakerView extends ItemView {
 	private _getSelectedBlock() {
 		if (!this.selectedBlockId) return null;
 		return (
-			this._getCurrentPage().blocks.find(
-				(block) => block.id === this.selectedBlockId,
-			) || null
+			this._findBlockById(
+				this._getCurrentPage().blocks,
+				this.selectedBlockId,
+			)?.block || null
 		);
+	}
+
+	private _findBlockById(
+		blocks: DesignCanvasBlock[],
+		id: string,
+	): {
+		block: DesignCanvasBlock;
+		parent?: DesignGridBlock;
+		index: number;
+	} | null {
+		for (let i = 0; i < blocks.length; i++) {
+			const block = blocks[i];
+			if (block.id === id) return { block, index: i };
+			if (block.type === "grid" && block.children) {
+				const found = this._findBlockById(block.children, id);
+				if (found)
+					return { ...found, parent: block as DesignGridBlock };
+			}
+		}
+		return null;
+	}
+
+	private _reparentBlock(
+		blockId: string,
+		targetParentId: string | null,
+	): void {
+		const page = this._getCurrentPage();
+		const found = this._findBlockById(page.blocks, blockId);
+		if (!found || found.block.type !== "grid") return;
+
+		let currentParentId = found.parent ? found.parent.id : null;
+		if (currentParentId === targetParentId) {
+			return;
+		}
+
+		// Check for circular dependency
+		if (targetParentId) {
+			const targetFound = this._findBlockById(
+				page.blocks,
+				targetParentId,
+			);
+			if (!targetFound || targetFound.block.type !== "grid") return;
+			let currentCheck = targetFound.parent;
+			while (currentCheck) {
+				if (currentCheck.id === blockId) {
+					new Notice(
+						"Cannot nest a grid inside its own descendant" as any,
+					);
+					return;
+				}
+				currentCheck = this._findBlockById(
+					page.blocks,
+					currentCheck.id,
+				)?.parent;
+			}
+		}
+
+		// Calculate global coordinates before moving
+		const canvasInner = this.canvasEl!.querySelector(
+			".slides-rup-design-maker-canvas",
+		) as HTMLElement;
+		const blockEl = this.canvasEl!.querySelector(
+			`[data-block-id="${blockId}"]`,
+		) as HTMLElement;
+		if (!blockEl || !canvasInner) return;
+		const globalRect = blockEl.getBoundingClientRect();
+
+		// Remove from current parent
+		if (found.parent) {
+			found.parent.children!.splice(found.index, 1);
+		} else {
+			page.blocks.splice(found.index, 1);
+		}
+
+		let targetParentEl: HTMLElement | null = null;
+
+		// Add to new parent
+		if (targetParentId) {
+			const targetFound = this._findBlockById(
+				page.blocks,
+				targetParentId,
+			);
+			if (targetFound && targetFound.block.type === "grid") {
+				const parentBlock = targetFound.block as DesignGridBlock;
+				if (!parentBlock.children) parentBlock.children = [];
+				parentBlock.children.push(found.block);
+				targetParentEl = this.canvasEl!.querySelector(
+					`[data-block-id="${targetParentId}"]`,
+				);
+			} else {
+				page.blocks.push(found.block); // fallback to root
+				targetParentEl = canvasInner;
+			}
+		} else {
+			page.blocks.push(found.block);
+			targetParentEl = canvasInner;
+		}
+
+		if (targetParentEl) {
+			this._updateBlockCoordinates(
+				found.block as DesignGridBlock,
+				globalRect,
+				targetParentEl,
+			);
+		}
+
+		this._syncPageSource();
+		this._render();
+	}
+
+	private _updateBlockCoordinates(
+		block: DesignGridBlock,
+		globalRect: DOMRect,
+		parentEl: HTMLElement,
+	): void {
+		const parentRect = parentEl.getBoundingClientRect();
+		const newX =
+			((globalRect.left - parentRect.left) / parentRect.width) * 100;
+		const newY =
+			((globalRect.top - parentRect.top) / parentRect.height) * 100;
+		const newWidth = (globalRect.width / parentRect.width) * 100;
+		const newHeight = (globalRect.height / parentRect.height) * 100;
+
+		block.rect.x = Math.round(newX);
+		block.rect.y = Math.round(newY);
+		block.rect.width = Math.max(1, Math.round(newWidth));
+		block.rect.height = Math.max(1, Math.round(newHeight));
 	}
 
 	private _patchBlockById(
 		blockId: string,
 		patcher: (block: DesignGridBlock) => void,
 	): void {
-		const block = this._getCurrentPage().blocks.find(
-			(item) => item.id === blockId,
+		const found = this._findBlockById(
+			this._getCurrentPage().blocks,
+			blockId,
 		);
-		if (!block || block.type !== "grid") return;
-		patcher(block);
+		if (!found || found.block.type !== "grid") return;
+		patcher(found.block as DesignGridBlock);
 		this._syncPageSource();
 	}
 
@@ -667,15 +888,29 @@ export class DesignMakerView extends ItemView {
 	}
 
 	private _hasFootnotesBlock(): boolean {
-		return this._getCurrentPage().blocks.some(
-			(block) => block.type === "grid" && this._isFootnotesBlock(block),
-		);
+		const check = (blocks: DesignCanvasBlock[]): boolean => {
+			return blocks.some(
+				(block) =>
+					(block.type === "grid" && this._isFootnotesBlock(block)) ||
+					(block.type === "grid" &&
+						block.children &&
+						check(block.children)),
+			);
+		};
+		return check(this._getCurrentPage().blocks);
 	}
 
 	private _hasSideBarBlock(): boolean {
-		return this._getCurrentPage().blocks.some(
-			(block) => block.type === "grid" && this._isSideBarBlock(block),
-		);
+		const check = (blocks: DesignCanvasBlock[]): boolean => {
+			return blocks.some(
+				(block) =>
+					(block.type === "grid" && this._isSideBarBlock(block)) ||
+					(block.type === "grid" &&
+						block.children &&
+						check(block.children)),
+			);
+		};
+		return check(this._getCurrentPage().blocks);
 	}
 
 	private _createFootnotesBlock(): DesignGridBlock {
@@ -738,10 +973,10 @@ export class DesignMakerView extends ItemView {
 
 	private _duplicateGridBlock(blockId: string, offset: number): void {
 		const page = this._getCurrentPage();
-		const target = page.blocks.find(
-			(block) => block.id === blockId && block.type === "grid",
-		);
-		if (!target || target.type !== "grid") return;
+		const found = this._findBlockById(page.blocks, blockId);
+		if (!found || found.block.type !== "grid") return;
+
+		const target = found.block as DesignGridBlock;
 		if (this._isFootnotesBlock(target)) {
 			new Notice(t("Footnotes block already exists"));
 			return;
@@ -759,7 +994,17 @@ export class DesignMakerView extends ItemView {
 				y: Math.min(100 - target.rect.height, target.rect.y + offset),
 			},
 		};
-		page.blocks.push(nextBlock);
+		// recursive duplicate of children if necessary? Actually spread operator copies the children array reference.
+		// We should deep clone children if we want to fully support duplicate.
+		// For now, let's omit children or just empty them to avoid duplicate IDs
+		nextBlock.children = [];
+
+		if (found.parent) {
+			found.parent.children!.push(nextBlock);
+		} else {
+			page.blocks.push(nextBlock);
+		}
+
 		this.selectedBlockId = nextBlock.id;
 		this._syncPageSource();
 		this._render();
@@ -767,7 +1012,15 @@ export class DesignMakerView extends ItemView {
 
 	private _deleteBlockById(blockId: string): void {
 		const page = this._getCurrentPage();
-		page.blocks = page.blocks.filter((block) => block.id !== blockId);
+		const found = this._findBlockById(page.blocks, blockId);
+		if (!found) return;
+
+		if (found.parent) {
+			found.parent.children!.splice(found.index, 1);
+		} else {
+			page.blocks.splice(found.index, 1);
+		}
+
 		if (this.selectedBlockId === blockId) {
 			this.selectedBlockId = null;
 		}

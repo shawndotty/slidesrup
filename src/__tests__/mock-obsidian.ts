@@ -1,0 +1,1 @@
+export const setIcon = () => {}; export class Notice {}; export const normalizePath = (p: string) => p; export class TFile {}; export class TFolder {}; export class Vault {}; export const moment = () => ({ format: () => "" });

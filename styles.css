@@ -840,3 +840,12 @@ h3.slides-rup-title {
 	border-radius: 8px;
 	pointer-events: none;
 }
+
+.is-parent-highlighted {
+	outline: 2px dashed var(--sr-dm-primary);
+	z-index: 1;
+}
+
+.slides-rup-design-maker-layer-children.is-collapsed {
+	display: none;
+}

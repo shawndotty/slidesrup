@@ -90,9 +90,22 @@ export function renderDesignInspector(options: {
 	container: HTMLElement;
 	block: DesignCanvasBlock | null;
 	showTitle?: boolean;
+	isGlobalCoords?: boolean;
+	onToggleCoords?: (global: boolean) => void;
+	getGlobalCoords?: () => { x: number; y: number } | null;
+	setGlobalCoords?: (x: number, y: number) => void;
 	onPatchBlock: (patcher: (block: DesignGridBlock) => void) => void;
 }): void {
-	const { container, block, onPatchBlock, showTitle = true } = options;
+	const {
+		container,
+		block,
+		onPatchBlock,
+		showTitle = true,
+		isGlobalCoords = false,
+		onToggleCoords,
+		getGlobalCoords,
+		setGlobalCoords,
+	} = options;
 	container.empty();
 
 	if (showTitle) {
@@ -123,15 +136,58 @@ export function renderDesignInspector(options: {
 		return;
 	}
 
-	createNumberField(container, "X", block.rect.x, (value) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.rect.x = Math.round(Math.max(-100, Math.min(100, value)));
-		});
+	const coordsHeader = container.createDiv(
+		"slides-rup-design-maker-coords-header",
+	);
+	coordsHeader.style.display = "flex";
+	coordsHeader.style.justifyContent = "space-between";
+	coordsHeader.style.alignItems = "center";
+	coordsHeader.style.marginBottom = "8px";
+	coordsHeader.createEl("strong", { text: t("Coordinates" as any) });
+
+	const toggleContainer = coordsHeader.createDiv();
+	const relativeLabel = toggleContainer.createSpan({ text: "Rel " });
+	const toggleBtn = toggleContainer.createEl("button", {
+		text: isGlobalCoords ? "Global" : "Relative",
+		cls: "slides-rup-design-maker-layer-toggle",
 	});
-	createNumberField(container, "Y", block.rect.y, (value) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.rect.y = Math.round(Math.max(-100, Math.min(100, value)));
-		});
+	const globalLabel = toggleContainer.createSpan({ text: " Glob" });
+
+	relativeLabel.style.opacity = isGlobalCoords ? "0.5" : "1";
+	globalLabel.style.opacity = isGlobalCoords ? "1" : "0.5";
+
+	toggleBtn.addEventListener("click", () => {
+		if (onToggleCoords) onToggleCoords(!isGlobalCoords);
+	});
+
+	let displayX = block.rect.x;
+	let displayY = block.rect.y;
+
+	if (isGlobalCoords && getGlobalCoords) {
+		const global = getGlobalCoords();
+		if (global) {
+			displayX = global.x;
+			displayY = global.y;
+		}
+	}
+
+	createNumberField(container, "X", displayX, (value) => {
+		if (isGlobalCoords && setGlobalCoords) {
+			setGlobalCoords(value, displayY);
+		} else {
+			onPatchBlock((nextBlock) => {
+				nextBlock.rect.x = Math.round(value);
+			});
+		}
+	});
+	createNumberField(container, "Y", displayY, (value) => {
+		if (isGlobalCoords && setGlobalCoords) {
+			setGlobalCoords(displayX, value);
+		} else {
+			onPatchBlock((nextBlock) => {
+				nextBlock.rect.y = Math.round(value);
+			});
+		}
 	});
 	createNumberField(container, "Width", block.rect.width, (value) => {
 		onPatchBlock((nextBlock) => {

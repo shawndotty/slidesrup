@@ -44,6 +44,7 @@ export interface DesignGridBlock {
 	frag: string;
 	extraAttributes: Record<string, string>;
 	hiddenInDesign?: boolean;
+	children?: DesignCanvasBlock[];
 }
 
 export interface DesignRawBlock {

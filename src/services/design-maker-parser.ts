@@ -257,6 +257,13 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 	const [x, y] = parsePair(attrs.drop || "", 0, 0);
 	const cleanedContent = stripNestedGridMarkup(content);
 
+	// Parse children recursively
+	const rawChildren = parseGridBlocks(content, {
+		hasFootnotesBlock: true,
+		hasSideBarBlock: true,
+	}); // Prevent footnotes/sidebar inside nested grids
+	const children = rawChildren.filter((c) => c.type === "grid");
+
 	return {
 		id: nextBlockId("grid"),
 		type: "grid",
@@ -309,7 +316,39 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 			},
 			{} as Record<string, string>,
 		),
+		children: children.length > 0 ? children : undefined,
 	};
+}
+
+function parseGridBlocks(
+	markdown: string,
+	footnotesState: { hasFootnotesBlock: boolean; hasSideBarBlock: boolean },
+): DesignCanvasBlock[] {
+	const blocks: DesignCanvasBlock[] = [];
+	const { topLevelRanges, segments } = parseGridSegments(markdown);
+	if (topLevelRanges.length === 0) {
+		appendRawBlocksAndFootnotes(markdown, blocks, footnotesState);
+		return blocks;
+	}
+
+	let cursor = 0;
+	topLevelRanges.forEach((range) => {
+		const before = markdown.slice(cursor, range.start);
+		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
+
+		// Find the exact segment that corresponds to this topLevelRange
+		const segment = segments.find(
+			(s) => s.start === range.start && s.end === range.end,
+		);
+		if (segment) {
+			blocks.push(createGridBlock(segment.attrSource, segment.content));
+		}
+
+		cursor = range.end;
+	});
+
+	appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
+	return blocks;
 }
 
 export function parseDesignPageDraft(
@@ -319,46 +358,12 @@ export function parseDesignPageDraft(
 	markdown: string,
 ): DesignPageDraft {
 	const fileName = getDesignPageFileName(pageType, designName);
-	const blocks: DesignCanvasBlock[] = [];
 	const footnotesState = {
 		hasFootnotesBlock: false,
 		hasSideBarBlock: false,
 	};
-	const { segments, topLevelRanges } = parseGridSegments(markdown);
-	if (segments.length === 0) {
-		appendRawBlocksAndFootnotes(markdown, blocks, footnotesState);
-		return {
-			type: pageType,
-			label: getDesignPageDisplayName(fileName),
-			fileName,
-			filePath,
-			blocks,
-			rawMarkdown: markdown,
-			hasUnsupportedContent: blocks.some((block) => block.type === "raw"),
-		};
-	}
 
-	let cursor = 0;
-	let segmentCursor = 0;
-	topLevelRanges.forEach((range) => {
-		const before = markdown.slice(cursor, range.start);
-		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
-		while (
-			segmentCursor < segments.length &&
-			segments[segmentCursor].start < range.end
-		) {
-			const segment = segments[segmentCursor];
-			if (segment.start >= range.start) {
-				blocks.push(
-					createGridBlock(segment.attrSource, segment.content),
-				);
-			}
-			segmentCursor += 1;
-		}
-		cursor = range.end;
-	});
-
-	appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
+	const blocks = parseGridBlocks(markdown, footnotesState);
 
 	return {
 		type: pageType,

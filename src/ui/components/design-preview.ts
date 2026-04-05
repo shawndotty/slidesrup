@@ -1,6 +1,10 @@
 import { App } from "obsidian";
 import { t } from "src/lang/helpers";
-import { DesignPageDraft, ThemeStyleDraft } from "src/types/design-maker";
+import {
+	DesignPageDraft,
+	ThemeStyleDraft,
+	DesignCanvasBlock,
+} from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 import { applyBlockRectStyles, applyGridFlexStyles } from "./design-canvas";
 
@@ -77,13 +81,15 @@ export function renderDesignPreview(options: {
 		styleEl.textContent = theme.rawCss;
 	}
 
-	page.blocks.forEach((block) => {
+	const renderBlock = (parentEl: HTMLElement, block: DesignCanvasBlock) => {
 		if (block.hiddenInDesign) {
 			return;
 		}
 
 		if (block.type === "raw") {
-			const raw = preview.createDiv("slides-rup-design-maker-preview-raw");
+			const raw = parentEl.createDiv(
+				"slides-rup-design-maker-preview-raw",
+			);
 			const result = renderBlockContent(raw, block.raw, {
 				app,
 				sourcePath: page.filePath,
@@ -97,7 +103,7 @@ export function renderDesignPreview(options: {
 			}
 			return;
 		}
-		const el = preview.createDiv("slides-rup-design-maker-preview-block");
+		const el = parentEl.createDiv("slides-rup-design-maker-preview-block");
 		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) el.addClass("is-selected");
 		applyBlockRectStyles(el, block);
@@ -106,13 +112,16 @@ export function renderDesignPreview(options: {
 		}
 		if (block.bg && block.bg.trim()) el.style.backgroundColor = block.bg;
 		if (block.border && block.border.trim()) el.style.border = block.border;
-		if (block.opacity && block.opacity.trim()) el.style.opacity = block.opacity;
-		if (block.rotate && block.rotate.trim()) el.style.transform = `rotate(${block.rotate}deg)`;
+		if (block.opacity && block.opacity.trim())
+			el.style.opacity = block.opacity;
+		if (block.rotate && block.rotate.trim())
+			el.style.transform = `rotate(${block.rotate}deg)`;
 		if (block.filter && block.filter.trim()) el.style.filter = block.filter;
 		if (block.type === "grid") {
 			applyGridFlexStyles(el, block);
 		}
-		if (block.style && block.style.trim()) el.style.cssText += `;${block.style}`;
+		if (block.style && block.style.trim())
+			el.style.cssText += `;${block.style}`;
 		const result = renderBlockContent(el, block.content, {
 			app,
 			sourcePath: page.filePath,
@@ -121,10 +130,19 @@ export function renderDesignPreview(options: {
 			el.remove();
 			return;
 		}
-		if (!result.rendered) {
-			el.setText(result.textContent);
+		if (!result.rendered && !block.content?.trim()) {
+			if (!block.children || block.children.length === 0) {
+				el.setText(result.textContent);
+			}
 		}
-	});
+
+		if (block.children) {
+			block.children.forEach((child) => renderBlock(el, child));
+		}
+	};
+
+	page.blocks.forEach((block) => renderBlock(preview, block));
+
 	applySlideBaselineScale(preview, frame, slideBaseWidth, slideBaseHeight);
 	const appliedScale = Number.isFinite(previewScale) ? previewScale / 100 : 1;
 	preview.style.transform += ` scale(${appliedScale})`;

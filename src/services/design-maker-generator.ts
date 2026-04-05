@@ -43,7 +43,18 @@ function serializeAttributes(block: DesignGridBlock): string {
 }
 
 function generateGridBlock(block: DesignGridBlock): string {
-	return `<grid ${serializeAttributes(block)}>\n${block.content}\n</grid>`;
+	const childrenStr = (block.children || [])
+		.map((child) =>
+			child.type === "grid" ? generateGridBlock(child) : child.raw.trim(),
+		)
+		.filter(Boolean)
+		.join("\n\n");
+
+	const innerContent = [block.content, childrenStr]
+		.filter(Boolean)
+		.join("\n\n");
+
+	return `<grid ${serializeAttributes(block)}>\n${innerContent}\n</grid>`;
 }
 
 export function generatePageMarkdown(page: DesignPageDraft): string {
@@ -63,7 +74,10 @@ export function generateThemeCss(
 	const header =
 		theme.headerDirectives.length > 0
 			? theme.headerDirectives
-			: [`/* @theme sr-design-${designName.toLowerCase()} */`, '@import "sr-base"'];
+			: [
+					`/* @theme sr-design-${designName.toLowerCase()} */`,
+					'@import "sr-base"',
+				];
 
 	const generatedCss = `
 :root {

@@ -1,6 +1,10 @@
 import { App } from "obsidian";
 import { t } from "src/lang/helpers";
-import { DesignPageDraft, DesignGridBlock } from "src/types/design-maker";
+import {
+	DesignPageDraft,
+	DesignGridBlock,
+	DesignCanvasBlock,
+} from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 
 type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
@@ -173,6 +177,15 @@ export function renderDesignToolbar(options: {
 		["content", "Add Content Slot"],
 	].forEach(([kind, label]) => {
 		const button = toolbar.createEl("button", { text: t(label as any) });
+		button.draggable = true;
+		button.addEventListener("dragstart", (e) => {
+			if (e.dataTransfer) {
+				e.dataTransfer.setData(
+					"application/json",
+					JSON.stringify({ action: "add", kind }),
+				);
+			}
+		});
 		button.addEventListener("click", () =>
 			onAddBlock(createTemplateBlock(kind as InsertBlockKind)),
 		);
@@ -254,13 +267,47 @@ export function renderDesignCanvas(options: {
 	}
 	canvas.addEventListener("click", () => onSelect(null));
 
-	page.blocks.forEach((block) => {
+	canvas.addEventListener("dragover", (e) => {
+		e.preventDefault();
+	});
+
+	canvas.addEventListener("drop", (e) => {
+		e.preventDefault();
+		if (!e.dataTransfer) return;
+		try {
+			const data = JSON.parse(e.dataTransfer.getData("application/json"));
+			if (data.action === "add" && data.kind) {
+				const block = createTemplateBlock(data.kind as InsertBlockKind);
+
+				const canvasBounds = canvas.getBoundingClientRect();
+				const widthPx = canvasBounds.width * (block.rect.width / 100);
+				const heightPx =
+					canvasBounds.height * (block.rect.height / 100);
+
+				const x =
+					((e.clientX - canvasBounds.left) / canvasBounds.width) *
+					100;
+				const y =
+					((e.clientY - canvasBounds.top) / canvasBounds.height) *
+					100;
+
+				block.rect.x = Math.round(x);
+				block.rect.y = Math.round(y);
+
+				options.onAddBlock(block);
+			}
+		} catch (ex) {
+			// ignore
+		}
+	});
+
+	const renderBlock = (parentEl: HTMLElement, block: DesignCanvasBlock) => {
 		if (block.hiddenInDesign) {
 			return;
 		}
 
 		if (block.type === "raw") {
-			const raw = canvas.createDiv("slides-rup-design-maker-raw-block");
+			const raw = parentEl.createDiv("slides-rup-design-maker-raw-block");
 			const result = renderBlockContent(raw, block.raw, {
 				app,
 				sourcePath: page.filePath,
@@ -275,7 +322,7 @@ export function renderDesignCanvas(options: {
 			return;
 		}
 
-		const el = canvas.createDiv("slides-rup-design-maker-block");
+		const el = parentEl.createDiv("slides-rup-design-maker-block");
 		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) {
 			el.addClass("is-selected");
@@ -302,8 +349,15 @@ export function renderDesignCanvas(options: {
 			el.remove();
 			return;
 		}
-		if (!result.rendered) {
-			el.setText(result.textContent || t("Empty Block"));
+		if (!result.rendered && !block.content?.trim()) {
+			// Don't override if there's no text but we have children
+			if (!block.children || block.children.length === 0) {
+				el.setText(t("Empty Block"));
+			}
+		}
+
+		if (block.children) {
+			block.children.forEach((child) => renderBlock(el, child));
 		}
 
 		const resizeHandle = el.createDiv("slides-rup-design-maker-resize");
@@ -324,7 +378,7 @@ export function renderDesignCanvas(options: {
 			event.preventDefault();
 			event.stopPropagation();
 			onSelect(block.id);
-			const bounds = canvas.getBoundingClientRect();
+			const bounds = parentEl.getBoundingClientRect();
 			const startX = event.clientX;
 			const startY = event.clientY;
 			const startRect = { ...block.rect };
@@ -335,16 +389,12 @@ export function renderDesignCanvas(options: {
 				const deltaY =
 					((moveEvent.clientY - startY) / bounds.height) * 100;
 				onPatchBlock(block.id, (nextBlock) => {
-					nextBlock.rect.x = toInt(
-						Math.max(-100, Math.min(100, startRect.x + deltaX)),
-					);
-					nextBlock.rect.y = toInt(
-						Math.max(-100, Math.min(100, startRect.y + deltaY)),
-					);
+					nextBlock.rect.x = toInt(startRect.x + deltaX);
+					nextBlock.rect.y = toInt(startRect.y + deltaY);
 				});
 			};
 
-			const onUp = () => {
+			const onUp = (upEvent: MouseEvent) => {
 				document.removeEventListener("mousemove", onMove);
 				document.removeEventListener("mouseup", onUp);
 			};
@@ -357,7 +407,7 @@ export function renderDesignCanvas(options: {
 			event.preventDefault();
 			event.stopPropagation();
 			onSelect(block.id);
-			const bounds = canvas.getBoundingClientRect();
+			const bounds = parentEl.getBoundingClientRect();
 			const startX = event.clientX;
 			const startY = event.clientY;
 			const startRect = { ...block.rect };
@@ -385,6 +435,9 @@ export function renderDesignCanvas(options: {
 			document.addEventListener("mousemove", onMove);
 			document.addEventListener("mouseup", onUp);
 		});
-	});
+	};
+
+	page.blocks.forEach((block) => renderBlock(canvas, block));
+
 	applySlideBaselineScale(canvas, frame, slideBaseWidth, slideBaseHeight);
 }
