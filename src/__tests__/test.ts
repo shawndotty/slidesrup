@@ -352,13 +352,13 @@ function testDesignTemplateUnitConsistency() {
 	);
 	assert.strictEqual(
 		mixedUserGrid.rect.x,
-		45,
-		"X should be parsed as 45px due to pure number normalization",
+		864,
+		"X should be parsed as 864px (45% of 1920) in px mode drop",
 	);
 	assert.strictEqual(
 		mixedUserGrid.rect.y,
-		20,
-		"Y should be parsed as 20px due to pure number normalization",
+		216,
+		"Y should be parsed as 216px (20% of 1080) in px mode drop",
 	);
 
 	const mixedPercentMarkdown = `<grid drag="200px 200px" drop="50% 100">\n</grid>`;
@@ -376,8 +376,90 @@ function testDesignTemplateUnitConsistency() {
 	);
 	assert.strictEqual(
 		mixedPercentGrid.rect.y,
+		1080,
+		"Y should be 1080px (100% of 1080) when drop uses unitless number in px mode",
+	);
+
+	const nestedSingleLevelMarkdown = `<grid drag="960px 540px" drop="0px 0px">\n<grid drag="200px 100px" drop="50 50">\n</grid>\n</grid>`;
+	const nestedSingleLevelPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		nestedSingleLevelMarkdown,
+	);
+	const nestedSingleLevelParent = nestedSingleLevelPage.blocks[0] as any;
+	const nestedSingleLevelChild = nestedSingleLevelParent.children?.[0] as any;
+	assert.strictEqual(
+		nestedSingleLevelChild.rect.x,
+		480,
+		"Single-level nested drop.x should use parent width (50% of 960)",
+	);
+	assert.strictEqual(
+		nestedSingleLevelChild.rect.y,
+		270,
+		"Single-level nested drop.y should use parent height (50% of 540)",
+	);
+
+	const pxModeUnitlessDragMarkdown = `<grid drag="960px 540px" drop="0px 0px">\n<grid drag="200 100" drop="50 50">\n</grid>\n</grid>`;
+	const pxModeUnitlessDragPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		pxModeUnitlessDragMarkdown,
+	);
+	const pxModeUnitlessDragParent = pxModeUnitlessDragPage.blocks[0] as any;
+	const pxModeUnitlessDragChild = pxModeUnitlessDragParent
+		.children?.[0] as any;
+	assert.strictEqual(
+		pxModeUnitlessDragChild.rect.width,
+		200,
+		"Regression: in px mode, unitless drag width should keep legacy px behavior",
+	);
+	assert.strictEqual(
+		pxModeUnitlessDragChild.rect.height,
 		100,
-		"Y should be 100px due to pure number normalization",
+		"Regression: in px mode, unitless drag height should keep legacy px behavior",
+	);
+	assert.strictEqual(
+		pxModeUnitlessDragChild.rect.x,
+		480,
+		"In px mode, drop unitless x should keep percent-to-parent conversion (50% of 960)",
+	);
+	assert.strictEqual(
+		pxModeUnitlessDragChild.rect.y,
+		270,
+		"In px mode, drop unitless y should keep percent-to-parent conversion (50% of 540)",
+	);
+
+	const nestedMultiLevelMarkdown = `<grid drag="1000px 800px" drop="0px 0px">\n<grid drag="500px 400px" drop="10 25">\n<grid drag="100px 100px" drop="50 50">\n</grid>\n</grid>\n</grid>`;
+	const nestedMultiLevelPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		nestedMultiLevelMarkdown,
+	);
+	const nestedOuter = nestedMultiLevelPage.blocks[0] as any;
+	const nestedMiddle = nestedOuter.children?.[0] as any;
+	const nestedInner = nestedMiddle.children?.[0] as any;
+	assert.strictEqual(
+		nestedMiddle.rect.x,
+		100,
+		"Multi-level middle drop.x should use outer width (10% of 1000)",
+	);
+	assert.strictEqual(
+		nestedMiddle.rect.y,
+		200,
+		"Multi-level middle drop.y should use outer height (25% of 800)",
+	);
+	assert.strictEqual(
+		nestedInner.rect.x,
+		250,
+		"Multi-level inner drop.x should use middle width (50% of 500)",
+	);
+	assert.strictEqual(
+		nestedInner.rect.y,
+		200,
+		"Multi-level inner drop.y should use middle height (50% of 400)",
 	);
 
 	const mixedMarkdown = `<grid drag="80px 100px" drop="0px 0px">\n</grid>\n\n<grid drag="100 80" drop="0 0">\n</grid>`;

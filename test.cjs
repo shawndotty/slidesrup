@@ -588,6 +588,14 @@ var en_default = {
   Rel: "Rel",
   Glob: "Glob",
   "Block Content": "Block Content",
+  "Insert local image": "Insert local image",
+  "Search local images": "Search local images",
+  "No local images found": "No local images found",
+  "Image Picker": "Image Picker",
+  "Pin picker": "Pin picker",
+  "Unpin picker": "Unpin picker",
+  "Close picker": "Close picker",
+  "Enter to insert \xB7 Esc to close": "Enter to insert \xB7 Esc to close",
   "CSS Class": "CSS Class",
   "Inline Style": "Inline Style",
   "Page Source": "Page Source",
@@ -1177,6 +1185,14 @@ var zh_cn_default = {
   Rel: "\u76F8\u5BF9",
   Glob: "\u5168\u5C40",
   "Block Content": "\u533A\u5757\u5185\u5BB9",
+  "Insert local image": "\u63D2\u5165\u672C\u5730\u56FE\u7247",
+  "Search local images": "\u641C\u7D22\u672C\u5730\u56FE\u7247",
+  "No local images found": "\u672A\u627E\u5230\u672C\u5730\u56FE\u7247",
+  "Image Picker": "\u56FE\u7247\u9009\u62E9\u5668",
+  "Pin picker": "\u7F6E\u9876\u9009\u62E9\u5668",
+  "Unpin picker": "\u53D6\u6D88\u7F6E\u9876",
+  "Close picker": "\u5173\u95ED\u9009\u62E9\u5668",
+  "Enter to insert \xB7 Esc to close": "\u56DE\u8F66\u63D2\u5165 \xB7 Esc \u5173\u95ED",
   "CSS Class": "CSS \u7C7B\u540D",
   "Inline Style": "\u5185\u8054\u6837\u5F0F",
   "Page Source": "\u9875\u9762\u6E90\u7801",
@@ -1765,6 +1781,14 @@ var zh_tw_default = {
   Rel: "\u76F8\u5C0D",
   Glob: "\u5168\u57DF",
   "Block Content": "\u5340\u584A\u5167\u5BB9",
+  "Insert local image": "\u63D2\u5165\u672C\u5730\u5716\u7247",
+  "Search local images": "\u641C\u5C0B\u672C\u5730\u5716\u7247",
+  "No local images found": "\u672A\u627E\u5230\u672C\u5730\u5716\u7247",
+  "Image Picker": "\u5716\u7247\u9078\u64C7\u5668",
+  "Pin picker": "\u7F6E\u9802\u9078\u64C7\u5668",
+  "Unpin picker": "\u53D6\u6D88\u7F6E\u9802",
+  "Close picker": "\u95DC\u9589\u9078\u64C7\u5668",
+  "Enter to insert \xB7 Esc to close": "Enter \u63D2\u5165 \xB7 Esc \u95DC\u9589",
   "CSS Class": "CSS \u985E\u540D",
   "Inline Style": "\u5167\u806F\u6A23\u5F0F",
   "Page Source": "\u9801\u9762\u539F\u59CB\u78BC",
@@ -2003,7 +2027,7 @@ function parseRectInputValue(raw, defaultUnitForUnitless = "percent") {
     return null;
   return { value: num, rectUnit: defaultUnitForUnitless };
 }
-function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
+function parsePair(value, fallbackA, fallbackB, rectUnit, warnings, unitlessPercentBase) {
   if (!value)
     return [fallbackA, fallbackB];
   const trimmed = value.trim();
@@ -2034,8 +2058,20 @@ function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
   }
   const parts = trimmed.split(/\s+/);
   if (parts.length >= 2) {
-    const a = parseNumericToken(parts[0], rectUnit, "x", warnings);
-    const b = parseNumericToken(parts[1], rectUnit, "y", warnings);
+    const a = parseNumericToken(
+      parts[0],
+      rectUnit,
+      "x",
+      warnings,
+      unitlessPercentBase == null ? void 0 : unitlessPercentBase.width
+    );
+    const b = parseNumericToken(
+      parts[1],
+      rectUnit,
+      "y",
+      warnings,
+      unitlessPercentBase == null ? void 0 : unitlessPercentBase.height
+    );
     if (a != null && b != null)
       return [a, b];
   }
@@ -2043,7 +2079,7 @@ function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
 }
 var DEFAULT_DESIGN_BASE_WIDTH = 1920;
 var DEFAULT_DESIGN_BASE_HEIGHT = 1080;
-function parseNumericToken(token, rectUnit, dimension, warnings) {
+function parseNumericToken(token, rectUnit, dimension, warnings, unitlessPercentBase) {
   const match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
   if (!match)
     return null;
@@ -2052,11 +2088,18 @@ function parseNumericToken(token, rectUnit, dimension, warnings) {
     return null;
   const unit = (match[2] || "").toLowerCase();
   const isPx = unit === "px";
-  const isPercent = unit === "%" || unit === "";
+  const isPercent = unit === "%";
+  const isUnitless = unit === "";
   if (rectUnit === "px") {
     if (isPercent) {
       const base = dimension === "x" ? DEFAULT_DESIGN_BASE_WIDTH : DEFAULT_DESIGN_BASE_HEIGHT;
       return Math.round(value / 100 * base);
+    }
+    if (isUnitless) {
+      if (unitlessPercentBase != null) {
+        return Math.round(value / 100 * unitlessPercentBase);
+      }
+      return Math.round(value);
     }
     if (!isPx) {
       warnings.push(
@@ -2293,7 +2336,7 @@ function appendRawBlocksAndFootnotes(raw, blocks, state, rectUnit, warnings) {
   if (tail)
     blocks.push(tail);
 }
-function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
+function createGridBlock(attrSource, content, inheritedRectUnit, warnings, parentRectPx) {
   const attrs = parseAttributes(attrSource);
   const explicitUnit = detectExplicitRectUnit(attrs.drag || "") || detectExplicitRectUnit(attrs.drop || "");
   const rectUnit = explicitUnit != null ? explicitUnit : inheritedRectUnit;
@@ -2304,9 +2347,24 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
     rectUnit,
     warnings
   );
-  const normalizedDrop = rectUnit === "px" ? normalizeCoordinateString(attrs.drop || "") : attrs.drop || "";
-  const [x, y] = parsePair(normalizedDrop, 0, 0, rectUnit, warnings);
+  const [x, y] = parsePair(
+    attrs.drop || "",
+    0,
+    0,
+    rectUnit,
+    warnings,
+    rectUnit === "px" ? parentRectPx : void 0
+  );
   const cleanedContent = stripNestedGridMarkup(content);
+  const normalizedWidth = Math.max(1, Math.round(width));
+  const normalizedHeight = Math.max(1, Math.round(height));
+  const childParentRectPx = rectUnit === "px" ? {
+    width: normalizedWidth,
+    height: normalizedHeight
+  } : {
+    width: parentRectPx.width * normalizedWidth / 100,
+    height: parentRectPx.height * normalizedHeight / 100
+  };
   const rawChildren = parseGridBlocks(
     content,
     {
@@ -2314,7 +2372,8 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
       hasSideBarBlock: true
     },
     rectUnit,
-    warnings
+    warnings,
+    childParentRectPx
   );
   const children = rawChildren.filter((c) => c.type === "grid");
   return {
@@ -2324,8 +2383,8 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
     rect: {
       x: rectUnit === "px" ? Math.round(x) : clampInt(x, -100, 100),
       y: rectUnit === "px" ? Math.round(y) : clampInt(y, -100, 100),
-      width: Math.max(1, Math.round(width)),
-      height: Math.max(1, Math.round(height))
+      width: normalizedWidth,
+      height: normalizedHeight
     },
     content: cleanedContent,
     className: attrs.class || "",
@@ -2376,7 +2435,7 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
     children: children.length > 0 ? children : void 0
   };
 }
-function parseGridBlocks(markdown, footnotesState, rectUnit, warnings) {
+function parseGridBlocks(markdown, footnotesState, rectUnit, warnings, parentRectPx) {
   const blocks = [];
   const { topLevelRanges, segments } = parseGridSegments(markdown);
   if (topLevelRanges.length === 0) {
@@ -2408,7 +2467,8 @@ function parseGridBlocks(markdown, footnotesState, rectUnit, warnings) {
           segment.attrSource,
           segment.content,
           rectUnit,
-          warnings
+          warnings,
+          parentRectPx
         )
       );
     }
@@ -2434,7 +2494,11 @@ function parseDesignPageDraft(pageType, designName, filePath, markdown) {
     markdown,
     footnotesState,
     defaultRectUnit,
-    warnings
+    warnings,
+    {
+      width: DEFAULT_DESIGN_BASE_WIDTH,
+      height: DEFAULT_DESIGN_BASE_HEIGHT
+    }
   );
   const units = /* @__PURE__ */ new Set();
   const collect = (items) => {
@@ -2650,6 +2714,114 @@ function computePanForZoom(options) {
     panX: Number.isFinite(nextPanX) ? nextPanX : panX,
     panY: Number.isFinite(nextPanY) ? nextPanY : panY
   };
+}
+
+// src/ui/components/design-inspector.ts
+var import_obsidian4 = require("obsidian");
+var LOCAL_IMAGE_EXTENSIONS = /* @__PURE__ */ new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "svg",
+  "bmp",
+  "ico",
+  "avif",
+  "heic"
+]);
+function clampImagePickerPosition(options) {
+  const {
+    left,
+    top,
+    pickerWidth,
+    pickerHeight,
+    viewportWidth,
+    viewportHeight,
+    margin = 12
+  } = options;
+  const maxLeft = Math.max(margin, viewportWidth - pickerWidth - margin);
+  const maxTop = Math.max(margin, viewportHeight - pickerHeight - margin);
+  return {
+    left: Math.min(maxLeft, Math.max(margin, left)),
+    top: Math.min(maxTop, Math.max(margin, top))
+  };
+}
+function computeImagePickerPlacement(options) {
+  const {
+    triggerRect,
+    pickerWidth,
+    pickerHeight,
+    viewportWidth,
+    viewportHeight,
+    margin = 12,
+    gap = 8
+  } = options;
+  const belowSpace = Math.max(
+    0,
+    viewportHeight - triggerRect.bottom - margin
+  );
+  const aboveSpace = Math.max(0, triggerRect.top - margin);
+  const preferredPlacement = belowSpace >= 220 || belowSpace >= aboveSpace ? "bottom" : "top";
+  const maxHeight = Math.max(
+    160,
+    (preferredPlacement === "bottom" ? belowSpace : aboveSpace) - gap
+  );
+  const preferredLeft = triggerRect.right - pickerWidth;
+  const preferredTop = preferredPlacement === "bottom" ? triggerRect.bottom + gap : triggerRect.top - pickerHeight - gap;
+  const clamped = clampImagePickerPosition({
+    left: preferredLeft,
+    top: preferredTop,
+    pickerWidth,
+    pickerHeight,
+    viewportWidth,
+    viewportHeight,
+    margin
+  });
+  return {
+    left: clamped.left,
+    top: clamped.top,
+    maxHeight: Math.min(maxHeight, viewportHeight - margin * 2),
+    placement: preferredPlacement
+  };
+}
+function getNextPickerSelectionIndex(currentIndex, totalItems, direction) {
+  if (totalItems <= 0)
+    return -1;
+  const normalized = currentIndex < 0 ? 0 : currentIndex;
+  return (normalized + direction + totalItems) % totalItems;
+}
+function isLocalImagePath(path) {
+  if (!path || !path.trim())
+    return false;
+  const parts = path.toLowerCase().split(".");
+  if (parts.length < 2)
+    return false;
+  return LOCAL_IMAGE_EXTENSIONS.has(parts[parts.length - 1]);
+}
+function buildWikiImageEmbed(path) {
+  return `![[${path.trim()}]]`;
+}
+function insertImageEmbedIntoContent(content, imagePath) {
+  const embed = buildWikiImageEmbed(imagePath);
+  const current = (content || "").trimEnd();
+  if (!current)
+    return embed;
+  return `${current}
+${embed}`;
+}
+function syncInspectorRectFields(options) {
+  const { container, rect, rectUnit } = options;
+  const keys = ["x", "y", "width", "height"];
+  keys.forEach((key) => {
+    const input = container.querySelector(
+      `input[data-rect-field="${key}"]`
+    );
+    if (!input)
+      return;
+    input.value = formatRectInputValue(Math.round(rect[key]), rectUnit);
+    input.setAttr("data-rect-unit", rectUnit);
+  });
 }
 
 // src/yamlStore.ts
@@ -3217,6 +3389,7 @@ function testCanvasZoomTransformMath() {
   console.log("testCanvasZoomTransformMath passed");
 }
 function testDesignTemplateUnitConsistency() {
+  var _a, _b, _c, _d;
   const pxMarkdown = `<grid drag="80px 100px" drop="10px 20px" class="bg-with-front-color">
 </grid>`;
   const pxPage = parseDesignPageDraft(
@@ -3278,13 +3451,13 @@ function testDesignTemplateUnitConsistency() {
   );
   import_assert.default.strictEqual(
     mixedUserGrid.rect.x,
-    45,
-    "X should be parsed as 45px due to pure number normalization"
+    864,
+    "X should be parsed as 864px (45% of 1920) in px mode drop"
   );
   import_assert.default.strictEqual(
     mixedUserGrid.rect.y,
-    20,
-    "Y should be parsed as 20px due to pure number normalization"
+    216,
+    "Y should be parsed as 216px (20% of 1080) in px mode drop"
   );
   const mixedPercentMarkdown = `<grid drag="200px 200px" drop="50% 100">
 </grid>`;
@@ -3302,8 +3475,97 @@ function testDesignTemplateUnitConsistency() {
   );
   import_assert.default.strictEqual(
     mixedPercentGrid.rect.y,
+    1080,
+    "Y should be 1080px (100% of 1080) when drop uses unitless number in px mode"
+  );
+  const nestedSingleLevelMarkdown = `<grid drag="960px 540px" drop="0px 0px">
+<grid drag="200px 100px" drop="50 50">
+</grid>
+</grid>`;
+  const nestedSingleLevelPage = parseDesignPageDraft(
+    "content",
+    "test",
+    "test.md",
+    nestedSingleLevelMarkdown
+  );
+  const nestedSingleLevelParent = nestedSingleLevelPage.blocks[0];
+  const nestedSingleLevelChild = (_a = nestedSingleLevelParent.children) == null ? void 0 : _a[0];
+  import_assert.default.strictEqual(
+    nestedSingleLevelChild.rect.x,
+    480,
+    "Single-level nested drop.x should use parent width (50% of 960)"
+  );
+  import_assert.default.strictEqual(
+    nestedSingleLevelChild.rect.y,
+    270,
+    "Single-level nested drop.y should use parent height (50% of 540)"
+  );
+  const pxModeUnitlessDragMarkdown = `<grid drag="960px 540px" drop="0px 0px">
+<grid drag="200 100" drop="50 50">
+</grid>
+</grid>`;
+  const pxModeUnitlessDragPage = parseDesignPageDraft(
+    "content",
+    "test",
+    "test.md",
+    pxModeUnitlessDragMarkdown
+  );
+  const pxModeUnitlessDragParent = pxModeUnitlessDragPage.blocks[0];
+  const pxModeUnitlessDragChild = (_b = pxModeUnitlessDragParent.children) == null ? void 0 : _b[0];
+  import_assert.default.strictEqual(
+    pxModeUnitlessDragChild.rect.width,
+    200,
+    "Regression: in px mode, unitless drag width should keep legacy px behavior"
+  );
+  import_assert.default.strictEqual(
+    pxModeUnitlessDragChild.rect.height,
     100,
-    "Y should be 100px due to pure number normalization"
+    "Regression: in px mode, unitless drag height should keep legacy px behavior"
+  );
+  import_assert.default.strictEqual(
+    pxModeUnitlessDragChild.rect.x,
+    480,
+    "In px mode, drop unitless x should keep percent-to-parent conversion (50% of 960)"
+  );
+  import_assert.default.strictEqual(
+    pxModeUnitlessDragChild.rect.y,
+    270,
+    "In px mode, drop unitless y should keep percent-to-parent conversion (50% of 540)"
+  );
+  const nestedMultiLevelMarkdown = `<grid drag="1000px 800px" drop="0px 0px">
+<grid drag="500px 400px" drop="10 25">
+<grid drag="100px 100px" drop="50 50">
+</grid>
+</grid>
+</grid>`;
+  const nestedMultiLevelPage = parseDesignPageDraft(
+    "content",
+    "test",
+    "test.md",
+    nestedMultiLevelMarkdown
+  );
+  const nestedOuter = nestedMultiLevelPage.blocks[0];
+  const nestedMiddle = (_c = nestedOuter.children) == null ? void 0 : _c[0];
+  const nestedInner = (_d = nestedMiddle.children) == null ? void 0 : _d[0];
+  import_assert.default.strictEqual(
+    nestedMiddle.rect.x,
+    100,
+    "Multi-level middle drop.x should use outer width (10% of 1000)"
+  );
+  import_assert.default.strictEqual(
+    nestedMiddle.rect.y,
+    200,
+    "Multi-level middle drop.y should use outer height (25% of 800)"
+  );
+  import_assert.default.strictEqual(
+    nestedInner.rect.x,
+    250,
+    "Multi-level inner drop.x should use middle width (50% of 500)"
+  );
+  import_assert.default.strictEqual(
+    nestedInner.rect.y,
+    200,
+    "Multi-level inner drop.y should use middle height (50% of 400)"
   );
   const mixedMarkdown = `<grid drag="80px 100px" drop="0px 0px">
 </grid>
@@ -3478,6 +3740,176 @@ function testAdvancedSlidesWidthHeightParsing() {
   );
   console.log("testAdvancedSlidesWidthHeightParsing passed");
 }
+function testInspectorRectFieldRealtimeSync() {
+  const inputMap = {
+    x: { value: "", setAttr: (_name, _value) => {
+    } },
+    y: { value: "", setAttr: (_name, _value) => {
+    } },
+    width: { value: "", setAttr: (_name, _value) => {
+    } },
+    height: { value: "", setAttr: (_name, _value) => {
+    } }
+  };
+  const container = {
+    querySelector: (selector) => {
+      const match = selector.match(
+        /data-rect-field="(x|y|width|height)"/
+      );
+      if (!match)
+        return null;
+      return inputMap[match[1]];
+    }
+  };
+  syncInspectorRectFields({
+    container,
+    rect: { x: 12, y: 34, width: 220, height: 160 },
+    rectUnit: "px"
+  });
+  import_assert.default.strictEqual(inputMap.x.value, "12px");
+  import_assert.default.strictEqual(inputMap.y.value, "34px");
+  import_assert.default.strictEqual(inputMap.width.value, "220px");
+  import_assert.default.strictEqual(inputMap.height.value, "160px");
+  syncInspectorRectFields({
+    container,
+    rect: { x: 7, y: 8, width: 40, height: 25 },
+    rectUnit: "percent"
+  });
+  import_assert.default.strictEqual(inputMap.x.value, "7");
+  import_assert.default.strictEqual(inputMap.y.value, "8");
+  import_assert.default.strictEqual(inputMap.width.value, "40");
+  import_assert.default.strictEqual(inputMap.height.value, "25");
+  console.log("testInspectorRectFieldRealtimeSync passed");
+}
+function testInsertLocalImageEmbed() {
+  import_assert.default.strictEqual(isLocalImagePath("assets/logo.png"), true);
+  import_assert.default.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
+  import_assert.default.strictEqual(isLocalImagePath("assets/doc.md"), false);
+  import_assert.default.strictEqual(isLocalImagePath("assets/noext"), false);
+  import_assert.default.strictEqual(
+    insertImageEmbedIntoContent("", "assets/cover.png"),
+    "![[assets/cover.png]]"
+  );
+  import_assert.default.strictEqual(
+    insertImageEmbedIntoContent("Hello", "assets/cover.png"),
+    "Hello\n![[assets/cover.png]]"
+  );
+  import_assert.default.strictEqual(
+    insertImageEmbedIntoContent("Hello\n", "assets/cover.png"),
+    "Hello\n![[assets/cover.png]]"
+  );
+  console.log("testInsertLocalImageEmbed passed");
+}
+function testImagePickerPlacementAndSelection() {
+  const bottomPlacement = computeImagePickerPlacement({
+    triggerRect: {
+      left: 700,
+      right: 780,
+      top: 100,
+      bottom: 130
+    },
+    pickerWidth: 360,
+    pickerHeight: 280,
+    viewportWidth: 1280,
+    viewportHeight: 720
+  });
+  import_assert.default.strictEqual(bottomPlacement.placement, "bottom");
+  import_assert.default.ok(
+    bottomPlacement.top > 130,
+    "Should place below when space is enough"
+  );
+  const topPlacement = computeImagePickerPlacement({
+    triggerRect: {
+      left: 700,
+      right: 780,
+      top: 690,
+      bottom: 710
+    },
+    pickerWidth: 360,
+    pickerHeight: 280,
+    viewportWidth: 1280,
+    viewportHeight: 720
+  });
+  import_assert.default.strictEqual(topPlacement.placement, "top");
+  import_assert.default.ok(
+    topPlacement.top < 690,
+    "Should place above when bottom space is too small"
+  );
+  const clamped = clampImagePickerPosition({
+    left: -200,
+    top: 900,
+    pickerWidth: 360,
+    pickerHeight: 300,
+    viewportWidth: 1024,
+    viewportHeight: 768,
+    margin: 12
+  });
+  import_assert.default.strictEqual(
+    clamped.left,
+    12,
+    "Should clamp left to viewport margin"
+  );
+  import_assert.default.strictEqual(
+    clamped.top,
+    456,
+    "Should clamp bottom overflow to max top"
+  );
+  import_assert.default.strictEqual(
+    getNextPickerSelectionIndex(0, 3, 1),
+    1,
+    "ArrowDown should move forward"
+  );
+  import_assert.default.strictEqual(
+    getNextPickerSelectionIndex(0, 3, -1),
+    2,
+    "ArrowUp should wrap to last item"
+  );
+  import_assert.default.strictEqual(
+    getNextPickerSelectionIndex(-1, 3, 1),
+    1,
+    "Negative index should normalize before moving"
+  );
+  import_assert.default.strictEqual(
+    getNextPickerSelectionIndex(1, 0, 1),
+    -1,
+    "Empty list should return -1"
+  );
+  console.log("testImagePickerPlacementAndSelection passed");
+}
+function testInspectorLocaleKeysCompleteness() {
+  const requiredKeys = [
+    "Coordinates",
+    "Rel",
+    "Glob",
+    "X",
+    "Y",
+    "Width",
+    "Height",
+    "Insert local image",
+    "Search local images",
+    "No local images found",
+    "Image Picker",
+    "Pin picker",
+    "Unpin picker",
+    "Close picker",
+    "Enter to insert \xB7 Esc to close"
+  ];
+  requiredKeys.forEach((key) => {
+    import_assert.default.ok(
+      en_default[key],
+      `en missing key: ${key}`
+    );
+    import_assert.default.ok(
+      zh_cn_default[key],
+      `zh-cn missing key: ${key}`
+    );
+    import_assert.default.ok(
+      zh_tw_default[key],
+      `zh-tw missing key: ${key}`
+    );
+  });
+  console.log("testInspectorLocaleKeysCompleteness passed");
+}
 function runTests() {
   try {
     globalThis.window = {
@@ -3502,6 +3934,10 @@ function runTests() {
     testCanvasZoomTransformMath();
     testDesignTemplateUnitConsistency();
     testAdvancedSlidesWidthHeightParsing();
+    testInspectorRectFieldRealtimeSync();
+    testInsertLocalImageEmbed();
+    testImagePickerPlacementAndSelection();
+    testInspectorLocaleKeysCompleteness();
     console.log("All tests passed 100%!");
   } catch (err) {
     console.error(err);

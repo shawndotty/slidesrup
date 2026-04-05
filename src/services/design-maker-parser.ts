@@ -25,6 +25,11 @@ interface TextRange {
 	end: number;
 }
 
+interface RectSizeContext {
+	width: number;
+	height: number;
+}
+
 function nextBlockId(prefix: string): string {
 	blockSeed += 1;
 	return `${prefix}-${blockSeed}`;
@@ -108,6 +113,7 @@ function parsePair(
 	fallbackB: number,
 	rectUnit: DesignRectUnit,
 	warnings: string[],
+	unitlessPercentBase?: RectSizeContext,
 ): [number, number] {
 	if (!value) return [fallbackA, fallbackB];
 
@@ -138,8 +144,20 @@ function parsePair(
 
 	const parts = trimmed.split(/\s+/);
 	if (parts.length >= 2) {
-		const a = parseNumericToken(parts[0], rectUnit, "x", warnings);
-		const b = parseNumericToken(parts[1], rectUnit, "y", warnings);
+		const a = parseNumericToken(
+			parts[0],
+			rectUnit,
+			"x",
+			warnings,
+			unitlessPercentBase?.width,
+		);
+		const b = parseNumericToken(
+			parts[1],
+			rectUnit,
+			"y",
+			warnings,
+			unitlessPercentBase?.height,
+		);
 		if (a != null && b != null) return [a, b];
 	}
 	return [fallbackA, fallbackB];
@@ -153,6 +171,7 @@ function parseNumericToken(
 	rectUnit: DesignRectUnit,
 	dimension: "x" | "y",
 	warnings: string[],
+	unitlessPercentBase?: number,
 ): number | null {
 	const match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
 	if (!match) return null;
@@ -161,7 +180,8 @@ function parseNumericToken(
 	const unit = (match[2] || "").toLowerCase();
 
 	const isPx = unit === "px";
-	const isPercent = unit === "%" || unit === "";
+	const isPercent = unit === "%";
+	const isUnitless = unit === "";
 
 	if (rectUnit === "px") {
 		if (isPercent) {
@@ -170,6 +190,12 @@ function parseNumericToken(
 					? DEFAULT_DESIGN_BASE_WIDTH
 					: DEFAULT_DESIGN_BASE_HEIGHT;
 			return Math.round((value / 100) * base);
+		}
+		if (isUnitless) {
+			if (unitlessPercentBase != null) {
+				return Math.round((value / 100) * unitlessPercentBase);
+			}
+			return Math.round(value);
 		}
 		if (!isPx) {
 			warnings.push(
@@ -438,6 +464,7 @@ function createGridBlock(
 	content: string,
 	inheritedRectUnit: DesignRectUnit,
 	warnings: string[],
+	parentRectPx: RectSizeContext,
 ): DesignGridBlock {
 	const attrs = parseAttributes(attrSource);
 	const explicitUnit =
@@ -452,13 +479,27 @@ function createGridBlock(
 		warnings,
 	);
 
-	// Normalize the drop attribute (x and y) to add 'px' to pure numbers only if the block operates in px mode
-	const normalizedDrop =
-		rectUnit === "px"
-			? normalizeCoordinateString(attrs.drop || "")
-			: attrs.drop || "";
-	const [x, y] = parsePair(normalizedDrop, 0, 0, rectUnit, warnings);
+	const [x, y] = parsePair(
+		attrs.drop || "",
+		0,
+		0,
+		rectUnit,
+		warnings,
+		rectUnit === "px" ? parentRectPx : undefined,
+	);
 	const cleanedContent = stripNestedGridMarkup(content);
+	const normalizedWidth = Math.max(1, Math.round(width));
+	const normalizedHeight = Math.max(1, Math.round(height));
+	const childParentRectPx: RectSizeContext =
+		rectUnit === "px"
+			? {
+					width: normalizedWidth,
+					height: normalizedHeight,
+				}
+			: {
+					width: (parentRectPx.width * normalizedWidth) / 100,
+					height: (parentRectPx.height * normalizedHeight) / 100,
+				};
 
 	// Parse children recursively
 	const rawChildren = parseGridBlocks(
@@ -469,6 +510,7 @@ function createGridBlock(
 		},
 		rectUnit,
 		warnings,
+		childParentRectPx,
 	); // Prevent footnotes/sidebar inside nested grids
 	const children = rawChildren.filter((c) => c.type === "grid");
 
@@ -479,8 +521,8 @@ function createGridBlock(
 		rect: {
 			x: rectUnit === "px" ? Math.round(x) : clampInt(x, -100, 100),
 			y: rectUnit === "px" ? Math.round(y) : clampInt(y, -100, 100),
-			width: Math.max(1, Math.round(width)),
-			height: Math.max(1, Math.round(height)),
+			width: normalizedWidth,
+			height: normalizedHeight,
 		},
 		content: cleanedContent,
 		className: attrs.class || "",
@@ -539,6 +581,7 @@ function parseGridBlocks(
 	footnotesState: { hasFootnotesBlock: boolean; hasSideBarBlock: boolean },
 	rectUnit: DesignRectUnit,
 	warnings: string[],
+	parentRectPx: RectSizeContext,
 ): DesignCanvasBlock[] {
 	const blocks: DesignCanvasBlock[] = [];
 	const { topLevelRanges, segments } = parseGridSegments(markdown);
@@ -575,6 +618,7 @@ function parseGridBlocks(
 					segment.content,
 					rectUnit,
 					warnings,
+					parentRectPx,
 				),
 			);
 		}
@@ -611,6 +655,10 @@ export function parseDesignPageDraft(
 		footnotesState,
 		defaultRectUnit,
 		warnings,
+		{
+			width: DEFAULT_DESIGN_BASE_WIDTH,
+			height: DEFAULT_DESIGN_BASE_HEIGHT,
+		},
 	);
 	const units = new Set<DesignRectUnit>();
 	const collect = (items: DesignCanvasBlock[]) => {
