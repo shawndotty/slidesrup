@@ -575,8 +575,16 @@ export class DesignMakerView extends ItemView {
 
 		const zoomResetButton = controls.createEl("button", { text: "100%" });
 		zoomResetButton.addEventListener("click", () =>
-			this._setCanvasZoomPercent(100, "center"),
+			this._resetCanvasView(),
 		);
+	}
+
+	private _resetCanvasView(): void {
+		this.canvasZoomPercent = 100;
+		this.canvasPanX = 0;
+		this.canvasPanY = 0;
+		this._renderCanvasOnly();
+		this._renderCanvasControls();
 	}
 
 	private _updateCanvasZoomLabel(): void {

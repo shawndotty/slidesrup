@@ -246,6 +246,21 @@ function testCanvasZoomTransformMath() {
 	assert.strictEqual(transform.scale, 1);
 	assert.strictEqual(transform.transform, "translate(10px, 20px) scale(1)");
 
+	const resetTransform = computeCanvasTransform({
+		frameWidth: 960,
+		frameHeight: 540,
+		baseWidth: 1920,
+		baseHeight: 1080,
+		zoomPercent: 100,
+		panX: 0,
+		panY: 0,
+	});
+	assert.strictEqual(resetTransform.scale, 0.5);
+	assert.strictEqual(
+		resetTransform.transform,
+		"translate(0px, 0px) scale(0.5)",
+	);
+
 	const nextPan = computePanForZoom({
 		cursorX: 100,
 		cursorY: 100,
