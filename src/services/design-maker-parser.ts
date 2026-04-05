@@ -109,8 +109,8 @@ function parsePair(
 
 	const parts = trimmed.split(/\s+/);
 	if (parts.length >= 2) {
-		const a = parseNumericToken(parts[0], rectUnit, warnings);
-		const b = parseNumericToken(parts[1], rectUnit, warnings);
+		const a = parseNumericToken(parts[0], rectUnit, "x", warnings);
+		const b = parseNumericToken(parts[1], rectUnit, "y", warnings);
 		if (a != null && b != null) return [a, b];
 	}
 	return [fallbackA, fallbackB];
@@ -122,6 +122,7 @@ const DEFAULT_DESIGN_BASE_HEIGHT = 1080;
 function parseNumericToken(
 	token: string,
 	rectUnit: DesignRectUnit,
+	dimension: "x" | "y",
 	warnings: string[],
 ): number | null {
 	const match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
@@ -129,21 +130,39 @@ function parseNumericToken(
 	const value = Number(match[1]);
 	if (!Number.isFinite(value)) return null;
 	const unit = (match[2] || "").toLowerCase();
-	if (!unit) return value;
+
+	const isPx = unit === "px";
+	const isPercent = unit === "%" || unit === "";
+
 	if (rectUnit === "px") {
-		if (unit !== "px") {
+		if (isPercent) {
+			const base =
+				dimension === "x"
+					? DEFAULT_DESIGN_BASE_WIDTH
+					: DEFAULT_DESIGN_BASE_HEIGHT;
+			return Math.round((value / 100) * base);
+		}
+		if (!isPx) {
 			warnings.push(
 				`Detected unsupported unit "${unit}" in px mode; treating it as px.`,
 			);
 		}
-		return value;
+		return Math.round(value);
+	} else {
+		if (isPx) {
+			const base =
+				dimension === "x"
+					? DEFAULT_DESIGN_BASE_WIDTH
+					: DEFAULT_DESIGN_BASE_HEIGHT;
+			return Math.round((value / base) * 100);
+		}
+		if (unit && unit !== "%") {
+			warnings.push(
+				`Detected unsupported unit "${unit}" in percent mode; stripping unit and treating it as a number.`,
+			);
+		}
+		return Math.round(value);
 	}
-	if (unit !== "%") {
-		warnings.push(
-			`Detected unsupported unit "${unit}" in percent mode; stripping unit and treating it as a number.`,
-		);
-	}
-	return value;
 }
 
 function detectDefaultRectUnit(markdown: string): {

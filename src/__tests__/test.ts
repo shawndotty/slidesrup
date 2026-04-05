@@ -1,6 +1,6 @@
-import module from "module";
-const originalRequire = (module as any).prototype.require;
-(module as any).prototype.require = function (...args: any[]) {
+import * as module from "module";
+const originalRequire = (module as any).Module.prototype.require;
+(module as any).Module.prototype.require = function (...args: any[]) {
 	if (args[0] === "obsidian") return {};
 	return originalRequire.apply(this, args);
 };
@@ -312,6 +312,42 @@ function testDesignTemplateUnitConsistency() {
 		percentPage.rectUnit,
 		"percent",
 		"Should detect percent unit from bare numbers",
+	);
+
+	// Test the specific user case: drag in px, drop in percent (unitless)
+	const mixedUserMarkdown = `<grid drag="200px 200px" drop="45 20">\n</grid>`;
+	const mixedUserPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		mixedUserMarkdown,
+	);
+	assert.strictEqual(
+		mixedUserPage.rectUnit,
+		"px",
+		"Block with any px should be parsed as px unit overall",
+	);
+	const mixedUserGrid = mixedUserPage.blocks[0] as any;
+	assert.strictEqual(
+		mixedUserGrid.rect.width,
+		200,
+		"Width should be parsed as 200px",
+	);
+	assert.strictEqual(
+		mixedUserGrid.rect.height,
+		200,
+		"Height should be parsed as 200px",
+	);
+	// 45% of 1920 = 864, 20% of 1080 = 216
+	assert.strictEqual(
+		mixedUserGrid.rect.x,
+		864,
+		"X should be parsed as 45% of 1920 = 864px",
+	);
+	assert.strictEqual(
+		mixedUserGrid.rect.y,
+		216,
+		"Y should be parsed as 20% of 1080 = 216px",
 	);
 
 	const mixedMarkdown = `<grid drag="80px 100px" drop="0px 0px">\n</grid>\n\n<grid drag="100 80" drop="0 0">\n</grid>`;

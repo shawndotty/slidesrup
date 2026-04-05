@@ -38,10 +38,10 @@ function parseRectInputValue(raw) {
     if (!trimmed)
         return null;
     if (trimmed.toLowerCase().endsWith("px")) {
-        var num = Number(trimmed.slice(0, -2).trim());
-        if (!Number.isFinite(num))
+        var num_1 = Number(trimmed.slice(0, -2).trim());
+        if (!Number.isFinite(num_1))
             return null;
-        return { value: num, rectUnit: "px" };
+        return { value: num_1, rectUnit: "px" };
     }
     var num = Number(trimmed);
     if (!Number.isFinite(num))
@@ -49,58 +49,6 @@ function parseRectInputValue(raw) {
     return { value: num, rectUnit: "percent" };
 }
 exports.parseRectInputValue = parseRectInputValue;
-var DEFAULT_DESIGN_BASE_WIDTH = 1920;
-var DEFAULT_DESIGN_BASE_HEIGHT = 1080;
-function parseNumericToken(token, rectUnit, warnings) {
-    var match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
-    if (!match)
-        return null;
-    var value = Number(match[1]);
-    if (!Number.isFinite(value))
-        return null;
-    var unit = (match[2] || "").toLowerCase();
-    if (!unit)
-        return value;
-    if (rectUnit === "px") {
-        if (unit !== "px") {
-            warnings.push("Detected unsupported unit \"".concat(unit, "\" in px mode; treating it as px."));
-        }
-        return value;
-    }
-    if (unit !== "%") {
-        warnings.push("Detected unsupported unit \"".concat(unit, "\" in percent mode; stripping unit and treating it as a number."));
-    }
-    return value;
-}
-function detectRectUnit(markdown) {
-    var warnings = [];
-    var unitsSeen = new Set();
-    var hasBareNumber = false;
-    var attrRegex = /\b(?:drag|drop)\s*=\s*"([^"]*)"/g;
-    var match = attrRegex.exec(markdown);
-    while (match) {
-        var value = match[1] || "";
-        var parts = value.trim().split(/\s+/).filter(Boolean);
-        for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
-            var part = parts_1[_i];
-            var m = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
-            if (!m)
-                continue;
-            var unit = (m[2] || "").toLowerCase();
-            if (!unit)
-                hasBareNumber = true;
-            else
-                unitsSeen.add(unit);
-        }
-        match = attrRegex.exec(markdown);
-    }
-    var rectUnit = unitsSeen.has("px") && !hasBareNumber ? "px" : "percent";
-    var unsupportedUnits = Array.from(unitsSeen).filter(function (u) { return u !== "px" && u !== "%"; });
-    if (unsupportedUnits.length > 0) {
-        warnings.push("Detected unsupported units in template: ".concat(unsupportedUnits.join(", "), ". They will be auto-corrected."));
-    }
-    return { rectUnit: rectUnit, warnings: warnings };
-}
 function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
     if (!value)
         return [fallbackA, fallbackB];
@@ -131,12 +79,78 @@ function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
     }
     var parts = trimmed.split(/\s+/);
     if (parts.length >= 2) {
-        var a = parseNumericToken(parts[0], rectUnit, warnings);
-        var b = parseNumericToken(parts[1], rectUnit, warnings);
+        var a = parseNumericToken(parts[0], rectUnit, "x", warnings);
+        var b = parseNumericToken(parts[1], rectUnit, "y", warnings);
         if (a != null && b != null)
             return [a, b];
     }
     return [fallbackA, fallbackB];
+}
+var DEFAULT_DESIGN_BASE_WIDTH = 1920;
+var DEFAULT_DESIGN_BASE_HEIGHT = 1080;
+function parseNumericToken(token, rectUnit, dimension, warnings) {
+    var match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+    if (!match)
+        return null;
+    var value = Number(match[1]);
+    if (!Number.isFinite(value))
+        return null;
+    var unit = (match[2] || "").toLowerCase();
+    var isPx = unit === "px";
+    var isPercent = unit === "%" || unit === "";
+    if (rectUnit === "px") {
+        if (isPercent) {
+            var base = dimension === "x"
+                ? DEFAULT_DESIGN_BASE_WIDTH
+                : DEFAULT_DESIGN_BASE_HEIGHT;
+            return Math.round((value / 100) * base);
+        }
+        if (!isPx) {
+            warnings.push("Detected unsupported unit \"".concat(unit, "\" in px mode; treating it as px."));
+        }
+        return Math.round(value);
+    }
+    else {
+        if (isPx) {
+            var base = dimension === "x"
+                ? DEFAULT_DESIGN_BASE_WIDTH
+                : DEFAULT_DESIGN_BASE_HEIGHT;
+            return Math.round((value / base) * 100);
+        }
+        if (unit && unit !== "%") {
+            warnings.push("Detected unsupported unit \"".concat(unit, "\" in percent mode; stripping unit and treating it as a number."));
+        }
+        return Math.round(value);
+    }
+}
+function detectDefaultRectUnit(markdown) {
+    var warnings = [];
+    var unitsSeen = new Set();
+    var hasBareNumber = false;
+    var attrRegex = /\b(?:drag|drop)\s*=\s*"([^"]*)"/g;
+    var match = attrRegex.exec(markdown);
+    while (match) {
+        var value = match[1] || "";
+        var parts = value.trim().split(/\s+/).filter(Boolean);
+        for (var _i = 0, parts_2 = parts; _i < parts_2.length; _i++) {
+            var part = parts_2[_i];
+            var m = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+            if (!m)
+                continue;
+            var unit = (m[2] || "").toLowerCase();
+            if (!unit)
+                hasBareNumber = true;
+            else
+                unitsSeen.add(unit);
+        }
+        match = attrRegex.exec(markdown);
+    }
+    var rectUnit = unitsSeen.has("px") && !hasBareNumber ? "px" : "percent";
+    var unsupportedUnits = Array.from(unitsSeen).filter(function (u) { return u !== "px" && u !== "%"; });
+    if (unsupportedUnits.length > 0) {
+        warnings.push("Detected unsupported units in template: ".concat(unsupportedUnits.join(", "), ". They will be auto-corrected."));
+    }
+    return { rectUnit: rectUnit, warnings: warnings };
 }
 function parseAttributes(raw) {
     var attrs = {};
@@ -233,7 +247,7 @@ function createFootnotesBlock(rectUnit) {
             x: 0,
             y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 92) / 100),
             width: DEFAULT_DESIGN_BASE_WIDTH,
-            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 8) / 100),
+            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 8) / 100)
         }
         : { x: 0, y: 92, width: 100, height: 8 };
     return {
@@ -264,7 +278,7 @@ function createSideBarBlock(rectUnit) {
             x: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 95) / 100),
             y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 35) / 100),
             width: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 5) / 100),
-            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 30) / 100),
+            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 30) / 100)
         }
         : { x: 95, y: 35, width: 5, height: 30 };
     return {
@@ -328,8 +342,9 @@ function appendRawBlocksAndFootnotes(raw, blocks, state, rectUnit, warnings) {
 }
 function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
     var attrs = parseAttributes(attrSource);
-    var explicitUnit = detectExplicitRectUnit(attrs.drag || "") || detectExplicitRectUnit(attrs.drop || "");
-    var rectUnit = explicitUnit || inheritedRectUnit;
+    var explicitUnit = detectExplicitRectUnit(attrs.drag || "") ||
+        detectExplicitRectUnit(attrs.drop || "");
+    var rectUnit = explicitUnit !== null && explicitUnit !== void 0 ? explicitUnit : inheritedRectUnit;
     var _a = parsePair(attrs.drag || "", 100, 30, rectUnit, warnings), width = _a[0], height = _a[1];
     var _b = parsePair(attrs.drop || "", 0, 0, rectUnit, warnings), x = _b[0], y = _b[1];
     var cleanedContent = stripNestedGridMarkup(content);
@@ -339,33 +354,6 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
         hasSideBarBlock: true
     }, rectUnit, warnings); // Prevent footnotes/sidebar inside nested grids
     var children = rawChildren.filter(function (c) { return c.type === "grid"; });
-    var extraAttributes = Object.entries(attrs).reduce(function (result, _a) {
-        var key = _a[0], value = _a[1];
-        if ([
-            "drag",
-            "drop",
-            "class",
-            "style",
-            "pad",
-            "align",
-            "flow",
-            "filter",
-            "justify-content",
-            "bg",
-            "border",
-            "animate",
-            "opacity",
-            "rotate",
-            "frag",
-        ].includes(key)) {
-            return result;
-        }
-        result[key] = value;
-        return result;
-    }, {});
-    if (rectUnit === "px") {
-        extraAttributes.rectUnit = "px";
-    }
     return {
         id: nextBlockId("grid"),
         type: "grid",
@@ -390,7 +378,36 @@ function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
         opacity: attrs.opacity || "",
         rotate: attrs.rotate || "",
         frag: attrs.frag || "",
-        extraAttributes: extraAttributes,
+        extraAttributes: (function () {
+            var extra = Object.entries(attrs).reduce(function (result, _a) {
+                var key = _a[0], value = _a[1];
+                if ([
+                    "drag",
+                    "drop",
+                    "class",
+                    "style",
+                    "pad",
+                    "align",
+                    "flow",
+                    "filter",
+                    "justify-content",
+                    "bg",
+                    "border",
+                    "animate",
+                    "opacity",
+                    "rotate",
+                    "frag",
+                ].includes(key)) {
+                    return result;
+                }
+                result[key] = value;
+                return result;
+            }, {});
+            if (rectUnit === "px") {
+                extra.rectUnit = "px";
+            }
+            return extra;
+        })(),
         children: children.length > 0 ? children : undefined
     };
 }
@@ -421,16 +438,14 @@ function parseDesignPageDraft(pageType, designName, filePath, markdown) {
         hasFootnotesBlock: false,
         hasSideBarBlock: false
     };
-    var _a = detectRectUnit(markdown), defaultRectUnit = _a.rectUnit, warnings = _a.warnings;
+    var _a = detectDefaultRectUnit(markdown), defaultRectUnit = _a.rectUnit, warnings = _a.warnings;
     var blocks = parseGridBlocks(markdown, footnotesState, defaultRectUnit, warnings);
     var units = new Set();
     var collect = function (items) {
         items.forEach(function (block) {
             if (block.type !== "grid")
                 return;
-            units.add(block.extraAttributes && block.extraAttributes.rectUnit === "px"
-                ? "px"
-                : "percent");
+            units.add(block.extraAttributes.rectUnit === "px" ? "px" : "percent");
             if (block.children)
                 collect(block.children);
         });
