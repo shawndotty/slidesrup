@@ -1,26 +1,9 @@
 var __create = Object.create;
 var __defProp = Object.defineProperty;
-var __defProps = Object.defineProperties;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
-  for (var prop in b ||= {})
-    if (__hasOwnProp.call(b, prop))
-      __defNormalProp(a, prop, b[prop]);
-  if (__getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(b)) {
-      if (__propIsEnum.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    }
-  return a;
-};
-var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -1868,7 +1851,7 @@ function _get_locale() {
   }
   const baseLocale = en_default;
   const specificLocale = localeMap[lang];
-  const locale = specificLocale && specificLocale !== baseLocale ? __spreadValues(__spreadValues({}, baseLocale), specificLocale) : baseLocale;
+  const locale = specificLocale && specificLocale !== baseLocale ? { ...baseLocale, ...specificLocale } : baseLocale;
   cachedLocale = locale;
   cachedLang = lang;
   return locale;
@@ -2242,6 +2225,40 @@ function parseDesignPageDraft(pageType, designName, filePath, markdown) {
     hasUnsupportedContent: blocks.some((block) => block.type === "raw")
   };
 }
+function readCssValue(css, key, fallback) {
+  var _a;
+  const match = css.match(new RegExp(`${key}\\s*:\\s*([^;]+);`));
+  return ((_a = match == null ? void 0 : match[1]) == null ? void 0 : _a.trim()) || fallback;
+}
+function readNumberValue(css, key, fallback) {
+  const value = readCssValue(css, key, `${fallback}`);
+  const parsed = Number(value.replace(/[^\d.]/g, ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+function parseThemeDraft(designName, cssContent) {
+  const lines = cssContent.split("\n");
+  const headerDirectives = lines.filter((line) => {
+    const trimmed = line.trim();
+    return trimmed.startsWith("/* @theme") || trimmed.startsWith("@import");
+  });
+  const rawCss = lines.filter((line) => !headerDirectives.includes(line)).join("\n").trim();
+  return {
+    themeName: `sr-design-${designName.toLowerCase()}`,
+    primaryColor: readCssValue(rawCss, "--sr-dm-primary", "#0044ff"),
+    secondaryColor: readCssValue(rawCss, "--sr-dm-secondary", "#7c3aed"),
+    backgroundColor: readCssValue(rawCss, "--sr-dm-background", "#ffffff"),
+    textColor: readCssValue(rawCss, "--sr-dm-text", "#111111"),
+    headingFont: readCssValue(rawCss, "--sr-dm-heading-font", "inherit"),
+    bodyFont: readCssValue(rawCss, "--sr-dm-body-font", "inherit"),
+    headingScale: readNumberValue(rawCss, "--sr-dm-heading-scale", 1),
+    bodyScale: readNumberValue(rawCss, "--sr-dm-body-scale", 1),
+    borderRadius: readNumberValue(rawCss, "--sr-dm-radius", 24),
+    shadowOpacity: readNumberValue(rawCss, "--sr-dm-shadow-opacity", 0.18),
+    mode: readCssValue(rawCss, "--sr-dm-mode", "light") === "dark" ? "dark" : "light",
+    headerDirectives,
+    rawCss
+  };
+}
 
 // src/services/design-maker-generator.ts
 function formatRectValue(value) {
@@ -2300,6 +2317,427 @@ function generatePageMarkdown(page) {
     (block) => block.type === "grid" ? generateGridBlock(block) : block.raw.trim()
   ).filter(Boolean).join("\n\n").trim();
 }
+function generateDesignMakerRuntimeCss(theme) {
+  var _a;
+  const root = ":where(.slides-rup-design-maker-canvas, .slides-rup-design-maker-preview)";
+  const generatedCss = `
+${root} {
+	--sr-dm-primary: ${theme.primaryColor};
+	--sr-dm-secondary: ${theme.secondaryColor};
+	--sr-dm-background: ${theme.backgroundColor};
+	--sr-dm-text: ${theme.textColor};
+	--sr-dm-heading-font: ${theme.headingFont};
+	--sr-dm-body-font: ${theme.bodyFont};
+	--sr-dm-heading-scale: ${theme.headingScale};
+	--sr-dm-body-scale: ${theme.bodyScale};
+	--sr-dm-radius: ${theme.borderRadius}px;
+	--sr-dm-shadow-opacity: ${theme.shadowOpacity};
+	--sr-dm-mode: ${theme.mode};
+}
+
+${root} .bg-with-back-color {
+	background: var(--sr-dm-primary);
+	color: #ffffff;
+}
+
+${root} .bg-with-front-color {
+	background: color-mix(in srgb, var(--sr-dm-background) 90%, var(--sr-dm-secondary) 10%);
+	color: var(--sr-dm-text);
+	border-radius: var(--sr-dm-radius);
+	box-shadow: 0 18px 40px rgba(15, 23, 42, var(--sr-dm-shadow-opacity));
+}
+
+${root} .has-dark-background {
+	color: #ffffff;
+}
+
+${root} .has-light-background {
+	color: var(--sr-dm-text);
+}
+`.trim();
+  const tail = ((_a = theme.rawCss) == null ? void 0 : _a.trim()) ? `
+
+${theme.rawCss.trim()}
+` : "\n";
+  return `${generatedCss}${tail}`;
+}
+
+// src/ui/components/design-canvas.ts
+function clampCanvasZoomPercent(value) {
+  if (!Number.isFinite(value))
+    return 100;
+  return Math.max(25, Math.min(400, Math.round(value)));
+}
+function computeBaselineScale(options) {
+  const { frameWidth, frameHeight, baseWidth, baseHeight } = options;
+  if (!frameWidth || !frameHeight || !baseWidth || !baseHeight)
+    return 1;
+  return Math.min(frameWidth / baseWidth, frameHeight / baseHeight);
+}
+function computeCanvasTransform(options) {
+  const zoomPercent = clampCanvasZoomPercent(options.zoomPercent);
+  const zoomScale = zoomPercent / 100;
+  const baselineScale = computeBaselineScale(options);
+  const scale = baselineScale * zoomScale;
+  const panX = Number.isFinite(options.panX) ? options.panX : 0;
+  const panY = Number.isFinite(options.panY) ? options.panY : 0;
+  return {
+    scale,
+    transform: `translate(${panX}px, ${panY}px) scale(${scale})`
+  };
+}
+function computePanForZoom(options) {
+  const { cursorX, cursorY, panX, panY, currentScale, nextScale } = options;
+  if (!Number.isFinite(currentScale) || currentScale <= 0) {
+    return { panX, panY };
+  }
+  const ratio = nextScale / currentScale;
+  const nextPanX = cursorX - ratio * (cursorX - panX);
+  const nextPanY = cursorY - ratio * (cursorY - panY);
+  return {
+    panX: Number.isFinite(nextPanX) ? nextPanX : panX,
+    panY: Number.isFinite(nextPanY) ? nextPanY : panY
+  };
+}
+
+// src/yamlStore.ts
+var YamlStore = class {
+  constructor() {
+  }
+  static getInstance() {
+    if (!YamlStore.instance) {
+      YamlStore.instance = new YamlStore();
+    }
+    return YamlStore.instance;
+  }
+};
+
+// src/transformers/gridTransformer.ts
+var GridTransformer = class {
+  constructor() {
+    this.gridAttributeRegex = /^(?:(-?\d+(?:px)?)(?:\s*|x)(-?\d+(?:px)?)|(center|top|bottom|left|right|topleft|topright|bottomleft|bottomright))$/m;
+    this.maxWidth = YamlStore.getInstance().options.width;
+    this.maxHeight = YamlStore.getInstance().options.height;
+    this.isCenter = YamlStore.getInstance().options.center;
+  }
+  transform(element) {
+    var _a, _b;
+    let defaultDrop;
+    let defaultUnit;
+    const isAbsolute = element.getAttribute("absolute") == "true";
+    if (isAbsolute) {
+      defaultDrop = "480px 700px";
+      defaultUnit = "px";
+    } else {
+      defaultDrop = "50 100";
+      defaultUnit = "%";
+    }
+    const drop = element.getAttribute("drop");
+    if (drop != void 0) {
+      const drag = (_a = element.getAttribute("drag")) != null ? _a : defaultDrop;
+      const grid = this.read(drag, drop, isAbsolute);
+      if (grid != void 0) {
+        const left = this.leftOf(grid) + defaultUnit;
+        const top = this.topOf(grid) + defaultUnit;
+        const height = this.heightOf(grid) + defaultUnit;
+        const width = this.widthOf(grid) + defaultUnit;
+        element.addStyle("position", "absolute");
+        element.addStyle("left", left);
+        element.addStyle("top", top);
+        element.addStyle("height", height);
+        element.addStyle("width", width);
+        if (isAbsolute) {
+          element.addStyle("min-height", height);
+        }
+        element.deleteAttribute("drag");
+        element.deleteAttribute("drop");
+      }
+    }
+    if (element.getAttribute("align") || drop) {
+      const flow = element.getAttribute("flow");
+      const [align, alignItems, justifyContent, stretch] = this.getAlignment(element.getAttribute("align"), flow);
+      const justifyCtx = (_b = element.getAttribute("justify-content")) != null ? _b : justifyContent;
+      if (align) {
+        element.addAttribute("align", align, false);
+      }
+      if (stretch) {
+        element.addClass(stretch);
+      }
+      switch (flow) {
+        case "row":
+          element.addStyle("display", "flex");
+          element.addStyle("flex-direction", "row");
+          element.addStyle("align-items", alignItems);
+          element.addStyle("justify-content", justifyCtx);
+          element.addClass("flex-even");
+          break;
+        case "col":
+        default:
+          element.addStyle("display", "flex");
+          element.addStyle("flex-direction", "column");
+          element.addStyle("align-items", alignItems);
+          element.addStyle("justify-content", justifyCtx);
+          break;
+      }
+      if (this.isCenter != void 0 && !this.isCenter) {
+        element.addStyle("align-items", "start");
+      }
+      element.deleteAttribute("flow");
+      element.deleteAttribute("justify-content");
+    }
+  }
+  getAlignment(input, flow) {
+    const direction = flow != null ? flow : "col";
+    switch (input) {
+      case "topleft":
+        if (direction == "col") {
+          return ["left", "flex-start", "flex-start", void 0];
+        } else {
+          return ["left", "flex-start", "space-evenly", void 0];
+        }
+      case "topright":
+        if (direction == "col") {
+          return ["right", "flex-end", "flex-start", void 0];
+        } else {
+          return ["right", "flex-start", "space-evenly", void 0];
+        }
+      case "bottomright":
+        if (direction == "col") {
+          return ["right", "flex-end", "flex-end", void 0];
+        } else {
+          return ["right", "flex-end", "space-evenly", void 0];
+        }
+      case "bottomleft":
+        if (direction == "col") {
+          return ["left", "flex-start", "flex-end", void 0];
+        } else {
+          return ["left", "flex-end", "space-evenly", void 0];
+        }
+      case "left":
+        if (direction == "col") {
+          return ["left", "flex-start", "space-evenly", void 0];
+        } else {
+          return ["left", "center", "space-evenly", void 0];
+        }
+      case "right":
+        if (direction == "col") {
+          return ["right", "flex-end", "space-evenly", void 0];
+        } else {
+          return ["right", "center", "space-evenly", void 0];
+        }
+      case "top":
+        if (direction == "col") {
+          return [void 0, "center", "flex-start", void 0];
+        } else {
+          return [void 0, "flex-start", "space-evenly", void 0];
+        }
+      case "bottom":
+        if (direction == "col") {
+          return [void 0, "center", "flex-end", void 0];
+        } else {
+          return [void 0, "flex-end", "space-evenly", void 0];
+        }
+      case "stretch":
+        if (direction == "col") {
+          return [
+            void 0,
+            "center",
+            "space-evenly",
+            "stretch-column"
+          ];
+        } else {
+          return [void 0, "center", "space-evenly", "stretch-row"];
+        }
+      case "block":
+      case "justify":
+        return ["justify", "center", "space-evenly", void 0];
+      case "center":
+      default:
+        return [void 0, "center", "center", void 0];
+    }
+  }
+  read(drag, drop, isAbsolute) {
+    try {
+      const result = /* @__PURE__ */ new Map();
+      result.set("slideWidth", this.maxWidth);
+      result.set("slideHeight", this.maxHeight);
+      if (isAbsolute) {
+        result.set("maxWidth", this.maxWidth);
+        result.set("maxHeight", this.maxHeight);
+        return this.readValues(drag, drop, result, this.toPixel);
+      } else {
+        result.set("maxWidth", 100);
+        result.set("maxHeight", 100);
+        return this.readValues(
+          drag,
+          drop,
+          result,
+          this.toRelativeValue
+        );
+      }
+    } catch (ex) {
+      return void 0;
+    }
+  }
+  readValues(drag, drop, result, valueTransformer) {
+    try {
+      const dragMatch = this.gridAttributeRegex.exec(drag);
+      const dropMatch = this.gridAttributeRegex.exec(drop);
+      const width = dragMatch == null ? void 0 : dragMatch[1];
+      const height = dragMatch == null ? void 0 : dragMatch[2];
+      const x = dropMatch == null ? void 0 : dropMatch[1];
+      const y = dropMatch == null ? void 0 : dropMatch[2];
+      const name = dropMatch == null ? void 0 : dropMatch[3];
+      const parsedWidth = width ? this.parseWidthOrHeight(width) : null;
+      const parsedHeight = height ? this.parseWidthOrHeight(height) : null;
+      if (!parsedWidth || !parsedHeight)
+        return void 0;
+      result.set(
+        "width",
+        valueTransformer(result.get("slideWidth"), parsedWidth)
+      );
+      result.set(
+        "height",
+        valueTransformer(result.get("slideHeight"), parsedHeight)
+      );
+      if (name) {
+        const [nx, ny] = this.getXYof(
+          name,
+          result.get("width"),
+          result.get("height"),
+          result.get("maxWidth"),
+          result.get("maxHeight")
+        );
+        result.set("x", nx);
+        result.set("y", ny);
+      } else {
+        if (x) {
+          const parsedX = this.parseXY(x);
+          if (!parsedX)
+            return void 0;
+          result.set(
+            "x",
+            valueTransformer(result.get("slideWidth"), parsedX)
+          );
+        } else {
+          return void 0;
+        }
+        if (y) {
+          const parsedY = this.parseXY(y);
+          if (!parsedY)
+            return void 0;
+          result.set(
+            "y",
+            valueTransformer(result.get("slideHeight"), parsedY)
+          );
+        } else {
+          return void 0;
+        }
+      }
+      return result;
+    } catch (ex) {
+      return void 0;
+    }
+  }
+  parseWidthOrHeight(input) {
+    const trimmed = input.trim();
+    if (!trimmed)
+      return null;
+    if (trimmed.toLowerCase().endsWith("px")) {
+      const raw = trimmed.slice(0, -2).trim();
+      if (!/^\d+$/.test(raw))
+        return null;
+      const px = Number(raw);
+      if (!Number.isFinite(px) || px <= 0)
+        return null;
+      return `${Math.round(px)}px`;
+    }
+    if (!/^\d+$/.test(trimmed))
+      return null;
+    const ratio = Number(trimmed);
+    if (!Number.isFinite(ratio) || ratio <= 0)
+      return null;
+    return `${Math.round(ratio)}`;
+  }
+  parseXY(input) {
+    const trimmed = input.trim();
+    if (!trimmed)
+      return null;
+    if (trimmed.toLowerCase().endsWith("px")) {
+      const raw = trimmed.slice(0, -2).trim();
+      if (!/^-?\d+$/.test(raw))
+        return null;
+      const px = Number(raw);
+      if (!Number.isFinite(px))
+        return null;
+      return `${Math.round(px)}px`;
+    }
+    if (!/^-?\d+$/.test(trimmed))
+      return null;
+    const ratio = Number(trimmed);
+    if (!Number.isFinite(ratio))
+      return null;
+    return `${Math.round(ratio)}`;
+  }
+  toRelativeValue(max, input) {
+    if (input.toLowerCase().endsWith("px")) {
+      return Number(input.toLowerCase().replace("px", "").trim()) / max * 100;
+    } else {
+      return Number(input);
+    }
+  }
+  toPixel(max, input) {
+    if (input.toLowerCase().endsWith("px")) {
+      return Number(input.toLowerCase().replace("px", "").trim());
+    } else {
+      return max / 100 * Number(input);
+    }
+  }
+  getXYof(name, width, height, maxWidth, maxHeight) {
+    switch (name) {
+      case "topleft":
+        return [0, 0];
+      case "topright":
+        return [maxWidth - width, 0];
+      case "bottomleft":
+        return [0, maxHeight - height];
+      case "bottomright":
+        return [maxWidth - width, maxHeight - height];
+      case "left":
+        return [0, (maxHeight - height) / 2];
+      case "right":
+        return [maxWidth - width, (maxHeight - height) / 2];
+      case "top":
+        return [(maxWidth - width) / 2, 0];
+      case "bottom":
+        return [(maxWidth - width) / 2, maxHeight - height];
+      case "center":
+        return [(maxWidth - width) / 2, (maxHeight - height) / 2];
+      default:
+        return [0, 0];
+    }
+  }
+  leftOf(grid) {
+    if (grid.get("x") < 0) {
+      return grid.get("maxWidth") + grid.get("x") - grid.get("width");
+    } else {
+      return grid.get("x");
+    }
+  }
+  topOf(grid) {
+    if (grid.get("y") < 0) {
+      return grid.get("maxHeight") + grid.get("y") - grid.get("height");
+    } else {
+      return grid.get("y");
+    }
+  }
+  heightOf(grid) {
+    return grid.get("height");
+  }
+  widthOf(grid) {
+    return grid.get("width");
+  }
+};
 
 // src/__tests__/test.ts
 var originalRequire = import_module.default.prototype.require;
@@ -2319,14 +2757,23 @@ function testNestedGridSerialization() {
   import_assert.default.strictEqual(draft.blocks.length, 1, "Should have 1 top-level block");
   const outerGrid = draft.blocks[0];
   import_assert.default.strictEqual(outerGrid.type, "grid");
-  import_assert.default.strictEqual(outerGrid.children.length, 1, "Should have 1 child grid");
+  import_assert.default.strictEqual(
+    outerGrid.children.length,
+    1,
+    "Should have 1 child grid"
+  );
   const innerGrid = outerGrid.children[0];
   import_assert.default.strictEqual(innerGrid.rect.width, 5);
   import_assert.default.strictEqual(innerGrid.rect.height, 40);
   import_assert.default.strictEqual(innerGrid.rect.x, 97);
   import_assert.default.strictEqual(innerGrid.rect.y, 36);
   const generated = generatePageMarkdown(draft);
-  const reParsed = parseDesignPageDraft("cover", "test", "test.md", generated);
+  const reParsed = parseDesignPageDraft(
+    "cover",
+    "test",
+    "test.md",
+    generated
+  );
   import_assert.default.strictEqual(reParsed.blocks.length, 1);
   import_assert.default.strictEqual(reParsed.blocks[0].children.length, 1);
   console.log("testNestedGridSerialization passed");
@@ -2355,11 +2802,17 @@ function testCoordinateConversion() {
 function testTreeCircularDependency() {
   var _a;
   const blocks = [
-    { id: "A", type: "grid", children: [
-      { id: "B", type: "grid", children: [
-        { id: "C", type: "grid" }
-      ] }
-    ] }
+    {
+      id: "A",
+      type: "grid",
+      children: [
+        {
+          id: "B",
+          type: "grid",
+          children: [{ id: "C", type: "grid" }]
+        }
+      ]
+    }
   ];
   const _findBlockById = (blocksArr, id) => {
     for (let i = 0; i < blocksArr.length; i++) {
@@ -2369,7 +2822,7 @@ function testTreeCircularDependency() {
       if (block.type === "grid" && block.children) {
         const found = _findBlockById(block.children, id);
         if (found)
-          return __spreadProps(__spreadValues({}, found), { parent: block });
+          return { ...found, parent: block };
       }
     }
     return null;
@@ -2388,14 +2841,209 @@ function testTreeCircularDependency() {
       currentCheck = (_a = _findBlockById(blocks, currentCheck.id)) == null ? void 0 : _a.parent;
     }
   }
-  import_assert.default.strictEqual(hasCircular, true, "Should detect circular dependency when dropping A into C");
+  import_assert.default.strictEqual(
+    hasCircular,
+    true,
+    "Should detect circular dependency when dropping A into C"
+  );
   console.log("testTreeCircularDependency passed");
+}
+function testDesignMakerRuntimeCssHasHelperClasses() {
+  const theme = parseThemeDraft("Test", "");
+  const css = generateDesignMakerRuntimeCss(theme);
+  import_assert.default.ok(
+    css.includes(".bg-with-front-color"),
+    "Should include .bg-with-front-color helper class"
+  );
+  import_assert.default.ok(
+    css.includes(".bg-with-back-color"),
+    "Should include .bg-with-back-color helper class"
+  );
+  import_assert.default.ok(
+    css.includes(".slides-rup-design-maker-canvas") || css.includes(".slides-rup-design-maker-preview"),
+    "Should scope helper CSS to Design Maker containers"
+  );
+  console.log("testDesignMakerRuntimeCssHasHelperClasses passed");
+}
+function testSelectionDebounceStateMachine() {
+  const machine = (() => {
+    let lastApplied = null;
+    let selected = null;
+    return {
+      select(next) {
+        selected = next;
+      },
+      apply() {
+        const previous = lastApplied;
+        const next = selected;
+        lastApplied = next;
+        return { previous, next };
+      }
+    };
+  })();
+  machine.select("A");
+  machine.select("B");
+  machine.select("C");
+  const first = machine.apply();
+  import_assert.default.deepStrictEqual(first, { previous: null, next: "C" });
+  machine.select(null);
+  const second = machine.apply();
+  import_assert.default.deepStrictEqual(second, { previous: "C", next: null });
+  console.log("testSelectionDebounceStateMachine passed");
+}
+function testNestedBlockVisibilityToggle() {
+  var _a, _b;
+  const findById = (blocks2, id) => {
+    for (const block of blocks2) {
+      if (block.id === id)
+        return block;
+      if (block.type === "grid" && block.children) {
+        const found = findById(block.children, id);
+        if (found)
+          return found;
+      }
+    }
+    return null;
+  };
+  const blocks = [
+    {
+      id: "parent",
+      type: "grid",
+      children: [{ id: "child", type: "grid" }]
+    }
+  ];
+  const child = findById(blocks, "child");
+  import_assert.default.ok(child, "Should find nested child block");
+  import_assert.default.strictEqual(child.hiddenInDesign, void 0);
+  child.hiddenInDesign = true;
+  import_assert.default.strictEqual((_a = findById(blocks, "child")) == null ? void 0 : _a.hiddenInDesign, true);
+  const parent = findById(blocks, "parent");
+  import_assert.default.ok(parent, "Should find parent block");
+  parent.hiddenInDesign = true;
+  parent.hiddenInDesign = false;
+  import_assert.default.strictEqual((_b = findById(blocks, "parent")) == null ? void 0 : _b.hiddenInDesign, false);
+  console.log("testNestedBlockVisibilityToggle passed");
+}
+function testCanvasZoomTransformMath() {
+  import_assert.default.strictEqual(clampCanvasZoomPercent(0), 25);
+  import_assert.default.strictEqual(clampCanvasZoomPercent(500), 400);
+  import_assert.default.strictEqual(clampCanvasZoomPercent(123.4), 123);
+  const transform = computeCanvasTransform({
+    frameWidth: 960,
+    frameHeight: 540,
+    baseWidth: 1920,
+    baseHeight: 1080,
+    zoomPercent: 200,
+    panX: 10,
+    panY: 20
+  });
+  import_assert.default.strictEqual(transform.scale, 1);
+  import_assert.default.strictEqual(transform.transform, "translate(10px, 20px) scale(1)");
+  const resetTransform = computeCanvasTransform({
+    frameWidth: 960,
+    frameHeight: 540,
+    baseWidth: 1920,
+    baseHeight: 1080,
+    zoomPercent: 100,
+    panX: 0,
+    panY: 0
+  });
+  import_assert.default.strictEqual(resetTransform.scale, 0.5);
+  import_assert.default.strictEqual(
+    resetTransform.transform,
+    "translate(0px, 0px) scale(0.5)"
+  );
+  const nextPan = computePanForZoom({
+    cursorX: 100,
+    cursorY: 100,
+    panX: 0,
+    panY: 0,
+    currentScale: 1,
+    nextScale: 2
+  });
+  import_assert.default.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
+  console.log("testCanvasZoomTransformMath passed");
+}
+function testAdvancedSlidesWidthHeightParsing() {
+  var _a, _b;
+  YamlStore.getInstance().options = {
+    width: 1920,
+    height: 1080,
+    center: true
+  };
+  const transformer = new GridTransformer();
+  const relRatio = transformer.read("5 12", "0 0", false);
+  import_assert.default.ok(relRatio, "Relative ratio should parse");
+  import_assert.default.strictEqual(relRatio == null ? void 0 : relRatio.get("width"), 5);
+  import_assert.default.strictEqual(relRatio == null ? void 0 : relRatio.get("height"), 12);
+  import_assert.default.strictEqual(relRatio == null ? void 0 : relRatio.get("x"), 0);
+  import_assert.default.strictEqual(relRatio == null ? void 0 : relRatio.get("y"), 0);
+  const relPx = transformer.read("200px 300px", "0 0", false);
+  import_assert.default.ok(relPx, "Relative px should parse");
+  import_assert.default.ok(
+    Math.abs(((_a = relPx == null ? void 0 : relPx.get("width")) != null ? _a : 0) - 10.4166667) < 0.01,
+    "Relative px width should convert to percentage"
+  );
+  import_assert.default.ok(
+    Math.abs(((_b = relPx == null ? void 0 : relPx.get("height")) != null ? _b : 0) - 27.7777778) < 0.01,
+    "Relative px height should convert to percentage"
+  );
+  const absRatio = transformer.read("5 10", "0 0", true);
+  import_assert.default.ok(absRatio, "Absolute ratio should parse");
+  import_assert.default.strictEqual(absRatio == null ? void 0 : absRatio.get("width"), 96);
+  import_assert.default.strictEqual(absRatio == null ? void 0 : absRatio.get("height"), 108);
+  const absPx = transformer.read("200px 300px", "0 0", true);
+  import_assert.default.ok(absPx, "Absolute px should parse");
+  import_assert.default.strictEqual(absPx == null ? void 0 : absPx.get("width"), 200);
+  import_assert.default.strictEqual(absPx == null ? void 0 : absPx.get("height"), 300);
+  const relNegXY = transformer.read("5 5", "-10 20", false);
+  import_assert.default.ok(relNegXY, "Relative negative XY should parse");
+  import_assert.default.strictEqual(relNegXY == null ? void 0 : relNegXY.get("x"), -10);
+  import_assert.default.strictEqual(relNegXY == null ? void 0 : relNegXY.get("y"), 20);
+  const absNegPxXY = transformer.read("5 5", "-20px 30px", true);
+  import_assert.default.ok(absNegPxXY, "Absolute px negative XY should parse");
+  import_assert.default.strictEqual(absNegPxXY == null ? void 0 : absNegPxXY.get("x"), -20);
+  import_assert.default.strictEqual(absNegPxXY == null ? void 0 : absNegPxXY.get("y"), 30);
+  import_assert.default.strictEqual(
+    transformer.read("0px 300px", "0 0", false),
+    void 0,
+    "Invalid px width should be rejected"
+  );
+  import_assert.default.strictEqual(
+    transformer.read("5.5 10", "0 0", false),
+    void 0,
+    "Invalid ratio width should be rejected"
+  );
+  import_assert.default.strictEqual(
+    transformer.read("-5 10", "0 0", false),
+    void 0,
+    "Negative ratio width should be rejected"
+  );
+  console.log("testAdvancedSlidesWidthHeightParsing passed");
 }
 function runTests() {
   try {
+    globalThis.window = {
+      app: {
+        plugins: {
+          plugins: {
+            "slides-rup": {
+              settings: {
+                slidesRupRunningLanguage: "en"
+              }
+            }
+          }
+        }
+      }
+    };
     testNestedGridSerialization();
     testCoordinateConversion();
     testTreeCircularDependency();
+    testDesignMakerRuntimeCssHasHelperClasses();
+    testSelectionDebounceStateMachine();
+    testNestedBlockVisibilityToggle();
+    testCanvasZoomTransformMath();
+    testAdvancedSlidesWidthHeightParsing();
     console.log("All tests passed 100%!");
   } catch (err) {
     console.error(err);

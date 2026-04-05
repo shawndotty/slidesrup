@@ -2,6 +2,7 @@ import {
 	DesignDraft,
 	DesignGridBlock,
 	DesignPageDraft,
+	DesignRectUnit,
 	ThemeStyleDraft,
 } from "src/types/design-maker";
 
@@ -9,10 +10,27 @@ function formatRectValue(value: number): string {
 	return `${Math.round(value)}`;
 }
 
-function serializeAttributes(block: DesignGridBlock): string {
+function serializeAttributes(
+	block: DesignGridBlock,
+	defaultRectUnit: DesignRectUnit,
+): string {
+	const rectUnit: DesignRectUnit =
+		block.extraAttributes.rectUnit === "px" ? "px" : defaultRectUnit;
 	const attrs: Record<string, string> = {
-		drag: `${formatRectValue(block.rect.width)} ${formatRectValue(block.rect.height)}`,
-		drop: `${formatRectValue(block.rect.x)} ${formatRectValue(block.rect.y)}`,
+		drag:
+			rectUnit === "px"
+				? `${formatRectValue(block.rect.width)}px ${formatRectValue(
+						block.rect.height,
+					)}px`
+				: `${formatRectValue(block.rect.width)} ${formatRectValue(
+						block.rect.height,
+					)}`,
+		drop:
+			rectUnit === "px"
+				? `${formatRectValue(block.rect.x)}px ${formatRectValue(
+						block.rect.y,
+					)}px`
+				: `${formatRectValue(block.rect.x)} ${formatRectValue(block.rect.y)}`,
 	};
 
 	if (block.className.trim()) attrs.class = block.className.trim();
@@ -32,6 +50,7 @@ function serializeAttributes(block: DesignGridBlock): string {
 	}
 
 	Object.entries(block.extraAttributes).forEach(([key, value]) => {
+		if (key === "rectUnit") return;
 		if (!attrs[key] && value.trim()) {
 			attrs[key] = value.trim();
 		}
@@ -42,10 +61,17 @@ function serializeAttributes(block: DesignGridBlock): string {
 		.join(" ");
 }
 
-function generateGridBlock(block: DesignGridBlock): string {
+function generateGridBlock(
+	block: DesignGridBlock,
+	defaultRectUnit: DesignRectUnit,
+): string {
+	const rectUnit: DesignRectUnit =
+		block.extraAttributes.rectUnit === "px" ? "px" : defaultRectUnit;
 	const childrenStr = (block.children || [])
 		.map((child) =>
-			child.type === "grid" ? generateGridBlock(child) : child.raw.trim(),
+			child.type === "grid"
+				? generateGridBlock(child, rectUnit)
+				: child.raw.trim(),
 		)
 		.filter(Boolean)
 		.join("\n\n");
@@ -54,13 +80,16 @@ function generateGridBlock(block: DesignGridBlock): string {
 		.filter(Boolean)
 		.join("\n\n");
 
-	return `<grid ${serializeAttributes(block)}>\n${innerContent}\n</grid>`;
+	return `<grid ${serializeAttributes(block, rectUnit)}>\n${innerContent}\n</grid>`;
 }
 
 export function generatePageMarkdown(page: DesignPageDraft): string {
+	const rectUnit: DesignRectUnit = page.rectUnit ?? "percent";
 	return page.blocks
 		.map((block) =>
-			block.type === "grid" ? generateGridBlock(block) : block.raw.trim(),
+			block.type === "grid"
+				? generateGridBlock(block, rectUnit)
+				: block.raw.trim(),
 		)
 		.filter(Boolean)
 		.join("\n\n")

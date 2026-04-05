@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.parseThemeDraft = exports.parseDesignPageDraft = void 0;
+exports.parseThemeDraft = exports.parseDesignPageDraft = exports.parseRectInputValue = exports.formatRectInputValue = void 0;
 var design_maker_schema_1 = require("./design-maker-schema");
 var blockSeed = 0;
 function nextBlockId(prefix) {
@@ -13,24 +13,129 @@ function clamp(value, min, max) {
 function clampInt(value, min, max) {
     return Math.round(clamp(value, min, max));
 }
-function parsePair(value, fallbackA, fallbackB) {
+function detectExplicitRectUnit(value) {
+    var parts = (value || "").trim().split(/\s+/).filter(Boolean);
+    for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
+        var part = parts_1[_i];
+        var match = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+        if (!match)
+            continue;
+        var unit = (match[2] || "").toLowerCase();
+        if (unit === "px")
+            return "px";
+        if (unit === "%" || unit === "percent")
+            return "percent";
+    }
+    return null;
+}
+function formatRectInputValue(value, rectUnit) {
+    var rounded = Math.round(value);
+    return rectUnit === "px" ? "".concat(rounded, "px") : "".concat(rounded);
+}
+exports.formatRectInputValue = formatRectInputValue;
+function parseRectInputValue(raw) {
+    var trimmed = raw.trim();
+    if (!trimmed)
+        return null;
+    if (trimmed.toLowerCase().endsWith("px")) {
+        var num = Number(trimmed.slice(0, -2).trim());
+        if (!Number.isFinite(num))
+            return null;
+        return { value: num, rectUnit: "px" };
+    }
+    var num = Number(trimmed);
+    if (!Number.isFinite(num))
+        return null;
+    return { value: num, rectUnit: "percent" };
+}
+exports.parseRectInputValue = parseRectInputValue;
+var DEFAULT_DESIGN_BASE_WIDTH = 1920;
+var DEFAULT_DESIGN_BASE_HEIGHT = 1080;
+function parseNumericToken(token, rectUnit, warnings) {
+    var match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+    if (!match)
+        return null;
+    var value = Number(match[1]);
+    if (!Number.isFinite(value))
+        return null;
+    var unit = (match[2] || "").toLowerCase();
+    if (!unit)
+        return value;
+    if (rectUnit === "px") {
+        if (unit !== "px") {
+            warnings.push("Detected unsupported unit \"".concat(unit, "\" in px mode; treating it as px."));
+        }
+        return value;
+    }
+    if (unit !== "%") {
+        warnings.push("Detected unsupported unit \"".concat(unit, "\" in percent mode; stripping unit and treating it as a number."));
+    }
+    return value;
+}
+function detectRectUnit(markdown) {
+    var warnings = [];
+    var unitsSeen = new Set();
+    var hasBareNumber = false;
+    var attrRegex = /\b(?:drag|drop)\s*=\s*"([^"]*)"/g;
+    var match = attrRegex.exec(markdown);
+    while (match) {
+        var value = match[1] || "";
+        var parts = value.trim().split(/\s+/).filter(Boolean);
+        for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
+            var part = parts_1[_i];
+            var m = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+            if (!m)
+                continue;
+            var unit = (m[2] || "").toLowerCase();
+            if (!unit)
+                hasBareNumber = true;
+            else
+                unitsSeen.add(unit);
+        }
+        match = attrRegex.exec(markdown);
+    }
+    var rectUnit = unitsSeen.has("px") && !hasBareNumber ? "px" : "percent";
+    var unsupportedUnits = Array.from(unitsSeen).filter(function (u) { return u !== "px" && u !== "%"; });
+    if (unsupportedUnits.length > 0) {
+        warnings.push("Detected unsupported units in template: ".concat(unsupportedUnits.join(", "), ". They will be auto-corrected."));
+    }
+    return { rectUnit: rectUnit, warnings: warnings };
+}
+function parsePair(value, fallbackA, fallbackB, rectUnit, warnings) {
     if (!value)
         return [fallbackA, fallbackB];
-    var parts = value
-        .trim()
-        .split(/\s+/)
-        .map(function (item) { return Number(item); });
-    if (parts.length >= 2 && parts.every(function (item) { return !isNaN(item); })) {
-        return [parts[0], parts[1]];
+    var trimmed = value.trim();
+    if (rectUnit !== "px") {
+        if (trimmed === "topleft")
+            return [0, 0];
+        if (trimmed === "topright")
+            return [50, 0];
+        if (trimmed === "bottomleft")
+            return [0, 50];
+        if (trimmed === "bottomright")
+            return [50, 50];
     }
-    if (value === "topleft")
-        return [0, 0];
-    if (value === "topright")
-        return [50, 0];
-    if (value === "bottomleft")
-        return [0, 50];
-    if (value === "bottomright")
-        return [50, 50];
+    else if ([
+        "topleft",
+        "topright",
+        "bottomleft",
+        "bottomright",
+        "center",
+        "top",
+        "bottom",
+        "left",
+        "right",
+    ].includes(trimmed)) {
+        warnings.push("Detected keyword positioning \"".concat(trimmed, "\" in px mode; falling back to defaults."));
+        return [fallbackA, fallbackB];
+    }
+    var parts = trimmed.split(/\s+/);
+    if (parts.length >= 2) {
+        var a = parseNumericToken(parts[0], rectUnit, warnings);
+        var b = parseNumericToken(parts[1], rectUnit, warnings);
+        if (a != null && b != null)
+            return [a, b];
+    }
     return [fallbackA, fallbackB];
 }
 function parseAttributes(raw) {
@@ -122,17 +227,20 @@ function createRawBlock(raw) {
         raw: raw.trim()
     };
 }
-function createFootnotesBlock() {
+function createFootnotesBlock(rectUnit) {
+    var rect = rectUnit === "px"
+        ? {
+            x: 0,
+            y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 92) / 100),
+            width: DEFAULT_DESIGN_BASE_WIDTH,
+            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 8) / 100),
+        }
+        : { x: 0, y: 92, width: 100, height: 8 };
     return {
         id: nextBlockId("grid"),
         type: "grid",
         role: "placeholder",
-        rect: {
-            x: 0,
-            y: 92,
-            width: 100,
-            height: 8
-        },
+        rect: rect,
         content: "<%? footnotes %>",
         className: "footnotes",
         style: "",
@@ -150,17 +258,20 @@ function createFootnotesBlock() {
         extraAttributes: {}
     };
 }
-function createSideBarBlock() {
+function createSideBarBlock(rectUnit) {
+    var rect = rectUnit === "px"
+        ? {
+            x: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 95) / 100),
+            y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 35) / 100),
+            width: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 5) / 100),
+            height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 30) / 100),
+        }
+        : { x: 95, y: 35, width: 5, height: 30 };
     return {
         id: nextBlockId("grid"),
         type: "grid",
         role: "placeholder",
-        rect: {
-            x: 95,
-            y: 35,
-            width: 5,
-            height: 30
-        },
+        rect: rect,
         content: "![[SR-SideBar]]",
         className: "sr-sidebar",
         style: "",
@@ -178,7 +289,7 @@ function createSideBarBlock() {
         extraAttributes: {}
     };
 }
-function appendRawBlocksAndFootnotes(raw, blocks, state) {
+function appendRawBlocksAndFootnotes(raw, blocks, state, rectUnit, warnings) {
     var normalizedRaw = raw.trim();
     if (!normalizedRaw)
         return;
@@ -200,12 +311,12 @@ function appendRawBlocksAndFootnotes(raw, blocks, state) {
         var token = match[0];
         if (token.includes("footnotes")) {
             if (!state.hasFootnotesBlock) {
-                blocks.push(createFootnotesBlock());
+                blocks.push(createFootnotesBlock(rectUnit));
                 state.hasFootnotesBlock = true;
             }
         }
         else if (!state.hasSideBarBlock) {
-            blocks.push(createSideBarBlock());
+            blocks.push(createSideBarBlock(rectUnit));
             state.hasSideBarBlock = true;
         }
         lastIndex = match.index + token.length;
@@ -215,24 +326,53 @@ function appendRawBlocksAndFootnotes(raw, blocks, state) {
     if (tail)
         blocks.push(tail);
 }
-function createGridBlock(attrSource, content) {
+function createGridBlock(attrSource, content, inheritedRectUnit, warnings) {
     var attrs = parseAttributes(attrSource);
-    var _a = parsePair(attrs.drag || "", 100, 30), width = _a[0], height = _a[1];
-    var _b = parsePair(attrs.drop || "", 0, 0), x = _b[0], y = _b[1];
+    var explicitUnit = detectExplicitRectUnit(attrs.drag || "") || detectExplicitRectUnit(attrs.drop || "");
+    var rectUnit = explicitUnit || inheritedRectUnit;
+    var _a = parsePair(attrs.drag || "", 100, 30, rectUnit, warnings), width = _a[0], height = _a[1];
+    var _b = parsePair(attrs.drop || "", 0, 0, rectUnit, warnings), x = _b[0], y = _b[1];
     var cleanedContent = stripNestedGridMarkup(content);
     // Parse children recursively
     var rawChildren = parseGridBlocks(content, {
         hasFootnotesBlock: true,
         hasSideBarBlock: true
-    }); // Prevent footnotes/sidebar inside nested grids
+    }, rectUnit, warnings); // Prevent footnotes/sidebar inside nested grids
     var children = rawChildren.filter(function (c) { return c.type === "grid"; });
+    var extraAttributes = Object.entries(attrs).reduce(function (result, _a) {
+        var key = _a[0], value = _a[1];
+        if ([
+            "drag",
+            "drop",
+            "class",
+            "style",
+            "pad",
+            "align",
+            "flow",
+            "filter",
+            "justify-content",
+            "bg",
+            "border",
+            "animate",
+            "opacity",
+            "rotate",
+            "frag",
+        ].includes(key)) {
+            return result;
+        }
+        result[key] = value;
+        return result;
+    }, {});
+    if (rectUnit === "px") {
+        extraAttributes.rectUnit = "px";
+    }
     return {
         id: nextBlockId("grid"),
         type: "grid",
         role: inferRole(content),
         rect: {
-            x: clampInt(x, -100, 100),
-            y: clampInt(y, -100, 100),
+            x: rectUnit === "px" ? Math.round(x) : clampInt(x, -100, 100),
+            y: rectUnit === "px" ? Math.round(y) : clampInt(y, -100, 100),
             width: Math.max(1, Math.round(width)),
             height: Math.max(1, Math.round(height))
         },
@@ -250,52 +390,29 @@ function createGridBlock(attrSource, content) {
         opacity: attrs.opacity || "",
         rotate: attrs.rotate || "",
         frag: attrs.frag || "",
-        extraAttributes: Object.entries(attrs).reduce(function (result, _a) {
-            var key = _a[0], value = _a[1];
-            if ([
-                "drag",
-                "drop",
-                "class",
-                "style",
-                "pad",
-                "align",
-                "flow",
-                "filter",
-                "justify-content",
-                "bg",
-                "border",
-                "animate",
-                "opacity",
-                "rotate",
-                "frag",
-            ].includes(key)) {
-                return result;
-            }
-            result[key] = value;
-            return result;
-        }, {}),
+        extraAttributes: extraAttributes,
         children: children.length > 0 ? children : undefined
     };
 }
-function parseGridBlocks(markdown, footnotesState) {
+function parseGridBlocks(markdown, footnotesState, rectUnit, warnings) {
     var blocks = [];
     var _a = parseGridSegments(markdown), topLevelRanges = _a.topLevelRanges, segments = _a.segments;
     if (topLevelRanges.length === 0) {
-        appendRawBlocksAndFootnotes(markdown, blocks, footnotesState);
+        appendRawBlocksAndFootnotes(markdown, blocks, footnotesState, rectUnit, warnings);
         return blocks;
     }
     var cursor = 0;
     topLevelRanges.forEach(function (range) {
         var before = markdown.slice(cursor, range.start);
-        appendRawBlocksAndFootnotes(before, blocks, footnotesState);
+        appendRawBlocksAndFootnotes(before, blocks, footnotesState, rectUnit, warnings);
         // Find the exact segment that corresponds to this topLevelRange
         var segment = segments.find(function (s) { return s.start === range.start && s.end === range.end; });
         if (segment) {
-            blocks.push(createGridBlock(segment.attrSource, segment.content));
+            blocks.push(createGridBlock(segment.attrSource, segment.content, rectUnit, warnings));
         }
         cursor = range.end;
     });
-    appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
+    appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState, rectUnit, warnings);
     return blocks;
 }
 function parseDesignPageDraft(pageType, designName, filePath, markdown) {
@@ -304,7 +421,22 @@ function parseDesignPageDraft(pageType, designName, filePath, markdown) {
         hasFootnotesBlock: false,
         hasSideBarBlock: false
     };
-    var blocks = parseGridBlocks(markdown, footnotesState);
+    var _a = detectRectUnit(markdown), defaultRectUnit = _a.rectUnit, warnings = _a.warnings;
+    var blocks = parseGridBlocks(markdown, footnotesState, defaultRectUnit, warnings);
+    var units = new Set();
+    var collect = function (items) {
+        items.forEach(function (block) {
+            if (block.type !== "grid")
+                return;
+            units.add(block.extraAttributes && block.extraAttributes.rectUnit === "px"
+                ? "px"
+                : "percent");
+            if (block.children)
+                collect(block.children);
+        });
+    };
+    collect(blocks);
+    var rectUnit = units.has("px") && !units.has("percent") ? "px" : "percent";
     return {
         type: pageType,
         label: (0, design_maker_schema_1.getDesignPageDisplayName)(fileName),
@@ -312,7 +444,9 @@ function parseDesignPageDraft(pageType, designName, filePath, markdown) {
         filePath: filePath,
         blocks: blocks,
         rawMarkdown: markdown,
-        hasUnsupportedContent: blocks.some(function (block) { return block.type === "raw"; })
+        hasUnsupportedContent: blocks.some(function (block) { return block.type === "raw"; }),
+        rectUnit: rectUnit,
+        unitWarnings: warnings.length > 0 ? warnings : undefined
     };
 }
 exports.parseDesignPageDraft = parseDesignPageDraft;

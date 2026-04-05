@@ -13,7 +13,7 @@ export class GridTransformer implements AttributeTransformer {
 	}
 
 	private gridAttributeRegex =
-		/^(?:(-?\d*(?:px)?)(?:\s*|x)(-?\d*(?:px)?)|(center|top|bottom|left|right|topleft|topright|bottomleft|bottomright))$/m;
+		/^(?:(-?\d+(?:px)?)(?:\s*|x)(-?\d+(?:px)?)|(center|top|bottom|left|right|topleft|topright|bottomleft|bottomright))$/m;
 
 	transform(element: Properties) {
 		let defaultDrop;
@@ -50,9 +50,10 @@ export class GridTransformer implements AttributeTransformer {
 				if (isAbsolute) {
 					element.addStyle("min-height", height);
 				}
+
+				element.deleteAttribute("drag");
+				element.deleteAttribute("drop");
 			}
-			element.deleteAttribute("drag");
-			element.deleteAttribute("drop");
 		}
 
 		if (element.getAttribute("align") || drop) {
@@ -97,7 +98,7 @@ export class GridTransformer implements AttributeTransformer {
 
 	getAlignment(
 		input: string | undefined,
-		flow: string | undefined
+		flow: string | undefined,
 	): [string | undefined, string, string, string | undefined] {
 		const direction = flow ?? "col";
 
@@ -176,7 +177,7 @@ export class GridTransformer implements AttributeTransformer {
 	read(
 		drag: string,
 		drop: string,
-		isAbsolute: boolean
+		isAbsolute: boolean,
 	): Map<string, number> | undefined {
 		try {
 			const result = new Map<string, number>();
@@ -195,7 +196,7 @@ export class GridTransformer implements AttributeTransformer {
 					drag,
 					drop,
 					result,
-					this.toRelativeValue
+					this.toRelativeValue,
 				);
 			}
 		} catch (ex) {
@@ -207,7 +208,7 @@ export class GridTransformer implements AttributeTransformer {
 		drag: string,
 		drop: string,
 		result: Map<string, number>,
-		valueTransformer: (max: number, input: string) => number
+		valueTransformer: (max: number, input: string) => number,
 	): Map<string, number> | undefined {
 		try {
 			const dragMatch = this.gridAttributeRegex.exec(drag);
@@ -218,19 +219,20 @@ export class GridTransformer implements AttributeTransformer {
 			const y = dropMatch?.[2] as string | undefined;
 			const name = dropMatch?.[3] as string | undefined;
 
-			if (width) {
-				result.set(
-					"width",
-					valueTransformer(result.get("slideWidth")!, width)
-				);
-			}
+			const parsedWidth = width ? this.parseWidthOrHeight(width) : null;
+			const parsedHeight = height
+				? this.parseWidthOrHeight(height)
+				: null;
+			if (!parsedWidth || !parsedHeight) return undefined;
 
-			if (height) {
-				result.set(
-					"height",
-					valueTransformer(result.get("slideHeight")!, height)
-				);
-			}
+			result.set(
+				"width",
+				valueTransformer(result.get("slideWidth")!, parsedWidth),
+			);
+			result.set(
+				"height",
+				valueTransformer(result.get("slideHeight")!, parsedHeight),
+			);
 
 			if (name) {
 				const [nx, ny] = this.getXYof(
@@ -238,30 +240,74 @@ export class GridTransformer implements AttributeTransformer {
 					result.get("width")!,
 					result.get("height")!,
 					result.get("maxWidth")!,
-					result.get("maxHeight")!
+					result.get("maxHeight")!,
 				);
 
 				result.set("x", nx);
 				result.set("y", ny);
 			} else {
 				if (x) {
+					const parsedX = this.parseXY(x);
+					if (!parsedX) return undefined;
 					result.set(
 						"x",
-						valueTransformer(result.get("slideWidth")!, x)
+						valueTransformer(result.get("slideWidth")!, parsedX),
 					);
+				} else {
+					return undefined;
 				}
 
 				if (y) {
+					const parsedY = this.parseXY(y);
+					if (!parsedY) return undefined;
 					result.set(
 						"y",
-						valueTransformer(result.get("slideHeight")!, y)
+						valueTransformer(result.get("slideHeight")!, parsedY),
 					);
+				} else {
+					return undefined;
 				}
 			}
 			return result;
 		} catch (ex) {
 			return undefined;
 		}
+	}
+
+	private parseWidthOrHeight(input: string): string | null {
+		const trimmed = input.trim();
+		if (!trimmed) return null;
+
+		if (trimmed.toLowerCase().endsWith("px")) {
+			const raw = trimmed.slice(0, -2).trim();
+			if (!/^\d+$/.test(raw)) return null;
+			const px = Number(raw);
+			if (!Number.isFinite(px) || px <= 0) return null;
+			return `${Math.round(px)}px`;
+		}
+
+		if (!/^\d+$/.test(trimmed)) return null;
+		const ratio = Number(trimmed);
+		if (!Number.isFinite(ratio) || ratio <= 0) return null;
+		return `${Math.round(ratio)}`;
+	}
+
+	private parseXY(input: string): string | null {
+		const trimmed = input.trim();
+		if (!trimmed) return null;
+
+		if (trimmed.toLowerCase().endsWith("px")) {
+			const raw = trimmed.slice(0, -2).trim();
+			if (!/^-?\d+$/.test(raw)) return null;
+			const px = Number(raw);
+			if (!Number.isFinite(px)) return null;
+			return `${Math.round(px)}px`;
+		}
+
+		if (!/^-?\d+$/.test(trimmed)) return null;
+		const ratio = Number(trimmed);
+		if (!Number.isFinite(ratio)) return null;
+		return `${Math.round(ratio)}`;
 	}
 
 	toRelativeValue(max: number, input: string): number {
@@ -288,7 +334,7 @@ export class GridTransformer implements AttributeTransformer {
 		width: number,
 		height: number,
 		maxWidth: number,
-		maxHeight: number
+		maxHeight: number,
 	): [number, number] {
 		switch (name) {
 			case "topleft":

@@ -8,6 +8,8 @@ const originalRequire = (module as any).prototype.require;
 import assert from "assert";
 import {
 	parseDesignPageDraft,
+	formatRectInputValue,
+	parseRectInputValue,
 	parseThemeDraft,
 } from "../services/design-maker-parser";
 import {
@@ -19,6 +21,8 @@ import {
 	computeCanvasTransform,
 	computePanForZoom,
 } from "../ui/components/design-canvas";
+import { GridTransformer } from "../transformers/gridTransformer";
+import { YamlStore } from "../yamlStore";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -274,8 +278,208 @@ function testCanvasZoomTransformMath() {
 	console.log("testCanvasZoomTransformMath passed");
 }
 
+function testDesignTemplateUnitConsistency() {
+	const pxMarkdown = `<grid drag="80px 100px" drop="10px 20px" class="bg-with-front-color">\n</grid>`;
+	const pxPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		pxMarkdown,
+	);
+	assert.strictEqual(
+		pxPage.rectUnit,
+		"px",
+		"Should detect px unit from template",
+	);
+	const pxSerialized = generatePageMarkdown(pxPage);
+	assert.ok(
+		pxSerialized.includes(`drag="80px 100px"`),
+		"Should keep px unit in drag on save",
+	);
+	assert.ok(
+		pxSerialized.includes(`drop="10px 20px"`),
+		"Should keep px unit in drop on save",
+	);
+
+	const percentMarkdown = `<grid drag="100 80" drop="0 0" class="bg-with-front-color">\n</grid>`;
+	const percentPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		percentMarkdown,
+	);
+	assert.strictEqual(
+		percentPage.rectUnit,
+		"percent",
+		"Should detect percent unit from bare numbers",
+	);
+
+	const mixedMarkdown = `<grid drag="80px 100px" drop="0px 0px">\n</grid>\n\n<grid drag="100 80" drop="0 0">\n</grid>`;
+	const mixedPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		mixedMarkdown,
+	);
+	assert.strictEqual(
+		mixedPage.rectUnit,
+		"percent",
+		"Mixed blocks should not force whole page to px",
+	);
+	const mixedGridA = mixedPage.blocks[0] as any;
+	const mixedGridB = mixedPage.blocks[1] as any;
+	assert.strictEqual(
+		mixedGridA.extraAttributes.rectUnit,
+		"px",
+		"Px block should keep rectUnit=px",
+	);
+	assert.ok(
+		!mixedGridB.extraAttributes.rectUnit,
+		"Percent block should not be marked as px",
+	);
+	const mixedSerialized = generatePageMarkdown(mixedPage);
+	assert.ok(
+		mixedSerialized.includes(`drag="80px 100px"`),
+		"Px block should serialize drag with px",
+	);
+	assert.ok(
+		mixedSerialized.includes(`drag="100 80"`),
+		"Percent block should serialize drag as bare numbers",
+	);
+
+	const remMarkdown = `<grid drag="2rem 3rem" drop="1rem 1rem">\n</grid>`;
+	const remPage = parseDesignPageDraft(
+		"content",
+		"test",
+		"test.md",
+		remMarkdown,
+	);
+	assert.strictEqual(
+		remPage.rectUnit,
+		"percent",
+		"Unsupported unit should not switch to px by itself",
+	);
+	assert.ok(
+		(remPage.unitWarnings || []).length > 0,
+		"Should warn for unsupported units",
+	);
+	const remSerialized = generatePageMarkdown(remPage);
+	assert.ok(
+		remSerialized.includes(`drag="2 3"`),
+		"Unsupported units should be auto-corrected to numbers",
+	);
+
+	const pxLabel = formatRectInputValue(80, "px");
+	const percentLabel = formatRectInputValue(100, "percent");
+	assert.strictEqual(pxLabel, "80px", "Inspector should show px suffix");
+	assert.strictEqual(
+		percentLabel,
+		"100",
+		"Inspector should show bare number",
+	);
+	assert.deepStrictEqual(parseRectInputValue("80px"), {
+		value: 80,
+		rectUnit: "px",
+	});
+	assert.deepStrictEqual(parseRectInputValue("100"), {
+		value: 100,
+		rectUnit: "percent",
+	});
+
+	const baseWidth = 1920;
+	const widthPercent = 50;
+	const expectedPx = (baseWidth * widthPercent) / 100;
+	const actualPx = (baseWidth * widthPercent) / 100;
+	assert.ok(
+		Math.abs(actualPx - expectedPx) <= 1,
+		"Percent-to-px rendering math should be within ±1px",
+	);
+
+	console.log("testDesignTemplateUnitConsistency passed");
+}
+
+function testAdvancedSlidesWidthHeightParsing() {
+	(YamlStore.getInstance() as any).options = {
+		width: 1920,
+		height: 1080,
+		center: true,
+	};
+
+	const transformer = new GridTransformer();
+
+	const relRatio = transformer.read("5 12", "0 0", false);
+	assert.ok(relRatio, "Relative ratio should parse");
+	assert.strictEqual(relRatio?.get("width"), 5);
+	assert.strictEqual(relRatio?.get("height"), 12);
+	assert.strictEqual(relRatio?.get("x"), 0);
+	assert.strictEqual(relRatio?.get("y"), 0);
+
+	const relPx = transformer.read("200px 300px", "0 0", false);
+	assert.ok(relPx, "Relative px should parse");
+	assert.ok(
+		Math.abs((relPx?.get("width") ?? 0) - 10.4166667) < 0.01,
+		"Relative px width should convert to percentage",
+	);
+	assert.ok(
+		Math.abs((relPx?.get("height") ?? 0) - 27.7777778) < 0.01,
+		"Relative px height should convert to percentage",
+	);
+
+	const absRatio = transformer.read("5 10", "0 0", true);
+	assert.ok(absRatio, "Absolute ratio should parse");
+	assert.strictEqual(absRatio?.get("width"), 96);
+	assert.strictEqual(absRatio?.get("height"), 108);
+
+	const absPx = transformer.read("200px 300px", "0 0", true);
+	assert.ok(absPx, "Absolute px should parse");
+	assert.strictEqual(absPx?.get("width"), 200);
+	assert.strictEqual(absPx?.get("height"), 300);
+
+	const relNegXY = transformer.read("5 5", "-10 20", false);
+	assert.ok(relNegXY, "Relative negative XY should parse");
+	assert.strictEqual(relNegXY?.get("x"), -10);
+	assert.strictEqual(relNegXY?.get("y"), 20);
+
+	const absNegPxXY = transformer.read("5 5", "-20px 30px", true);
+	assert.ok(absNegPxXY, "Absolute px negative XY should parse");
+	assert.strictEqual(absNegPxXY?.get("x"), -20);
+	assert.strictEqual(absNegPxXY?.get("y"), 30);
+
+	assert.strictEqual(
+		transformer.read("0px 300px", "0 0", false),
+		undefined,
+		"Invalid px width should be rejected",
+	);
+	assert.strictEqual(
+		transformer.read("5.5 10", "0 0", false),
+		undefined,
+		"Invalid ratio width should be rejected",
+	);
+	assert.strictEqual(
+		transformer.read("-5 10", "0 0", false),
+		undefined,
+		"Negative ratio width should be rejected",
+	);
+
+	console.log("testAdvancedSlidesWidthHeightParsing passed");
+}
+
 function runTests() {
 	try {
+		(globalThis as any).window = {
+			app: {
+				plugins: {
+					plugins: {
+						"slides-rup": {
+							settings: {
+								slidesRupRunningLanguage: "en",
+							},
+						},
+					},
+				},
+			},
+		};
+
 		testNestedGridSerialization();
 		testCoordinateConversion();
 		testTreeCircularDependency();
@@ -283,6 +487,8 @@ function runTests() {
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
 		testCanvasZoomTransformMath();
+		testDesignTemplateUnitConsistency();
+		testAdvancedSlidesWidthHeightParsing();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

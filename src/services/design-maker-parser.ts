@@ -3,6 +3,7 @@ import {
 	DesignGridBlock,
 	DesignPageDraft,
 	DesignPageType,
+	DesignRectUnit,
 	ThemeStyleDraft,
 } from "src/types/design-maker";
 import {
@@ -37,24 +38,150 @@ function clampInt(value: number, min: number, max: number): number {
 	return Math.round(clamp(value, min, max));
 }
 
+function detectExplicitRectUnit(value: string): DesignRectUnit | null {
+	const parts = (value || "").trim().split(/\s+/).filter(Boolean);
+	for (const part of parts) {
+		const match = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+		if (!match) continue;
+		const unit = (match[2] || "").toLowerCase();
+		if (unit === "px") return "px";
+		if (unit === "%" || unit === "percent") return "percent";
+	}
+	return null;
+}
+
+export function formatRectInputValue(
+	value: number,
+	rectUnit: DesignRectUnit,
+): string {
+	const rounded = Math.round(value);
+	return rectUnit === "px" ? `${rounded}px` : `${rounded}`;
+}
+
+export function parseRectInputValue(
+	raw: string,
+): { value: number; rectUnit: DesignRectUnit } | null {
+	const trimmed = raw.trim();
+	if (!trimmed) return null;
+	if (trimmed.toLowerCase().endsWith("px")) {
+		const num = Number(trimmed.slice(0, -2).trim());
+		if (!Number.isFinite(num)) return null;
+		return { value: num, rectUnit: "px" };
+	}
+	const num = Number(trimmed);
+	if (!Number.isFinite(num)) return null;
+	return { value: num, rectUnit: "percent" };
+}
+
 function parsePair(
 	value: string,
 	fallbackA: number,
 	fallbackB: number,
+	rectUnit: DesignRectUnit,
+	warnings: string[],
 ): [number, number] {
 	if (!value) return [fallbackA, fallbackB];
-	const parts = value
-		.trim()
-		.split(/\s+/)
-		.map((item) => Number(item));
-	if (parts.length >= 2 && parts.every((item) => !isNaN(item))) {
-		return [parts[0], parts[1]];
+
+	const trimmed = value.trim();
+	if (rectUnit !== "px") {
+		if (trimmed === "topleft") return [0, 0];
+		if (trimmed === "topright") return [50, 0];
+		if (trimmed === "bottomleft") return [0, 50];
+		if (trimmed === "bottomright") return [50, 50];
+	} else if (
+		[
+			"topleft",
+			"topright",
+			"bottomleft",
+			"bottomright",
+			"center",
+			"top",
+			"bottom",
+			"left",
+			"right",
+		].includes(trimmed)
+	) {
+		warnings.push(
+			`Detected keyword positioning "${trimmed}" in px mode; falling back to defaults.`,
+		);
+		return [fallbackA, fallbackB];
 	}
-	if (value === "topleft") return [0, 0];
-	if (value === "topright") return [50, 0];
-	if (value === "bottomleft") return [0, 50];
-	if (value === "bottomright") return [50, 50];
+
+	const parts = trimmed.split(/\s+/);
+	if (parts.length >= 2) {
+		const a = parseNumericToken(parts[0], rectUnit, warnings);
+		const b = parseNumericToken(parts[1], rectUnit, warnings);
+		if (a != null && b != null) return [a, b];
+	}
 	return [fallbackA, fallbackB];
+}
+
+const DEFAULT_DESIGN_BASE_WIDTH = 1920;
+const DEFAULT_DESIGN_BASE_HEIGHT = 1080;
+
+function parseNumericToken(
+	token: string,
+	rectUnit: DesignRectUnit,
+	warnings: string[],
+): number | null {
+	const match = token.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+	if (!match) return null;
+	const value = Number(match[1]);
+	if (!Number.isFinite(value)) return null;
+	const unit = (match[2] || "").toLowerCase();
+	if (!unit) return value;
+	if (rectUnit === "px") {
+		if (unit !== "px") {
+			warnings.push(
+				`Detected unsupported unit "${unit}" in px mode; treating it as px.`,
+			);
+		}
+		return value;
+	}
+	if (unit !== "%") {
+		warnings.push(
+			`Detected unsupported unit "${unit}" in percent mode; stripping unit and treating it as a number.`,
+		);
+	}
+	return value;
+}
+
+function detectDefaultRectUnit(markdown: string): {
+	rectUnit: DesignRectUnit;
+	warnings: string[];
+} {
+	const warnings: string[] = [];
+	const unitsSeen = new Set<string>();
+	let hasBareNumber = false;
+
+	const attrRegex = /\b(?:drag|drop)\s*=\s*"([^"]*)"/g;
+	let match = attrRegex.exec(markdown);
+	while (match) {
+		const value = match[1] || "";
+		const parts = value.trim().split(/\s+/).filter(Boolean);
+		for (const part of parts) {
+			const m = part.trim().match(/^(-?\d+(?:\.\d+)?)([a-z%]+)?$/i);
+			if (!m) continue;
+			const unit = (m[2] || "").toLowerCase();
+			if (!unit) hasBareNumber = true;
+			else unitsSeen.add(unit);
+		}
+		match = attrRegex.exec(markdown);
+	}
+
+	const rectUnit: DesignRectUnit =
+		unitsSeen.has("px") && !hasBareNumber ? "px" : "percent";
+	const unsupportedUnits = Array.from(unitsSeen).filter(
+		(u) => u !== "px" && u !== "%",
+	);
+	if (unsupportedUnits.length > 0) {
+		warnings.push(
+			`Detected unsupported units in template: ${unsupportedUnits.join(
+				", ",
+			)}. They will be auto-corrected.`,
+		);
+	}
+	return { rectUnit, warnings };
 }
 
 function parseAttributes(raw: string): Record<string, string> {
@@ -152,17 +279,21 @@ function createRawBlock(raw: string): DesignCanvasBlock | null {
 	};
 }
 
-function createFootnotesBlock(): DesignGridBlock {
+function createFootnotesBlock(rectUnit: DesignRectUnit): DesignGridBlock {
+	const rect =
+		rectUnit === "px"
+			? {
+					x: 0,
+					y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 92) / 100),
+					width: DEFAULT_DESIGN_BASE_WIDTH,
+					height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 8) / 100),
+				}
+			: { x: 0, y: 92, width: 100, height: 8 };
 	return {
 		id: nextBlockId("grid"),
 		type: "grid",
 		role: "placeholder",
-		rect: {
-			x: 0,
-			y: 92,
-			width: 100,
-			height: 8,
-		},
+		rect,
 		content: "<%? footnotes %>",
 		className: "footnotes",
 		style: "",
@@ -181,17 +312,21 @@ function createFootnotesBlock(): DesignGridBlock {
 	};
 }
 
-function createSideBarBlock(): DesignGridBlock {
+function createSideBarBlock(rectUnit: DesignRectUnit): DesignGridBlock {
+	const rect =
+		rectUnit === "px"
+			? {
+					x: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 95) / 100),
+					y: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 35) / 100),
+					width: Math.round((DEFAULT_DESIGN_BASE_WIDTH * 5) / 100),
+					height: Math.round((DEFAULT_DESIGN_BASE_HEIGHT * 30) / 100),
+				}
+			: { x: 95, y: 35, width: 5, height: 30 };
 	return {
 		id: nextBlockId("grid"),
 		type: "grid",
 		role: "placeholder",
-		rect: {
-			x: 95,
-			y: 35,
-			width: 5,
-			height: 30,
-		},
+		rect,
 		content: "![[SR-SideBar]]",
 		className: "sr-sidebar",
 		style: "",
@@ -213,10 +348,9 @@ function createSideBarBlock(): DesignGridBlock {
 function appendRawBlocksAndFootnotes(
 	raw: string,
 	blocks: DesignCanvasBlock[],
-	state: {
-		hasFootnotesBlock: boolean;
-		hasSideBarBlock: boolean;
-	},
+	state: { hasFootnotesBlock: boolean; hasSideBarBlock: boolean },
+	rectUnit: DesignRectUnit,
+	warnings: string[],
 ): void {
 	const normalizedRaw = raw.trim();
 	if (!normalizedRaw) return;
@@ -237,11 +371,11 @@ function appendRawBlocksAndFootnotes(
 		const token = match[0];
 		if (token.includes("footnotes")) {
 			if (!state.hasFootnotesBlock) {
-				blocks.push(createFootnotesBlock());
+				blocks.push(createFootnotesBlock(rectUnit));
 				state.hasFootnotesBlock = true;
 			}
 		} else if (!state.hasSideBarBlock) {
-			blocks.push(createSideBarBlock());
+			blocks.push(createSideBarBlock(rectUnit));
 			state.hasSideBarBlock = true;
 		}
 		lastIndex = match.index + token.length;
@@ -251,17 +385,37 @@ function appendRawBlocksAndFootnotes(
 	if (tail) blocks.push(tail);
 }
 
-function createGridBlock(attrSource: string, content: string): DesignGridBlock {
+function createGridBlock(
+	attrSource: string,
+	content: string,
+	inheritedRectUnit: DesignRectUnit,
+	warnings: string[],
+): DesignGridBlock {
 	const attrs = parseAttributes(attrSource);
-	const [width, height] = parsePair(attrs.drag || "", 100, 30);
-	const [x, y] = parsePair(attrs.drop || "", 0, 0);
+	const explicitUnit =
+		detectExplicitRectUnit(attrs.drag || "") ||
+		detectExplicitRectUnit(attrs.drop || "");
+	const rectUnit = explicitUnit ?? inheritedRectUnit;
+	const [width, height] = parsePair(
+		attrs.drag || "",
+		100,
+		30,
+		rectUnit,
+		warnings,
+	);
+	const [x, y] = parsePair(attrs.drop || "", 0, 0, rectUnit, warnings);
 	const cleanedContent = stripNestedGridMarkup(content);
 
 	// Parse children recursively
-	const rawChildren = parseGridBlocks(content, {
-		hasFootnotesBlock: true,
-		hasSideBarBlock: true,
-	}); // Prevent footnotes/sidebar inside nested grids
+	const rawChildren = parseGridBlocks(
+		content,
+		{
+			hasFootnotesBlock: true,
+			hasSideBarBlock: true,
+		},
+		rectUnit,
+		warnings,
+	); // Prevent footnotes/sidebar inside nested grids
 	const children = rawChildren.filter((c) => c.type === "grid");
 
 	return {
@@ -269,8 +423,8 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		type: "grid",
 		role: inferRole(content),
 		rect: {
-			x: clampInt(x, -100, 100),
-			y: clampInt(y, -100, 100),
+			x: rectUnit === "px" ? Math.round(x) : clampInt(x, -100, 100),
+			y: rectUnit === "px" ? Math.round(y) : clampInt(y, -100, 100),
 			width: Math.max(1, Math.round(width)),
 			height: Math.max(1, Math.round(height)),
 		},
@@ -288,34 +442,40 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 		opacity: attrs.opacity || "",
 		rotate: attrs.rotate || "",
 		frag: attrs.frag || "",
-		extraAttributes: Object.entries(attrs).reduce(
-			(result, [key, value]) => {
-				if (
-					[
-						"drag",
-						"drop",
-						"class",
-						"style",
-						"pad",
-						"align",
-						"flow",
-						"filter",
-						"justify-content",
-						"bg",
-						"border",
-						"animate",
-						"opacity",
-						"rotate",
-						"frag",
-					].includes(key)
-				) {
+		extraAttributes: (() => {
+			const extra = Object.entries(attrs).reduce(
+				(result, [key, value]) => {
+					if (
+						[
+							"drag",
+							"drop",
+							"class",
+							"style",
+							"pad",
+							"align",
+							"flow",
+							"filter",
+							"justify-content",
+							"bg",
+							"border",
+							"animate",
+							"opacity",
+							"rotate",
+							"frag",
+						].includes(key)
+					) {
+						return result;
+					}
+					result[key] = value;
 					return result;
-				}
-				result[key] = value;
-				return result;
-			},
-			{} as Record<string, string>,
-		),
+				},
+				{} as Record<string, string>,
+			);
+			if (rectUnit === "px") {
+				extra.rectUnit = "px";
+			}
+			return extra;
+		})(),
 		children: children.length > 0 ? children : undefined,
 	};
 }
@@ -323,31 +483,58 @@ function createGridBlock(attrSource: string, content: string): DesignGridBlock {
 function parseGridBlocks(
 	markdown: string,
 	footnotesState: { hasFootnotesBlock: boolean; hasSideBarBlock: boolean },
+	rectUnit: DesignRectUnit,
+	warnings: string[],
 ): DesignCanvasBlock[] {
 	const blocks: DesignCanvasBlock[] = [];
 	const { topLevelRanges, segments } = parseGridSegments(markdown);
 	if (topLevelRanges.length === 0) {
-		appendRawBlocksAndFootnotes(markdown, blocks, footnotesState);
+		appendRawBlocksAndFootnotes(
+			markdown,
+			blocks,
+			footnotesState,
+			rectUnit,
+			warnings,
+		);
 		return blocks;
 	}
 
 	let cursor = 0;
 	topLevelRanges.forEach((range) => {
 		const before = markdown.slice(cursor, range.start);
-		appendRawBlocksAndFootnotes(before, blocks, footnotesState);
+		appendRawBlocksAndFootnotes(
+			before,
+			blocks,
+			footnotesState,
+			rectUnit,
+			warnings,
+		);
 
 		// Find the exact segment that corresponds to this topLevelRange
 		const segment = segments.find(
 			(s) => s.start === range.start && s.end === range.end,
 		);
 		if (segment) {
-			blocks.push(createGridBlock(segment.attrSource, segment.content));
+			blocks.push(
+				createGridBlock(
+					segment.attrSource,
+					segment.content,
+					rectUnit,
+					warnings,
+				),
+			);
 		}
 
 		cursor = range.end;
 	});
 
-	appendRawBlocksAndFootnotes(markdown.slice(cursor), blocks, footnotesState);
+	appendRawBlocksAndFootnotes(
+		markdown.slice(cursor),
+		blocks,
+		footnotesState,
+		rectUnit,
+		warnings,
+	);
 	return blocks;
 }
 
@@ -363,7 +550,27 @@ export function parseDesignPageDraft(
 		hasSideBarBlock: false,
 	};
 
-	const blocks = parseGridBlocks(markdown, footnotesState);
+	const { rectUnit: defaultRectUnit, warnings } =
+		detectDefaultRectUnit(markdown);
+	const blocks = parseGridBlocks(
+		markdown,
+		footnotesState,
+		defaultRectUnit,
+		warnings,
+	);
+	const units = new Set<DesignRectUnit>();
+	const collect = (items: DesignCanvasBlock[]) => {
+		items.forEach((block) => {
+			if (block.type !== "grid") return;
+			units.add(
+				block.extraAttributes.rectUnit === "px" ? "px" : "percent",
+			);
+			if (block.children) collect(block.children);
+		});
+	};
+	collect(blocks);
+	const rectUnit: DesignRectUnit =
+		units.has("px") && !units.has("percent") ? "px" : "percent";
 
 	return {
 		type: pageType,
@@ -373,6 +580,8 @@ export function parseDesignPageDraft(
 		blocks,
 		rawMarkdown: markdown,
 		hasUnsupportedContent: blocks.some((block) => block.type === "raw"),
+		rectUnit,
+		unitWarnings: warnings.length > 0 ? warnings : undefined,
 	};
 }
 

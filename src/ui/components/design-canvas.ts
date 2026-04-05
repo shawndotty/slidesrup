@@ -4,6 +4,7 @@ import {
 	DesignPageDraft,
 	DesignGridBlock,
 	DesignCanvasBlock,
+	DesignRectUnit,
 } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 
@@ -69,7 +70,33 @@ export function computePanForZoom(options: {
 	};
 }
 
-export function applyBlockRectStyles(el: HTMLElement, block: DesignGridBlock) {
+export function applyBlockRectStyles(
+	el: HTMLElement,
+	block: DesignGridBlock,
+	rectUnit: DesignRectUnit = "percent",
+) {
+	if (rectUnit === "px") {
+		if (block.rect.x < 0) {
+			el.style.right = `${Math.abs(block.rect.x)}px`;
+			el.style.left = "";
+		} else {
+			el.style.left = `${block.rect.x}px`;
+			el.style.right = "";
+		}
+
+		if (block.rect.y < 0) {
+			el.style.bottom = `${Math.abs(block.rect.y)}px`;
+			el.style.top = "";
+		} else {
+			el.style.top = `${block.rect.y}px`;
+			el.style.bottom = "";
+		}
+
+		el.style.width = `${block.rect.width}px`;
+		el.style.height = `${block.rect.height}px`;
+		return;
+	}
+
 	if (block.rect.x < 0) {
 		el.style.right = `${Math.abs(block.rect.x)}%`;
 		el.style.left = "";
@@ -148,43 +175,6 @@ function toInt(value: number): number {
 	return Math.round(value);
 }
 
-function createTemplateBlock(kind: InsertBlockKind): DesignGridBlock {
-	const contentMap: Record<InsertBlockKind, string> = {
-		grid: "",
-		text: "Editable text",
-		image: "![](https://placehold.co/800x450)",
-		placeholder: "{{LOGO_OR_TAGLINE}}",
-		content: "<% content %>",
-	};
-
-	return {
-		id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-		type: "grid",
-		role: kind,
-		rect: {
-			x: 10,
-			y: 10,
-			width: 40,
-			height: 24,
-		},
-		content: contentMap[kind],
-		className: kind === "text" ? "bg-with-front-color" : "",
-		style: "",
-		pad: "24px",
-		align: "left",
-		flow: "",
-		filter: "",
-		justifyContent: "",
-		bg: "",
-		border: "",
-		animate: "",
-		opacity: "",
-		rotate: "",
-		frag: "",
-		extraAttributes: {},
-	};
-}
-
 function applySlideBaselineScale(
 	slideEl: HTMLElement,
 	frameEl: HTMLElement,
@@ -208,6 +198,9 @@ export function renderDesignToolbar(options: {
 	selectedBlockId: string | null;
 	hasFootnotesBlock: boolean;
 	hasSideBarBlock: boolean;
+	rectUnit?: DesignRectUnit;
+	slideBaseWidth?: number;
+	slideBaseHeight?: number;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onAddFootnotes: () => void;
 	onAddSideBar: () => void;
@@ -219,6 +212,9 @@ export function renderDesignToolbar(options: {
 		selectedBlockId,
 		hasFootnotesBlock,
 		hasSideBarBlock,
+		rectUnit = "percent",
+		slideBaseWidth = DESIGN_MAKER_SLIDE_WIDTH,
+		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
 		onAddBlock,
 		onAddFootnotes,
 		onAddSideBar,
@@ -247,7 +243,14 @@ export function renderDesignToolbar(options: {
 			}
 		});
 		button.addEventListener("click", () =>
-			onAddBlock(createTemplateBlock(kind as InsertBlockKind)),
+			onAddBlock(
+				createTemplateBlock(
+					kind as InsertBlockKind,
+					rectUnit,
+					slideBaseWidth,
+					slideBaseHeight,
+				),
+			),
 		);
 	});
 	const footnotesButton = toolbar.createEl("button", {
@@ -275,6 +278,58 @@ export function renderDesignToolbar(options: {
 			onDeleteBlock(selectedBlockId),
 		);
 	}
+}
+
+function createTemplateBlock(
+	kind: InsertBlockKind,
+	rectUnit: DesignRectUnit,
+	slideBaseWidth: number,
+	slideBaseHeight: number,
+): DesignGridBlock {
+	const contentMap: Record<InsertBlockKind, string> = {
+		grid: "",
+		text: "Editable text",
+		image: "![](https://placehold.co/800x450)",
+		placeholder: "{{LOGO_OR_TAGLINE}}",
+		content: "<% content %>",
+	};
+
+	const percentRect = { x: 10, y: 10, width: 40, height: 24 };
+	const rect =
+		rectUnit === "px"
+			? {
+					x: Math.round((slideBaseWidth * percentRect.x) / 100),
+					y: Math.round((slideBaseHeight * percentRect.y) / 100),
+					width: Math.round(
+						(slideBaseWidth * percentRect.width) / 100,
+					),
+					height: Math.round(
+						(slideBaseHeight * percentRect.height) / 100,
+					),
+				}
+			: percentRect;
+
+	return {
+		id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+		type: "grid",
+		role: kind,
+		rect,
+		content: contentMap[kind],
+		className: kind === "text" ? "bg-with-front-color" : "",
+		style: "",
+		pad: "24px",
+		align: "left",
+		flow: "",
+		filter: "",
+		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
+		extraAttributes: {},
+	};
 }
 
 export function renderDesignCanvas(options: {
@@ -322,6 +377,8 @@ export function renderDesignCanvas(options: {
 		onDeleteBlock,
 		onDuplicateBlock,
 	} = options;
+
+	const rectUnit: DesignRectUnit = page.rectUnit ?? "percent";
 
 	let zoomPercent = canvasZoomPercent;
 	let panX = canvasPanX;
@@ -449,28 +506,46 @@ export function renderDesignCanvas(options: {
 		e.preventDefault();
 	});
 
+	const getCanvasScale = (): number => {
+		const canvasBounds = canvas.getBoundingClientRect();
+		if (!canvasBounds.width || !slideBaseWidth) return 1;
+		const scale = canvasBounds.width / slideBaseWidth;
+		return Number.isFinite(scale) && scale > 0 ? scale : 1;
+	};
+
 	canvas.addEventListener("drop", (e) => {
 		e.preventDefault();
 		if (!e.dataTransfer) return;
 		try {
 			const data = JSON.parse(e.dataTransfer.getData("application/json"));
 			if (data.action === "add" && data.kind) {
-				const block = createTemplateBlock(data.kind as InsertBlockKind);
+				const block = createTemplateBlock(
+					data.kind as InsertBlockKind,
+					rectUnit,
+					slideBaseWidth,
+					slideBaseHeight,
+				);
 
 				const canvasBounds = canvas.getBoundingClientRect();
-				const widthPx = canvasBounds.width * (block.rect.width / 100);
-				const heightPx =
-					canvasBounds.height * (block.rect.height / 100);
-
-				const x =
-					((e.clientX - canvasBounds.left) / canvasBounds.width) *
-					100;
-				const y =
-					((e.clientY - canvasBounds.top) / canvasBounds.height) *
-					100;
-
-				block.rect.x = Math.round(x);
-				block.rect.y = Math.round(y);
+				if (rectUnit === "px") {
+					const x =
+						((e.clientX - canvasBounds.left) / canvasBounds.width) *
+						slideBaseWidth;
+					const y =
+						((e.clientY - canvasBounds.top) / canvasBounds.height) *
+						slideBaseHeight;
+					block.rect.x = Math.round(x);
+					block.rect.y = Math.round(y);
+				} else {
+					const x =
+						((e.clientX - canvasBounds.left) / canvasBounds.width) *
+						100;
+					const y =
+						((e.clientY - canvasBounds.top) / canvasBounds.height) *
+						100;
+					block.rect.x = Math.round(x);
+					block.rect.y = Math.round(y);
+				}
 
 				options.onAddBlock(block);
 			}
@@ -505,7 +580,9 @@ export function renderDesignCanvas(options: {
 		if (block.id === selectedBlockId) {
 			el.addClass("is-selected");
 		}
-		applyBlockRectStyles(el, block);
+		const blockRectUnit: DesignRectUnit =
+			block.extraAttributes.rectUnit === "px" ? "px" : rectUnit;
+		applyBlockRectStyles(el, block, blockRectUnit);
 		if (block.className && block.className.trim()) {
 			el.addClass(...block.className.trim().split(/\s+/));
 		}
@@ -557,15 +634,22 @@ export function renderDesignCanvas(options: {
 			event.stopPropagation();
 			onSelect(block.id);
 			const bounds = parentEl.getBoundingClientRect();
+			const canvasScale = blockRectUnit === "px" ? getCanvasScale() : 1;
+			const parentBaseWidth =
+				blockRectUnit === "px" ? bounds.width / canvasScale : 100;
+			const parentBaseHeight =
+				blockRectUnit === "px" ? bounds.height / canvasScale : 100;
 			const startX = event.clientX;
 			const startY = event.clientY;
 			const startRect = { ...block.rect };
 
 			const onMove = (moveEvent: MouseEvent) => {
 				const deltaX =
-					((moveEvent.clientX - startX) / bounds.width) * 100;
+					((moveEvent.clientX - startX) / bounds.width) *
+					parentBaseWidth;
 				const deltaY =
-					((moveEvent.clientY - startY) / bounds.height) * 100;
+					((moveEvent.clientY - startY) / bounds.height) *
+					parentBaseHeight;
 				onPatchBlock(block.id, (nextBlock) => {
 					nextBlock.rect.x = toInt(startRect.x + deltaX);
 					nextBlock.rect.y = toInt(startRect.y + deltaY);
@@ -586,21 +670,29 @@ export function renderDesignCanvas(options: {
 			event.stopPropagation();
 			onSelect(block.id);
 			const bounds = parentEl.getBoundingClientRect();
+			const canvasScale = blockRectUnit === "px" ? getCanvasScale() : 1;
+			const parentBaseWidth =
+				blockRectUnit === "px" ? bounds.width / canvasScale : 100;
+			const parentBaseHeight =
+				blockRectUnit === "px" ? bounds.height / canvasScale : 100;
 			const startX = event.clientX;
 			const startY = event.clientY;
 			const startRect = { ...block.rect };
 
 			const onMove = (moveEvent: MouseEvent) => {
 				const deltaX =
-					((moveEvent.clientX - startX) / bounds.width) * 100;
+					((moveEvent.clientX - startX) / bounds.width) *
+					parentBaseWidth;
 				const deltaY =
-					((moveEvent.clientY - startY) / bounds.height) * 100;
+					((moveEvent.clientY - startY) / bounds.height) *
+					parentBaseHeight;
 				onPatchBlock(block.id, (nextBlock) => {
+					const minSize = blockRectUnit === "px" ? 20 : 5;
 					nextBlock.rect.width = toInt(
-						Math.max(5, startRect.width + deltaX),
+						Math.max(minSize, startRect.width + deltaX),
 					);
 					nextBlock.rect.height = toInt(
-						Math.max(5, startRect.height + deltaY),
+						Math.max(minSize, startRect.height + deltaY),
 					);
 				});
 			};

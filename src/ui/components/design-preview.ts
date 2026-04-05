@@ -4,6 +4,7 @@ import {
 	DesignPageDraft,
 	ThemeStyleDraft,
 	DesignCanvasBlock,
+	DesignRectUnit,
 } from "src/types/design-maker";
 import { renderBlockContent } from "./design-block-renderer";
 import { applyBlockRectStyles, applyGridFlexStyles } from "./design-canvas";
@@ -52,6 +53,8 @@ export function renderDesignPreview(options: {
 		slideBaseHeight = DESIGN_MAKER_SLIDE_HEIGHT,
 	} = options;
 	container.empty();
+
+	const rectUnit: DesignRectUnit = page.rectUnit ?? "percent";
 
 	if (showTitle) {
 		container.createEl("h3", {
@@ -106,7 +109,9 @@ export function renderDesignPreview(options: {
 		const el = parentEl.createDiv("slides-rup-design-maker-preview-block");
 		el.setAttr("data-block-id", block.id);
 		if (block.id === selectedBlockId) el.addClass("is-selected");
-		applyBlockRectStyles(el, block);
+		const blockRectUnit: DesignRectUnit =
+			block.extraAttributes.rectUnit === "px" ? "px" : rectUnit;
+		applyBlockRectStyles(el, block, blockRectUnit);
 		if (block.className && block.className.trim()) {
 			el.addClass(...block.className.trim().split(/\s+/));
 		}

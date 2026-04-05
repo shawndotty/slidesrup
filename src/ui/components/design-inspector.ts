@@ -1,5 +1,13 @@
 import { t } from "src/lang/helpers";
-import { DesignCanvasBlock, DesignGridBlock } from "src/types/design-maker";
+import {
+	formatRectInputValue,
+	parseRectInputValue,
+} from "src/services/design-maker-parser";
+import {
+	DesignCanvasBlock,
+	DesignGridBlock,
+	DesignRectUnit,
+} from "src/types/design-maker";
 
 function createNumberField(
 	container: HTMLElement,
@@ -34,6 +42,27 @@ function createTextField(
 		cls: "slides-rup-design-maker-input",
 	});
 	input.addEventListener("input", () => onChange(input.value));
+}
+
+function createRectField(
+	container: HTMLElement,
+	label: string,
+	value: number,
+	rectUnit: DesignRectUnit,
+	onChange: (value: number) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const input = row.createEl("input", {
+		type: "text",
+		value: formatRectInputValue(value, rectUnit),
+		cls: "slides-rup-design-maker-input",
+	});
+	input.addEventListener("input", () => {
+		const parsed = parseRectInputValue(input.value);
+		if (!parsed) return;
+		onChange(Math.round(parsed.value));
+	});
 }
 
 function createSelectField(
@@ -171,6 +200,9 @@ export function renderDesignInspector(options: {
 		}
 	}
 
+	const rectUnit: DesignRectUnit =
+		block.extraAttributes.rectUnit === "px" ? "px" : "percent";
+
 	createNumberField(container, "X", displayX, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(value, displayY);
@@ -189,14 +221,14 @@ export function renderDesignInspector(options: {
 			});
 		}
 	});
-	createNumberField(container, "Width", block.rect.width, (value) => {
+	createRectField(container, "Width", block.rect.width, rectUnit, (v) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.width = Math.round(Math.max(1, value));
+			nextBlock.rect.width = Math.round(Math.max(1, v));
 		});
 	});
-	createNumberField(container, "Height", block.rect.height, (value) => {
+	createRectField(container, "Height", block.rect.height, rectUnit, (v) => {
 		onPatchBlock((nextBlock) => {
-			nextBlock.rect.height = Math.round(Math.max(1, value));
+			nextBlock.rect.height = Math.round(Math.max(1, v));
 		});
 	});
 	createTextField(container, "CSS Class", block.className, (value) => {

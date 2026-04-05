@@ -23,6 +23,8 @@ export interface DesignBlockRect {
 	height: number;
 }
 
+export type DesignRectUnit = "percent" | "px";
+
 export interface DesignGridBlock {
 	id: string;
 	type: "grid";
@@ -81,6 +83,8 @@ export interface DesignPageDraft {
 	blocks: DesignCanvasBlock[];
 	rawMarkdown: string;
 	hasUnsupportedContent: boolean;
+	rectUnit?: DesignRectUnit;
+	unitWarnings?: string[];
 }
 
 export interface DesignDraft {

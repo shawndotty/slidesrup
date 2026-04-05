@@ -12,6 +12,7 @@ import {
 	DesignCanvasBlock,
 	DesignMakerViewState,
 	DesignPageType,
+	DesignRectUnit,
 } from "src/types/design-maker";
 import { renderDesignPageList } from "../components/design-page-list";
 import { renderDesignThemePanel } from "../components/design-theme-panel";
@@ -162,6 +163,7 @@ export class DesignMakerView extends ItemView {
 			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 			this.cssSourceValue = this.draft.theme.rawCss || "";
 			await this._loadPresentationCss();
+			this._notifyUnitWarnings(this.draft);
 			this._render();
 		} catch (error) {
 			this.draft = null;
@@ -648,11 +650,15 @@ export class DesignMakerView extends ItemView {
 
 	private _renderToolbar(): void {
 		if (!this.toolbarEl) return;
+		const page = this.draft ? this._getCurrentPage() : null;
 		renderDesignToolbar({
 			container: this.toolbarEl,
 			selectedBlockId: this.selectedBlockId,
 			hasFootnotesBlock: this._hasFootnotesBlock(),
 			hasSideBarBlock: this._hasSideBarBlock(),
+			rectUnit: page?.rectUnit ?? "percent",
+			slideBaseWidth: this._getSlideBaseWidth(),
+			slideBaseHeight: this._getSlideBaseHeight(),
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
 				this.selectedBlockId = block.id;
@@ -910,6 +916,15 @@ export class DesignMakerView extends ItemView {
 		return Number.isFinite(value) && value > 0 ? value : 1080;
 	}
 
+	private _notifyUnitWarnings(draft: DesignDraft): void {
+		const warnings = Object.values(draft.pages)
+			.flatMap((page) => page.unitWarnings || [])
+			.filter(Boolean);
+		if (warnings.length === 0) return;
+		const message = warnings.slice(0, 3).join("\n");
+		new Notice(`Template units adjusted:\n${message}`);
+	}
+
 	private _renderPageSourceEditor(): void {
 		this.pageSourceEl!.empty();
 		const textarea = this.pageSourceEl!.createEl("textarea", {
@@ -936,6 +951,8 @@ export class DesignMakerView extends ItemView {
 			);
 			this.draft.pages[this.activePageType] = reparsed;
 			this.selectedBlockId = null;
+			this._notifyUnitWarnings(this.draft);
+			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 			this._render();
 		});
 	}
@@ -1096,6 +1113,31 @@ export class DesignMakerView extends ItemView {
 		parentEl: HTMLElement,
 	): void {
 		const parentRect = parentEl.getBoundingClientRect();
+		const rectUnit: DesignRectUnit =
+			block.extraAttributes.rectUnit === "px"
+				? "px"
+				: (this._getCurrentPage().rectUnit ?? "percent");
+		if (rectUnit === "px") {
+			const canvasEl = this.canvasEl?.querySelector(
+				".slides-rup-design-maker-canvas",
+			) as HTMLElement | null;
+			const canvasRect = canvasEl?.getBoundingClientRect();
+			const scale =
+				canvasRect && canvasRect.width
+					? canvasRect.width / this._getSlideBaseWidth()
+					: 1;
+			const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+			const newX = (globalRect.left - parentRect.left) / safeScale;
+			const newY = (globalRect.top - parentRect.top) / safeScale;
+			const newWidth = globalRect.width / safeScale;
+			const newHeight = globalRect.height / safeScale;
+			block.rect.x = Math.round(newX);
+			block.rect.y = Math.round(newY);
+			block.rect.width = Math.max(1, Math.round(newWidth));
+			block.rect.height = Math.max(1, Math.round(newHeight));
+			return;
+		}
+
 		const newX =
 			((globalRect.left - parentRect.left) / parentRect.width) * 100;
 		const newY =
@@ -1163,16 +1205,24 @@ export class DesignMakerView extends ItemView {
 	}
 
 	private _createFootnotesBlock(): DesignGridBlock {
+		const rectUnit: DesignRectUnit =
+			this._getCurrentPage().rectUnit ?? "percent";
+		const baseWidth = this._getSlideBaseWidth();
+		const baseHeight = this._getSlideBaseHeight();
+		const rect =
+			rectUnit === "px"
+				? {
+						x: 0,
+						y: Math.round((baseHeight * 92) / 100),
+						width: baseWidth,
+						height: Math.round((baseHeight * 8) / 100),
+					}
+				: { x: 0, y: 92, width: 100, height: 8 };
 		return {
 			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
 			type: "grid",
 			role: "placeholder",
-			rect: {
-				x: 0,
-				y: 92,
-				width: 100,
-				height: 8,
-			},
+			rect,
 			content: "<%? footnotes %>",
 			className: "footnotes",
 			style: "",
@@ -1192,16 +1242,24 @@ export class DesignMakerView extends ItemView {
 	}
 
 	private _createSideBarBlock(): DesignGridBlock {
+		const rectUnit: DesignRectUnit =
+			this._getCurrentPage().rectUnit ?? "percent";
+		const baseWidth = this._getSlideBaseWidth();
+		const baseHeight = this._getSlideBaseHeight();
+		const rect =
+			rectUnit === "px"
+				? {
+						x: Math.round((baseWidth * 95) / 100),
+						y: Math.round((baseHeight * 35) / 100),
+						width: Math.round((baseWidth * 5) / 100),
+						height: Math.round((baseHeight * 30) / 100),
+					}
+				: { x: 95, y: 35, width: 5, height: 30 };
 		return {
 			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
 			type: "grid",
 			role: "placeholder",
-			rect: {
-				x: 95,
-				y: 35,
-				width: 5,
-				height: 30,
-			},
+			rect,
 			content: "![[SR-SideBar]]",
 			className: "sr-sidebar",
 			style: "",
