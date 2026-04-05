@@ -41,7 +41,9 @@ export class DesignMakerView extends ItemView {
 	private centerTabsEl: HTMLElement | null = null;
 	private centerStageEl: HTMLElement | null = null;
 	private canvasEl: HTMLElement | null = null;
+	private centerControlsEl: HTMLElement | null = null;
 	private canvasControlsEl: HTMLElement | null = null;
+	private centerActionsEl: HTMLElement | null = null;
 	private toolbarEl: HTMLElement | null = null;
 	private inspectorPanelEl: HTMLDetailsElement | null = null;
 	private themePanelEl: HTMLDetailsElement | null = null;
@@ -65,6 +67,7 @@ export class DesignMakerView extends ItemView {
 	private canvasZoomPercent = 100;
 	private canvasPanX = 0;
 	private canvasPanY = 0;
+	private previewZoomPercent = 100;
 	private isSpaceKeyDown = false;
 	private readonly _onWindowKeyUp = (event: KeyboardEvent) => {
 		this._handleWindowKeyUp(event);
@@ -83,6 +86,8 @@ export class DesignMakerView extends ItemView {
 		super(leaf);
 		this.plugin = plugin;
 		this.designMaker = new DesignMaker(this.app, plugin.settings, plugin);
+		this.previewZoomPercent =
+			Number(plugin.settings.designMakerPreviewScale) || 100;
 		this._syncSelectionVisualsDebounced = debounce(() => {
 			this._applySelectionVisualTransition(
 				this.lastSelectionVisualBlockId,
@@ -202,41 +207,13 @@ export class DesignMakerView extends ItemView {
 		const title = header.createEl("h2", { text: t("Design Maker") });
 		title.addClass("slides-rup-design-maker-title");
 
-		const actions = header.createDiv(
-			"slides-rup-design-maker-header-actions",
-		);
-
-		const saveButton = actions.createEl("button", {
-			text: t("Save and Apply"),
-		});
-		saveButton.addEventListener("click", async () => {
-			if (!this.draft) return;
-			this.draft.theme.rawCss = this.cssSourceValue;
-			await this.designMaker.saveDesignDraft(this.draft);
-			await this._loadDraft({ keepActivePage: true });
-		});
-
-		const reloadButton = actions.createEl("button", {
-			text: t("Reload Design"),
-		});
-		reloadButton.addEventListener("click", async () => {
-			await this._loadDraft({ keepActivePage: true });
-		});
-
-		const loadButton = actions.createEl("button", {
-			text: t("Load Design"),
-		});
-		loadButton.addEventListener("click", async () => {
-			await this.designMaker.openDesignMaker(this.leaf);
-		});
-
 		const layout = this.contentEl.createDiv(
 			"slides-rup-design-maker-layout",
 		);
 		this.pageListEl = layout.createDiv("slides-rup-design-maker-sidebar");
 		const center = layout.createDiv("slides-rup-design-maker-main");
-		this.centerTabsEl = center.createDiv(
-			"slides-rup-design-maker-center-tabs",
+		this.toolbarEl = center.createDiv(
+			"slides-rup-design-maker-toolbar-panel",
 		);
 		this.centerStageEl = center.createDiv(
 			"slides-rup-design-maker-center-stage",
@@ -247,11 +224,17 @@ export class DesignMakerView extends ItemView {
 		this.previewEl = this.centerStageEl.createDiv(
 			"slides-rup-design-maker-panel",
 		);
-		this.canvasControlsEl = center.createDiv(
-			"slides-rup-design-maker-canvas-controls-panel",
+		this.centerControlsEl = center.createDiv(
+			"slides-rup-design-maker-center-controls-panel",
 		);
-		this.toolbarEl = center.createDiv(
-			"slides-rup-design-maker-toolbar-panel",
+		this.canvasControlsEl = this.centerControlsEl.createDiv(
+			"slides-rup-design-maker-canvas-controls-panel slides-rup-design-maker-center-controls-left",
+		);
+		this.centerTabsEl = this.centerControlsEl.createDiv(
+			"slides-rup-design-maker-center-tabs slides-rup-design-maker-center-controls-center",
+		);
+		this.centerActionsEl = this.centerControlsEl.createDiv(
+			"slides-rup-design-maker-center-controls-right",
 		);
 		const right = layout.createDiv("slides-rup-design-maker-sidepanel");
 		this.inspectorEl = this._createCollapsiblePanel(
@@ -335,20 +318,23 @@ export class DesignMakerView extends ItemView {
 	}
 
 	private _renderCenterPanel(): void {
-		this._renderCenterTabs();
+		this._renderToolbar();
+		this._renderCenterControls();
 		if (this.activeCenterTab === "design") {
 			this.canvasEl?.removeClass("is-hidden");
 			this.previewEl?.addClass("is-hidden");
-			this._renderCanvasControls();
-			this._renderToolbar();
 			this._renderCanvasOnly();
 			return;
 		}
 		this.canvasEl?.addClass("is-hidden");
 		this.previewEl?.removeClass("is-hidden");
-		this.canvasControlsEl?.addClass("is-hidden");
-		this._renderToolbar();
 		this._renderPreviewOnly(false);
+	}
+
+	private _renderCenterControls(): void {
+		this._renderCenterTabs();
+		this._renderCanvasControls();
+		this._renderCenterActions();
 	}
 
 	private _renderCenterTabs(): void {
@@ -489,7 +475,7 @@ export class DesignMakerView extends ItemView {
 		this._syncPageSource();
 		this._renderCanvasOnly();
 		this._renderPreviewOnly(false);
-		this._renderCanvasControls();
+		this._renderCenterControls();
 		if (this.plugin.settings.designMakerShowAdvancedSourceEditor) {
 			this._renderPageSourceEditor();
 		}
@@ -547,36 +533,97 @@ export class DesignMakerView extends ItemView {
 
 	private _renderCanvasControls(): void {
 		if (!this.canvasControlsEl) return;
-		if (this.activeCenterTab !== "design") {
-			this.canvasControlsEl.empty();
-			this.canvasControlsEl.addClass("is-hidden");
-			return;
-		}
 		this.canvasControlsEl.removeClass("is-hidden");
 		this.canvasControlsEl.empty();
+
+		const isPreview = this.activeCenterTab === "preview";
+		const zoomPercent = isPreview
+			? this.previewZoomPercent
+			: this.canvasZoomPercent;
 
 		const controls = this.canvasControlsEl.createDiv(
 			"slides-rup-design-maker-canvas-controls",
 		);
-		const zoomOutButton = controls.createEl("button", { text: "-" });
-		zoomOutButton.addEventListener("click", () =>
-			this._setCanvasZoomPercent(this.canvasZoomPercent - 10, "center"),
-		);
+		const zoomOutButton = controls.createEl("button", {
+			text: "-",
+			attr: { "aria-label": "Zoom out" },
+		});
+		zoomOutButton.addEventListener("click", () => {
+			if (isPreview) {
+				this._setPreviewZoomPercent(zoomPercent - 10);
+				return;
+			}
+			this._setCanvasZoomPercent(zoomPercent - 10, "center");
+		});
 
 		const zoomLabel = controls.createDiv(
 			"slides-rup-design-maker-zoom-label",
 		);
-		zoomLabel.setText(`${this.canvasZoomPercent}%`);
+		zoomLabel.setText(`${zoomPercent}%`);
 
-		const zoomInButton = controls.createEl("button", { text: "+" });
-		zoomInButton.addEventListener("click", () =>
-			this._setCanvasZoomPercent(this.canvasZoomPercent + 10, "center"),
+		const zoomInButton = controls.createEl("button", {
+			text: "+",
+			attr: { "aria-label": "Zoom in" },
+		});
+		zoomInButton.addEventListener("click", () => {
+			if (isPreview) {
+				this._setPreviewZoomPercent(zoomPercent + 10);
+				return;
+			}
+			this._setCanvasZoomPercent(zoomPercent + 10, "center");
+		});
+
+		const zoomResetButton = controls.createEl("button", {
+			text: "100%",
+			attr: { "aria-label": "Reset zoom" },
+		});
+		zoomResetButton.addEventListener("click", () => {
+			if (isPreview) {
+				this._setPreviewZoomPercent(100);
+				return;
+			}
+			this._resetCanvasView();
+		});
+	}
+
+	private _setPreviewZoomPercent(zoomPercent: number): void {
+		this.previewZoomPercent = clampCanvasZoomPercent(zoomPercent);
+		this._renderPreviewOnly(false);
+		this._renderCanvasControls();
+	}
+
+	private _renderCenterActions(): void {
+		if (!this.centerActionsEl) return;
+		this.centerActionsEl.empty();
+		const actions = this.centerActionsEl.createDiv(
+			"slides-rup-design-maker-center-actions",
 		);
 
-		const zoomResetButton = controls.createEl("button", { text: "100%" });
-		zoomResetButton.addEventListener("click", () =>
-			this._resetCanvasView(),
-		);
+		const saveButton = actions.createEl("button", {
+			text: t("Save and Apply"),
+		});
+		saveButton.disabled = !this.draft;
+		saveButton.addEventListener("click", async () => {
+			if (!this.draft) return;
+			this.draft.theme.rawCss = this.cssSourceValue;
+			await this.designMaker.saveDesignDraft(this.draft);
+			await this._loadDraft({ keepActivePage: true });
+		});
+
+		const reloadButton = actions.createEl("button", {
+			text: t("Reload Design"),
+		});
+		reloadButton.disabled = !this.draft;
+		reloadButton.addEventListener("click", async () => {
+			await this._loadDraft({ keepActivePage: true });
+		});
+
+		const loadButton = actions.createEl("button", {
+			text: t("Load Design"),
+		});
+		loadButton.addEventListener("click", async () => {
+			await this.designMaker.openDesignMaker(this.leaf);
+		});
 	}
 
 	private _resetCanvasView(): void {
@@ -584,7 +631,7 @@ export class DesignMakerView extends ItemView {
 		this.canvasPanX = 0;
 		this.canvasPanY = 0;
 		this._renderCanvasOnly();
-		this._renderCanvasControls();
+		this._renderCenterControls();
 	}
 
 	private _updateCanvasZoomLabel(): void {
@@ -592,7 +639,11 @@ export class DesignMakerView extends ItemView {
 			".slides-rup-design-maker-zoom-label",
 		) as HTMLElement | null;
 		if (!label) return;
-		label.textContent = `${this.canvasZoomPercent}%`;
+		const zoomPercent =
+			this.activeCenterTab === "preview"
+				? this.previewZoomPercent
+				: this.canvasZoomPercent;
+		label.textContent = `${zoomPercent}%`;
 	}
 
 	private _renderToolbar(): void {
@@ -653,7 +704,7 @@ export class DesignMakerView extends ItemView {
 			presentationCss: this.presentationCss,
 			selectedBlockId: this.selectedBlockId,
 			showTitle,
-			previewScale: this.plugin.settings.designMakerPreviewScale,
+			previewScale: this.previewZoomPercent,
 			slideBaseWidth: this._getSlideBaseWidth(),
 			slideBaseHeight: this._getSlideBaseHeight(),
 		});
@@ -1311,7 +1362,9 @@ export class DesignMakerView extends ItemView {
 		[
 			this.pageListEl,
 			this.canvasEl,
+			this.centerControlsEl,
 			this.canvasControlsEl,
+			this.centerActionsEl,
 			this.toolbarEl,
 			this.inspectorEl,
 			this.themeEl,
@@ -1336,7 +1389,9 @@ export class DesignMakerView extends ItemView {
 			this.centerTabsEl &&
 			this.centerStageEl &&
 			this.canvasEl &&
+			this.centerControlsEl &&
 			this.canvasControlsEl &&
+			this.centerActionsEl &&
 			this.toolbarEl &&
 			this.inspectorPanelEl &&
 			this.themePanelEl &&
@@ -1351,7 +1406,9 @@ export class DesignMakerView extends ItemView {
 			this.contentEl.contains(this.centerTabsEl) &&
 			this.contentEl.contains(this.centerStageEl) &&
 			this.contentEl.contains(this.canvasEl) &&
+			this.contentEl.contains(this.centerControlsEl) &&
 			this.contentEl.contains(this.canvasControlsEl) &&
+			this.contentEl.contains(this.centerActionsEl) &&
 			this.contentEl.contains(this.toolbarEl) &&
 			this.contentEl.contains(this.inspectorPanelEl) &&
 			this.contentEl.contains(this.themePanelEl) &&
@@ -1370,7 +1427,9 @@ export class DesignMakerView extends ItemView {
 		this.centerTabsEl = null;
 		this.centerStageEl = null;
 		this.canvasEl = null;
+		this.centerControlsEl = null;
 		this.canvasControlsEl = null;
+		this.centerActionsEl = null;
 		this.toolbarEl = null;
 		this.inspectorPanelEl = null;
 		this.themePanelEl = null;
