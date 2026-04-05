@@ -182,6 +182,48 @@ function testSelectionDebounceStateMachine() {
 	console.log("testSelectionDebounceStateMachine passed");
 }
 
+function testNestedBlockVisibilityToggle() {
+	type Block = {
+		id: string;
+		type: "grid" | "raw";
+		hiddenInDesign?: boolean;
+		children?: Block[];
+	};
+
+	const findById = (blocks: Block[], id: string): Block | null => {
+		for (const block of blocks) {
+			if (block.id === id) return block;
+			if (block.type === "grid" && block.children) {
+				const found = findById(block.children, id);
+				if (found) return found;
+			}
+		}
+		return null;
+	};
+
+	const blocks: Block[] = [
+		{
+			id: "parent",
+			type: "grid",
+			children: [{ id: "child", type: "grid" }],
+		},
+	];
+
+	const child = findById(blocks, "child");
+	assert.ok(child, "Should find nested child block");
+	assert.strictEqual(child.hiddenInDesign, undefined);
+	child.hiddenInDesign = true;
+	assert.strictEqual(findById(blocks, "child")?.hiddenInDesign, true);
+
+	const parent = findById(blocks, "parent");
+	assert.ok(parent, "Should find parent block");
+	parent.hiddenInDesign = true;
+	parent.hiddenInDesign = false;
+	assert.strictEqual(findById(blocks, "parent")?.hiddenInDesign, false);
+
+	console.log("testNestedBlockVisibilityToggle passed");
+}
+
 function runTests() {
 	try {
 		testNestedGridSerialization();
@@ -189,6 +231,7 @@ function runTests() {
 		testTreeCircularDependency();
 		testDesignMakerRuntimeCssHasHelperClasses();
 		testSelectionDebounceStateMachine();
+		testNestedBlockVisibilityToggle();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

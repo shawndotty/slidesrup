@@ -293,14 +293,14 @@ export class DesignMakerView extends ItemView {
 				this._reparentBlock(sourceId, targetId);
 			},
 			onToggleBlockVisibility: (blockId, hidden) => {
-				const block = this._getCurrentPage().blocks.find(
-					(b) => b.id === blockId,
+				const found = this._findBlockById(
+					this._getCurrentPage().blocks,
+					blockId,
 				);
-				if (block) {
-					block.hiddenInDesign = hidden;
-					this._renderCanvasAndPreview();
-					this._render(); // update eye icon in list
-				}
+				if (!found) return;
+				found.block.hiddenInDesign = hidden;
+				this._renderCanvasAndPreview();
+				this._render(); // update eye icon in list
 			},
 		});
 

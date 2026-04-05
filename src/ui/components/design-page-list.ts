@@ -157,7 +157,11 @@ export function renderDesignPageList(options: {
 
 		toggleBtn.addEventListener("click", (e) => {
 			e.stopPropagation();
-			onToggleBlockVisibility(block.id, !block.hiddenInDesign);
+			try {
+				onToggleBlockVisibility(block.id, !block.hiddenInDesign);
+			} catch {
+				// ignore
+			}
 		});
 
 		if (hasChildren) {
