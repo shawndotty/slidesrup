@@ -371,6 +371,7 @@ export class DesignMakerView extends ItemView {
 	private _renderRightPanel(): void {
 		if (!this.draft) return;
 		renderDesignInspector({
+			app: this.app,
 			container: this.inspectorEl!,
 			block: this._getSelectedBlock(),
 			showTitle: false,

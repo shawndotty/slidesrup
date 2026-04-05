@@ -1,3 +1,4 @@
+import { App, setIcon, TFile } from "obsidian";
 import { t } from "src/lang/helpers";
 import {
 	formatRectInputValue,
@@ -8,6 +9,429 @@ import {
 	DesignGridBlock,
 	DesignRectUnit,
 } from "src/types/design-maker";
+
+const LOCAL_IMAGE_EXTENSIONS = new Set([
+	"png",
+	"jpg",
+	"jpeg",
+	"gif",
+	"webp",
+	"svg",
+	"bmp",
+	"ico",
+	"avif",
+	"heic",
+]);
+
+type PickerPlacement = "top" | "bottom";
+
+export function clampImagePickerPosition(options: {
+	left: number;
+	top: number;
+	pickerWidth: number;
+	pickerHeight: number;
+	viewportWidth: number;
+	viewportHeight: number;
+	margin?: number;
+}): { left: number; top: number } {
+	const {
+		left,
+		top,
+		pickerWidth,
+		pickerHeight,
+		viewportWidth,
+		viewportHeight,
+		margin = 12,
+	} = options;
+	const maxLeft = Math.max(margin, viewportWidth - pickerWidth - margin);
+	const maxTop = Math.max(margin, viewportHeight - pickerHeight - margin);
+	return {
+		left: Math.min(maxLeft, Math.max(margin, left)),
+		top: Math.min(maxTop, Math.max(margin, top)),
+	};
+}
+
+export function computeImagePickerPlacement(options: {
+	triggerRect: Pick<DOMRect, "left" | "right" | "top" | "bottom">;
+	pickerWidth: number;
+	pickerHeight: number;
+	viewportWidth: number;
+	viewportHeight: number;
+	margin?: number;
+	gap?: number;
+}): {
+	left: number;
+	top: number;
+	maxHeight: number;
+	placement: PickerPlacement;
+} {
+	const {
+		triggerRect,
+		pickerWidth,
+		pickerHeight,
+		viewportWidth,
+		viewportHeight,
+		margin = 12,
+		gap = 8,
+	} = options;
+	const belowSpace = Math.max(
+		0,
+		viewportHeight - triggerRect.bottom - margin,
+	);
+	const aboveSpace = Math.max(0, triggerRect.top - margin);
+	const preferredPlacement: PickerPlacement =
+		belowSpace >= 220 || belowSpace >= aboveSpace ? "bottom" : "top";
+	const maxHeight = Math.max(
+		160,
+		(preferredPlacement === "bottom" ? belowSpace : aboveSpace) - gap,
+	);
+	const preferredLeft = triggerRect.right - pickerWidth;
+	const preferredTop =
+		preferredPlacement === "bottom"
+			? triggerRect.bottom + gap
+			: triggerRect.top - pickerHeight - gap;
+	const clamped = clampImagePickerPosition({
+		left: preferredLeft,
+		top: preferredTop,
+		pickerWidth,
+		pickerHeight,
+		viewportWidth,
+		viewportHeight,
+		margin,
+	});
+	return {
+		left: clamped.left,
+		top: clamped.top,
+		maxHeight: Math.min(maxHeight, viewportHeight - margin * 2),
+		placement: preferredPlacement,
+	};
+}
+
+export function getNextPickerSelectionIndex(
+	currentIndex: number,
+	totalItems: number,
+	direction: 1 | -1,
+): number {
+	if (totalItems <= 0) return -1;
+	const normalized = currentIndex < 0 ? 0 : currentIndex;
+	return (normalized + direction + totalItems) % totalItems;
+}
+
+export function isLocalImagePath(path: string): boolean {
+	if (!path || !path.trim()) return false;
+	const parts = path.toLowerCase().split(".");
+	if (parts.length < 2) return false;
+	return LOCAL_IMAGE_EXTENSIONS.has(parts[parts.length - 1]);
+}
+
+export function buildWikiImageEmbed(path: string): string {
+	return `![[${path.trim()}]]`;
+}
+
+export function insertImageEmbedIntoContent(
+	content: string,
+	imagePath: string,
+): string {
+	const embed = buildWikiImageEmbed(imagePath);
+	const current = (content || "").trimEnd();
+	if (!current) return embed;
+	return `${current}\n${embed}`;
+}
+
+function openLocalImagePicker(options: {
+	app: App;
+	triggerEl: HTMLElement;
+	onSelect: (path: string) => void;
+}): void {
+	const { app, triggerEl, onSelect } = options;
+	const imagePaths = app.vault
+		.getFiles()
+		.filter((file: TFile) => isLocalImagePath(file.path))
+		.map((file) => file.path)
+		.sort((a, b) => a.localeCompare(b));
+
+	const pickerEl = document.body.createDiv(
+		"slides-rup-design-maker-image-picker",
+	);
+	pickerEl.addClass("is-entering");
+	const headerEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-header",
+	);
+	headerEl.createEl("strong", {
+		text: t("Image Picker" as any),
+		cls: "slides-rup-design-maker-image-picker-title",
+	});
+	const headerActions = headerEl.createDiv(
+		"slides-rup-design-maker-image-picker-actions",
+	);
+	const pinButton = headerActions.createEl("button", {
+		cls: "slides-rup-design-maker-image-picker-action",
+		attr: { type: "button", "aria-label": t("Pin picker" as any) },
+	});
+	setIcon(pinButton, "pin");
+	const closeButton = headerActions.createEl("button", {
+		cls: "slides-rup-design-maker-image-picker-action",
+		attr: { type: "button", "aria-label": t("Close picker" as any) },
+	});
+	setIcon(closeButton, "x");
+	const searchInput = pickerEl.createEl("input", {
+		type: "text",
+		cls: "slides-rup-design-maker-image-picker-search",
+		attr: {
+			placeholder: t("Search local images"),
+		},
+	});
+	const hintEl = pickerEl.createDiv({
+		cls: "slides-rup-design-maker-image-picker-hint",
+		text: t("Enter to insert · Esc to close" as any),
+	});
+	const listEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-list",
+	);
+
+	let pinned = false;
+	let isDragging = false;
+	let dragPointerId: number | null = null;
+	let dragOffsetX = 0;
+	let dragOffsetY = 0;
+	let selectedIndex = 0;
+	let hasManualPosition = false;
+	let currentLeft = 12;
+	let currentTop = 12;
+	let matchedPaths: string[] = [];
+	let isClosed = false;
+
+	const updatePinnedState = () => {
+		pickerEl.classList.toggle("is-pinned", pinned);
+		pinButton.setAttr("aria-pressed", pinned ? "true" : "false");
+		pinButton.setAttr(
+			"aria-label",
+			pinned ? t("Unpin picker" as any) : t("Pin picker" as any),
+		);
+		pinButton.title = pinned
+			? t("Unpin picker" as any)
+			: t("Pin picker" as any);
+	};
+
+	const applyPosition = (left: number, top: number) => {
+		const rect = pickerEl.getBoundingClientRect();
+		const clamped = clampImagePickerPosition({
+			left,
+			top,
+			pickerWidth: rect.width || 360,
+			pickerHeight: rect.height || 320,
+			viewportWidth: window.innerWidth,
+			viewportHeight: window.innerHeight,
+		});
+		currentLeft = clamped.left;
+		currentTop = clamped.top;
+		pickerEl.style.left = `${currentLeft}px`;
+		pickerEl.style.top = `${currentTop}px`;
+	};
+
+	const placePicker = () => {
+		const rect = triggerEl.getBoundingClientRect();
+		const pickerRect = pickerEl.getBoundingClientRect();
+		const placement = computeImagePickerPlacement({
+			triggerRect: rect,
+			pickerWidth: pickerRect.width || 360,
+			pickerHeight: pickerRect.height || 320,
+			viewportWidth: window.innerWidth,
+			viewportHeight: window.innerHeight,
+		});
+		pickerEl.setAttr("data-placement", placement.placement);
+		pickerEl.style.maxHeight = `${Math.max(180, placement.maxHeight)}px`;
+		if (hasManualPosition) {
+			applyPosition(currentLeft, currentTop);
+			return;
+		}
+		applyPosition(placement.left, placement.top);
+	};
+
+	const setSelectedIndex = (
+		nextIndex: number,
+		options?: { scrollIntoView?: boolean },
+	) => {
+		selectedIndex = nextIndex;
+		const items = listEl.querySelectorAll(
+			".slides-rup-design-maker-image-picker-item",
+		);
+		items.forEach((item, index) => {
+			item.classList.toggle("is-selected", index === selectedIndex);
+		});
+		if (options?.scrollIntoView && selectedIndex >= 0) {
+			(items[selectedIndex] as HTMLElement | undefined)?.scrollIntoView({
+				block: "nearest",
+			});
+		}
+	};
+
+	const selectCurrentPath = () => {
+		const targetPath = matchedPaths[selectedIndex];
+		if (!targetPath) return;
+		onSelect(targetPath);
+		close();
+	};
+
+	const close = () => {
+		if (isClosed) return;
+		isClosed = true;
+		document.removeEventListener("mousedown", onDocumentMouseDown, true);
+		document.removeEventListener(
+			"pointermove",
+			onDocumentPointerMove,
+			true,
+		);
+		document.removeEventListener("pointerup", onDocumentPointerUp, true);
+		window.removeEventListener("resize", onWindowResize);
+		document.removeEventListener("keydown", onDocumentKeyDown, true);
+		pickerEl.removeClass("is-entering");
+		pickerEl.addClass("is-closing");
+		window.setTimeout(() => pickerEl.remove(), 130);
+	};
+
+	const onDocumentMouseDown = (event: MouseEvent) => {
+		if (pinned) return;
+		const target = event.target as Node;
+		if (
+			pickerEl.contains(target) ||
+			triggerEl.contains(target as HTMLElement)
+		) {
+			return;
+		}
+		close();
+	};
+
+	const onDocumentKeyDown = (event: KeyboardEvent) => {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			close();
+			return;
+		}
+		if (event.key === "Enter") {
+			event.preventDefault();
+			selectCurrentPath();
+			return;
+		}
+		if (event.key === "ArrowDown") {
+			event.preventDefault();
+			setSelectedIndex(
+				getNextPickerSelectionIndex(
+					selectedIndex,
+					matchedPaths.length,
+					1,
+				),
+				{ scrollIntoView: true },
+			);
+			return;
+		}
+		if (event.key === "ArrowUp") {
+			event.preventDefault();
+			setSelectedIndex(
+				getNextPickerSelectionIndex(
+					selectedIndex,
+					matchedPaths.length,
+					-1,
+				),
+				{ scrollIntoView: true },
+			);
+		}
+	};
+
+	const onDocumentPointerMove = (event: PointerEvent) => {
+		if (!isDragging || dragPointerId !== event.pointerId) return;
+		event.preventDefault();
+		applyPosition(event.clientX - dragOffsetX, event.clientY - dragOffsetY);
+	};
+
+	const onDocumentPointerUp = (event: PointerEvent) => {
+		if (dragPointerId !== event.pointerId) return;
+		isDragging = false;
+		dragPointerId = null;
+		headerEl.removeClass("is-dragging");
+		if (headerEl.hasPointerCapture(event.pointerId)) {
+			headerEl.releasePointerCapture(event.pointerId);
+		}
+	};
+
+	const onWindowResize = () => {
+		placePicker();
+	};
+
+	const renderList = () => {
+		const keyword = searchInput.value.trim().toLowerCase();
+		matchedPaths = keyword
+			? imagePaths.filter((path) => path.toLowerCase().includes(keyword))
+			: imagePaths;
+		listEl.empty();
+		if (!matchedPaths.length) {
+			selectedIndex = -1;
+			listEl.createDiv({
+				cls: "slides-rup-design-maker-image-picker-empty",
+				text: t("No local images found"),
+			});
+			return;
+		}
+		selectedIndex = Math.min(
+			Math.max(0, selectedIndex),
+			matchedPaths.length - 1,
+		);
+		matchedPaths.forEach((path, index) => {
+			const button = listEl.createEl("button", {
+				cls: "slides-rup-design-maker-image-picker-item",
+				text: path,
+				attr: { type: "button" },
+			});
+			button.addEventListener("pointerenter", () => {
+				setSelectedIndex(index);
+			});
+			button.addEventListener("click", () => {
+				setSelectedIndex(index);
+				selectCurrentPath();
+			});
+		});
+		setSelectedIndex(selectedIndex);
+	};
+
+	searchInput.addEventListener("input", renderList);
+	pinButton.addEventListener("click", (event) => {
+		event.preventDefault();
+		pinned = !pinned;
+		updatePinnedState();
+	});
+	closeButton.addEventListener("click", (event) => {
+		event.preventDefault();
+		close();
+	});
+	headerEl.addEventListener("pointerdown", (event) => {
+		const target = event.target as HTMLElement;
+		if (target.closest(".slides-rup-design-maker-image-picker-action"))
+			return;
+		isDragging = true;
+		hasManualPosition = true;
+		dragPointerId = event.pointerId;
+		const rect = pickerEl.getBoundingClientRect();
+		dragOffsetX = event.clientX - rect.left;
+		dragOffsetY = event.clientY - rect.top;
+		headerEl.addClass("is-dragging");
+		headerEl.setPointerCapture(event.pointerId);
+		event.preventDefault();
+	});
+
+	updatePinnedState();
+	renderList();
+	placePicker();
+
+	requestAnimationFrame(() => {
+		pickerEl.removeClass("is-entering");
+		document.addEventListener("pointermove", onDocumentPointerMove, true);
+		document.addEventListener("pointerup", onDocumentPointerUp, true);
+		document.addEventListener("mousedown", onDocumentMouseDown, true);
+		window.addEventListener("resize", onWindowResize);
+		document.addEventListener("keydown", onDocumentKeyDown, true);
+		searchInput.focus();
+	});
+}
 
 function createNumberField(
 	container: HTMLElement,
@@ -142,6 +566,7 @@ function createRangeField(
 }
 
 export function renderDesignInspector(options: {
+	app?: App;
 	container: HTMLElement;
 	block: DesignCanvasBlock | null;
 	showTitle?: boolean;
@@ -152,6 +577,7 @@ export function renderDesignInspector(options: {
 	onPatchBlock: (patcher: (block: DesignGridBlock) => void) => void;
 }): void {
 	const {
+		app,
 		container,
 		block,
 		onPatchBlock,
@@ -427,10 +853,40 @@ export function renderDesignInspector(options: {
 	const contentRow = container.createDiv(
 		"slides-rup-design-maker-field is-stacked",
 	);
-	contentRow.createEl("label", { text: t("Block Content") });
+	const contentHeader = contentRow.createDiv(
+		"slides-rup-design-maker-content-header",
+	);
+	contentHeader.createEl("label", { text: t("Block Content") });
+	const insertImageButton = contentHeader.createEl("button", {
+		cls: "slides-rup-design-maker-content-action",
+		attr: {
+			type: "button",
+			"aria-label": t("Insert local image"),
+		},
+	});
+	setIcon(insertImageButton, "image-plus");
+	insertImageButton.title = t("Insert local image");
+	insertImageButton.disabled = !app;
 	const textarea = contentRow.createEl("textarea", {
 		text: block.content,
 		cls: "slides-rup-design-maker-textarea",
+	});
+	insertImageButton.addEventListener("click", (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!app) return;
+		openLocalImagePicker({
+			app,
+			triggerEl: insertImageButton,
+			onSelect: (path) => {
+				textarea.value = insertImageEmbedIntoContent(
+					textarea.value,
+					path,
+				);
+				textarea.dispatchEvent(new Event("input"));
+				textarea.focus();
+			},
+		});
 	});
 	textarea.addEventListener("input", () => {
 		onPatchBlock((nextBlock) => {

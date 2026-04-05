@@ -22,7 +22,14 @@ import {
 	computeCanvasTransform,
 	computePanForZoom,
 } from "../ui/components/design-canvas";
-import { syncInspectorRectFields } from "../ui/components/design-inspector";
+import {
+	clampImagePickerPosition,
+	computeImagePickerPlacement,
+	getNextPickerSelectionIndex,
+	insertImageEmbedIntoContent,
+	isLocalImagePath,
+	syncInspectorRectFields,
+} from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
 import { YamlStore } from "../yamlStore";
 import en from "../lang/locale/en";
@@ -598,6 +605,109 @@ function testInspectorRectFieldRealtimeSync() {
 	console.log("testInspectorRectFieldRealtimeSync passed");
 }
 
+function testInsertLocalImageEmbed() {
+	assert.strictEqual(isLocalImagePath("assets/logo.png"), true);
+	assert.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
+	assert.strictEqual(isLocalImagePath("assets/doc.md"), false);
+	assert.strictEqual(isLocalImagePath("assets/noext"), false);
+
+	assert.strictEqual(
+		insertImageEmbedIntoContent("", "assets/cover.png"),
+		"![[assets/cover.png]]",
+	);
+	assert.strictEqual(
+		insertImageEmbedIntoContent("Hello", "assets/cover.png"),
+		"Hello\n![[assets/cover.png]]",
+	);
+	assert.strictEqual(
+		insertImageEmbedIntoContent("Hello\n", "assets/cover.png"),
+		"Hello\n![[assets/cover.png]]",
+	);
+
+	console.log("testInsertLocalImageEmbed passed");
+}
+
+function testImagePickerPlacementAndSelection() {
+	const bottomPlacement = computeImagePickerPlacement({
+		triggerRect: {
+			left: 700,
+			right: 780,
+			top: 100,
+			bottom: 130,
+		} as DOMRect,
+		pickerWidth: 360,
+		pickerHeight: 280,
+		viewportWidth: 1280,
+		viewportHeight: 720,
+	});
+	assert.strictEqual(bottomPlacement.placement, "bottom");
+	assert.ok(
+		bottomPlacement.top > 130,
+		"Should place below when space is enough",
+	);
+
+	const topPlacement = computeImagePickerPlacement({
+		triggerRect: {
+			left: 700,
+			right: 780,
+			top: 690,
+			bottom: 710,
+		} as DOMRect,
+		pickerWidth: 360,
+		pickerHeight: 280,
+		viewportWidth: 1280,
+		viewportHeight: 720,
+	});
+	assert.strictEqual(topPlacement.placement, "top");
+	assert.ok(
+		topPlacement.top < 690,
+		"Should place above when bottom space is too small",
+	);
+
+	const clamped = clampImagePickerPosition({
+		left: -200,
+		top: 900,
+		pickerWidth: 360,
+		pickerHeight: 300,
+		viewportWidth: 1024,
+		viewportHeight: 768,
+		margin: 12,
+	});
+	assert.strictEqual(
+		clamped.left,
+		12,
+		"Should clamp left to viewport margin",
+	);
+	assert.strictEqual(
+		clamped.top,
+		456,
+		"Should clamp bottom overflow to max top",
+	);
+
+	assert.strictEqual(
+		getNextPickerSelectionIndex(0, 3, 1),
+		1,
+		"ArrowDown should move forward",
+	);
+	assert.strictEqual(
+		getNextPickerSelectionIndex(0, 3, -1),
+		2,
+		"ArrowUp should wrap to last item",
+	);
+	assert.strictEqual(
+		getNextPickerSelectionIndex(-1, 3, 1),
+		1,
+		"Negative index should normalize before moving",
+	);
+	assert.strictEqual(
+		getNextPickerSelectionIndex(1, 0, 1),
+		-1,
+		"Empty list should return -1",
+	);
+
+	console.log("testImagePickerPlacementAndSelection passed");
+}
+
 function testInspectorLocaleKeysCompleteness() {
 	const requiredKeys = [
 		"Coordinates",
@@ -607,6 +717,14 @@ function testInspectorLocaleKeysCompleteness() {
 		"Y",
 		"Width",
 		"Height",
+		"Insert local image",
+		"Search local images",
+		"No local images found",
+		"Image Picker",
+		"Pin picker",
+		"Unpin picker",
+		"Close picker",
+		"Enter to insert · Esc to close",
 	];
 	requiredKeys.forEach((key) => {
 		assert.ok(
@@ -651,6 +769,8 @@ function runTests() {
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
 		testInspectorRectFieldRealtimeSync();
+		testInsertLocalImageEmbed();
+		testImagePickerPlacementAndSelection();
 		testInspectorLocaleKeysCompleteness();
 		console.log("All tests passed 100%!");
 	} catch (err) {

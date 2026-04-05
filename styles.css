@@ -845,6 +845,177 @@ h3.slides-rup-title {
 	width: auto;
 }
 
+.slides-rup-design-maker-content-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	width: 100%;
+}
+
+.slides-rup-design-maker-content-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.slides-rup-design-maker-content-action:hover:not(:disabled) {
+	color: var(--text-normal);
+	border-color: var(--interactive-accent);
+}
+
+.slides-rup-design-maker-content-action:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.slides-rup-design-maker-image-picker {
+	position: fixed;
+	z-index: 1000;
+	width: min(380px, calc(100vw - 24px));
+	max-height: min(420px, calc(100vh - 24px));
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 10px;
+	background: var(--background-primary);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+	opacity: 1;
+	transform: scale(1);
+	transition: opacity 120ms ease, transform 120ms ease,
+		box-shadow 160ms ease;
+}
+
+.slides-rup-design-maker-image-picker.is-entering {
+	opacity: 0;
+	transform: translateY(4px) scale(0.98);
+}
+
+.slides-rup-design-maker-image-picker.is-closing {
+	opacity: 0;
+	transform: translateY(4px) scale(0.98);
+	pointer-events: none;
+}
+
+.slides-rup-design-maker-image-picker.is-pinned {
+	z-index: 1200;
+	box-shadow: 0 14px 38px rgba(0, 0, 0, 0.32);
+}
+
+.slides-rup-design-maker-image-picker-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 2px 2px 8px;
+	cursor: grab;
+	touch-action: none;
+	user-select: none;
+}
+
+.slides-rup-design-maker-image-picker-header.is-dragging {
+	cursor: grabbing;
+}
+
+.slides-rup-design-maker-image-picker-title {
+	font-size: 12px;
+	letter-spacing: 0.02em;
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+
+.slides-rup-design-maker-image-picker-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.slides-rup-design-maker-image-picker-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.slides-rup-design-maker-image-picker-action:hover {
+	color: var(--text-normal);
+	border-color: var(--interactive-accent);
+}
+
+.slides-rup-design-maker-image-picker-hint {
+	margin: -2px 0 6px;
+	font-size: 11px;
+	color: var(--text-faint);
+}
+
+.slides-rup-design-maker-image-picker-search {
+	width: 100%;
+	margin-bottom: 8px;
+	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.slides-rup-design-maker-image-picker-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-height: 300px;
+	overflow: auto;
+}
+
+.slides-rup-design-maker-image-picker-item {
+	width: 100%;
+	text-align: left;
+	padding: 9px 10px;
+	min-height: 36px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-normal);
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.slides-rup-design-maker-image-picker-item:hover,
+.slides-rup-design-maker-image-picker-item.is-selected {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.slides-rup-design-maker-image-picker-empty {
+	padding: 6px 8px;
+	color: var(--text-muted);
+	font-size: 12px;
+}
+
+@media (max-width: 640px) {
+	.slides-rup-design-maker-image-picker {
+		width: calc(100vw - 16px);
+		max-height: calc(100vh - 16px);
+		border-radius: 12px;
+	}
+
+	.slides-rup-design-maker-image-picker-item {
+		min-height: 40px;
+		font-size: 13px;
+	}
+}
+
 .slides-rup-design-maker-input,
 .slides-rup-design-maker-textarea {
 	flex: 1;
