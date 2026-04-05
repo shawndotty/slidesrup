@@ -22,8 +22,12 @@ import {
 	computeCanvasTransform,
 	computePanForZoom,
 } from "../ui/components/design-canvas";
+import { syncInspectorRectFields } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
 import { YamlStore } from "../yamlStore";
+import en from "../lang/locale/en";
+import zhCN from "../lang/locale/zh-cn";
+import zhTW from "../lang/locale/zh-tw";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -555,6 +559,72 @@ function testAdvancedSlidesWidthHeightParsing() {
 	console.log("testAdvancedSlidesWidthHeightParsing passed");
 }
 
+function testInspectorRectFieldRealtimeSync() {
+	const inputMap: Record<string, any> = {
+		x: { value: "", setAttr: (_name: string, _value: string) => {} },
+		y: { value: "", setAttr: (_name: string, _value: string) => {} },
+		width: { value: "", setAttr: (_name: string, _value: string) => {} },
+		height: { value: "", setAttr: (_name: string, _value: string) => {} },
+	};
+	const container = {
+		querySelector: (selector: string) => {
+			const match = selector.match(
+				/data-rect-field="(x|y|width|height)"/,
+			);
+			if (!match) return null;
+			return inputMap[match[1]];
+		},
+	};
+
+	syncInspectorRectFields({
+		container: container as any,
+		rect: { x: 12, y: 34, width: 220, height: 160 },
+		rectUnit: "px",
+	});
+	assert.strictEqual(inputMap.x.value, "12px");
+	assert.strictEqual(inputMap.y.value, "34px");
+	assert.strictEqual(inputMap.width.value, "220px");
+	assert.strictEqual(inputMap.height.value, "160px");
+
+	syncInspectorRectFields({
+		container: container as any,
+		rect: { x: 7, y: 8, width: 40, height: 25 },
+		rectUnit: "percent",
+	});
+	assert.strictEqual(inputMap.x.value, "7");
+	assert.strictEqual(inputMap.y.value, "8");
+	assert.strictEqual(inputMap.width.value, "40");
+	assert.strictEqual(inputMap.height.value, "25");
+	console.log("testInspectorRectFieldRealtimeSync passed");
+}
+
+function testInspectorLocaleKeysCompleteness() {
+	const requiredKeys = [
+		"Coordinates",
+		"Rel",
+		"Glob",
+		"X",
+		"Y",
+		"Width",
+		"Height",
+	];
+	requiredKeys.forEach((key) => {
+		assert.ok(
+			(en as Record<string, string>)[key],
+			`en missing key: ${key}`,
+		);
+		assert.ok(
+			(zhCN as Record<string, string>)[key],
+			`zh-cn missing key: ${key}`,
+		);
+		assert.ok(
+			(zhTW as Record<string, string>)[key],
+			`zh-tw missing key: ${key}`,
+		);
+	});
+	console.log("testInspectorLocaleKeysCompleteness passed");
+}
+
 function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -580,6 +650,8 @@ function runTests() {
 		testCanvasZoomTransformMath();
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
+		testInspectorRectFieldRealtimeSync();
+		testInspectorLocaleKeysCompleteness();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

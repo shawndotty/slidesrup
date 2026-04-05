@@ -351,6 +351,7 @@ export function renderDesignCanvas(options: {
 	onPatchBlock: (
 		blockId: string,
 		patcher: (block: DesignGridBlock) => void,
+		mode?: "live" | "commit",
 	) => void;
 	onAddBlock: (block: DesignGridBlock) => void;
 	onDeleteBlock: (blockId: string) => void;
@@ -650,15 +651,21 @@ export function renderDesignCanvas(options: {
 				const deltaY =
 					((moveEvent.clientY - startY) / bounds.height) *
 					parentBaseHeight;
-				onPatchBlock(block.id, (nextBlock) => {
-					nextBlock.rect.x = toInt(startRect.x + deltaX);
-					nextBlock.rect.y = toInt(startRect.y + deltaY);
-				});
+				onPatchBlock(
+					block.id,
+					(nextBlock) => {
+						nextBlock.rect.x = toInt(startRect.x + deltaX);
+						nextBlock.rect.y = toInt(startRect.y + deltaY);
+					},
+					"live",
+				);
+				applyBlockRectStyles(el, block, blockRectUnit);
 			};
 
 			const onUp = (upEvent: MouseEvent) => {
 				document.removeEventListener("mousemove", onMove);
 				document.removeEventListener("mouseup", onUp);
+				onPatchBlock(block.id, () => {}, "commit");
 			};
 
 			document.addEventListener("mousemove", onMove);
@@ -686,20 +693,26 @@ export function renderDesignCanvas(options: {
 				const deltaY =
 					((moveEvent.clientY - startY) / bounds.height) *
 					parentBaseHeight;
-				onPatchBlock(block.id, (nextBlock) => {
-					const minSize = blockRectUnit === "px" ? 20 : 5;
-					nextBlock.rect.width = toInt(
-						Math.max(minSize, startRect.width + deltaX),
-					);
-					nextBlock.rect.height = toInt(
-						Math.max(minSize, startRect.height + deltaY),
-					);
-				});
+				onPatchBlock(
+					block.id,
+					(nextBlock) => {
+						const minSize = blockRectUnit === "px" ? 20 : 5;
+						nextBlock.rect.width = toInt(
+							Math.max(minSize, startRect.width + deltaX),
+						);
+						nextBlock.rect.height = toInt(
+							Math.max(minSize, startRect.height + deltaY),
+						);
+					},
+					"live",
+				);
+				applyBlockRectStyles(el, block, blockRectUnit);
 			};
 
 			const onUp = () => {
 				document.removeEventListener("mousemove", onMove);
 				document.removeEventListener("mouseup", onUp);
+				onPatchBlock(block.id, () => {}, "commit");
 			};
 
 			document.addEventListener("mousemove", onMove);

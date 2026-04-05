@@ -47,6 +47,7 @@ function createTextField(
 function createRectField(
 	container: HTMLElement,
 	label: string,
+	fieldKey: "x" | "y" | "width" | "height",
 	value: number,
 	rectUnit: DesignRectUnit,
 	onChange: (value: number) => void,
@@ -58,11 +59,35 @@ function createRectField(
 		value: formatRectInputValue(value, rectUnit),
 		cls: "slides-rup-design-maker-input",
 	});
+	input.setAttr("data-rect-field", fieldKey);
+	input.setAttr("data-rect-unit", rectUnit);
 	input.addEventListener("input", () => {
 		const defaultUnit = rectUnit === "px" ? "px" : "percent";
 		const parsed = parseRectInputValue(input.value, defaultUnit);
 		if (!parsed) return;
 		onChange(Math.round(parsed.value));
+	});
+}
+
+export function syncInspectorRectFields(options: {
+	container: HTMLElement;
+	rect: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+	rectUnit: DesignRectUnit;
+}): void {
+	const { container, rect, rectUnit } = options;
+	const keys: Array<keyof typeof rect> = ["x", "y", "width", "height"];
+	keys.forEach((key) => {
+		const input = container.querySelector(
+			`input[data-rect-field="${key}"]`,
+		) as HTMLInputElement | null;
+		if (!input) return;
+		input.value = formatRectInputValue(Math.round(rect[key]), rectUnit);
+		input.setAttr("data-rect-unit", rectUnit);
 	});
 }
 
@@ -207,7 +232,7 @@ export function renderDesignInspector(options: {
 	const rectUnit: DesignRectUnit =
 		block.extraAttributes.rectUnit === "px" ? "px" : "percent";
 
-	createRectField(container, "X", displayX, rectUnit, (value) => {
+	createRectField(container, "X", "x", displayX, rectUnit, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(value, displayY);
 		} else {
@@ -216,7 +241,7 @@ export function renderDesignInspector(options: {
 			});
 		}
 	});
-	createRectField(container, "Y", displayY, rectUnit, (value) => {
+	createRectField(container, "Y", "y", displayY, rectUnit, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(displayX, value);
 		} else {
@@ -225,16 +250,30 @@ export function renderDesignInspector(options: {
 			});
 		}
 	});
-	createRectField(container, "Width", block.rect.width, rectUnit, (v) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.rect.width = Math.round(Math.max(1, v));
-		});
-	});
-	createRectField(container, "Height", block.rect.height, rectUnit, (v) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.rect.height = Math.round(Math.max(1, v));
-		});
-	});
+	createRectField(
+		container,
+		"Width",
+		"width",
+		block.rect.width,
+		rectUnit,
+		(v) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.rect.width = Math.round(Math.max(1, v));
+			});
+		},
+	);
+	createRectField(
+		container,
+		"Height",
+		"height",
+		block.rect.height,
+		rectUnit,
+		(v) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.rect.height = Math.round(Math.max(1, v));
+			});
+		},
+	);
 	createTextField(container, "CSS Class", block.className, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.className = value;

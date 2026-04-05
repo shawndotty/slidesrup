@@ -17,7 +17,10 @@ import {
 import { renderDesignPageList } from "../components/design-page-list";
 import { renderDesignThemePanel } from "../components/design-theme-panel";
 import { renderDesignPreview } from "../components/design-preview";
-import { renderDesignInspector } from "../components/design-inspector";
+import {
+	renderDesignInspector,
+	syncInspectorRectFields,
+} from "../components/design-inspector";
 import {
 	clampCanvasZoomPercent,
 	computeCanvasTransform,
@@ -377,29 +380,7 @@ export class DesignMakerView extends ItemView {
 				this._renderRightPanel();
 			},
 			getGlobalCoords: () => {
-				const block = this._getSelectedBlock();
-				if (!block || !this.canvasEl) return null;
-				const el = this.canvasEl.querySelector(
-					`[data-block-id="${block.id}"]`,
-				) as HTMLElement;
-				const parentEl = this.canvasEl.querySelector(
-					".slides-rup-design-maker-canvas",
-				) as HTMLElement;
-				if (!el || !parentEl) return null;
-
-				const elRect = el.getBoundingClientRect();
-				const parentRect = parentEl.getBoundingClientRect();
-
-				return {
-					x: Math.round(
-						((elRect.left - parentRect.left) / parentRect.width) *
-							100,
-					),
-					y: Math.round(
-						((elRect.top - parentRect.top) / parentRect.height) *
-							100,
-					),
-				};
+				return this._getSelectedBlockGlobalCoords();
 			},
 			setGlobalCoords: (x, y) => {
 				const block = this._getSelectedBlock();
@@ -514,8 +495,14 @@ export class DesignMakerView extends ItemView {
 			onSelect: (blockId) => {
 				this._setSelectedBlockId(blockId);
 			},
-			onPatchBlock: (blockId, patcher) => {
-				this._patchBlockById(blockId, patcher);
+			onPatchBlock: (blockId, patcher, mode = "commit") => {
+				this._patchBlockById(blockId, patcher, {
+					syncPageSource: mode !== "live",
+				});
+				if (mode === "live") {
+					this._syncSelectedInspectorRectFields();
+					return;
+				}
 				this._renderCanvasAndPreview();
 			},
 			onAddBlock: (block) => {
@@ -1154,6 +1141,7 @@ export class DesignMakerView extends ItemView {
 	private _patchBlockById(
 		blockId: string,
 		patcher: (block: DesignGridBlock) => void,
+		options?: { syncPageSource?: boolean },
 	): void {
 		const found = this._findBlockById(
 			this._getCurrentPage().blocks,
@@ -1161,7 +1149,57 @@ export class DesignMakerView extends ItemView {
 		);
 		if (!found || found.block.type !== "grid") return;
 		patcher(found.block as DesignGridBlock);
-		this._syncPageSource();
+		if (options?.syncPageSource !== false) {
+			this._syncPageSource();
+		}
+	}
+
+	private _getSelectedBlockGlobalCoords(): { x: number; y: number } | null {
+		const block = this._getSelectedBlock();
+		if (!block || !this.canvasEl) return null;
+		const el = this.canvasEl.querySelector(
+			`[data-block-id="${block.id}"]`,
+		) as HTMLElement | null;
+		const parentEl = this.canvasEl.querySelector(
+			".slides-rup-design-maker-canvas",
+		) as HTMLElement | null;
+		if (!el || !parentEl) return null;
+
+		const elRect = el.getBoundingClientRect();
+		const parentRect = parentEl.getBoundingClientRect();
+		if (!parentRect.width || !parentRect.height) return null;
+
+		return {
+			x: Math.round(
+				((elRect.left - parentRect.left) / parentRect.width) * 100,
+			),
+			y: Math.round(
+				((elRect.top - parentRect.top) / parentRect.height) * 100,
+			),
+		};
+	}
+
+	private _syncSelectedInspectorRectFields(): void {
+		if (!this.inspectorEl || !this.selectedBlockId) return;
+		const block = this._getSelectedBlock();
+		if (!block || block.type !== "grid") return;
+		const global = this.isGlobalCoords
+			? this._getSelectedBlockGlobalCoords()
+			: null;
+		const rectUnit: DesignRectUnit =
+			block.extraAttributes.rectUnit === "px"
+				? "px"
+				: (this._getCurrentPage().rectUnit ?? "percent");
+		syncInspectorRectFields({
+			container: this.inspectorEl,
+			rect: {
+				x: global?.x ?? block.rect.x,
+				y: global?.y ?? block.rect.y,
+				width: block.rect.width,
+				height: block.rect.height,
+			},
+			rectUnit,
+		});
 	}
 
 	private _isFootnotesBlock(block: DesignGridBlock): boolean {
