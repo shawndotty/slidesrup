@@ -1,4 +1,4 @@
-import { ItemView, Notice, WorkspaceLeaf } from "obsidian";
+import { debounce, ItemView, Notice, WorkspaceLeaf } from "obsidian";
 import { t } from "src/lang/helpers";
 import {
 	generateDesignMakerRuntimeCss,
@@ -56,6 +56,8 @@ export class DesignMakerView extends ItemView {
 	private resizeRafId: number | null = null;
 	private lastCenterStageWidth = 0;
 	private lastCenterStageHeight = 0;
+	private lastSelectionVisualBlockId: string | null = null;
+	private readonly _syncSelectionVisualsDebounced: () => void;
 	private readonly _onWindowKeyDown = (event: KeyboardEvent) => {
 		this._handleWindowKeyDown(event);
 	};
@@ -70,6 +72,13 @@ export class DesignMakerView extends ItemView {
 		super(leaf);
 		this.plugin = plugin;
 		this.designMaker = new DesignMaker(this.app, plugin.settings, plugin);
+		this._syncSelectionVisualsDebounced = debounce(() => {
+			this._applySelectionVisualTransition(
+				this.lastSelectionVisualBlockId,
+				this.selectedBlockId,
+			);
+			this.lastSelectionVisualBlockId = this.selectedBlockId;
+		}, 16);
 	}
 
 	getViewType(): string {
@@ -278,12 +287,7 @@ export class DesignMakerView extends ItemView {
 				this._render();
 			},
 			onSelectBlock: (blockId) => {
-				const previousBlockId = this.selectedBlockId;
-				this.selectedBlockId = blockId;
-				this._applySelectionVisualTransition(previousBlockId, blockId);
-				this._renderToolbar();
-				this._renderRightPanel();
-				this._render();
+				this._setSelectedBlockId(blockId);
 			},
 			onReparentBlock: (sourceId, targetId) => {
 				this._reparentBlock(sourceId, targetId);
@@ -301,6 +305,16 @@ export class DesignMakerView extends ItemView {
 		});
 
 		this._renderCenterPanel();
+		this._renderRightPanel();
+		this.lastSelectionVisualBlockId = this.selectedBlockId;
+	}
+
+	private _setSelectedBlockId(blockId: string | null): void {
+		if (!this.draft) return;
+		if (this.selectedBlockId === blockId) return;
+		this.selectedBlockId = blockId;
+		this._syncSelectionVisualsDebounced();
+		this._renderToolbar();
 		this._renderRightPanel();
 	}
 
@@ -476,11 +490,7 @@ export class DesignMakerView extends ItemView {
 			slideBaseHeight: this._getSlideBaseHeight(),
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (blockId) => {
-				const previousBlockId = this.selectedBlockId;
-				this.selectedBlockId = blockId;
-				this._applySelectionVisualTransition(previousBlockId, blockId);
-				this._renderToolbar();
-				this._renderRightPanel();
+				this._setSelectedBlockId(blockId);
 			},
 			onPatchBlock: (blockId, patcher) => {
 				this._patchBlockById(blockId, patcher);
@@ -648,13 +658,24 @@ export class DesignMakerView extends ItemView {
 		const preview = this.previewEl?.querySelector(
 			".slides-rup-design-maker-preview",
 		) as HTMLElement | null;
-		if (!canvas || !preview) {
+		if (canvas) {
+			updateSelection(canvas, ".slides-rup-design-maker-block");
+		} else {
 			this._renderCanvasOnly();
-			this._renderPreviewOnly(false);
-			return;
 		}
-		updateSelection(canvas, ".slides-rup-design-maker-block");
-		updateSelection(preview, ".slides-rup-design-maker-preview-block");
+
+		if (preview) {
+			updateSelection(preview, ".slides-rup-design-maker-preview-block");
+		} else {
+			this._renderPreviewOnly(false);
+		}
+
+		if (this.pageListEl) {
+			updateSelection(
+				this.pageListEl,
+				".slides-rup-design-maker-layer-item",
+			);
+		}
 	}
 
 	private _getSlideBaseWidth(): number {

@@ -152,12 +152,43 @@ function testDesignMakerRuntimeCssHasHelperClasses() {
 	console.log("testDesignMakerRuntimeCssHasHelperClasses passed");
 }
 
+function testSelectionDebounceStateMachine() {
+	const machine = (() => {
+		let lastApplied: string | null = null;
+		let selected: string | null = null;
+		return {
+			select(next: string | null) {
+				selected = next;
+			},
+			apply() {
+				const previous = lastApplied;
+				const next = selected;
+				lastApplied = next;
+				return { previous, next };
+			},
+		};
+	})();
+
+	machine.select("A");
+	machine.select("B");
+	machine.select("C");
+	const first = machine.apply();
+	assert.deepStrictEqual(first, { previous: null, next: "C" });
+
+	machine.select(null);
+	const second = machine.apply();
+	assert.deepStrictEqual(second, { previous: "C", next: null });
+
+	console.log("testSelectionDebounceStateMachine passed");
+}
+
 function runTests() {
 	try {
 		testNestedGridSerialization();
 		testCoordinateConversion();
 		testTreeCircularDependency();
 		testDesignMakerRuntimeCssHasHelperClasses();
+		testSelectionDebounceStateMachine();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

@@ -45,6 +45,7 @@ export function renderDesignPageList(options: {
 		const itemEl = itemWrapper.createDiv(
 			"slides-rup-design-maker-layer-item",
 		);
+		itemEl.setAttr("data-block-id", block.id);
 		itemEl.style.paddingLeft = `${depth * 16}px`;
 
 		if (block.id === selectedBlockId) {
