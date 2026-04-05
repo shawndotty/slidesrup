@@ -201,11 +201,11 @@ export class DesignMakerView extends ItemView {
 		this.contentEl.empty();
 		this.contentEl.addClass("slides-rup-design-maker-view");
 
-		const header = this.contentEl.createDiv(
-			"slides-rup-design-maker-header",
-		);
-		const title = header.createEl("h2", { text: t("Design Maker") });
-		title.addClass("slides-rup-design-maker-title");
+		// const header = this.contentEl.createDiv(
+		// 	"slides-rup-design-maker-header",
+		// );
+		// const title = header.createEl("h2", { text: t("Design Maker") });
+		// title.addClass("slides-rup-design-maker-title");
 
 		const layout = this.contentEl.createDiv(
 			"slides-rup-design-maker-layout",
