@@ -766,8 +766,8 @@ h3.slides-rup-title {
 }
 
 .slides-rup-design-maker-layer-root-dropzone {
-	height: 24px;
-	margin: 4px 0 10px 12px;
+	height: 12px;
+	margin: 4px 0;
 	border: 1px dashed var(--background-modifier-border);
 	border-radius: 6px;
 	background: transparent;
