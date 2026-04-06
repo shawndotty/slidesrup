@@ -853,6 +853,22 @@ button.slides-rup-design-maker-layer-collapse {
 	padding: 0 4px;
 }
 
+.slides-rup-design-maker-code-editor {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	overflow: hidden;
+	width: 100%;
+}
+
+.slides-rup-design-maker-code-editor .cm-editor {
+	min-height: 132px;
+	font-size: 12px;
+}
+
+.slides-rup-design-maker-code-editor .cm-scroller {
+	font-family: var(--font-monospace);
+}
+
 .slides-rup-design-maker-layer-item .slides-rup-design-maker-layer-toggle {
 	background: transparent;
 	box-shadow: none;

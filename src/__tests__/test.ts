@@ -16,6 +16,7 @@ import {
 import {
 	generateDesignMakerRuntimeCss,
 	generatePageMarkdown,
+	normalizeInlineStyleForTemplate,
 } from "../services/design-maker-generator";
 import {
 	clampCanvasZoomPercent,
@@ -40,6 +41,7 @@ import {
 	getNextPickerSelectionIndex,
 	insertImageEmbedIntoContent,
 	isLocalImagePath,
+	formatInlineStyleForEditor,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -1132,6 +1134,27 @@ function testGeneratedMarkdownOrderAfterLayerMove() {
 	console.log("testGeneratedMarkdownOrderAfterLayerMove passed");
 }
 
+function testInlineStyleEditorAndTemplateNormalization() {
+	assert.strictEqual(
+		formatInlineStyleForEditor("color:red; font-size:20px;"),
+		"color:red;\nfont-size:20px;",
+		"Single-line template style should expand to multi-line editor format",
+	);
+	assert.strictEqual(
+		normalizeInlineStyleForTemplate("color:red;\nfont-size:20px"),
+		"color:red; font-size:20px;",
+		"Multi-line editor style should normalize to single-line template format",
+	);
+	assert.strictEqual(
+		normalizeInlineStyleForTemplate(
+			" color : red ; ; \n font-size : 20px ; ",
+		),
+		"color : red; font-size : 20px;",
+		"Template style normalization should clean empty declarations and extra spaces",
+	);
+	console.log("testInlineStyleEditorAndTemplateNormalization passed");
+}
+
 function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -1168,6 +1191,7 @@ function runTests() {
 		testLayerDragPayloadCompatibility();
 		testLayerDropIntentAndInsertIndexMath();
 		testGeneratedMarkdownOrderAfterLayerMove();
+		testInlineStyleEditorAndTemplateNormalization();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

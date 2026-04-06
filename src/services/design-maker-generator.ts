@@ -10,6 +10,15 @@ function formatRectValue(value: number): string {
 	return `${Math.round(value)}`;
 }
 
+export function normalizeInlineStyleForTemplate(style: string): string {
+	const declarations = style
+		.split(";")
+		.map((part) => part.replace(/\s+/g, " ").trim())
+		.filter(Boolean);
+	if (!declarations.length) return "";
+	return `${declarations.join("; ")};`;
+}
+
 function serializeAttributes(
 	block: DesignGridBlock,
 	defaultRectUnit: DesignRectUnit,
@@ -36,7 +45,8 @@ function serializeAttributes(
 	if (block.className.trim()) attrs.class = block.className.trim();
 	if (block.align.trim()) attrs.align = block.align.trim();
 	if (block.pad.trim()) attrs.pad = block.pad.trim();
-	if (block.style.trim()) attrs.style = block.style.trim();
+	const normalizedStyle = normalizeInlineStyleForTemplate(block.style);
+	if (normalizedStyle) attrs.style = normalizedStyle;
 	if (block.flow.trim()) attrs.flow = block.flow.trim();
 	if (block.filter.trim()) attrs.filter = block.filter.trim();
 	if (block.bg.trim()) attrs.bg = block.bg.trim();

@@ -1,4 +1,8 @@
 import { App, setIcon, TFile } from "obsidian";
+import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
+import { css } from "@codemirror/lang-css";
+import { autocompletion } from "@codemirror/autocomplete";
+import { oneDark } from "@codemirror/theme-one-dark";
 import { t } from "src/lang/helpers";
 import {
 	formatRectInputValue,
@@ -468,6 +472,48 @@ function createTextField(
 	input.addEventListener("input", () => onChange(input.value));
 }
 
+export function formatInlineStyleForEditor(style: string): string {
+	const declarations = style
+		.split(";")
+		.map((part) => part.trim())
+		.filter(Boolean);
+	if (!declarations.length) return "";
+	return `${declarations.join(";\n")};`;
+}
+
+function createCssEditorField(
+	container: HTMLElement,
+	label: string,
+	value: string,
+	onChange: (value: string) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field is-stacked");
+	row.createEl("label", { text: t(label as any) });
+	const editorContainer = row.createDiv(
+		"slides-rup-design-maker-code-editor",
+	);
+	const initialDoc = formatInlineStyleForEditor(value);
+	new EditorView({
+		state: EditorState.create({
+			doc: initialDoc,
+			extensions: [
+				basicSetup,
+				css(),
+				autocompletion(),
+				...(document.body.classList.contains("theme-dark")
+					? [oneDark]
+					: []),
+				EditorView.updateListener.of((update) => {
+					if (update.docChanged) {
+						onChange(update.state.doc.toString());
+					}
+				}),
+			],
+		}),
+		parent: editorContainer,
+	});
+}
+
 function createRectField(
 	container: HTMLElement,
 	label: string,
@@ -844,7 +890,7 @@ export function renderDesignInspector(options: {
 			nextBlock.frag = value;
 		});
 	});
-	createTextField(container, "Inline Style", block.style, (value) => {
+	createCssEditorField(container, "Inline Style", block.style, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.style = value;
 		});
