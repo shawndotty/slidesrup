@@ -1308,6 +1308,10 @@ button.slides-rup-design-maker-layer-collapse {
 	color: var(--text-normal);
 }
 
+.slides-rup-design-maker-input[type="color"] {
+	flex: 0 0 auto;
+}
+
 .slides-rup-design-maker-textarea {
 	min-height: 120px;
 	resize: vertical;

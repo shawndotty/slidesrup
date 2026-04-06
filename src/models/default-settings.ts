@@ -160,7 +160,7 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	userAddedColumnClasses: "",
 	enableDesignMaker: true,
 	designMakerDefaultBaseDesign: "A",
-	designMakerShowAdvancedSourceEditor: true,
+	designMakerShowAdvancedSourceEditor: false,
 	designMakerSyncVsCodeThemeOnSave: true,
 	designMakerPreviewScale: 100,
 	designMakerSlideBaseWidth: 1920,

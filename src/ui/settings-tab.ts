@@ -363,16 +363,18 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			this.getDefaultDesignOptions(),
 		);
 
-		this.createToggleSetting(containerEl, {
-			name: "Show Design Maker Advanced Source Editor",
-			desc: "Show the fallback source editor in Design Maker",
-			value: this.plugin.settings.designMakerShowAdvancedSourceEditor,
-			onChange: async (value) => {
-				this.plugin.settings.designMakerShowAdvancedSourceEditor =
-					value;
-				await this.plugin.saveSettings();
-			},
-		});
+		// Turn off Source Editor by default
+
+		// this.createToggleSetting(containerEl, {
+		// 	name: "Show Design Maker Advanced Source Editor",
+		// 	desc: "Show the fallback source editor in Design Maker",
+		// 	value: this.plugin.settings.designMakerShowAdvancedSourceEditor,
+		// 	onChange: async (value) => {
+		// 		this.plugin.settings.designMakerShowAdvancedSourceEditor =
+		// 			value;
+		// 		await this.plugin.saveSettings();
+		// 	},
+		// });
 
 		this.createToggleSetting(containerEl, {
 			name: "Auto sync VS Code theme after saving",

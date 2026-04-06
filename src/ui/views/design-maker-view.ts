@@ -266,16 +266,19 @@ export class DesignMakerView extends ItemView {
 			"slides-rup-design-maker-center-controls-right",
 		);
 		const right = layout.createDiv("slides-rup-design-maker-sidepanel");
-		this.inspectorEl = this._createCollapsiblePanel(
-			right,
-			"Block Inspector",
-			"inspector",
-		);
+
 		this.themeEl = this._createCollapsiblePanel(
 			right,
 			"Design Theme",
 			"theme",
 		);
+
+		this.inspectorEl = this._createCollapsiblePanel(
+			right,
+			"Block Inspector",
+			"inspector",
+		);
+
 		this.pageSourceEl = this._createCollapsiblePanel(
 			right,
 			"Page Source",
@@ -286,6 +289,7 @@ export class DesignMakerView extends ItemView {
 			"Theme CSS",
 			"cssSource",
 		);
+
 		this._setupResizeObserver();
 	}
 
@@ -390,6 +394,23 @@ export class DesignMakerView extends ItemView {
 
 	private _renderRightPanel(): void {
 		if (!this.draft) return;
+
+		renderDesignThemePanel({
+			container: this.themeEl!,
+			theme: this.draft.theme,
+			showTitle: false,
+			onChange: (patch) => {
+				this.draft!.theme = {
+					...this.draft!.theme,
+					...patch,
+				};
+				if (typeof patch.primaryColor === "string") {
+					this._syncThemeColorToSettingsDebounced(patch.primaryColor);
+				}
+				this._renderPreviewOnly(false);
+			},
+		});
+
 		renderDesignInspector({
 			app: this.app,
 			container: this.inspectorEl!,
@@ -453,22 +474,6 @@ export class DesignMakerView extends ItemView {
 				patcher(block);
 				this._syncPageSource();
 				this._renderCanvasAndPreview();
-			},
-		});
-
-		renderDesignThemePanel({
-			container: this.themeEl!,
-			theme: this.draft.theme,
-			showTitle: false,
-			onChange: (patch) => {
-				this.draft!.theme = {
-					...this.draft!.theme,
-					...patch,
-				};
-				if (typeof patch.primaryColor === "string") {
-					this._syncThemeColorToSettingsDebounced(patch.primaryColor);
-				}
-				this._renderPreviewOnly(false);
 			},
 		});
 
