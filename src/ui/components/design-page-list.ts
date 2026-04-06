@@ -7,6 +7,47 @@ import {
 	DesignGridBlock,
 } from "src/types/design-maker";
 
+interface ReparentDragPayload {
+	action: "reparent";
+	blockId: string;
+}
+
+export function getLayerRenderOrder(
+	blocks: DesignCanvasBlock[],
+): DesignCanvasBlock[] {
+	return [...blocks].reverse();
+}
+
+export function buildReparentDragPayload(blockId: string): string {
+	const payload: ReparentDragPayload = {
+		action: "reparent",
+		blockId,
+	};
+	return JSON.stringify(payload);
+}
+
+export function parseReparentDragPayload(
+	rawPayload: string,
+): ReparentDragPayload | null {
+	try {
+		const parsed = JSON.parse(rawPayload);
+		if (
+			parsed &&
+			parsed.action === "reparent" &&
+			typeof parsed.blockId === "string" &&
+			parsed.blockId.length > 0
+		) {
+			return {
+				action: "reparent",
+				blockId: parsed.blockId,
+			};
+		}
+	} catch (ex) {
+		// ignore
+	}
+	return null;
+}
+
 export function renderDesignPageList(options: {
 	container: HTMLElement;
 	draft: DesignDraft;
@@ -103,10 +144,7 @@ export function renderDesignPageList(options: {
 				if (e.dataTransfer) {
 					e.dataTransfer.setData(
 						"application/json",
-						JSON.stringify({
-							action: "reparent",
-							blockId: block.id,
-						}),
+						buildReparentDragPayload(block.id),
 					);
 					e.dataTransfer.effectAllowed = "move";
 				}
@@ -127,20 +165,12 @@ export function renderDesignPageList(options: {
 				e.preventDefault();
 				itemEl.removeClass("is-drag-over");
 				if (!e.dataTransfer || !onReparentBlock) return;
-				try {
-					const data = JSON.parse(
-						e.dataTransfer.getData("application/json"),
-					);
-					if (
-						data.action === "reparent" &&
-						data.blockId &&
-						data.blockId !== block.id
-					) {
-						// Only reparent if it's a grid (raw cannot be parent)
-						onReparentBlock(data.blockId, block.id);
-					}
-				} catch (ex) {
-					// ignore
+				const payload = parseReparentDragPayload(
+					e.dataTransfer.getData("application/json"),
+				);
+				if (payload && payload.blockId !== block.id) {
+					// Only reparent if it's a grid (raw cannot be parent)
+					onReparentBlock(payload.blockId, block.id);
 				}
 			});
 		}
@@ -165,9 +195,11 @@ export function renderDesignPageList(options: {
 		});
 
 		if (hasChildren) {
-			(block as DesignGridBlock).children!.forEach((child) => {
-				renderLayerItem(childrenContainer, child, depth + 1);
-			});
+			getLayerRenderOrder((block as DesignGridBlock).children!).forEach(
+				(child) => {
+					renderLayerItem(childrenContainer, child, depth + 1);
+				},
+			);
 		}
 	};
 
@@ -200,19 +232,18 @@ export function renderDesignPageList(options: {
 				e.stopPropagation();
 				e.preventDefault();
 				if (!e.dataTransfer || !onReparentBlock) return;
-				try {
-					const data = JSON.parse(
-						e.dataTransfer.getData("application/json"),
-					);
-					if (data.action === "reparent" && data.blockId) {
-						onReparentBlock(data.blockId, null);
-					}
-				} catch (ex) {
-					// ignore
+				const payload = parseReparentDragPayload(
+					e.dataTransfer.getData("application/json"),
+				);
+				if (payload) {
+					onReparentBlock(payload.blockId, null);
 				}
 			});
 
-			page.blocks.forEach((block) => {
+			// 图层面板按“模板顺序倒序”渲染：
+			// 模板里靠后的 block 在画布上通常叠放在更上层（视觉上更接近“顶层”），
+			// 倒序显示可以让图层列表的阅读/选择顺序与用户的视觉层级一致。
+			getLayerRenderOrder(page.blocks).forEach((block) => {
 				renderLayerItem(blockListContainer, block, 0);
 			});
 		}

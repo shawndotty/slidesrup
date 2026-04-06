@@ -28,6 +28,11 @@ import {
 	getNextThumbnailIndex,
 } from "../ui/components/design-thumbnail-nav";
 import {
+	buildReparentDragPayload,
+	getLayerRenderOrder,
+	parseReparentDragPayload,
+} from "../ui/components/design-page-list";
+import {
 	clampImagePickerPosition,
 	computeImagePickerPlacement,
 	getNextPickerSelectionIndex,
@@ -926,6 +931,63 @@ function testThumbnailBlockCountFormatting() {
 	console.log("testThumbnailBlockCountFormatting passed");
 }
 
+function testLayerRenderOrderReverse() {
+	const blocks = [
+		{ id: "A", type: "raw", raw: "a" },
+		{ id: "B", type: "raw", raw: "b" },
+		{ id: "C", type: "raw", raw: "c" },
+	] as any[];
+	const ordered = getLayerRenderOrder(blocks);
+	assert.deepStrictEqual(
+		ordered.map((item) => item.id),
+		["C", "B", "A"],
+		"Layer panel should render in reverse template order",
+	);
+	assert.deepStrictEqual(
+		blocks.map((item) => item.id),
+		["A", "B", "C"],
+		"Render ordering should not mutate original block array",
+	);
+	console.log("testLayerRenderOrderReverse passed");
+}
+
+function testLayerDragPayloadCompatibility() {
+	const payload = buildReparentDragPayload("block-42");
+	const parsed = parseReparentDragPayload(payload);
+	assert.deepStrictEqual(parsed, {
+		action: "reparent",
+		blockId: "block-42",
+	});
+
+	assert.strictEqual(
+		parseReparentDragPayload(""),
+		null,
+		"Invalid payload should be ignored",
+	);
+	assert.strictEqual(
+		parseReparentDragPayload(JSON.stringify({ action: "copy", blockId: "x" })),
+		null,
+		"Non-reparent payload should be ignored",
+	);
+
+	// Regression: reversing layer render order must not break drag/drop reparent ids.
+	const reversedIds = getLayerRenderOrder([
+		{ id: "grid-a", type: "grid" },
+		{ id: "grid-b", type: "grid" },
+	] as any[]).map((item) => item.id);
+	assert.deepStrictEqual(reversedIds, ["grid-b", "grid-a"]);
+	const dragFromTopLayer = parseReparentDragPayload(
+		buildReparentDragPayload(reversedIds[0]),
+	);
+	assert.strictEqual(
+		dragFromTopLayer?.blockId,
+		"grid-b",
+		"Drag payload should keep source block id after reverse rendering",
+	);
+
+	console.log("testLayerDragPayloadCompatibility passed");
+}
+
 function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -958,6 +1020,8 @@ function runTests() {
 		testThumbnailVirtualizationMath();
 		testThumbnailKeyboardIndexMath();
 		testThumbnailBlockCountFormatting();
+		testLayerRenderOrderReverse();
+		testLayerDragPayloadCompatibility();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);
