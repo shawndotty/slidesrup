@@ -726,7 +726,7 @@ h3.slides-rup-title {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 4px 8px;
+	padding: 0px 8px;
 	margin: 2px 0;
 	border-radius: 4px;
 	background: transparent;
@@ -783,6 +783,7 @@ h3.slides-rup-title {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	padding-left: 4px;
 }
 
 button.slides-rup-design-maker-layer-collapse {
