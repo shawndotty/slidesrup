@@ -29,8 +29,10 @@ import {
 } from "../ui/components/design-thumbnail-nav";
 import {
 	buildReparentDragPayload,
+	getInsertIndexForReversedLayerOrder,
 	getLayerRenderOrder,
 	parseReparentDragPayload,
+	resolveLayerDropIntent,
 } from "../ui/components/design-page-list";
 import {
 	clampImagePickerPosition,
@@ -965,7 +967,9 @@ function testLayerDragPayloadCompatibility() {
 		"Invalid payload should be ignored",
 	);
 	assert.strictEqual(
-		parseReparentDragPayload(JSON.stringify({ action: "copy", blockId: "x" })),
+		parseReparentDragPayload(
+			JSON.stringify({ action: "copy", blockId: "x" }),
+		),
 		null,
 		"Non-reparent payload should be ignored",
 	);
@@ -986,6 +990,124 @@ function testLayerDragPayloadCompatibility() {
 	);
 
 	console.log("testLayerDragPayloadCompatibility passed");
+}
+
+function testLayerDropIntentAndInsertIndexMath() {
+	assert.strictEqual(
+		resolveLayerDropIntent({
+			relativeX: 10,
+			relativeY: 12,
+			height: 30,
+		}),
+		"as-child",
+		"Left indent hit zone should produce as-child intent",
+	);
+	assert.strictEqual(
+		resolveLayerDropIntent({
+			relativeX: 40,
+			relativeY: 8,
+			height: 30,
+		}),
+		"before",
+		"Upper half should produce before intent",
+	);
+	assert.strictEqual(
+		resolveLayerDropIntent({
+			relativeX: 40,
+			relativeY: 25,
+			height: 30,
+		}),
+		"after",
+		"Lower half should produce after intent",
+	);
+
+	assert.strictEqual(
+		getInsertIndexForReversedLayerOrder({
+			targetIndex: 3,
+			intent: "before",
+		}),
+		4,
+		"In reversed render order, before means insert after target in source array",
+	);
+	assert.strictEqual(
+		getInsertIndexForReversedLayerOrder({
+			targetIndex: 3,
+			intent: "after",
+		}),
+		3,
+		"In reversed render order, after means insert at target index in source array",
+	);
+	console.log("testLayerDropIntentAndInsertIndexMath passed");
+}
+
+function testGeneratedMarkdownOrderAfterLayerMove() {
+	const page = {
+		type: "content",
+		label: "Content",
+		fileName: "content.md",
+		filePath: "content.md",
+		blocks: [
+			{
+				id: "a",
+				type: "grid",
+				role: "grid",
+				rect: { x: 0, y: 0, width: 10, height: 10 },
+				content: "A",
+				className: "",
+				style: "",
+				pad: "",
+				align: "",
+				flow: "",
+				filter: "",
+				justifyContent: "",
+				bg: "",
+				border: "",
+				animate: "",
+				opacity: "",
+				rotate: "",
+				frag: "",
+				extraAttributes: {},
+				children: [],
+			},
+			{
+				id: "b",
+				type: "grid",
+				role: "grid",
+				rect: { x: 0, y: 0, width: 10, height: 10 },
+				content: "B",
+				className: "",
+				style: "",
+				pad: "",
+				align: "",
+				flow: "",
+				filter: "",
+				justifyContent: "",
+				bg: "",
+				border: "",
+				animate: "",
+				opacity: "",
+				rotate: "",
+				frag: "",
+				extraAttributes: {},
+				children: [],
+			},
+		],
+		rawMarkdown: "",
+		hasUnsupportedContent: false,
+		rectUnit: "percent",
+	} as any;
+
+	const moved = page.blocks.splice(0, 1)[0];
+	page.blocks.push(moved);
+	const markdown = generatePageMarkdown(page);
+	const normalized = markdown.replace(/\r\n/g, "\n");
+	const indexA = normalized.indexOf("\nA\n</grid>");
+	const indexB = normalized.indexOf("\nB\n</grid>");
+	assert.ok(
+		indexB < indexA,
+		"When block order changes in arrays, generated markdown order should match new structure",
+	);
+	console.log("testGeneratedMarkdownOrderAfterLayerMove passed");
 }
 
 function runTests() {
@@ -1022,6 +1144,8 @@ function runTests() {
 		testThumbnailBlockCountFormatting();
 		testLayerRenderOrderReverse();
 		testLayerDragPayloadCompatibility();
+		testLayerDropIntentAndInsertIndexMath();
+		testGeneratedMarkdownOrderAfterLayerMove();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

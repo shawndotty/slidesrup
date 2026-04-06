@@ -14,7 +14,11 @@ import {
 	DesignPageType,
 	DesignRectUnit,
 } from "src/types/design-maker";
-import { renderDesignPageList } from "../components/design-page-list";
+import {
+	getInsertIndexForReversedLayerOrder,
+	LayerMoveRequest,
+	renderDesignPageList,
+} from "../components/design-page-list";
 import { renderDesignThemePanel } from "../components/design-theme-panel";
 import { renderDesignPreview } from "../components/design-preview";
 import {
@@ -297,8 +301,8 @@ export class DesignMakerView extends ItemView {
 			onSelectBlock: (blockId) => {
 				this._setSelectedBlockId(blockId);
 			},
-			onReparentBlock: (sourceId, targetId) => {
-				this._reparentBlock(sourceId, targetId);
+			onMoveBlock: (request) => {
+				this._moveBlock(request);
 			},
 			onToggleBlockVisibility: (blockId, hidden) => {
 				const found = this._findBlockById(
@@ -1058,83 +1062,87 @@ export class DesignMakerView extends ItemView {
 		return null;
 	}
 
-	private _reparentBlock(
-		blockId: string,
-		targetParentId: string | null,
-	): void {
+	private _moveBlock(request: LayerMoveRequest): void {
+		const { sourceId, targetId, intent } = request;
 		const page = this._getCurrentPage();
-		const found = this._findBlockById(page.blocks, blockId);
+		const found = this._findBlockById(page.blocks, sourceId);
 		if (!found || found.block.type !== "grid") return;
+		if (targetId === sourceId) return;
 
-		let currentParentId = found.parent ? found.parent.id : null;
-		if (currentParentId === targetParentId) {
+		if (targetId && this._isDescendantBlock(sourceId, targetId)) {
+			new Notice("Cannot nest a grid inside its own descendant" as any);
 			return;
 		}
 
-		// Check for circular dependency
-		if (targetParentId) {
-			const targetFound = this._findBlockById(
-				page.blocks,
-				targetParentId,
-			);
-			if (!targetFound || targetFound.block.type !== "grid") return;
-			let currentCheck = targetFound.parent;
-			while (currentCheck) {
-				if (currentCheck.id === blockId) {
-					new Notice(
-						"Cannot nest a grid inside its own descendant" as any,
-					);
-					return;
-				}
-				currentCheck = this._findBlockById(
-					page.blocks,
-					currentCheck.id,
-				)?.parent;
-			}
+		const targetFound =
+			targetId != null
+				? this._findBlockById(page.blocks, targetId)
+				: null;
+		if (targetId && !targetFound) {
+			return;
 		}
 
-		// Calculate global coordinates before moving
+		const sourceContainer = found.parent
+			? found.parent.children!
+			: page.blocks;
+		const sourceIndex = found.index;
+		const oldParentId = found.parent ? found.parent.id : null;
+
+		let targetContainer: DesignCanvasBlock[] = page.blocks;
+		let newParentId: string | null = null;
+		let insertIndex = page.blocks.length;
+		if (intent === "to-root-top") {
+			targetContainer = page.blocks;
+			newParentId = null;
+			insertIndex = page.blocks.length;
+		} else if (intent === "as-child") {
+			if (!targetFound || targetFound.block.type !== "grid") return;
+			const parentBlock = targetFound.block as DesignGridBlock;
+			if (!parentBlock.children) parentBlock.children = [];
+			targetContainer = parentBlock.children;
+			newParentId = parentBlock.id;
+			insertIndex = targetContainer.length;
+		} else {
+			if (!targetFound) return;
+			targetContainer = targetFound.parent
+				? targetFound.parent.children!
+				: page.blocks;
+			newParentId = targetFound.parent ? targetFound.parent.id : null;
+			insertIndex = getInsertIndexForReversedLayerOrder({
+				targetIndex: targetFound.index,
+				intent,
+			});
+		}
+
 		const canvasInner = this.canvasEl!.querySelector(
 			".slides-rup-design-maker-canvas",
 		) as HTMLElement;
 		const blockEl = this.canvasEl!.querySelector(
-			`[data-block-id="${blockId}"]`,
-		) as HTMLElement;
-		if (!blockEl || !canvasInner) return;
-		const globalRect = blockEl.getBoundingClientRect();
+			`[data-block-id="${sourceId}"]`,
+		) as HTMLElement | null;
+		const globalRect = blockEl?.getBoundingClientRect() ?? null;
 
-		// Remove from current parent
-		if (found.parent) {
-			found.parent.children!.splice(found.index, 1);
-		} else {
-			page.blocks.splice(found.index, 1);
+		sourceContainer.splice(sourceIndex, 1);
+		if (sourceContainer === targetContainer && sourceIndex < insertIndex) {
+			insertIndex -= 1;
 		}
+		insertIndex = Math.max(
+			0,
+			Math.min(insertIndex, targetContainer.length),
+		);
+		targetContainer.splice(insertIndex, 0, found.block);
 
 		let targetParentEl: HTMLElement | null = null;
-
-		// Add to new parent
-		if (targetParentId) {
-			const targetFound = this._findBlockById(
-				page.blocks,
-				targetParentId,
+		if (newParentId) {
+			targetParentEl = this.canvasEl!.querySelector(
+				`[data-block-id="${newParentId}"]`,
 			);
-			if (targetFound && targetFound.block.type === "grid") {
-				const parentBlock = targetFound.block as DesignGridBlock;
-				if (!parentBlock.children) parentBlock.children = [];
-				parentBlock.children.push(found.block);
-				targetParentEl = this.canvasEl!.querySelector(
-					`[data-block-id="${targetParentId}"]`,
-				);
-			} else {
-				page.blocks.push(found.block); // fallback to root
-				targetParentEl = canvasInner;
-			}
 		} else {
-			page.blocks.push(found.block);
 			targetParentEl = canvasInner;
 		}
 
-		if (targetParentEl) {
+		const parentChanged = oldParentId !== newParentId;
+		if (targetParentEl && globalRect && parentChanged) {
 			this._updateBlockCoordinates(
 				found.block as DesignGridBlock,
 				globalRect,
@@ -1144,6 +1152,22 @@ export class DesignMakerView extends ItemView {
 
 		this._syncPageSource();
 		this._render();
+	}
+
+	private _isDescendantBlock(sourceId: string, targetId: string): boolean {
+		const found = this._findBlockById(
+			this._getCurrentPage().blocks,
+			sourceId,
+		);
+		if (!found || found.block.type !== "grid") return false;
+		const check = (blocks: DesignCanvasBlock[]): boolean =>
+			blocks.some((block) => {
+				if (block.id === targetId) return true;
+				return block.type === "grid" && block.children
+					? check(block.children)
+					: false;
+			});
+		return found.block.children ? check(found.block.children) : false;
 	}
 
 	private _updateBlockCoordinates(

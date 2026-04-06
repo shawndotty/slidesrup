@@ -12,6 +12,14 @@ interface ReparentDragPayload {
 	blockId: string;
 }
 
+export type LayerDropIntent = "before" | "after" | "as-child" | "to-root-top";
+
+export interface LayerMoveRequest {
+	sourceId: string;
+	targetId: string | null;
+	intent: LayerDropIntent;
+}
+
 export function getLayerRenderOrder(
 	blocks: DesignCanvasBlock[],
 ): DesignCanvasBlock[] {
@@ -48,6 +56,26 @@ export function parseReparentDragPayload(
 	return null;
 }
 
+export function resolveLayerDropIntent(options: {
+	relativeX: number;
+	relativeY: number;
+	height: number;
+	indentHitWidth?: number;
+}): Exclude<LayerDropIntent, "to-root-top"> {
+	const { relativeX, relativeY, height, indentHitWidth = 20 } = options;
+	if (relativeX <= indentHitWidth) return "as-child";
+	if (relativeY < height / 2) return "before";
+	return "after";
+}
+
+export function getInsertIndexForReversedLayerOrder(options: {
+	targetIndex: number;
+	intent: "before" | "after";
+}): number {
+	const { targetIndex, intent } = options;
+	return intent === "before" ? targetIndex + 1 : targetIndex;
+}
+
 export function renderDesignPageList(options: {
 	container: HTMLElement;
 	draft: DesignDraft;
@@ -56,7 +84,7 @@ export function renderDesignPageList(options: {
 	onSelect: (pageType: DesignPageType) => void;
 	onSelectBlock: (blockId: string | null) => void;
 	onToggleBlockVisibility: (blockId: string, hidden: boolean) => void;
-	onReparentBlock?: (sourceId: string, targetId: string | null) => void;
+	onMoveBlock?: (request: LayerMoveRequest) => void;
 }): void {
 	const {
 		container,
@@ -66,7 +94,7 @@ export function renderDesignPageList(options: {
 		onSelect,
 		onSelectBlock,
 		onToggleBlockVisibility,
-		onReparentBlock,
+		onMoveBlock,
 	} = options;
 	container.empty();
 
@@ -156,21 +184,45 @@ export function renderDesignPageList(options: {
 			itemEl.addEventListener("dragover", (e) => {
 				e.preventDefault(); // necessary to allow dropping
 				if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-				itemEl.addClass("is-drag-over");
+				const rect = itemEl.getBoundingClientRect();
+				const intent = resolveLayerDropIntent({
+					relativeX: e.clientX - rect.left,
+					relativeY: e.clientY - rect.top,
+					height: rect.height || 1,
+				});
+				itemEl.removeClass("is-drop-before");
+				itemEl.removeClass("is-drop-after");
+				itemEl.removeClass("is-drop-child");
+				if (intent === "before") itemEl.addClass("is-drop-before");
+				if (intent === "after") itemEl.addClass("is-drop-after");
+				if (intent === "as-child") itemEl.addClass("is-drop-child");
 			});
 			itemEl.addEventListener("dragleave", () => {
-				itemEl.removeClass("is-drag-over");
+				itemEl.removeClass("is-drop-before");
+				itemEl.removeClass("is-drop-after");
+				itemEl.removeClass("is-drop-child");
 			});
 			itemEl.addEventListener("drop", (e) => {
 				e.preventDefault();
-				itemEl.removeClass("is-drag-over");
-				if (!e.dataTransfer || !onReparentBlock) return;
+				itemEl.removeClass("is-drop-before");
+				itemEl.removeClass("is-drop-after");
+				itemEl.removeClass("is-drop-child");
+				if (!e.dataTransfer || !onMoveBlock) return;
 				const payload = parseReparentDragPayload(
 					e.dataTransfer.getData("application/json"),
 				);
 				if (payload && payload.blockId !== block.id) {
-					// Only reparent if it's a grid (raw cannot be parent)
-					onReparentBlock(payload.blockId, block.id);
+					const rect = itemEl.getBoundingClientRect();
+					const intent = resolveLayerDropIntent({
+						relativeX: e.clientX - rect.left,
+						relativeY: e.clientY - rect.top,
+						height: rect.height || 1,
+					});
+					onMoveBlock({
+						sourceId: payload.blockId,
+						targetId: block.id,
+						intent,
+					});
 				}
 			});
 		}
@@ -226,17 +278,26 @@ export function renderDesignPageList(options: {
 			blockListContainer.addEventListener("dragover", (e) => {
 				e.preventDefault();
 				if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+				blockListContainer.addClass("is-drop-root");
+			});
+			blockListContainer.addEventListener("dragleave", () => {
+				blockListContainer.removeClass("is-drop-root");
 			});
 			blockListContainer.addEventListener("drop", (e) => {
 				// Stop propagation so it doesn't trigger if we dropped on an item
 				e.stopPropagation();
 				e.preventDefault();
-				if (!e.dataTransfer || !onReparentBlock) return;
+				blockListContainer.removeClass("is-drop-root");
+				if (!e.dataTransfer || !onMoveBlock) return;
 				const payload = parseReparentDragPayload(
 					e.dataTransfer.getData("application/json"),
 				);
 				if (payload) {
-					onReparentBlock(payload.blockId, null);
+					onMoveBlock({
+						sourceId: payload.blockId,
+						targetId: null,
+						intent: "to-root-top",
+					});
 				}
 			});
 
