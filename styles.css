@@ -874,19 +874,21 @@ button.slides-rup-design-maker-layer-collapse {
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 6px;
+	width: 100%;
 }
 
 .slides-rup-design-maker-inline-style-ai-btn {
 	width: 24px;
 	height: 24px;
 	border-radius: 6px;
-	border: 1px solid var(--background-modifier-border);
-	background: var(--background-primary);
+	border: none;
+	background: transparent;
 	color: var(--interactive-accent);
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	padding: 0px;
 }
 
 .slides-rup-design-maker-inline-style-ai-btn:hover:not(.is-disabled) {
@@ -1134,13 +1136,14 @@ button.slides-rup-design-maker-layer-collapse {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
+	width: 24px;
+	height: 24px;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 8px;
 	background: var(--background-primary);
 	color: var(--text-muted);
 	cursor: pointer;
+	padding: 0px;
 }
 
 .slides-rup-design-maker-content-action:hover:not(:disabled) {
