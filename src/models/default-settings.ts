@@ -165,4 +165,11 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	designMakerPreviewScale: 100,
 	designMakerSlideBaseWidth: 1920,
 	designMakerSlideBaseHeight: 1080,
+	aiInlineStyleEnabled: false,
+	aiProviderType: "openai-compatible",
+	aiProviderBaseUrl: "https://api.openai.com/v1",
+	aiProviderModel: "gpt-4.1-mini",
+	aiProviderApiKeyFallback: "",
+	aiInlineStyleSystemPrompt:
+		"You are an inline CSS declaration assistant. Return only CSS declarations for a style attribute. Strict rules: no selectors, no braces, no @rules, no comments, no markdown, no explanations. Output plain text declarations only in the format 'property: value;' with one declaration per line. Prefer safe, broadly supported CSS properties and values. Keep existing intent and avoid unnecessary changes.",
 };

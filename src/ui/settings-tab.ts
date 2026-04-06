@@ -1434,6 +1434,95 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		// 根据用户设计CSS配置创建动态toggle设置
 
 		containerEl.createEl("h2", {
+			text: t("AI Assistant" as any),
+			cls: "slides-rup-title",
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Enable AI Inline Style Generator",
+			desc: "Enable AI generation for Design Maker inline style",
+			value: this.plugin.settings.aiInlineStyleEnabled,
+			onChange: async (value) => {
+				this.plugin.settings.aiInlineStyleEnabled = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		new Setting(containerEl)
+			.setName(t("AI Provider" as any))
+			.setDesc(t("Select AI provider protocol" as any))
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption(
+						"openai-compatible",
+						t("OpenAI Compatible" as any),
+					)
+					.setValue(this.plugin.settings.aiProviderType)
+					.onChange(async (value) => {
+						this.plugin.settings.aiProviderType =
+							value as "openai-compatible";
+						await this.plugin.saveSettings();
+					});
+			});
+
+		this.createTextSetting(containerEl, {
+			name: "AI Provider Base URL",
+			desc: "Set OpenAI-compatible API base URL",
+			value: this.plugin.settings.aiProviderBaseUrl,
+			onChange: async (value) => {
+				this.plugin.settings.aiProviderBaseUrl = value.trim();
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "AI Provider Model",
+			desc: "Set default model for AI inline style generation",
+			value: this.plugin.settings.aiProviderModel,
+			onChange: async (value) => {
+				this.plugin.settings.aiProviderModel = value.trim();
+				await this.plugin.saveSettings();
+			},
+		});
+
+		const keyStoreMode =
+			this.plugin.services.secretStoreService.getStorageMode();
+		new Setting(containerEl)
+			.setName(t("AI Provider API Key" as any))
+			.setDesc(
+				keyStoreMode === "keychain"
+					? t("API key is stored in Obsidian keychain" as any)
+					: t(
+							"Keychain unavailable, API key will fallback to plugin settings" as any,
+						),
+			)
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setPlaceholder(t("Enter API Key" as any));
+				this.plugin.services.secretStoreService
+					.getAIProviderApiKey()
+					.then((value) => {
+						text.setValue(value);
+					})
+					.catch(() => text.setValue(""));
+				text.onChange(async (value) => {
+					await this.plugin.services.secretStoreService.setAIProviderApiKey(
+						value,
+					);
+				});
+			});
+
+		this.createTextAreaSetting(containerEl, {
+			name: "AI Inline Style System Prompt",
+			desc: "Optional custom system prompt for AI inline style generation",
+			value: this.plugin.settings.aiInlineStyleSystemPrompt,
+			onChange: async (value) => {
+				this.plugin.settings.aiInlineStyleSystemPrompt = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		containerEl.createEl("h2", {
 			text: t("Customized CSS"),
 			cls: "slides-rup-title",
 		});

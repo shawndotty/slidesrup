@@ -174,6 +174,12 @@ export interface SlidesRupSettings {
 	designMakerPreviewScale: number;
 	designMakerSlideBaseWidth: number;
 	designMakerSlideBaseHeight: number;
+	aiInlineStyleEnabled: boolean;
+	aiProviderType: "openai-compatible";
+	aiProviderBaseUrl: string;
+	aiProviderModel: string;
+	aiProviderApiKeyFallback: string;
+	aiInlineStyleSystemPrompt: string;
 }
 
 export interface NocoDBTable {

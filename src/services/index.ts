@@ -5,6 +5,8 @@ import { TemplaterService } from "./templater-service";
 import { SlidesRupStyleService } from "./css-services";
 import { SlidesRupSettings } from "../types";
 import { VSCodeService } from "./vscode-service";
+import { SecretStoreService } from "./secret-store-service";
+import { InlineStyleAIService } from "./inline-style-ai-service";
 
 export function createServices(
 	plugin: Plugin,
@@ -15,6 +17,17 @@ export function createServices(
 	const apiService = new ApiService(settings);
 	const slidesRupStyleService = new SlidesRupStyleService(app, settings);
 	const vscodeService = new VSCodeService(app, settings);
+	const saveSettings = async () => {
+		const maybePlugin = plugin as any;
+		if (typeof maybePlugin.saveSettings === "function") {
+			await maybePlugin.saveSettings();
+		}
+	};
+	const secretStoreService = new SecretStoreService(app, settings, saveSettings);
+	const inlineStyleAiService = new InlineStyleAIService(
+		settings,
+		secretStoreService,
+	);
 	const commandService = new CommandService(
 		plugin.addCommand.bind(plugin),
 		plugin.addRibbonIcon.bind(plugin),
@@ -31,5 +44,7 @@ export function createServices(
 		apiService,
 		commandService,
 		slidesRupStyleService,
+		secretStoreService,
+		inlineStyleAiService,
 	};
 }

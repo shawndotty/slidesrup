@@ -395,6 +395,13 @@ export class DesignMakerView extends ItemView {
 			container: this.inspectorEl!,
 			block: this._getSelectedBlock(),
 			showTitle: false,
+			aiInlineStyleEnabled: this.plugin.settings.aiInlineStyleEnabled,
+			onGenerateInlineStyleAI: async (prompt, currentStyle) => {
+				return this.plugin.services.inlineStyleAiService.generateInlineStyle(
+					prompt,
+					currentStyle,
+				);
+			},
 			isGlobalCoords: this.isGlobalCoords,
 			onToggleCoords: (global) => {
 				this.isGlobalCoords = global;

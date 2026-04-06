@@ -869,6 +869,63 @@ button.slides-rup-design-maker-layer-collapse {
 	font-family: var(--font-monospace);
 }
 
+.slides-rup-design-maker-inline-style-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.slides-rup-design-maker-inline-style-ai-btn {
+	width: 24px;
+	height: 24px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--interactive-accent);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.slides-rup-design-maker-inline-style-ai-btn:hover:not(.is-disabled) {
+	background: var(--background-modifier-hover);
+}
+
+.slides-rup-design-maker-inline-style-ai-btn.is-disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.slides-rup-ai-style-modal .slides-rup-ai-style-input,
+.slides-rup-ai-style-modal .slides-rup-ai-style-result {
+	width: 100%;
+	min-height: 96px;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	padding: 8px 10px;
+	font-family: var(--font-monospace);
+}
+
+.slides-rup-ai-style-modal .slides-rup-ai-style-result {
+	min-height: 110px;
+}
+
+.slides-rup-ai-style-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.slides-rup-ai-style-status {
+	margin-top: 8px;
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
 .slides-rup-design-maker-layer-item .slides-rup-design-maker-layer-toggle {
 	background: transparent;
 	box-shadow: none;

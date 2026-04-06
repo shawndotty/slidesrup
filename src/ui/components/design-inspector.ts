@@ -18,6 +18,7 @@ import {
 	DesignGridBlock,
 	DesignRectUnit,
 } from "src/types/design-maker";
+import { InlineStyleAIModal } from "../modals/inline-style-ai-modal";
 
 const LOCAL_IMAGE_EXTENSIONS = new Set([
 	"png",
@@ -836,17 +837,28 @@ export function formatInlineStyleForEditor(style: string): string {
 
 function createCssEditorField(
 	container: HTMLElement,
+	app: App | undefined,
 	label: string,
 	value: string,
+	aiEnabled: boolean,
+	onGenerateInlineStyleAI:
+		| ((prompt: string, currentStyle: string) => Promise<string>)
+		| undefined,
 	onChange: (value: string) => void,
 ): void {
 	const row = container.createDiv("slides-rup-design-maker-field is-stacked");
-	row.createEl("label", { text: t(label as any) });
+	const header = row.createDiv("slides-rup-design-maker-inline-style-header");
+	header.createEl("label", { text: t(label as any) });
+	const aiButton = header.createEl("button", {
+		cls: "slides-rup-design-maker-inline-style-ai-btn",
+		attr: { type: "button", "aria-label": t("Generate with AI" as any) },
+	});
+	setIcon(aiButton, "sparkles");
 	const editorContainer = row.createDiv(
 		"slides-rup-design-maker-code-editor",
 	);
 	const initialDoc = formatInlineStyleForEditor(value);
-	new EditorView({
+	const editorView = new EditorView({
 		state: EditorState.create({
 			doc: initialDoc,
 			extensions: [
@@ -867,6 +879,29 @@ function createCssEditorField(
 			],
 		}),
 		parent: editorContainer,
+	});
+	const canUseAI = Boolean(app && aiEnabled && onGenerateInlineStyleAI);
+	if (!canUseAI) {
+		aiButton.disabled = true;
+		aiButton.addClass("is-disabled");
+		return;
+	}
+	aiButton.addEventListener("click", async () => {
+		if (!app || !onGenerateInlineStyleAI) return;
+		const modal = new InlineStyleAIModal(
+			app,
+			onGenerateInlineStyleAI,
+			editorView.state.doc.toString(),
+		);
+		const generatedStyle = await modal.openAndGetValue();
+		if (!generatedStyle) return;
+		editorView.dispatch({
+			changes: {
+				from: 0,
+				to: editorView.state.doc.length,
+				insert: generatedStyle,
+			},
+		});
 	});
 }
 
@@ -972,6 +1007,11 @@ export function renderDesignInspector(options: {
 	container: HTMLElement;
 	block: DesignCanvasBlock | null;
 	showTitle?: boolean;
+	aiInlineStyleEnabled?: boolean;
+	onGenerateInlineStyleAI?: (
+		prompt: string,
+		currentStyle: string,
+	) => Promise<string>;
 	isGlobalCoords?: boolean;
 	onToggleCoords?: (global: boolean) => void;
 	getGlobalCoords?: () => { x: number; y: number } | null;
@@ -984,6 +1024,8 @@ export function renderDesignInspector(options: {
 		block,
 		onPatchBlock,
 		showTitle = true,
+		aiInlineStyleEnabled = false,
+		onGenerateInlineStyleAI,
 		isGlobalCoords = false,
 		onToggleCoords,
 		getGlobalCoords,
@@ -1246,11 +1288,19 @@ export function renderDesignInspector(options: {
 			nextBlock.frag = value;
 		});
 	});
-	createCssEditorField(container, "Inline Style", block.style, (value) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.style = value;
-		});
-	});
+	createCssEditorField(
+		container,
+		app,
+		"Inline Style",
+		block.style,
+		aiInlineStyleEnabled,
+		onGenerateInlineStyleAI,
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.style = value;
+			});
+		},
+	);
 
 	const contentRow = container.createDiv(
 		"slides-rup-design-maker-field is-stacked",

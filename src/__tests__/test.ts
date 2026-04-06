@@ -56,6 +56,8 @@ import zhCN from "../lang/locale/zh-cn";
 import zhTW from "../lang/locale/zh-tw";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
 import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
+import { sanitizeInlineStyleAiOutput } from "../services/inline-style-ai-service";
+import { SecretStoreService } from "../services/secret-store-service";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -1326,6 +1328,52 @@ async function testDispatchThemeColorChange() {
 	console.log("testDispatchThemeColorChange passed");
 }
 
+function testInlineStyleAiOutputSanitization() {
+	assert.strictEqual(
+		sanitizeInlineStyleAiOutput(
+			"```css\ncolor: #fff; margin-top: 12px;\n```",
+		),
+		"color: #fff;\nmargin-top: 12px;",
+		"Should sanitize fenced CSS to inline declarations",
+	);
+	assert.throws(
+		() => sanitizeInlineStyleAiOutput("@media (max-width:600px){color:red;}"),
+		/non-inline CSS syntax/,
+		"Should reject @rules and braces",
+	);
+	console.log("testInlineStyleAiOutputSanitization passed");
+}
+
+async function testSecretStoreFallbackBehavior() {
+	const app = {} as any;
+	const settings = {
+		...DEFAULT_SETTINGS,
+		aiProviderApiKeyFallback: "",
+	} as any;
+	let saved = false;
+	const service = new SecretStoreService(app, settings, async () => {
+		saved = true;
+	});
+	assert.strictEqual(
+		service.getStorageMode(),
+		"fallback",
+		"Without keychain API should use fallback mode",
+	);
+	await service.setAIProviderApiKey("sk-fallback");
+	assert.strictEqual(
+		settings.aiProviderApiKeyFallback,
+		"sk-fallback",
+		"Fallback mode should persist API key into settings",
+	);
+	assert.strictEqual(saved, true, "Fallback mode should trigger saveSettings");
+	assert.strictEqual(
+		await service.getAIProviderApiKey(),
+		"sk-fallback",
+		"Fallback mode should read API key from settings",
+	);
+	console.log("testSecretStoreFallbackBehavior passed");
+}
+
 async function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -1367,6 +1415,8 @@ async function runTests() {
 		testInlineStyleEditorAndTemplateNormalization();
 		testInlineStyleCompletionDataSourceAndMode();
 		await testDispatchThemeColorChange();
+		testInlineStyleAiOutputSanitization();
+		await testSecretStoreFallbackBehavior();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);
