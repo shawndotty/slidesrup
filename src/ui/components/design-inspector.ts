@@ -1,7 +1,12 @@
 import { App, setIcon, TFile } from "obsidian";
 import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
-import { autocompletion } from "@codemirror/autocomplete";
+import {
+	autocompletion,
+	Completion,
+	CompletionContext,
+	CompletionResult,
+} from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { t } from "src/lang/helpers";
 import {
@@ -26,6 +31,277 @@ const LOCAL_IMAGE_EXTENSIONS = new Set([
 	"avif",
 	"heic",
 ]);
+
+const INLINE_STYLE_STANDARD_PROPERTIES = [
+	"align-content",
+	"align-items",
+	"align-self",
+	"animation",
+	"animation-delay",
+	"animation-direction",
+	"animation-duration",
+	"animation-fill-mode",
+	"animation-iteration-count",
+	"animation-name",
+	"animation-play-state",
+	"animation-timing-function",
+	"aspect-ratio",
+	"background",
+	"background-attachment",
+	"background-blend-mode",
+	"background-clip",
+	"background-color",
+	"background-image",
+	"background-origin",
+	"background-position",
+	"background-repeat",
+	"background-size",
+	"border",
+	"border-bottom",
+	"border-bottom-color",
+	"border-bottom-left-radius",
+	"border-bottom-right-radius",
+	"border-bottom-style",
+	"border-bottom-width",
+	"border-collapse",
+	"border-color",
+	"border-left",
+	"border-left-color",
+	"border-left-style",
+	"border-left-width",
+	"border-radius",
+	"border-right",
+	"border-right-color",
+	"border-right-style",
+	"border-right-width",
+	"border-spacing",
+	"border-style",
+	"border-top",
+	"border-top-color",
+	"border-top-left-radius",
+	"border-top-right-radius",
+	"border-top-style",
+	"border-top-width",
+	"border-width",
+	"bottom",
+	"box-shadow",
+	"box-sizing",
+	"break-inside",
+	"caption-side",
+	"caret-color",
+	"clear",
+	"clip-path",
+	"color",
+	"column-count",
+	"column-gap",
+	"column-rule",
+	"column-rule-color",
+	"column-rule-style",
+	"column-rule-width",
+	"column-span",
+	"column-width",
+	"columns",
+	"content",
+	"cursor",
+	"display",
+	"filter",
+	"flex",
+	"flex-basis",
+	"flex-direction",
+	"flex-flow",
+	"flex-grow",
+	"flex-shrink",
+	"flex-wrap",
+	"float",
+	"font",
+	"font-family",
+	"font-size",
+	"font-style",
+	"font-variant",
+	"font-weight",
+	"gap",
+	"grid",
+	"grid-area",
+	"grid-auto-columns",
+	"grid-auto-flow",
+	"grid-auto-rows",
+	"grid-column",
+	"grid-column-end",
+	"grid-column-gap",
+	"grid-column-start",
+	"grid-gap",
+	"grid-row",
+	"grid-row-end",
+	"grid-row-gap",
+	"grid-row-start",
+	"grid-template",
+	"grid-template-areas",
+	"grid-template-columns",
+	"grid-template-rows",
+	"height",
+	"inset",
+	"inset-block",
+	"inset-inline",
+	"justify-content",
+	"justify-items",
+	"justify-self",
+	"left",
+	"letter-spacing",
+	"line-height",
+	"list-style",
+	"list-style-image",
+	"list-style-position",
+	"list-style-type",
+	"margin",
+	"margin-bottom",
+	"margin-left",
+	"margin-right",
+	"margin-top",
+	"max-height",
+	"max-width",
+	"min-height",
+	"min-width",
+	"mix-blend-mode",
+	"object-fit",
+	"object-position",
+	"opacity",
+	"order",
+	"outline",
+	"outline-color",
+	"outline-offset",
+	"outline-style",
+	"outline-width",
+	"overflow",
+	"overflow-x",
+	"overflow-y",
+	"padding",
+	"padding-bottom",
+	"padding-left",
+	"padding-right",
+	"padding-top",
+	"perspective",
+	"pointer-events",
+	"position",
+	"right",
+	"row-gap",
+	"text-align",
+	"text-decoration",
+	"text-decoration-color",
+	"text-decoration-line",
+	"text-decoration-style",
+	"text-overflow",
+	"text-shadow",
+	"text-transform",
+	"top",
+	"transform",
+	"transform-origin",
+	"transform-style",
+	"transition",
+	"transition-delay",
+	"transition-duration",
+	"transition-property",
+	"transition-timing-function",
+	"user-select",
+	"vertical-align",
+	"visibility",
+	"white-space",
+	"width",
+	"word-break",
+	"word-spacing",
+	"writing-mode",
+	"z-index",
+];
+
+const INLINE_STYLE_VENDOR_PROPERTIES = [
+	"-webkit-line-clamp",
+	"-webkit-text-fill-color",
+	"-webkit-text-stroke",
+	"-webkit-text-stroke-color",
+	"-webkit-text-stroke-width",
+	"-webkit-user-select",
+	"-moz-user-select",
+	"-ms-user-select",
+];
+
+const INLINE_STYLE_VALUE_COMPLETIONS: Completion[] = [
+	{ label: "inherit", type: "constant", boost: 90 },
+	{ label: "initial", type: "constant", boost: 90 },
+	{ label: "unset", type: "constant", boost: 90 },
+	{ label: "revert", type: "constant", boost: 90 },
+	{ label: "none", type: "constant", boost: 70 },
+	{ label: "auto", type: "constant", boost: 70 },
+	{ label: "normal", type: "constant", boost: 70 },
+	{ label: "block", type: "constant", boost: 60 },
+	{ label: "inline", type: "constant", boost: 60 },
+	{ label: "flex", type: "constant", boost: 60 },
+	{ label: "grid", type: "constant", boost: 60 },
+	{ label: "relative", type: "constant", boost: 60 },
+	{ label: "absolute", type: "constant", boost: 60 },
+	{ label: "fixed", type: "constant", boost: 60 },
+	{ label: "sticky", type: "constant", boost: 60 },
+	{ label: "var(--)", type: "function", apply: "var(--$0)" },
+	{ label: "calc()", type: "function", apply: "calc($0)" },
+	{ label: "clamp()", type: "function", apply: "clamp($0)" },
+	{ label: "min()", type: "function", apply: "min($0)" },
+	{ label: "max()", type: "function", apply: "max($0)" },
+	{ label: "rgba()", type: "function", apply: "rgba($0)" },
+	{ label: "hsl()", type: "function", apply: "hsl($0)" },
+];
+
+export function buildInlineStylePropertyCompletions(
+	prefix: string,
+): Completion[] {
+	const normalized = prefix.toLowerCase();
+	const standard = INLINE_STYLE_STANDARD_PROPERTIES.filter((prop) =>
+		prop.startsWith(normalized),
+	).map(
+		(prop) => ({ label: prop, type: "property", boost: 100 }) as Completion,
+	);
+	const vendor = INLINE_STYLE_VENDOR_PROPERTIES.filter((prop) =>
+		prop.startsWith(normalized),
+	).map(
+		(prop) => ({ label: prop, type: "property", boost: 20 }) as Completion,
+	);
+	return [...standard, ...vendor];
+}
+
+export function buildInlineStyleValueCompletions(prefix: string): Completion[] {
+	const normalized = prefix.toLowerCase();
+	return INLINE_STYLE_VALUE_COMPLETIONS.filter((item) =>
+		item.label.toLowerCase().startsWith(normalized),
+	);
+}
+
+export function detectInlineStyleCompletionMode(
+	textBeforeCursor: string,
+): "property" | "value" {
+	const declaration = textBeforeCursor.split(";").pop() || "";
+	return declaration.includes(":") ? "value" : "property";
+}
+
+function createInlineStyleCompletionSource(
+	context: CompletionContext,
+): CompletionResult | null {
+	const line = context.state.doc.lineAt(context.pos);
+	const textBeforeCursor = line.text.slice(0, context.pos - line.from);
+	const mode = detectInlineStyleCompletionMode(textBeforeCursor);
+	const tokenMatch =
+		mode === "property"
+			? textBeforeCursor.match(/[\w-]*$/)
+			: textBeforeCursor.match(/[\w-]*$/);
+	const typed = tokenMatch ? tokenMatch[0] : "";
+	const from = context.pos - typed.length;
+	const options =
+		mode === "property"
+			? buildInlineStylePropertyCompletions(typed)
+			: buildInlineStyleValueCompletions(typed);
+	if (!options.length) return null;
+	return {
+		from,
+		options,
+		validFor: /^[\w-]*$/,
+	};
+}
 
 type PickerPlacement = "top" | "bottom";
 
@@ -499,7 +775,10 @@ function createCssEditorField(
 			extensions: [
 				basicSetup,
 				css(),
-				autocompletion(),
+				autocompletion({
+					activateOnTyping: true,
+					override: [createInlineStyleCompletionSource],
+				}),
 				...(document.body.classList.contains("theme-dark")
 					? [oneDark]
 					: []),

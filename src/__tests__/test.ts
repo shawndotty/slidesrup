@@ -36,12 +36,15 @@ import {
 	resolveLayerDropIntent,
 } from "../ui/components/design-page-list";
 import {
+	buildInlineStylePropertyCompletions,
+	buildInlineStyleValueCompletions,
 	clampImagePickerPosition,
+	detectInlineStyleCompletionMode,
+	formatInlineStyleForEditor,
 	computeImagePickerPlacement,
 	getNextPickerSelectionIndex,
 	insertImageEmbedIntoContent,
 	isLocalImagePath,
-	formatInlineStyleForEditor,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -1155,6 +1158,55 @@ function testInlineStyleEditorAndTemplateNormalization() {
 	console.log("testInlineStyleEditorAndTemplateNormalization passed");
 }
 
+function testInlineStyleCompletionDataSourceAndMode() {
+	const propertyLabels = buildInlineStylePropertyCompletions("mar").map(
+		(item) => item.label,
+	);
+	assert.ok(
+		propertyLabels.includes("margin"),
+		"Standard CSS property should appear in completion list",
+	);
+	assert.ok(
+		!propertyLabels.includes("marker"),
+		"Non-curated property should not appear in completion list",
+	);
+	assert.ok(
+		!propertyLabels.includes("class"),
+		"HTML attribute should not appear in CSS property completions",
+	);
+	const userSelectLabels = buildInlineStylePropertyCompletions("").map(
+		(item) => item.label,
+	);
+	const standardIndex = userSelectLabels.indexOf("user-select");
+	const vendorIndex = userSelectLabels.findIndex((label) =>
+		label.startsWith("-"),
+	);
+	assert.ok(
+		standardIndex >= 0 && vendorIndex >= 0 && standardIndex < vendorIndex,
+		"Standard properties should rank before vendor-prefixed entries",
+	);
+
+	const valueLabels = buildInlineStyleValueCompletions("ca").map(
+		(item) => item.label,
+	);
+	assert.ok(
+		valueLabels.includes("calc()"),
+		"Modern function syntax should be included in value completions",
+	);
+
+	assert.strictEqual(
+		detectInlineStyleCompletionMode("margin: 10px; color:"),
+		"value",
+		"After colon should be in value completion mode",
+	);
+	assert.strictEqual(
+		detectInlineStyleCompletionMode("margin: 10px; col"),
+		"property",
+		"Without colon in current declaration should be in property completion mode",
+	);
+	console.log("testInlineStyleCompletionDataSourceAndMode passed");
+}
+
 function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -1192,6 +1244,7 @@ function runTests() {
 		testLayerDropIntentAndInsertIndexMath();
 		testGeneratedMarkdownOrderAfterLayerMove();
 		testInlineStyleEditorAndTemplateNormalization();
+		testInlineStyleCompletionDataSourceAndMode();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);
