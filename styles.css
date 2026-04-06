@@ -754,6 +754,22 @@ h3.slides-rup-title {
 	white-space: nowrap;
 }
 
+button.slides-rup-design-maker-layer-collapse {
+	background: transparent;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: all 0.2s ease;
+	box-shadow: none;
+}
+
+.slides-rup-design-maker-layer-collapse:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
 .slides-rup-design-maker-coords-header {
 	display: flex;
 	justify-content: space-between;
