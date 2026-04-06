@@ -2,6 +2,7 @@ import { t } from "src/lang/helpers";
 import { DesignPageDraft, DesignPageType } from "src/types/design-maker";
 
 const THUMBNAIL_ITEM_WIDTH = 140;
+const THUMBNAIL_ITEM_HEIGHT = 64;
 const THUMBNAIL_ITEM_GAP = 8;
 const THUMBNAIL_VIRTUALIZE_THRESHOLD = 50;
 const THUMBNAIL_OVERSCAN = 4;
@@ -88,6 +89,13 @@ export function computeThumbnailVirtualWindow(options: {
 	};
 }
 
+export function formatThumbnailBlockCount(blockCount: number): string {
+	const safeCount = Number.isFinite(blockCount)
+		? Math.max(0, Math.floor(blockCount))
+		: 0;
+	return `${safeCount} blocks`;
+}
+
 function createThumbnailItem(options: {
 	parent: HTMLElement;
 	page: DesignPageDraft;
@@ -123,8 +131,6 @@ function createThumbnailItem(options: {
 		button.style.position = "absolute";
 		button.style.left = `${index * (itemWidth + gap)}px`;
 	}
-	button.addClass("is-loading");
-	requestAnimationFrame(() => button.removeClass("is-loading"));
 	if (isActive) {
 		button.addClass("is-active");
 	}
@@ -134,26 +140,11 @@ function createThumbnailItem(options: {
 
 	const frame = button.createDiv("slides-rup-design-maker-thumbnail-frame");
 	frame
-		.createDiv("slides-rup-design-maker-thumbnail-index")
-		.setText(`${index + 1}`);
-	const preview = frame.createDiv(
-		"slides-rup-design-maker-thumbnail-preview",
-	);
-	if (page.hasUnsupportedContent) {
-		preview.addClass("is-failed");
-		preview.setAttr("aria-label", t("Preview unavailable" as any));
-		preview.setText("⚠");
-	} else {
-		preview.addClass("is-ready");
-		preview.setAttr("aria-label", t("Loading page preview" as any));
-		preview.setText(page.type.toUpperCase());
-	}
-	frame
 		.createDiv("slides-rup-design-maker-thumbnail-label")
 		.setText(page.label);
 	frame
 		.createDiv("slides-rup-design-maker-thumbnail-meta")
-		.setText(`${page.blocks.length} blocks`);
+		.setText(formatThumbnailBlockCount(page.blocks.length));
 	button.addEventListener("click", () => onSelect(page.type));
 }
 
@@ -173,8 +164,8 @@ function ensureActiveItemVisible(options: {
 	} = options;
 	if (activeIndex < 0) return;
 	if (isVertical) {
-		const top = activeIndex * (84 + gap);
-		const bottom = top + 84;
+		const top = activeIndex * (THUMBNAIL_ITEM_HEIGHT + gap);
+		const bottom = top + THUMBNAIL_ITEM_HEIGHT;
 		const viewportTop = viewport.scrollTop;
 		const viewportBottom = viewportTop + viewport.clientHeight;
 		if (top < viewportTop) {
@@ -227,10 +218,13 @@ export function renderDesignThumbnailNav(options: {
 	container.empty();
 	if (pages.length === 0) return;
 
-	container
+	const header = container.createDiv(
+		"slides-rup-design-maker-thumbnail-header",
+	);
+	header
 		.createDiv("slides-rup-design-maker-thumbnail-title")
 		.setText(t("Slide Thumbnails" as any));
-	const controls = container.createDiv(
+	const controls = header.createDiv(
 		"slides-rup-design-maker-thumbnail-controls",
 	);
 	const prevButton = controls.createEl("button", {

@@ -24,6 +24,7 @@ import {
 } from "../ui/components/design-canvas";
 import {
 	computeThumbnailVirtualWindow,
+	formatThumbnailBlockCount,
 	getNextThumbnailIndex,
 } from "../ui/components/design-thumbnail-nav";
 import {
@@ -815,8 +816,6 @@ function testInspectorLocaleKeysCompleteness() {
 		"Switch to page",
 		"Previous thumbnails",
 		"Next thumbnails",
-		"Loading page preview",
-		"Preview unavailable",
 	];
 	requiredKeys.forEach((key) => {
 		assert.ok(
@@ -903,6 +902,30 @@ function testThumbnailKeyboardIndexMath() {
 	console.log("testThumbnailKeyboardIndexMath passed");
 }
 
+function testThumbnailBlockCountFormatting() {
+	assert.strictEqual(
+		formatThumbnailBlockCount(12),
+		"12 blocks",
+		"Should format integer counts",
+	);
+	assert.strictEqual(
+		formatThumbnailBlockCount(3.7),
+		"3 blocks",
+		"Should floor decimal counts",
+	);
+	assert.strictEqual(
+		formatThumbnailBlockCount(-2),
+		"0 blocks",
+		"Should clamp negative counts",
+	);
+	assert.strictEqual(
+		formatThumbnailBlockCount(Number.NaN),
+		"0 blocks",
+		"Should fallback for invalid counts",
+	);
+	console.log("testThumbnailBlockCountFormatting passed");
+}
+
 function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -934,6 +957,7 @@ function runTests() {
 		testInspectorLocaleKeysCompleteness();
 		testThumbnailVirtualizationMath();
 		testThumbnailKeyboardIndexMath();
+		testThumbnailBlockCountFormatting();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);
