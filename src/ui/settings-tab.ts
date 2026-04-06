@@ -24,6 +24,7 @@ import { DEFAULT_DESIGNS, REVEAL_USER_DESIGN_FOLDER } from "../constants";
 import { markdown } from "@codemirror/lang-markdown";
 import { GithubService } from "../services/github-service";
 import { GiteeService } from "../services/gitee-service";
+import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
 
 type SettingsKeys = keyof SlidesRup["settings"];
 
@@ -367,7 +368,8 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			desc: "Show the fallback source editor in Design Maker",
 			value: this.plugin.settings.designMakerShowAdvancedSourceEditor,
 			onChange: async (value) => {
-				this.plugin.settings.designMakerShowAdvancedSourceEditor = value;
+				this.plugin.settings.designMakerShowAdvancedSourceEditor =
+					value;
 				await this.plugin.saveSettings();
 			},
 		});
@@ -504,11 +506,8 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 		});
 
 		const onThemeColorChanges = debounce(
-			async () => {
-				await this.plugin.saveSettings();
-				await this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"hsl",
-				);
+			async (value: string) => {
+				await dispatchThemeColorChange(this.plugin, value);
 			},
 			200,
 			true,

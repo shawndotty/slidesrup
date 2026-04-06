@@ -55,6 +55,7 @@ import en from "../lang/locale/en";
 import zhCN from "../lang/locale/zh-cn";
 import zhTW from "../lang/locale/zh-tw";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
+import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -1294,7 +1295,38 @@ function testInlineStyleCompletionDataSourceAndMode() {
 	console.log("testInlineStyleCompletionDataSourceAndMode passed");
 }
 
-function runTests() {
+async function testDispatchThemeColorChange() {
+	const calls: string[] = [];
+	const plugin = {
+		settings: {
+			slidesRupThemeColor: "#0044FF",
+		},
+		saveSettings: async () => {
+			calls.push("saveSettings");
+		},
+		services: {
+			slidesRupStyleService: {
+				modifyStyleSection: async (section: "hsl") => {
+					calls.push(`modifyStyleSection:${section}`);
+				},
+			},
+		},
+	};
+
+	await dispatchThemeColorChange(plugin, "#123456");
+	assert.strictEqual(
+		plugin.settings.slidesRupThemeColor,
+		"#123456",
+		"Theme color should sync to plugin.settings.slidesRupThemeColor",
+	);
+	assert.deepStrictEqual(calls, [
+		"saveSettings",
+		"modifyStyleSection:hsl",
+	]);
+	console.log("testDispatchThemeColorChange passed");
+}
+
+async function runTests() {
 	try {
 		(globalThis as any).window = {
 			app: {
@@ -1334,6 +1366,7 @@ function runTests() {
 		testGeneratedMarkdownOrderAfterLayerMove();
 		testInlineStyleEditorAndTemplateNormalization();
 		testInlineStyleCompletionDataSourceAndMode();
+		await testDispatchThemeColorChange();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);

@@ -40,6 +40,7 @@ import {
 	SLIDES_EXTENDED_PLUGIN_FOLDER,
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
 } from "src/constants";
+import { dispatchThemeColorChange } from "src/services/theme-color-dispatch";
 
 export class DesignMakerView extends ItemView {
 	private plugin: any;
@@ -83,6 +84,9 @@ export class DesignMakerView extends ItemView {
 	private previewZoomPercent = 100;
 	private thumbnailNavScrollLeft = 0;
 	private isSpaceKeyDown = false;
+	private readonly _syncThemeColorToSettingsDebounced: (
+		color: string,
+	) => void;
 	private readonly _onWindowKeyUp = (event: KeyboardEvent) => {
 		this._handleWindowKeyUp(event);
 	};
@@ -109,6 +113,13 @@ export class DesignMakerView extends ItemView {
 			);
 			this.lastSelectionVisualBlockId = this.selectedBlockId;
 		}, 16);
+		this._syncThemeColorToSettingsDebounced = debounce(
+			async (color: string) => {
+				await dispatchThemeColorChange(this.plugin, color);
+			},
+			200,
+			true,
+		);
 	}
 
 	getViewType(): string {
@@ -447,6 +458,9 @@ export class DesignMakerView extends ItemView {
 					...this.draft!.theme,
 					...patch,
 				};
+				if (typeof patch.primaryColor === "string") {
+					this._syncThemeColorToSettingsDebounced(patch.primaryColor);
+				}
 				this._renderPreviewOnly(false);
 			},
 		});
