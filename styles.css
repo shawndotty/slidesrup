@@ -1289,8 +1289,8 @@ button.slides-rup-design-maker-layer-collapse {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	width: 100%;
-	height: 100%;
+	width: auto;
+	height: auto;
 	justify-content: center;
 }
 

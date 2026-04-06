@@ -596,6 +596,12 @@ var en_default = {
   "Unpin picker": "Unpin picker",
   "Close picker": "Close picker",
   "Enter to insert \xB7 Esc to close": "Enter to insert \xB7 Esc to close",
+  "Slide Thumbnails": "Slide Thumbnails",
+  "Switch to page": "Switch to page",
+  "Previous thumbnails": "Previous thumbnails",
+  "Next thumbnails": "Next thumbnails",
+  "Loading page preview": "Loading page preview",
+  "Preview unavailable": "Preview unavailable",
   "CSS Class": "CSS Class",
   "Inline Style": "Inline Style",
   "Page Source": "Page Source",
@@ -678,6 +684,88 @@ var en_default = {
   Faster: "Faster",
   Filter: "Filter",
   Align: "Align"
+};
+
+// src/lang/locale/design-inspector/en-US.json
+var en_US_default = {
+  "designInspector.option.default": "Default",
+  "designInspector.option.none": "None",
+  "designInspector.option.column": "Column",
+  "designInspector.option.row": "Row",
+  "designInspector.option.left": "Left",
+  "designInspector.option.right": "Right",
+  "designInspector.option.center": "Center",
+  "designInspector.option.justify": "Justify",
+  "designInspector.option.block": "Block",
+  "designInspector.option.top": "Top",
+  "designInspector.option.bottom": "Bottom",
+  "designInspector.option.topLeft": "Top Left",
+  "designInspector.option.topRight": "Top Right",
+  "designInspector.option.bottomLeft": "Bottom Left",
+  "designInspector.option.bottomRight": "Bottom Right",
+  "designInspector.option.stretch": "Stretch",
+  "designInspector.option.start": "Start",
+  "designInspector.option.end": "End",
+  "designInspector.option.spaceBetween": "Space Between",
+  "designInspector.option.spaceAround": "Space Around",
+  "designInspector.option.spaceEvenly": "Space Evenly",
+  "designInspector.option.fadeIn": "Fade In",
+  "designInspector.option.fadeOut": "Fade Out",
+  "designInspector.option.slideRightIn": "Slide Right In",
+  "designInspector.option.slideLeftIn": "Slide Left In",
+  "designInspector.option.slideUpIn": "Slide Up In",
+  "designInspector.option.slideDownIn": "Slide Down In",
+  "designInspector.option.slideRightOut": "Slide Right Out",
+  "designInspector.option.slideLeftOut": "Slide Left Out",
+  "designInspector.option.slideUpOut": "Slide Up Out",
+  "designInspector.option.slideDownOut": "Slide Down Out",
+  "designInspector.option.scaleUp": "Scale Up",
+  "designInspector.option.scaleUpOut": "Scale Up Out",
+  "designInspector.option.scaleDown": "Scale Down",
+  "designInspector.option.scaleDownOut": "Scale Down Out",
+  "designInspector.option.slower": "Slower",
+  "designInspector.option.faster": "Faster"
+};
+
+// src/lang/locale/design-inspector/zh-CN.json
+var zh_CN_default = {
+  "designInspector.option.default": "\u9ED8\u8BA4",
+  "designInspector.option.none": "\u65E0",
+  "designInspector.option.column": "\u7EB5\u5411",
+  "designInspector.option.row": "\u6A2A\u5411",
+  "designInspector.option.left": "\u5DE6\u5BF9\u9F50",
+  "designInspector.option.right": "\u53F3\u5BF9\u9F50",
+  "designInspector.option.center": "\u5C45\u4E2D",
+  "designInspector.option.justify": "\u4E24\u7AEF\u5BF9\u9F50",
+  "designInspector.option.block": "\u5757\u7EA7",
+  "designInspector.option.top": "\u9876\u90E8",
+  "designInspector.option.bottom": "\u5E95\u90E8",
+  "designInspector.option.topLeft": "\u5DE6\u4E0A",
+  "designInspector.option.topRight": "\u53F3\u4E0A",
+  "designInspector.option.bottomLeft": "\u5DE6\u4E0B",
+  "designInspector.option.bottomRight": "\u53F3\u4E0B",
+  "designInspector.option.stretch": "\u62C9\u4F38",
+  "designInspector.option.start": "\u8D77\u59CB",
+  "designInspector.option.end": "\u7ED3\u675F",
+  "designInspector.option.spaceBetween": "\u4E24\u7AEF\u5206\u5E03",
+  "designInspector.option.spaceAround": "\u73AF\u7ED5\u5206\u5E03",
+  "designInspector.option.spaceEvenly": "\u5747\u5300\u5206\u5E03",
+  "designInspector.option.fadeIn": "\u6DE1\u5165",
+  "designInspector.option.fadeOut": "\u6DE1\u51FA",
+  "designInspector.option.slideRightIn": "\u53F3\u4FA7\u6ED1\u5165",
+  "designInspector.option.slideLeftIn": "\u5DE6\u4FA7\u6ED1\u5165",
+  "designInspector.option.slideUpIn": "\u4E0A\u6ED1\u8FDB\u5165",
+  "designInspector.option.slideDownIn": "\u4E0B\u6ED1\u8FDB\u5165",
+  "designInspector.option.slideRightOut": "\u53F3\u4FA7\u6ED1\u51FA",
+  "designInspector.option.slideLeftOut": "\u5DE6\u4FA7\u6ED1\u51FA",
+  "designInspector.option.slideUpOut": "\u4E0A\u6ED1\u9000\u51FA",
+  "designInspector.option.slideDownOut": "\u4E0B\u6ED1\u9000\u51FA",
+  "designInspector.option.scaleUp": "\u653E\u5927",
+  "designInspector.option.scaleUpOut": "\u653E\u5927\u9000\u51FA",
+  "designInspector.option.scaleDown": "\u7F29\u5C0F",
+  "designInspector.option.scaleDownOut": "\u7F29\u5C0F\u9000\u51FA",
+  "designInspector.option.slower": "\u66F4\u6162",
+  "designInspector.option.faster": "\u66F4\u5FEB"
 };
 
 // src/lang/locale/zh-cn.ts
@@ -1193,6 +1281,12 @@ var zh_cn_default = {
   "Unpin picker": "\u53D6\u6D88\u7F6E\u9876",
   "Close picker": "\u5173\u95ED\u9009\u62E9\u5668",
   "Enter to insert \xB7 Esc to close": "\u56DE\u8F66\u63D2\u5165 \xB7 Esc \u5173\u95ED",
+  "Slide Thumbnails": "\u9875\u9762\u7F29\u7565\u5BFC\u822A",
+  "Switch to page": "\u5207\u6362\u5230\u9875\u9762",
+  "Previous thumbnails": "\u5411\u524D\u6EDA\u52A8\u7F29\u7565\u56FE",
+  "Next thumbnails": "\u5411\u540E\u6EDA\u52A8\u7F29\u7565\u56FE",
+  "Loading page preview": "\u6B63\u5728\u52A0\u8F7D\u9875\u9762\u9884\u89C8",
+  "Preview unavailable": "\u9884\u89C8\u4E0D\u53EF\u7528",
   "CSS Class": "CSS \u7C7B\u540D",
   "Inline Style": "\u5185\u8054\u6837\u5F0F",
   "Page Source": "\u9875\u9762\u6E90\u7801",
@@ -1789,6 +1883,12 @@ var zh_tw_default = {
   "Unpin picker": "\u53D6\u6D88\u7F6E\u9802",
   "Close picker": "\u95DC\u9589\u9078\u64C7\u5668",
   "Enter to insert \xB7 Esc to close": "Enter \u63D2\u5165 \xB7 Esc \u95DC\u9589",
+  "Slide Thumbnails": "\u9801\u9762\u7E2E\u5716\u5C0E\u89BD",
+  "Switch to page": "\u5207\u63DB\u5230\u9801\u9762",
+  "Previous thumbnails": "\u5411\u524D\u6372\u52D5\u7E2E\u5716",
+  "Next thumbnails": "\u5411\u5F8C\u6372\u52D5\u7E2E\u5716",
+  "Loading page preview": "\u6B63\u5728\u8F09\u5165\u9801\u9762\u9810\u89BD",
+  "Preview unavailable": "\u9810\u89BD\u4E0D\u53EF\u7528",
   "CSS Class": "CSS \u985E\u540D",
   "Inline Style": "\u5167\u806F\u6A23\u5F0F",
   "Page Source": "\u9801\u9762\u539F\u59CB\u78BC",
@@ -1874,9 +1974,10 @@ var zh_tw_default = {
 };
 
 // src/lang/helpers.ts
+var EN_BASE_LOCALE = __spreadValues(__spreadValues({}, en_default), en_US_default);
 var localeMap = {
-  en: en_default,
-  "zh-cn": zh_cn_default,
+  en: EN_BASE_LOCALE,
+  "zh-cn": __spreadValues(__spreadValues({}, zh_cn_default), zh_CN_default),
   "zh-tw": zh_tw_default
 };
 var cachedLocale = null;
@@ -1900,7 +2001,7 @@ function _get_locale() {
   if (cachedLocale && cachedLang === lang) {
     return cachedLocale;
   }
-  const baseLocale = en_default;
+  const baseLocale = EN_BASE_LOCALE;
   const specificLocale = localeMap[lang];
   const locale = specificLocale && specificLocale !== baseLocale ? __spreadValues(__spreadValues({}, baseLocale), specificLocale) : baseLocale;
   cachedLocale = locale;
@@ -1908,7 +2009,10 @@ function _get_locale() {
   return locale;
 }
 function t(str) {
-  return _get_locale()[str];
+  var _a, _b;
+  const locale = _get_locale();
+  const key = String(str);
+  return (_b = (_a = locale[key]) != null ? _a : EN_BASE_LOCALE[key]) != null ? _b : key;
 }
 
 // src/services/design-maker-schema.ts
@@ -2565,6 +2669,12 @@ function parseThemeDraft(designName, cssContent) {
 function formatRectValue(value) {
   return `${Math.round(value)}`;
 }
+function normalizeInlineStyleForTemplate(style) {
+  const declarations = style.split(";").map((part) => part.replace(/\s+/g, " ").trim()).filter(Boolean);
+  if (!declarations.length)
+    return "";
+  return `${declarations.join("; ")};`;
+}
 function serializeAttributes(block, defaultRectUnit) {
   const rectUnit = block.extraAttributes.rectUnit === "px" ? "px" : defaultRectUnit;
   const attrs = {
@@ -2583,8 +2693,9 @@ function serializeAttributes(block, defaultRectUnit) {
     attrs.align = block.align.trim();
   if (block.pad.trim())
     attrs.pad = block.pad.trim();
-  if (block.style.trim())
-    attrs.style = block.style.trim();
+  const normalizedStyle = normalizeInlineStyleForTemplate(block.style);
+  if (normalizedStyle)
+    attrs.style = normalizedStyle;
   if (block.flow.trim())
     attrs.flow = block.flow.trim();
   if (block.filter.trim())
@@ -2716,8 +2827,116 @@ function computePanForZoom(options) {
   };
 }
 
-// src/ui/components/design-inspector.ts
+// src/ui/components/design-thumbnail-nav.ts
+var THUMBNAIL_ITEM_WIDTH = 140;
+var THUMBNAIL_ITEM_GAP = 8;
+var THUMBNAIL_VIRTUALIZE_THRESHOLD = 50;
+var THUMBNAIL_OVERSCAN = 4;
+function getNextThumbnailIndex(options) {
+  const { currentIndex, direction, total, wrap = false } = options;
+  if (!Number.isFinite(total) || total <= 0)
+    return -1;
+  if (!Number.isFinite(currentIndex) || currentIndex < 0 || currentIndex >= total) {
+    return direction > 0 ? 0 : total - 1;
+  }
+  const nextIndex = currentIndex + direction;
+  if (wrap) {
+    return (nextIndex + total) % total;
+  }
+  if (nextIndex < 0)
+    return 0;
+  if (nextIndex >= total)
+    return total - 1;
+  return nextIndex;
+}
+function computeThumbnailVirtualWindow(options) {
+  const {
+    total,
+    containerWidth,
+    scrollLeft,
+    itemWidth = THUMBNAIL_ITEM_WIDTH,
+    gap = THUMBNAIL_ITEM_GAP,
+    overscan = THUMBNAIL_OVERSCAN,
+    threshold = THUMBNAIL_VIRTUALIZE_THRESHOLD
+  } = options;
+  if (!Number.isFinite(total) || total <= 0) {
+    return { virtualized: false, start: 0, end: 0, totalWidth: 0 };
+  }
+  const stride = Math.max(1, itemWidth + gap);
+  const safeWidth = Number.isFinite(containerWidth) ? Math.max(0, containerWidth) : 0;
+  const safeScrollLeft = Number.isFinite(scrollLeft) ? Math.max(0, scrollLeft) : 0;
+  const totalWidth = total * itemWidth + Math.max(0, total - 1) * gap;
+  const shouldVirtualize = total > threshold;
+  if (!shouldVirtualize) {
+    return {
+      virtualized: false,
+      start: 0,
+      end: total,
+      totalWidth
+    };
+  }
+  const visibleStart = Math.floor(safeScrollLeft / stride);
+  const visibleCount = Math.max(1, Math.ceil(safeWidth / stride));
+  const start = Math.max(0, visibleStart - overscan);
+  const end = Math.min(total, visibleStart + visibleCount + overscan);
+  return {
+    virtualized: true,
+    start,
+    end,
+    totalWidth
+  };
+}
+function formatThumbnailBlockCount(blockCount) {
+  const safeCount = Number.isFinite(blockCount) ? Math.max(0, Math.floor(blockCount)) : 0;
+  return `${safeCount} blocks`;
+}
+
+// src/ui/components/design-page-list.ts
 var import_obsidian4 = require("obsidian");
+function getLayerRenderOrder(blocks) {
+  return [...blocks].reverse();
+}
+function buildReparentDragPayload(blockId) {
+  const payload = {
+    action: "reparent",
+    blockId
+  };
+  return JSON.stringify(payload);
+}
+function parseReparentDragPayload(rawPayload) {
+  try {
+    const parsed = JSON.parse(rawPayload);
+    if (parsed && parsed.action === "reparent" && typeof parsed.blockId === "string" && parsed.blockId.length > 0) {
+      return {
+        action: "reparent",
+        blockId: parsed.blockId
+      };
+    }
+  } catch (ex) {
+  }
+  return null;
+}
+function resolveLayerDropIntent(options) {
+  const {
+    relativeX,
+    relativeY,
+    height,
+    indentHitWidth = 20,
+    allowAsChild = true
+  } = options;
+  if (allowAsChild && relativeX <= indentHitWidth)
+    return "as-child";
+  if (relativeY < height / 2)
+    return "before";
+  return "after";
+}
+function getInsertIndexForReversedLayerOrder(options) {
+  const { targetIndex, intent } = options;
+  return intent === "before" ? targetIndex + 1 : targetIndex;
+}
+
+// src/ui/components/design-inspector.ts
+var import_obsidian5 = require("obsidian");
 var LOCAL_IMAGE_EXTENSIONS = /* @__PURE__ */ new Set([
   "png",
   "jpg",
@@ -2730,6 +2949,312 @@ var LOCAL_IMAGE_EXTENSIONS = /* @__PURE__ */ new Set([
   "avif",
   "heic"
 ]);
+var INSPECTOR_SELECT_OPTION_I18N_KEYS = {
+  Default: "designInspector.option.default",
+  None: "designInspector.option.none",
+  Column: "designInspector.option.column",
+  Row: "designInspector.option.row",
+  Left: "designInspector.option.left",
+  Right: "designInspector.option.right",
+  Center: "designInspector.option.center",
+  Justify: "designInspector.option.justify",
+  Block: "designInspector.option.block",
+  Top: "designInspector.option.top",
+  Bottom: "designInspector.option.bottom",
+  "Top Left": "designInspector.option.topLeft",
+  "Top Right": "designInspector.option.topRight",
+  "Bottom Left": "designInspector.option.bottomLeft",
+  "Bottom Right": "designInspector.option.bottomRight",
+  Stretch: "designInspector.option.stretch",
+  Start: "designInspector.option.start",
+  End: "designInspector.option.end",
+  "Space Between": "designInspector.option.spaceBetween",
+  "Space Around": "designInspector.option.spaceAround",
+  "Space Evenly": "designInspector.option.spaceEvenly",
+  "Fade In": "designInspector.option.fadeIn",
+  "Fade Out": "designInspector.option.fadeOut",
+  "Slide Right In": "designInspector.option.slideRightIn",
+  "Slide Left In": "designInspector.option.slideLeftIn",
+  "Slide Up In": "designInspector.option.slideUpIn",
+  "Slide Down In": "designInspector.option.slideDownIn",
+  "Slide Right Out": "designInspector.option.slideRightOut",
+  "Slide Left Out": "designInspector.option.slideLeftOut",
+  "Slide Up Out": "designInspector.option.slideUpOut",
+  "Slide Down Out": "designInspector.option.slideDownOut",
+  "Scale Up": "designInspector.option.scaleUp",
+  "Scale Up Out": "designInspector.option.scaleUpOut",
+  "Scale Down": "designInspector.option.scaleDown",
+  "Scale Down Out": "designInspector.option.scaleDownOut",
+  Slower: "designInspector.option.slower",
+  Faster: "designInspector.option.faster"
+};
+var warnedMissingInspectorOptionLabels = /* @__PURE__ */ new Set();
+function warnMissingInspectorOptionI18n(label) {
+  if (warnedMissingInspectorOptionLabels.has(label))
+    return;
+  warnedMissingInspectorOptionLabels.add(label);
+  console.warn(
+    `[slides-rup] Missing inspector i18n key for option label "${label}", fallback to raw label.`
+  );
+}
+function localizeInspectorOptionLabel(label) {
+  const translationKey = INSPECTOR_SELECT_OPTION_I18N_KEYS[label];
+  if (!translationKey) {
+    warnMissingInspectorOptionI18n(label);
+    return label;
+  }
+  const localized = t(translationKey);
+  if (!localized || localized === translationKey) {
+    warnMissingInspectorOptionI18n(label);
+    return label;
+  }
+  return localized;
+}
+function localizeInspectorSelectOptions(options) {
+  return options.map((option) => __spreadProps(__spreadValues({}, option), {
+    label: localizeInspectorOptionLabel(option.label)
+  }));
+}
+function resetInspectorI18nWarnCacheForTests() {
+  warnedMissingInspectorOptionLabels.clear();
+}
+var INLINE_STYLE_STANDARD_PROPERTIES = [
+  "align-content",
+  "align-items",
+  "align-self",
+  "animation",
+  "animation-delay",
+  "animation-direction",
+  "animation-duration",
+  "animation-fill-mode",
+  "animation-iteration-count",
+  "animation-name",
+  "animation-play-state",
+  "animation-timing-function",
+  "aspect-ratio",
+  "background",
+  "background-attachment",
+  "background-blend-mode",
+  "background-clip",
+  "background-color",
+  "background-image",
+  "background-origin",
+  "background-position",
+  "background-repeat",
+  "background-size",
+  "border",
+  "border-bottom",
+  "border-bottom-color",
+  "border-bottom-left-radius",
+  "border-bottom-right-radius",
+  "border-bottom-style",
+  "border-bottom-width",
+  "border-collapse",
+  "border-color",
+  "border-left",
+  "border-left-color",
+  "border-left-style",
+  "border-left-width",
+  "border-radius",
+  "border-right",
+  "border-right-color",
+  "border-right-style",
+  "border-right-width",
+  "border-spacing",
+  "border-style",
+  "border-top",
+  "border-top-color",
+  "border-top-left-radius",
+  "border-top-right-radius",
+  "border-top-style",
+  "border-top-width",
+  "border-width",
+  "bottom",
+  "box-shadow",
+  "box-sizing",
+  "break-inside",
+  "caption-side",
+  "caret-color",
+  "clear",
+  "clip-path",
+  "color",
+  "column-count",
+  "column-gap",
+  "column-rule",
+  "column-rule-color",
+  "column-rule-style",
+  "column-rule-width",
+  "column-span",
+  "column-width",
+  "columns",
+  "content",
+  "cursor",
+  "display",
+  "filter",
+  "flex",
+  "flex-basis",
+  "flex-direction",
+  "flex-flow",
+  "flex-grow",
+  "flex-shrink",
+  "flex-wrap",
+  "float",
+  "font",
+  "font-family",
+  "font-size",
+  "font-style",
+  "font-variant",
+  "font-weight",
+  "gap",
+  "grid",
+  "grid-area",
+  "grid-auto-columns",
+  "grid-auto-flow",
+  "grid-auto-rows",
+  "grid-column",
+  "grid-column-end",
+  "grid-column-gap",
+  "grid-column-start",
+  "grid-gap",
+  "grid-row",
+  "grid-row-end",
+  "grid-row-gap",
+  "grid-row-start",
+  "grid-template",
+  "grid-template-areas",
+  "grid-template-columns",
+  "grid-template-rows",
+  "height",
+  "inset",
+  "inset-block",
+  "inset-inline",
+  "justify-content",
+  "justify-items",
+  "justify-self",
+  "left",
+  "letter-spacing",
+  "line-height",
+  "list-style",
+  "list-style-image",
+  "list-style-position",
+  "list-style-type",
+  "margin",
+  "margin-bottom",
+  "margin-left",
+  "margin-right",
+  "margin-top",
+  "max-height",
+  "max-width",
+  "min-height",
+  "min-width",
+  "mix-blend-mode",
+  "object-fit",
+  "object-position",
+  "opacity",
+  "order",
+  "outline",
+  "outline-color",
+  "outline-offset",
+  "outline-style",
+  "outline-width",
+  "overflow",
+  "overflow-x",
+  "overflow-y",
+  "padding",
+  "padding-bottom",
+  "padding-left",
+  "padding-right",
+  "padding-top",
+  "perspective",
+  "pointer-events",
+  "position",
+  "right",
+  "row-gap",
+  "text-align",
+  "text-decoration",
+  "text-decoration-color",
+  "text-decoration-line",
+  "text-decoration-style",
+  "text-overflow",
+  "text-shadow",
+  "text-transform",
+  "top",
+  "transform",
+  "transform-origin",
+  "transform-style",
+  "transition",
+  "transition-delay",
+  "transition-duration",
+  "transition-property",
+  "transition-timing-function",
+  "user-select",
+  "vertical-align",
+  "visibility",
+  "white-space",
+  "width",
+  "word-break",
+  "word-spacing",
+  "writing-mode",
+  "z-index"
+];
+var INLINE_STYLE_VENDOR_PROPERTIES = [
+  "-webkit-line-clamp",
+  "-webkit-text-fill-color",
+  "-webkit-text-stroke",
+  "-webkit-text-stroke-color",
+  "-webkit-text-stroke-width",
+  "-webkit-user-select",
+  "-moz-user-select",
+  "-ms-user-select"
+];
+var INLINE_STYLE_VALUE_COMPLETIONS = [
+  { label: "inherit", type: "constant", boost: 90 },
+  { label: "initial", type: "constant", boost: 90 },
+  { label: "unset", type: "constant", boost: 90 },
+  { label: "revert", type: "constant", boost: 90 },
+  { label: "none", type: "constant", boost: 70 },
+  { label: "auto", type: "constant", boost: 70 },
+  { label: "normal", type: "constant", boost: 70 },
+  { label: "block", type: "constant", boost: 60 },
+  { label: "inline", type: "constant", boost: 60 },
+  { label: "flex", type: "constant", boost: 60 },
+  { label: "grid", type: "constant", boost: 60 },
+  { label: "relative", type: "constant", boost: 60 },
+  { label: "absolute", type: "constant", boost: 60 },
+  { label: "fixed", type: "constant", boost: 60 },
+  { label: "sticky", type: "constant", boost: 60 },
+  { label: "var(--)", type: "function", apply: "var(--$0)" },
+  { label: "calc()", type: "function", apply: "calc($0)" },
+  { label: "clamp()", type: "function", apply: "clamp($0)" },
+  { label: "min()", type: "function", apply: "min($0)" },
+  { label: "max()", type: "function", apply: "max($0)" },
+  { label: "rgba()", type: "function", apply: "rgba($0)" },
+  { label: "hsl()", type: "function", apply: "hsl($0)" }
+];
+function buildInlineStylePropertyCompletions(prefix) {
+  const normalized = prefix.toLowerCase();
+  const standard = INLINE_STYLE_STANDARD_PROPERTIES.filter(
+    (prop) => prop.startsWith(normalized)
+  ).map(
+    (prop) => ({ label: prop, type: "property", boost: 100 })
+  );
+  const vendor = INLINE_STYLE_VENDOR_PROPERTIES.filter(
+    (prop) => prop.startsWith(normalized)
+  ).map(
+    (prop) => ({ label: prop, type: "property", boost: 20 })
+  );
+  return [...standard, ...vendor];
+}
+function buildInlineStyleValueCompletions(prefix) {
+  const normalized = prefix.toLowerCase();
+  return INLINE_STYLE_VALUE_COMPLETIONS.filter(
+    (item) => item.label.toLowerCase().startsWith(normalized)
+  );
+}
+function detectInlineStyleCompletionMode(textBeforeCursor) {
+  const declaration = textBeforeCursor.split(";").pop() || "";
+  return declaration.includes(":") ? "value" : "property";
+}
 function clampImagePickerPosition(options) {
   const {
     left,
@@ -2809,6 +3334,12 @@ function insertImageEmbedIntoContent(content, imagePath) {
     return embed;
   return `${current}
 ${embed}`;
+}
+function formatInlineStyleForEditor(style) {
+  const declarations = style.split(";").map((part) => part.trim()).filter(Boolean);
+  if (!declarations.length)
+    return "";
+  return `${declarations.join(";\n")};`;
 }
 function syncInspectorRectFields(options) {
   const { container, rect, rectUnit } = options;
@@ -3892,7 +4423,11 @@ function testInspectorLocaleKeysCompleteness() {
     "Pin picker",
     "Unpin picker",
     "Close picker",
-    "Enter to insert \xB7 Esc to close"
+    "Enter to insert \xB7 Esc to close",
+    "Slide Thumbnails",
+    "Switch to page",
+    "Previous thumbnails",
+    "Next thumbnails"
   ];
   requiredKeys.forEach((key) => {
     import_assert.default.ok(
@@ -3909,6 +4444,395 @@ function testInspectorLocaleKeysCompleteness() {
     );
   });
   console.log("testInspectorLocaleKeysCompleteness passed");
+}
+function testInspectorSelectOptionI18nAndFallback() {
+  const settings = globalThis.window.app.plugins.plugins["slides-rup"].settings;
+  settings.slidesRupRunningLanguage = "zh-cn";
+  resetInspectorI18nWarnCacheForTests();
+  const localized = localizeInspectorSelectOptions([
+    { value: "", label: "Default" },
+    { value: "col", label: "Column" },
+    { value: "custom", label: "Custom Label" }
+  ]);
+  import_assert.default.strictEqual(
+    localized[0].label,
+    "\u9ED8\u8BA4",
+    "Known label should use zh-CN JSON translation"
+  );
+  import_assert.default.strictEqual(
+    localized[1].label,
+    "\u7EB5\u5411",
+    "Known label should use zh-CN JSON translation"
+  );
+  import_assert.default.strictEqual(
+    localized[2].label,
+    "Custom Label",
+    "Unknown label should fallback to raw label"
+  );
+  const originalWarn = console.warn;
+  const warns = [];
+  console.warn = (...args) => warns.push(args.join(" "));
+  try {
+    localizeInspectorSelectOptions([
+      { value: "u1", label: "Unknown Label" },
+      { value: "u2", label: "Unknown Label" }
+    ]);
+    localizeInspectorSelectOptions([
+      { value: "u3", label: "Unknown Label" }
+    ]);
+  } finally {
+    console.warn = originalWarn;
+  }
+  import_assert.default.strictEqual(
+    warns.length,
+    1,
+    "Missing option i18n warning should be emitted only once per label"
+  );
+  settings.slidesRupRunningLanguage = "en";
+  resetInspectorI18nWarnCacheForTests();
+  console.log("testInspectorSelectOptionI18nAndFallback passed");
+}
+function testThumbnailVirtualizationMath() {
+  const nonVirtualWindow = computeThumbnailVirtualWindow({
+    total: 7,
+    containerWidth: 800,
+    scrollLeft: 0
+  });
+  import_assert.default.strictEqual(nonVirtualWindow.virtualized, false);
+  import_assert.default.strictEqual(nonVirtualWindow.start, 0);
+  import_assert.default.strictEqual(nonVirtualWindow.end, 7);
+  const virtualWindowStart = computeThumbnailVirtualWindow({
+    total: 120,
+    containerWidth: 560,
+    scrollLeft: 0
+  });
+  import_assert.default.strictEqual(virtualWindowStart.virtualized, true);
+  import_assert.default.strictEqual(virtualWindowStart.start, 0);
+  import_assert.default.ok(
+    virtualWindowStart.end < 120,
+    "Virtualized window should not render all thumbnails at once"
+  );
+  const virtualWindowMiddle = computeThumbnailVirtualWindow({
+    total: 120,
+    containerWidth: 560,
+    scrollLeft: 4200
+  });
+  import_assert.default.strictEqual(virtualWindowMiddle.virtualized, true);
+  import_assert.default.ok(
+    virtualWindowMiddle.start > 0,
+    "Scrolled window should start after index 0"
+  );
+  import_assert.default.ok(
+    virtualWindowMiddle.end <= 120,
+    "Window end should stay inside item bounds"
+  );
+  console.log("testThumbnailVirtualizationMath passed");
+}
+function testThumbnailKeyboardIndexMath() {
+  import_assert.default.strictEqual(
+    getNextThumbnailIndex({ currentIndex: 0, direction: -1, total: 7 }),
+    0,
+    "Left at first page should stay at first page"
+  );
+  import_assert.default.strictEqual(
+    getNextThumbnailIndex({ currentIndex: 6, direction: 1, total: 7 }),
+    6,
+    "Right at last page should stay at last page"
+  );
+  import_assert.default.strictEqual(
+    getNextThumbnailIndex({ currentIndex: 3, direction: 1, total: 7 }),
+    4,
+    "Right should move to next page"
+  );
+  import_assert.default.strictEqual(
+    getNextThumbnailIndex({
+      currentIndex: 0,
+      direction: -1,
+      total: 7,
+      wrap: true
+    }),
+    6,
+    "Wrap mode should jump from first to last"
+  );
+  console.log("testThumbnailKeyboardIndexMath passed");
+}
+function testThumbnailBlockCountFormatting() {
+  import_assert.default.strictEqual(
+    formatThumbnailBlockCount(12),
+    "12 blocks",
+    "Should format integer counts"
+  );
+  import_assert.default.strictEqual(
+    formatThumbnailBlockCount(3.7),
+    "3 blocks",
+    "Should floor decimal counts"
+  );
+  import_assert.default.strictEqual(
+    formatThumbnailBlockCount(-2),
+    "0 blocks",
+    "Should clamp negative counts"
+  );
+  import_assert.default.strictEqual(
+    formatThumbnailBlockCount(Number.NaN),
+    "0 blocks",
+    "Should fallback for invalid counts"
+  );
+  console.log("testThumbnailBlockCountFormatting passed");
+}
+function testLayerRenderOrderReverse() {
+  const blocks = [
+    { id: "A", type: "raw", raw: "a" },
+    { id: "B", type: "raw", raw: "b" },
+    { id: "C", type: "raw", raw: "c" }
+  ];
+  const ordered = getLayerRenderOrder(blocks);
+  import_assert.default.deepStrictEqual(
+    ordered.map((item) => item.id),
+    ["C", "B", "A"],
+    "Layer panel should render in reverse template order"
+  );
+  import_assert.default.deepStrictEqual(
+    blocks.map((item) => item.id),
+    ["A", "B", "C"],
+    "Render ordering should not mutate original block array"
+  );
+  console.log("testLayerRenderOrderReverse passed");
+}
+function testLayerDragPayloadCompatibility() {
+  const payload = buildReparentDragPayload("block-42");
+  const parsed = parseReparentDragPayload(payload);
+  import_assert.default.deepStrictEqual(parsed, {
+    action: "reparent",
+    blockId: "block-42"
+  });
+  import_assert.default.strictEqual(
+    parseReparentDragPayload(""),
+    null,
+    "Invalid payload should be ignored"
+  );
+  import_assert.default.strictEqual(
+    parseReparentDragPayload(
+      JSON.stringify({ action: "copy", blockId: "x" })
+    ),
+    null,
+    "Non-reparent payload should be ignored"
+  );
+  const reversedIds = getLayerRenderOrder([
+    { id: "grid-a", type: "grid" },
+    { id: "grid-b", type: "grid" }
+  ]).map((item) => item.id);
+  import_assert.default.deepStrictEqual(reversedIds, ["grid-b", "grid-a"]);
+  const dragFromTopLayer = parseReparentDragPayload(
+    buildReparentDragPayload(reversedIds[0])
+  );
+  import_assert.default.strictEqual(
+    dragFromTopLayer == null ? void 0 : dragFromTopLayer.blockId,
+    "grid-b",
+    "Drag payload should keep source block id after reverse rendering"
+  );
+  console.log("testLayerDragPayloadCompatibility passed");
+}
+function testLayerDropIntentAndInsertIndexMath() {
+  import_assert.default.strictEqual(
+    resolveLayerDropIntent({
+      relativeX: 10,
+      relativeY: 12,
+      height: 30
+    }),
+    "as-child",
+    "Left indent hit zone should produce as-child intent"
+  );
+  import_assert.default.strictEqual(
+    resolveLayerDropIntent({
+      relativeX: 10,
+      relativeY: 12,
+      height: 30,
+      allowAsChild: false
+    }),
+    "before",
+    "When child intent is not allowed, indent zone should fallback to reordering"
+  );
+  import_assert.default.strictEqual(
+    resolveLayerDropIntent({
+      relativeX: 40,
+      relativeY: 8,
+      height: 30
+    }),
+    "before",
+    "Upper half should produce before intent"
+  );
+  import_assert.default.strictEqual(
+    resolveLayerDropIntent({
+      relativeX: 40,
+      relativeY: 25,
+      height: 30
+    }),
+    "after",
+    "Lower half should produce after intent"
+  );
+  import_assert.default.strictEqual(
+    getInsertIndexForReversedLayerOrder({
+      targetIndex: 3,
+      intent: "before"
+    }),
+    4,
+    "In reversed render order, before means insert after target in source array"
+  );
+  import_assert.default.strictEqual(
+    getInsertIndexForReversedLayerOrder({
+      targetIndex: 3,
+      intent: "after"
+    }),
+    3,
+    "In reversed render order, after means insert at target index in source array"
+  );
+  console.log("testLayerDropIntentAndInsertIndexMath passed");
+}
+function testGeneratedMarkdownOrderAfterLayerMove() {
+  const page = {
+    type: "content",
+    label: "Content",
+    fileName: "content.md",
+    filePath: "content.md",
+    blocks: [
+      {
+        id: "a",
+        type: "grid",
+        role: "grid",
+        rect: { x: 0, y: 0, width: 10, height: 10 },
+        content: "A",
+        className: "",
+        style: "",
+        pad: "",
+        align: "",
+        flow: "",
+        filter: "",
+        justifyContent: "",
+        bg: "",
+        border: "",
+        animate: "",
+        opacity: "",
+        rotate: "",
+        frag: "",
+        extraAttributes: {},
+        children: []
+      },
+      {
+        id: "b",
+        type: "grid",
+        role: "grid",
+        rect: { x: 0, y: 0, width: 10, height: 10 },
+        content: "B",
+        className: "",
+        style: "",
+        pad: "",
+        align: "",
+        flow: "",
+        filter: "",
+        justifyContent: "",
+        bg: "",
+        border: "",
+        animate: "",
+        opacity: "",
+        rotate: "",
+        frag: "",
+        extraAttributes: {},
+        children: []
+      }
+    ],
+    rawMarkdown: "",
+    hasUnsupportedContent: false,
+    rectUnit: "percent"
+  };
+  const moved = page.blocks.splice(0, 1)[0];
+  page.blocks.push(moved);
+  const markdown = generatePageMarkdown(page);
+  const normalized = markdown.replace(/\r\n/g, "\n");
+  const indexA = normalized.indexOf("\nA\n</grid>");
+  const indexB = normalized.indexOf("\nB\n</grid>");
+  import_assert.default.ok(
+    indexB < indexA,
+    "When block order changes in arrays, generated markdown order should match new structure"
+  );
+  const parent = page.blocks[0];
+  if (!parent.children)
+    parent.children = [];
+  const childCandidate = page.blocks.splice(1, 1)[0];
+  parent.children.unshift(childCandidate);
+  const nestedMarkdown = generatePageMarkdown(page).replace(/\r\n/g, "\n");
+  const parentContentIndex = nestedMarkdown.indexOf("\nB\n");
+  const childContentIndex = nestedMarkdown.indexOf("\nA\n");
+  import_assert.default.ok(
+    parentContentIndex < childContentIndex,
+    "When moved as child to top, markdown should place child inside parent content block"
+  );
+  console.log("testGeneratedMarkdownOrderAfterLayerMove passed");
+}
+function testInlineStyleEditorAndTemplateNormalization() {
+  import_assert.default.strictEqual(
+    formatInlineStyleForEditor("color:red; font-size:20px;"),
+    "color:red;\nfont-size:20px;",
+    "Single-line template style should expand to multi-line editor format"
+  );
+  import_assert.default.strictEqual(
+    normalizeInlineStyleForTemplate("color:red;\nfont-size:20px"),
+    "color:red; font-size:20px;",
+    "Multi-line editor style should normalize to single-line template format"
+  );
+  import_assert.default.strictEqual(
+    normalizeInlineStyleForTemplate(
+      " color : red ; ; \n font-size : 20px ; "
+    ),
+    "color : red; font-size : 20px;",
+    "Template style normalization should clean empty declarations and extra spaces"
+  );
+  console.log("testInlineStyleEditorAndTemplateNormalization passed");
+}
+function testInlineStyleCompletionDataSourceAndMode() {
+  const propertyLabels = buildInlineStylePropertyCompletions("mar").map(
+    (item) => item.label
+  );
+  import_assert.default.ok(
+    propertyLabels.includes("margin"),
+    "Standard CSS property should appear in completion list"
+  );
+  import_assert.default.ok(
+    !propertyLabels.includes("marker"),
+    "Non-curated property should not appear in completion list"
+  );
+  import_assert.default.ok(
+    !propertyLabels.includes("class"),
+    "HTML attribute should not appear in CSS property completions"
+  );
+  const userSelectLabels = buildInlineStylePropertyCompletions("").map(
+    (item) => item.label
+  );
+  const standardIndex = userSelectLabels.indexOf("user-select");
+  const vendorIndex = userSelectLabels.findIndex(
+    (label) => label.startsWith("-")
+  );
+  import_assert.default.ok(
+    standardIndex >= 0 && vendorIndex >= 0 && standardIndex < vendorIndex,
+    "Standard properties should rank before vendor-prefixed entries"
+  );
+  const valueLabels = buildInlineStyleValueCompletions("ca").map(
+    (item) => item.label
+  );
+  import_assert.default.ok(
+    valueLabels.includes("calc()"),
+    "Modern function syntax should be included in value completions"
+  );
+  import_assert.default.strictEqual(
+    detectInlineStyleCompletionMode("margin: 10px; color:"),
+    "value",
+    "After colon should be in value completion mode"
+  );
+  import_assert.default.strictEqual(
+    detectInlineStyleCompletionMode("margin: 10px; col"),
+    "property",
+    "Without colon in current declaration should be in property completion mode"
+  );
+  console.log("testInlineStyleCompletionDataSourceAndMode passed");
 }
 function runTests() {
   try {
@@ -3938,6 +4862,16 @@ function runTests() {
     testInsertLocalImageEmbed();
     testImagePickerPlacementAndSelection();
     testInspectorLocaleKeysCompleteness();
+    testInspectorSelectOptionI18nAndFallback();
+    testThumbnailVirtualizationMath();
+    testThumbnailKeyboardIndexMath();
+    testThumbnailBlockCountFormatting();
+    testLayerRenderOrderReverse();
+    testLayerDragPayloadCompatibility();
+    testLayerDropIntentAndInsertIndexMath();
+    testGeneratedMarkdownOrderAfterLayerMove();
+    testInlineStyleEditorAndTemplateNormalization();
+    testInlineStyleCompletionDataSourceAndMode();
     console.log("All tests passed 100%!");
   } catch (err) {
     console.error(err);

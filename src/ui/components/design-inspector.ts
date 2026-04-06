@@ -32,6 +32,83 @@ const LOCAL_IMAGE_EXTENSIONS = new Set([
 	"heic",
 ]);
 
+const INSPECTOR_SELECT_OPTION_I18N_KEYS: Record<string, string> = {
+	Default: "designInspector.option.default",
+	None: "designInspector.option.none",
+	Column: "designInspector.option.column",
+	Row: "designInspector.option.row",
+	Left: "designInspector.option.left",
+	Right: "designInspector.option.right",
+	Center: "designInspector.option.center",
+	Justify: "designInspector.option.justify",
+	Block: "designInspector.option.block",
+	Top: "designInspector.option.top",
+	Bottom: "designInspector.option.bottom",
+	"Top Left": "designInspector.option.topLeft",
+	"Top Right": "designInspector.option.topRight",
+	"Bottom Left": "designInspector.option.bottomLeft",
+	"Bottom Right": "designInspector.option.bottomRight",
+	Stretch: "designInspector.option.stretch",
+	Start: "designInspector.option.start",
+	End: "designInspector.option.end",
+	"Space Between": "designInspector.option.spaceBetween",
+	"Space Around": "designInspector.option.spaceAround",
+	"Space Evenly": "designInspector.option.spaceEvenly",
+	"Fade In": "designInspector.option.fadeIn",
+	"Fade Out": "designInspector.option.fadeOut",
+	"Slide Right In": "designInspector.option.slideRightIn",
+	"Slide Left In": "designInspector.option.slideLeftIn",
+	"Slide Up In": "designInspector.option.slideUpIn",
+	"Slide Down In": "designInspector.option.slideDownIn",
+	"Slide Right Out": "designInspector.option.slideRightOut",
+	"Slide Left Out": "designInspector.option.slideLeftOut",
+	"Slide Up Out": "designInspector.option.slideUpOut",
+	"Slide Down Out": "designInspector.option.slideDownOut",
+	"Scale Up": "designInspector.option.scaleUp",
+	"Scale Up Out": "designInspector.option.scaleUpOut",
+	"Scale Down": "designInspector.option.scaleDown",
+	"Scale Down Out": "designInspector.option.scaleDownOut",
+	Slower: "designInspector.option.slower",
+	Faster: "designInspector.option.faster",
+};
+
+const warnedMissingInspectorOptionLabels = new Set<string>();
+
+function warnMissingInspectorOptionI18n(label: string): void {
+	if (warnedMissingInspectorOptionLabels.has(label)) return;
+	warnedMissingInspectorOptionLabels.add(label);
+	console.warn(
+		`[slides-rup] Missing inspector i18n key for option label "${label}", fallback to raw label.`,
+	);
+}
+
+function localizeInspectorOptionLabel(label: string): string {
+	const translationKey = INSPECTOR_SELECT_OPTION_I18N_KEYS[label];
+	if (!translationKey) {
+		warnMissingInspectorOptionI18n(label);
+		return label;
+	}
+	const localized = t(translationKey as any);
+	if (!localized || localized === translationKey) {
+		warnMissingInspectorOptionI18n(label);
+		return label;
+	}
+	return localized;
+}
+
+export function localizeInspectorSelectOptions(
+	options: { value: string; label: string }[],
+): { value: string; label: string }[] {
+	return options.map((option) => ({
+		...option,
+		label: localizeInspectorOptionLabel(option.label),
+	}));
+}
+
+export function resetInspectorI18nWarnCacheForTests(): void {
+	warnedMissingInspectorOptionLabels.clear();
+}
+
 const INLINE_STYLE_STANDARD_PROPERTIES = [
 	"align-content",
 	"align-items",
@@ -852,7 +929,7 @@ function createSelectField(
 	const select = row.createEl("select", {
 		cls: "slides-rup-design-maker-input",
 	});
-	options.forEach((opt) => {
+	localizeInspectorSelectOptions(options).forEach((opt) => {
 		const optionEl = select.createEl("option", {
 			value: opt.value,
 			text: opt.label,

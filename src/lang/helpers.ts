@@ -3,17 +3,29 @@
 import { moment } from "obsidian";
 import { getAppInstance } from "src/utils";
 import en from "./locale/en";
+import inspectorEnUS from "./locale/design-inspector/en-US.json";
+import inspectorZhCN from "./locale/design-inspector/zh-CN.json";
 import zhCN from "./locale/zh-cn";
 import zhTW from "./locale/zh-tw";
 
-const localeMap: { [k: string]: Partial<typeof en> } = {
-	en,
-	"zh-cn": zhCN,
-	"zh-tw": zhTW,
+type LocaleDictionary = Record<string, string>;
+
+const EN_BASE_LOCALE: LocaleDictionary = {
+	...(en as LocaleDictionary),
+	...(inspectorEnUS as LocaleDictionary),
+};
+
+const localeMap: { [k: string]: LocaleDictionary } = {
+	en: EN_BASE_LOCALE,
+	"zh-cn": {
+		...(zhCN as LocaleDictionary),
+		...(inspectorZhCN as LocaleDictionary),
+	},
+	"zh-tw": zhTW as LocaleDictionary,
 };
 
 // Cache for the fully resolved locale object and language string.
-let cachedLocale: typeof en | null = null;
+let cachedLocale: LocaleDictionary | null = null;
 let cachedLang: string | null = null;
 
 /**
@@ -43,7 +55,7 @@ function _get_current_lang(): string {
  * It merges the specific locale with the English fallback to ensure all keys are present.
  * The result is cached to avoid re-computation on subsequent calls.
  */
-function _get_locale(): typeof en {
+function _get_locale(): LocaleDictionary {
 	const lang = _get_current_lang();
 
 	// Return cached locale if language hasn't changed.
@@ -51,7 +63,7 @@ function _get_locale(): typeof en {
 		return cachedLocale;
 	}
 
-	const baseLocale = en;
+	const baseLocale = EN_BASE_LOCALE;
 	const specificLocale = localeMap[lang];
 
 	// Create a new locale object with 'en' as a fallback for missing keys.
@@ -72,7 +84,7 @@ function _get_locale(): typeof en {
  * @returns The translated string.
  */
 export function t(str: keyof typeof en): string {
-	// With the improved _get_locale, t() is now simpler and more direct.
-	// It just looks up the key in the guaranteed-to-be-complete locale object.
-	return _get_locale()[str];
+	const locale = _get_locale();
+	const key = String(str);
+	return locale[key] ?? EN_BASE_LOCALE[key] ?? key;
 }

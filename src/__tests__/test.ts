@@ -45,6 +45,8 @@ import {
 	getNextPickerSelectionIndex,
 	insertImageEmbedIntoContent,
 	isLocalImagePath,
+	localizeInspectorSelectOptions,
+	resetInspectorI18nWarnCacheForTests,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -846,6 +848,59 @@ function testInspectorLocaleKeysCompleteness() {
 	console.log("testInspectorLocaleKeysCompleteness passed");
 }
 
+function testInspectorSelectOptionI18nAndFallback() {
+	const settings = (globalThis as any).window.app.plugins.plugins[
+		"slides-rup"
+	].settings;
+	settings.slidesRupRunningLanguage = "zh-cn";
+	resetInspectorI18nWarnCacheForTests();
+
+	const localized = localizeInspectorSelectOptions([
+		{ value: "", label: "Default" },
+		{ value: "col", label: "Column" },
+		{ value: "custom", label: "Custom Label" },
+	]);
+	assert.strictEqual(
+		localized[0].label,
+		"默认",
+		"Known label should use zh-CN JSON translation",
+	);
+	assert.strictEqual(
+		localized[1].label,
+		"纵向",
+		"Known label should use zh-CN JSON translation",
+	);
+	assert.strictEqual(
+		localized[2].label,
+		"Custom Label",
+		"Unknown label should fallback to raw label",
+	);
+
+	const originalWarn = console.warn;
+	const warns: string[] = [];
+	console.warn = (...args: any[]) => warns.push(args.join(" "));
+	try {
+		localizeInspectorSelectOptions([
+			{ value: "u1", label: "Unknown Label" },
+			{ value: "u2", label: "Unknown Label" },
+		]);
+		localizeInspectorSelectOptions([
+			{ value: "u3", label: "Unknown Label" },
+		]);
+	} finally {
+		console.warn = originalWarn;
+	}
+	assert.strictEqual(
+		warns.length,
+		1,
+		"Missing option i18n warning should be emitted only once per label",
+	);
+
+	settings.slidesRupRunningLanguage = "en";
+	resetInspectorI18nWarnCacheForTests();
+	console.log("testInspectorSelectOptionI18nAndFallback passed");
+}
+
 function testThumbnailVirtualizationMath() {
 	const nonVirtualWindow = computeThumbnailVirtualWindow({
 		total: 7,
@@ -1236,6 +1291,7 @@ function runTests() {
 		testInsertLocalImageEmbed();
 		testImagePickerPlacementAndSelection();
 		testInspectorLocaleKeysCompleteness();
+		testInspectorSelectOptionI18nAndFallback();
 		testThumbnailVirtualizationMath();
 		testThumbnailKeyboardIndexMath();
 		testThumbnailBlockCountFormatting();
