@@ -6,6 +6,8 @@ import {
 	DesignRectUnit,
 	ThemeStyleDraft,
 } from "src/types/design-maker";
+import { DEFAULT_SETTINGS } from "src/models/default-settings";
+import type { SlidesRupSettings } from "src/types";
 import {
 	getDesignPageDisplayName,
 	getDesignPageFileName,
@@ -701,6 +703,7 @@ function readNumberValue(css: string, key: string, fallback: number): number {
 export function parseThemeDraft(
 	designName: string,
 	cssContent: string,
+	settings?: Pick<SlidesRupSettings, "slidesRupThemeColor">,
 ): ThemeStyleDraft {
 	const lines = cssContent.split("\n");
 	const headerDirectives = lines.filter((line) => {
@@ -711,10 +714,16 @@ export function parseThemeDraft(
 		.filter((line) => !headerDirectives.includes(line))
 		.join("\n")
 		.trim();
+	const fallbackPrimaryColor =
+		settings?.slidesRupThemeColor || DEFAULT_SETTINGS.slidesRupThemeColor;
 
 	return {
 		themeName: `sr-design-${designName.toLowerCase()}`,
-		primaryColor: readCssValue(rawCss, "--sr-dm-primary", "#0044ff"),
+		primaryColor: readCssValue(
+			rawCss,
+			"--sr-dm-primary",
+			fallbackPrimaryColor,
+		),
 		secondaryColor: readCssValue(rawCss, "--sr-dm-secondary", "#7c3aed"),
 		backgroundColor: readCssValue(rawCss, "--sr-dm-background", "#ffffff"),
 		textColor: readCssValue(rawCss, "--sr-dm-text", "#111111"),

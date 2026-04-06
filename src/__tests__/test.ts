@@ -54,6 +54,7 @@ import { YamlStore } from "../yamlStore";
 import en from "../lang/locale/en";
 import zhCN from "../lang/locale/zh-cn";
 import zhTW from "../lang/locale/zh-tw";
+import { DEFAULT_SETTINGS } from "../models/default-settings";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -190,6 +191,37 @@ function testDesignMakerRuntimeCssHasHelperClasses() {
 		"Should scope helper CSS to Design Maker containers",
 	);
 	console.log("testDesignMakerRuntimeCssHasHelperClasses passed");
+}
+
+function testParseThemeDraftPrimaryColorFallbackFromSettings() {
+	const fallbackTheme = parseThemeDraft("Test", "");
+	assert.strictEqual(
+		fallbackTheme.primaryColor,
+		DEFAULT_SETTINGS.slidesRupThemeColor,
+		"primaryColor fallback should come from DEFAULT_SETTINGS.slidesRupThemeColor",
+	);
+
+	const settingsColor = "#123456";
+	const settingsTheme = parseThemeDraft("Test", "", {
+		slidesRupThemeColor: settingsColor,
+	});
+	assert.strictEqual(
+		settingsTheme.primaryColor,
+		settingsColor,
+		"primaryColor fallback should use SlidesRupSettings.slidesRupThemeColor when provided",
+	);
+
+	const cssTheme = parseThemeDraft(
+		"Test",
+		":root { --sr-dm-primary: #abcdef; }",
+		{ slidesRupThemeColor: settingsColor },
+	);
+	assert.strictEqual(
+		cssTheme.primaryColor,
+		"#abcdef",
+		"CSS --sr-dm-primary should override settings fallback",
+	);
+	console.log("testParseThemeDraftPrimaryColorFallbackFromSettings passed");
 }
 
 function testSelectionDebounceStateMachine() {
@@ -1282,6 +1314,7 @@ function runTests() {
 		testCoordinateConversion();
 		testTreeCircularDependency();
 		testDesignMakerRuntimeCssHasHelperClasses();
+		testParseThemeDraftPrimaryColorFallbackFromSettings();
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
 		testCanvasZoomTransformMath();

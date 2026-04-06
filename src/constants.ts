@@ -15,6 +15,15 @@ export const TEMPLATE_PLACE_HOLDERS = {
 
 export const DEFAULT_DESIGNS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
+/**
+ * 设计器主题面板扩展项开关（Feature Flag）
+ * - false: 仅显示 Primary Color（当前默认）
+ * - true: 恢复 Secondary/Background/Text/字体/比例/圆角/阴影/Theme Mode 等全部主题项
+ *
+ * 恢复方式：将该常量改为 true 即可。
+ */
+export const DESIGN_THEME_PANEL_SHOW_EXTENDED_FIELDS = false;
+
 export const SLIDESRUP_LIST_CLASSES = [
 	"box-list",
 	"fancy-list",

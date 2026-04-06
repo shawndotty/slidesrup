@@ -159,8 +159,6 @@ h6 {
 .bg-with-front-color {
 	background: color-mix(in srgb, var(--sr-dm-background) 90%, var(--sr-dm-secondary) 10%);
 	color: var(--sr-dm-text);
-	border-radius: var(--sr-dm-radius);
-	box-shadow: 0 18px 40px rgba(15, 23, 42, var(--sr-dm-shadow-opacity));
 }
 
 .has-dark-background {
@@ -201,8 +199,6 @@ ${root} .bg-with-back-color {
 ${root} .bg-with-front-color {
 	background: color-mix(in srgb, var(--sr-dm-background) 90%, var(--sr-dm-secondary) 10%);
 	color: var(--sr-dm-text);
-	border-radius: var(--sr-dm-radius);
-	box-shadow: 0 18px 40px rgba(15, 23, 42, var(--sr-dm-shadow-opacity));
 }
 
 ${root} .has-dark-background {

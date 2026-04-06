@@ -77,7 +77,10 @@ export class DesignMaker {
 		)}`;
 		await this._writeOrCreateFile(
 			marpThemePath,
-			generateThemeCss(parseThemeDraft(designName, ""), designName),
+			generateThemeCss(
+				parseThemeDraft(designName, "", this.settings),
+				designName,
+			),
 		);
 		await this.vscodeService.addNewMarpThemeForVSCode(
 			designName.toLowerCase(),
@@ -255,7 +258,7 @@ export class DesignMaker {
 			designPath,
 			sourceDesignName: designName,
 			pages,
-			theme: parseThemeDraft(designName, cssContent),
+			theme: parseThemeDraft(designName, cssContent, this.settings),
 		};
 	}
 
@@ -394,7 +397,7 @@ export class DesignMaker {
 			await this._writeOrCreateFile(
 				newThemePath,
 				generateThemeCss(
-					parseThemeDraft(newDesignName, ""),
+					parseThemeDraft(newDesignName, "", this.settings),
 					newDesignName,
 				),
 			);
