@@ -722,11 +722,6 @@ h3.slides-rup-title {
 	border-left: 2px solid var(--background-modifier-border);
 }
 
-.slides-rup-design-maker-layer-list.is-drop-root {
-	border-left-color: var(--interactive-accent);
-	background: rgba(var(--interactive-accent-rgb), 0.05);
-}
-
 .slides-rup-design-maker-layer-item {
 	display: flex;
 	align-items: center;
@@ -763,6 +758,24 @@ h3.slides-rup-title {
 .slides-rup-design-maker-layer-item.is-drop-child {
 	background: rgba(var(--interactive-accent-rgb), 0.15);
 	outline: 1px dashed var(--interactive-accent);
+}
+
+.slides-rup-design-maker-layer-item.is-drop-child-pending {
+	background: rgba(var(--interactive-accent-rgb), 0.08);
+	outline: 1px dashed rgba(var(--interactive-accent-rgb), 0.7);
+}
+
+.slides-rup-design-maker-layer-root-dropzone {
+	height: 24px;
+	margin: 4px 0 10px 12px;
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: 6px;
+	background: transparent;
+}
+
+.slides-rup-design-maker-layer-root-dropzone.is-drop-root {
+	border-color: var(--interactive-accent);
+	background: rgba(var(--interactive-accent-rgb), 0.08);
 }
 
 .slides-rup-design-maker-layer-label {

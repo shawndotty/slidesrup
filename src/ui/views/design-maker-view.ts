@@ -1101,7 +1101,7 @@ export class DesignMakerView extends ItemView {
 			if (!parentBlock.children) parentBlock.children = [];
 			targetContainer = parentBlock.children;
 			newParentId = parentBlock.id;
-			insertIndex = targetContainer.length;
+			insertIndex = 0;
 		} else {
 			if (!targetFound) return;
 			targetContainer = targetFound.parent

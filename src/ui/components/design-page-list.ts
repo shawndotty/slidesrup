@@ -20,6 +20,8 @@ export interface LayerMoveRequest {
 	intent: LayerDropIntent;
 }
 
+const LAYER_CHILD_CONFIRM_MS = 150;
+
 export function getLayerRenderOrder(
 	blocks: DesignCanvasBlock[],
 ): DesignCanvasBlock[] {
@@ -61,9 +63,16 @@ export function resolveLayerDropIntent(options: {
 	relativeY: number;
 	height: number;
 	indentHitWidth?: number;
+	allowAsChild?: boolean;
 }): Exclude<LayerDropIntent, "to-root-top"> {
-	const { relativeX, relativeY, height, indentHitWidth = 20 } = options;
-	if (relativeX <= indentHitWidth) return "as-child";
+	const {
+		relativeX,
+		relativeY,
+		height,
+		indentHitWidth = 20,
+		allowAsChild = true,
+	} = options;
+	if (allowAsChild && relativeX <= indentHitWidth) return "as-child";
 	if (relativeY < height / 2) return "before";
 	return "after";
 }
@@ -102,6 +111,23 @@ export function renderDesignPageList(options: {
 		text: `${t("Design Pages")} - ${draft.designName}`,
 		cls: "slides-rup-design-maker-section-title",
 	});
+
+	let pendingChildTargetId: string | null = null;
+	let pendingChildTargetEl: HTMLElement | null = null;
+	let childIntentTimer: number | null = null;
+
+	const clearChildIntent = () => {
+		if (childIntentTimer != null) {
+			window.clearTimeout(childIntentTimer);
+			childIntentTimer = null;
+		}
+		if (pendingChildTargetEl) {
+			pendingChildTargetEl.removeClass("is-drop-child-pending");
+			pendingChildTargetEl.removeClass("is-drop-child");
+		}
+		pendingChildTargetId = null;
+		pendingChildTargetEl = null;
+	};
 
 	const renderLayerItem = (
 		parentContainer: HTMLElement,
@@ -185,45 +211,76 @@ export function renderDesignPageList(options: {
 				e.preventDefault(); // necessary to allow dropping
 				if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
 				const rect = itemEl.getBoundingClientRect();
+				const relativeX = e.clientX - rect.left;
+				const relativeY = e.clientY - rect.top;
+				const inChildZone = relativeX <= 20;
 				const intent = resolveLayerDropIntent({
-					relativeX: e.clientX - rect.left,
-					relativeY: e.clientY - rect.top,
+					relativeX,
+					relativeY,
 					height: rect.height || 1,
+					allowAsChild: false,
 				});
 				itemEl.removeClass("is-drop-before");
 				itemEl.removeClass("is-drop-after");
-				itemEl.removeClass("is-drop-child");
+				if (!itemEl.hasClass("is-drop-child")) {
+					itemEl.removeClass("is-drop-child-pending");
+				}
+				if (inChildZone) {
+					if (pendingChildTargetId !== block.id) {
+						clearChildIntent();
+						pendingChildTargetId = block.id;
+						pendingChildTargetEl = itemEl;
+						itemEl.addClass("is-drop-child-pending");
+						childIntentTimer = window.setTimeout(() => {
+							if (pendingChildTargetId === block.id) {
+								itemEl.removeClass("is-drop-child-pending");
+								itemEl.addClass("is-drop-child");
+							}
+						}, LAYER_CHILD_CONFIRM_MS);
+					}
+					return;
+				}
+				if (pendingChildTargetId === block.id) {
+					clearChildIntent();
+				}
 				if (intent === "before") itemEl.addClass("is-drop-before");
 				if (intent === "after") itemEl.addClass("is-drop-after");
-				if (intent === "as-child") itemEl.addClass("is-drop-child");
 			});
 			itemEl.addEventListener("dragleave", () => {
 				itemEl.removeClass("is-drop-before");
 				itemEl.removeClass("is-drop-after");
-				itemEl.removeClass("is-drop-child");
+				if (pendingChildTargetId === block.id) {
+					clearChildIntent();
+				} else {
+					itemEl.removeClass("is-drop-child-pending");
+					itemEl.removeClass("is-drop-child");
+				}
 			});
 			itemEl.addEventListener("drop", (e) => {
 				e.preventDefault();
 				itemEl.removeClass("is-drop-before");
 				itemEl.removeClass("is-drop-after");
-				itemEl.removeClass("is-drop-child");
 				if (!e.dataTransfer || !onMoveBlock) return;
 				const payload = parseReparentDragPayload(
 					e.dataTransfer.getData("application/json"),
 				);
 				if (payload && payload.blockId !== block.id) {
 					const rect = itemEl.getBoundingClientRect();
-					const intent = resolveLayerDropIntent({
-						relativeX: e.clientX - rect.left,
-						relativeY: e.clientY - rect.top,
-						height: rect.height || 1,
-					});
+					const intent = itemEl.hasClass("is-drop-child")
+						? "as-child"
+						: resolveLayerDropIntent({
+								relativeX: e.clientX - rect.left,
+								relativeY: e.clientY - rect.top,
+								height: rect.height || 1,
+								allowAsChild: false,
+							});
 					onMoveBlock({
 						sourceId: payload.blockId,
 						targetId: block.id,
 						intent,
 					});
 				}
+				clearChildIntent();
 			});
 		}
 
@@ -274,20 +331,26 @@ export function renderDesignPageList(options: {
 				"slides-rup-design-maker-layer-list",
 			);
 
-			// Allow drop to root layer
-			blockListContainer.addEventListener("dragover", (e) => {
+			getLayerRenderOrder(page.blocks).forEach((block) => {
+				renderLayerItem(blockListContainer, block, 0);
+			});
+
+			const rootDropZone = container.createDiv(
+				"slides-rup-design-maker-layer-root-dropzone",
+			);
+			rootDropZone.addEventListener("dragover", (e) => {
 				e.preventDefault();
 				if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-				blockListContainer.addClass("is-drop-root");
+				rootDropZone.addClass("is-drop-root");
 			});
-			blockListContainer.addEventListener("dragleave", () => {
-				blockListContainer.removeClass("is-drop-root");
+			rootDropZone.addEventListener("dragleave", () => {
+				rootDropZone.removeClass("is-drop-root");
 			});
-			blockListContainer.addEventListener("drop", (e) => {
-				// Stop propagation so it doesn't trigger if we dropped on an item
+			rootDropZone.addEventListener("drop", (e) => {
 				e.stopPropagation();
 				e.preventDefault();
-				blockListContainer.removeClass("is-drop-root");
+				rootDropZone.removeClass("is-drop-root");
+				clearChildIntent();
 				if (!e.dataTransfer || !onMoveBlock) return;
 				const payload = parseReparentDragPayload(
 					e.dataTransfer.getData("application/json"),
@@ -299,13 +362,6 @@ export function renderDesignPageList(options: {
 						intent: "to-root-top",
 					});
 				}
-			});
-
-			// 图层面板按“模板顺序倒序”渲染：
-			// 模板里靠后的 block 在画布上通常叠放在更上层（视觉上更接近“顶层”），
-			// 倒序显示可以让图层列表的阅读/选择顺序与用户的视觉层级一致。
-			getLayerRenderOrder(page.blocks).forEach((block) => {
-				renderLayerItem(blockListContainer, block, 0);
 			});
 		}
 	});

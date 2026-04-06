@@ -1004,6 +1004,16 @@ function testLayerDropIntentAndInsertIndexMath() {
 	);
 	assert.strictEqual(
 		resolveLayerDropIntent({
+			relativeX: 10,
+			relativeY: 12,
+			height: 30,
+			allowAsChild: false,
+		}),
+		"before",
+		"When child intent is not allowed, indent zone should fallback to reordering",
+	);
+	assert.strictEqual(
+		resolveLayerDropIntent({
 			relativeX: 40,
 			relativeY: 8,
 			height: 30,
@@ -1106,6 +1116,18 @@ function testGeneratedMarkdownOrderAfterLayerMove() {
 	assert.ok(
 		indexB < indexA,
 		"When block order changes in arrays, generated markdown order should match new structure",
+	);
+
+	const parent = page.blocks[0] as any;
+	if (!parent.children) parent.children = [];
+	const childCandidate = page.blocks.splice(1, 1)[0];
+	parent.children.unshift(childCandidate);
+	const nestedMarkdown = generatePageMarkdown(page).replace(/\r\n/g, "\n");
+	const parentContentIndex = nestedMarkdown.indexOf("\nB\n");
+	const childContentIndex = nestedMarkdown.indexOf("\nA\n");
+	assert.ok(
+		parentContentIndex < childContentIndex,
+		"When moved as child to top, markdown should place child inside parent content block",
 	);
 	console.log("testGeneratedMarkdownOrderAfterLayerMove passed");
 }
