@@ -1494,6 +1494,40 @@ button.slides-rup-design-maker-layer-collapse {
 	resize: vertical;
 }
 
+.slides-rup-design-maker-color-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	
+}
+
+.slides-rup-design-maker-color-preview {
+	width: 18px;
+	height: 18px;
+	border-radius: 999px;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+}
+
+.slides-rup-design-maker-color-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+.slides-rup-design-maker-color-input {
+	flex: 0 0 42px;
+	padding: 0;
+	height: 30px;
+	border-radius: 8px;
+}
+
+.slides-rup-design-maker-input.is-invalid {
+	border-color: var(--text-error);
+	box-shadow: 0 0 0 1px rgba(255, 77, 77, 0.2) inset;
+}
+
 .slides-rup-design-maker-preview {
 	position: relative;
 	width: 1920px;

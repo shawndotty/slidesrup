@@ -1182,6 +1182,96 @@ function createTextField(
 	input.addEventListener("input", () => onChange(input.value));
 }
 
+export function isValidInspectorColor(value: string): boolean {
+	const normalized = (value || "").trim();
+	if (!normalized) return true;
+	const supportsApi =
+		typeof CSS !== "undefined" && typeof CSS.supports === "function";
+	if (supportsApi && CSS.supports("color", normalized)) return true;
+	if (
+		/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(normalized)
+	) {
+		return true;
+	}
+	if (/^rgba?\(\s*[-\d.%\s,]+\)$/i.test(normalized)) return true;
+	if (/^hsla?\(\s*[-\d.%\s,]+\)$/i.test(normalized)) return true;
+	return false;
+}
+
+export function normalizeInspectorColorToHex(value: string): string | null {
+	const normalized = (value || "").trim();
+	if (!normalized) return null;
+	if (/^#([0-9a-f]{6})$/i.test(normalized)) return normalized.toLowerCase();
+	if (/^#([0-9a-f]{3})$/i.test(normalized)) {
+		const hex = normalized.slice(1);
+		return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`.toLowerCase();
+	}
+	if (typeof document === "undefined") return null;
+	const probe = document.createElement("span");
+	probe.style.color = normalized;
+	if (!probe.style.color) return null;
+	document.body.appendChild(probe);
+	const computed = getComputedStyle(probe).color;
+	probe.remove();
+	const match = computed.match(
+		/^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\s*\)$/i,
+	);
+	if (!match) return null;
+	const [r, g, b] = [match[1], match[2], match[3]].map((n) =>
+		Math.max(0, Math.min(255, Number(n))),
+	);
+	return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function createColorPickerField(
+	container: HTMLElement,
+	label: string,
+	value: string,
+	onChange: (value: string) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field");
+	const header = row.createDiv("slides-rup-design-maker-color-header");
+	header.createEl("label", { text: t(label as any) });
+
+	const controls = row.createDiv("slides-rup-design-maker-color-controls");
+
+	const textInput = controls.createEl("input", {
+		type: "text",
+		value,
+		cls: "slides-rup-design-maker-input",
+		attr: { placeholder: t("Hex/RGB/HSL" as any) },
+	});
+
+	const colorInput = controls.createEl("input", {
+		type: "color",
+		cls: "slides-rup-design-maker-input slides-rup-design-maker-color-input",
+	});
+
+	const syncUI = (next: string, emit: boolean) => {
+		const normalized = next.trim();
+		const valid = isValidInspectorColor(normalized);
+		textInput.toggleClass("is-invalid", !valid);
+		textInput.setAttr("aria-invalid", valid ? "false" : "true");
+		if (!normalized) {
+			colorInput.value = "#000000";
+			if (emit) onChange("");
+			return;
+		}
+		if (!valid) return;
+
+		const hex = normalizeInspectorColorToHex(normalized);
+		if (hex) colorInput.value = hex;
+		if (emit) onChange(normalized);
+	};
+
+	textInput.addEventListener("input", () => syncUI(textInput.value, true));
+	colorInput.addEventListener("input", () => {
+		textInput.value = colorInput.value;
+		syncUI(colorInput.value, true);
+	});
+	syncUI(value, false);
+}
+
 export function formatInlineStyleForEditor(style: string): string {
 	const declarations = style
 		.split(";")
@@ -1751,7 +1841,7 @@ export function renderDesignInspector(options: {
 			nextBlock.pad = value;
 		});
 	});
-	createTextField(container, "Background", block.bg, (value) => {
+	createColorPickerField(container, "Background", block.bg, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.bg = value;
 		});

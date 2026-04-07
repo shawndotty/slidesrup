@@ -50,9 +50,11 @@ import {
 	insertMarkdownImageIntoContent,
 	isLocalImagePath,
 	localizeInspectorSelectOptions,
+	normalizeInspectorColorToHex,
 	parseInspectorOpacityValue,
 	resetInspectorI18nWarnCacheForTests,
 	resolveOpacityFromTrackPosition,
+	isValidInspectorColor,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -834,6 +836,40 @@ function testOpacitySliderValueHelpers() {
 	console.log("testOpacitySliderValueHelpers passed");
 }
 
+function testBackgroundColorPickerValueHelpers() {
+	assert.strictEqual(
+		isValidInspectorColor("#ff8800"),
+		true,
+		"Hex color should be valid",
+	);
+	assert.strictEqual(
+		isValidInspectorColor("rgb(12, 34, 56)"),
+		true,
+		"RGB color should be valid",
+	);
+	assert.strictEqual(
+		isValidInspectorColor("hsl(210, 40%, 50%)"),
+		true,
+		"HSL color should be valid",
+	);
+	assert.strictEqual(
+		isValidInspectorColor("not-a-color"),
+		false,
+		"Invalid color token should be rejected",
+	);
+	assert.strictEqual(
+		normalizeInspectorColorToHex("#abc"),
+		"#aabbcc",
+		"Short hex should normalize to 6-digit hex",
+	);
+	assert.strictEqual(
+		normalizeInspectorColorToHex("#AABBCC"),
+		"#aabbcc",
+		"6-digit hex should normalize to lowercase",
+	);
+	console.log("testBackgroundColorPickerValueHelpers passed");
+}
+
 function testInsertLocalImageEmbed() {
 	assert.strictEqual(isLocalImagePath("assets/logo.png"), true);
 	assert.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
@@ -1608,6 +1644,7 @@ async function runTests() {
 		testAdvancedSlidesWidthHeightParsing();
 		testInspectorRectFieldRealtimeSync();
 		testOpacitySliderValueHelpers();
+		testBackgroundColorPickerValueHelpers();
 		testInsertLocalImageEmbed();
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();
