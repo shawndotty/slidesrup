@@ -15,6 +15,12 @@ type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
 const DESIGN_MAKER_SLIDE_HEIGHT = 1080;
 
+export function resolveHostDocument(container: HTMLElement): Document {
+	if (container.ownerDocument) return container.ownerDocument;
+	const fallback = (globalThis as any).document as Document | undefined;
+	return fallback || ({} as Document);
+}
+
 export function clampCanvasZoomPercent(value: number): number {
 	if (!Number.isFinite(value)) return 100;
 	return Math.max(25, Math.min(400, Math.round(value)));
@@ -383,6 +389,7 @@ export function renderDesignCanvas(options: {
 	} = options;
 
 	const rectUnit: DesignRectUnit = page.rectUnit ?? "percent";
+	const hostDocument = resolveHostDocument(container);
 
 	let zoomPercent = canvasZoomPercent;
 	let panX = canvasPanX;
@@ -497,11 +504,11 @@ export function renderDesignCanvas(options: {
 			const onUp = () => {
 				isPanning = false;
 				frame.removeClass("is-panning");
-				document.removeEventListener("mousemove", onMove);
-				document.removeEventListener("mouseup", onUp);
+				hostDocument.removeEventListener("mousemove", onMove);
+				hostDocument.removeEventListener("mouseup", onUp);
 			};
-			document.addEventListener("mousemove", onMove);
-			document.addEventListener("mouseup", onUp);
+			hostDocument.addEventListener("mousemove", onMove);
+			hostDocument.addEventListener("mouseup", onUp);
 		},
 		true,
 	);
@@ -674,13 +681,13 @@ export function renderDesignCanvas(options: {
 			};
 
 			const onUp = (upEvent: MouseEvent) => {
-				document.removeEventListener("mousemove", onMove);
-				document.removeEventListener("mouseup", onUp);
+				hostDocument.removeEventListener("mousemove", onMove);
+				hostDocument.removeEventListener("mouseup", onUp);
 				onPatchBlock(block.id, () => {}, "commit");
 			};
 
-			document.addEventListener("mousemove", onMove);
-			document.addEventListener("mouseup", onUp);
+			hostDocument.addEventListener("mousemove", onMove);
+			hostDocument.addEventListener("mouseup", onUp);
 		});
 
 		resizeHandle.addEventListener("mousedown", (event) => {
@@ -721,13 +728,13 @@ export function renderDesignCanvas(options: {
 			};
 
 			const onUp = () => {
-				document.removeEventListener("mousemove", onMove);
-				document.removeEventListener("mouseup", onUp);
+				hostDocument.removeEventListener("mousemove", onMove);
+				hostDocument.removeEventListener("mouseup", onUp);
 				onPatchBlock(block.id, () => {}, "commit");
 			};
 
-			document.addEventListener("mousemove", onMove);
-			document.addEventListener("mouseup", onUp);
+			hostDocument.addEventListener("mousemove", onMove);
+			hostDocument.addEventListener("mouseup", onUp);
 		});
 	};
 

@@ -23,6 +23,7 @@ import {
 	clampCanvasZoomPercent,
 	computeCanvasTransform,
 	computePanForZoom,
+	resolveHostDocument,
 } from "../ui/components/design-canvas";
 import {
 	getPlainTextForBlock,
@@ -370,6 +371,21 @@ function testCanvasZoomTransformMath() {
 	assert.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
 
 	console.log("testCanvasZoomTransformMath passed");
+}
+
+function testResolveHostDocumentForPopoutWindow() {
+	const fallback = resolveHostDocument({} as HTMLElement);
+	assert.ok(fallback, "Should fallback to current document when ownerDocument absent");
+	const ownerDoc = { body: {} } as Document;
+	const resolved = resolveHostDocument({
+		ownerDocument: ownerDoc,
+	} as unknown as HTMLElement);
+	assert.strictEqual(
+		resolved,
+		ownerDoc,
+		"Should prefer container.ownerDocument for popout-window safety",
+	);
+	console.log("testResolveHostDocumentForPopoutWindow passed");
 }
 
 function testGridPlainTextFallbackRendering() {
@@ -1801,6 +1817,7 @@ async function runTests() {
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
 		testCanvasZoomTransformMath();
+		testResolveHostDocumentForPopoutWindow();
 		testGridPlainTextFallbackRendering();
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();

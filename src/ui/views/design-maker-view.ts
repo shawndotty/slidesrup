@@ -84,6 +84,7 @@ export class DesignMakerView extends ItemView {
 	private previewZoomPercent = 100;
 	private thumbnailNavScrollLeft = 0;
 	private isSpaceKeyDown = false;
+	private keyboardEventWindow: Window | null = null;
 	private readonly _syncThemeColorToSettingsDebounced: (
 		color: string,
 	) => void;
@@ -138,19 +139,43 @@ export class DesignMakerView extends ItemView {
 		this._ensureLayout();
 		this._render();
 		this._setupResizeObserver();
-		window.addEventListener("keydown", this._onWindowKeyDown);
-		window.addEventListener("keyup", this._onWindowKeyUp);
+		this._bindKeyboardEventsToViewWindow();
 	}
 
 	async onClose(): Promise<void> {
-		window.removeEventListener("keydown", this._onWindowKeyDown);
-		window.removeEventListener("keyup", this._onWindowKeyUp);
+		this._unbindKeyboardEventsFromViewWindow();
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		if (this.resizeRafId !== null) {
 			cancelAnimationFrame(this.resizeRafId);
 			this.resizeRafId = null;
 		}
+	}
+
+	private _bindKeyboardEventsToViewWindow(): void {
+		const nextWindow =
+			this.containerEl?.ownerDocument?.defaultView || window;
+		if (this.keyboardEventWindow === nextWindow) return;
+		this._unbindKeyboardEventsFromViewWindow();
+		this.keyboardEventWindow = nextWindow;
+		this.keyboardEventWindow.addEventListener(
+			"keydown",
+			this._onWindowKeyDown,
+		);
+		this.keyboardEventWindow.addEventListener("keyup", this._onWindowKeyUp);
+	}
+
+	private _unbindKeyboardEventsFromViewWindow(): void {
+		if (!this.keyboardEventWindow) return;
+		this.keyboardEventWindow.removeEventListener(
+			"keydown",
+			this._onWindowKeyDown,
+		);
+		this.keyboardEventWindow.removeEventListener(
+			"keyup",
+			this._onWindowKeyUp,
+		);
+		this.keyboardEventWindow = null;
 	}
 
 	async setState(state: DesignMakerViewState, result: any): Promise<void> {
@@ -295,6 +320,7 @@ export class DesignMakerView extends ItemView {
 
 	private _render(): void {
 		this._ensureLayout();
+		this._bindKeyboardEventsToViewWindow();
 		if (!this.pageListEl || !this.canvasEl || !this.inspectorEl) return;
 		if (!this.draft) {
 			this._renderEmptyState(
