@@ -315,7 +315,7 @@ function createTemplateBlock(
 		role: kind,
 		rect,
 		content: contentMap[kind],
-		className: kind === "text" ? "bg-with-front-color" : "",
+		className: "",
 		style: "",
 		pad: "",
 		align: "left",
