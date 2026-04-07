@@ -180,6 +180,10 @@ export interface SlidesRupSettings {
 	aiProviderModel: string;
 	aiProviderApiKeyFallback: string;
 	aiInlineStyleSystemPrompt: string;
+	unsplashEnabled: boolean;
+	unsplashUseRandomFallbackWithoutKey: boolean;
+	unsplashApiBaseUrl: string;
+	unsplashAccessKeyFallback: string;
 }
 
 export interface NocoDBTable {

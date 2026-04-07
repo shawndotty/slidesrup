@@ -1278,6 +1278,64 @@ button.slides-rup-design-maker-layer-collapse {
 	background: var(--background-modifier-hover);
 }
 
+.slides-rup-design-maker-image-picker.is-unsplash-picker
+	.slides-rup-design-maker-image-picker-list {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	max-height: 320px;
+	overflow: auto;
+	padding-right: 2px;
+}
+
+.slides-rup-design-maker-image-picker.is-unsplash-picker
+	.slides-rup-design-maker-image-picker-item {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	min-height: auto;
+	overflow: hidden;
+	border-radius: 8px;
+	background: var(--background-primary-alt);
+}
+
+.slides-rup-design-maker-image-picker-thumb-wrap {
+	aspect-ratio: 4 / 3;
+	background: var(--background-secondary);
+	overflow: hidden;
+}
+
+.slides-rup-design-maker-image-picker-thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.slides-rup-design-maker-image-picker-meta {
+	padding: 6px 7px 7px;
+}
+
+.slides-rup-design-maker-image-picker-meta-title {
+	font-size: 11px;
+	line-height: 1.25;
+	color: var(--text-normal);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	word-break: break-word;
+}
+
+.slides-rup-design-maker-image-picker-meta-author {
+	margin-top: 3px;
+	font-size: 10px;
+	color: var(--text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .slides-rup-design-maker-image-picker-empty {
 	padding: 6px 8px;
 	color: var(--text-muted);

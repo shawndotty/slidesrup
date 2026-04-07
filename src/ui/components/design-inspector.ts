@@ -19,6 +19,7 @@ import {
 	DesignRectUnit,
 } from "src/types/design-maker";
 import { InlineStyleAIModal } from "../modals/inline-style-ai-modal";
+import type { UnsplashImageItem } from "src/services/unsplash-image-service";
 
 const LOCAL_IMAGE_EXTENSIONS = new Set([
 	"png",
@@ -486,6 +487,10 @@ export function buildWikiImageEmbed(path: string): string {
 	return `![[${path.trim()}]]`;
 }
 
+export function buildMarkdownImageEmbed(url: string): string {
+	return `![](${url.trim()})`;
+}
+
 export function insertImageEmbedIntoContent(
 	content: string,
 	imagePath: string,
@@ -494,6 +499,222 @@ export function insertImageEmbedIntoContent(
 	const current = (content || "").trimEnd();
 	if (!current) return embed;
 	return `${current}\n${embed}`;
+}
+
+export function insertMarkdownImageIntoContent(
+	content: string,
+	imageUrl: string,
+): string {
+	const embed = buildMarkdownImageEmbed(imageUrl);
+	const current = (content || "").trimEnd();
+	if (!current) return embed;
+	return `${current}\n${embed}`;
+}
+
+function openUnsplashImagePicker(options: {
+	app: App;
+	triggerEl: HTMLElement;
+	onSearch: (keyword: string) => Promise<UnsplashImageItem[]>;
+	onSelect: (url: string) => void;
+}): void {
+	const { app, triggerEl, onSearch, onSelect } = options;
+	const pickerEl = document.body.createDiv(
+		"slides-rup-design-maker-image-picker",
+	);
+	pickerEl.addClass("is-unsplash-picker");
+	pickerEl.addClass("is-entering");
+	const headerEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-header",
+	);
+	headerEl.createEl("strong", {
+		text: t("Unsplash Picker" as any),
+		cls: "slides-rup-design-maker-image-picker-title",
+	});
+	const closeButton = headerEl.createEl("button", {
+		cls: "slides-rup-design-maker-image-picker-action",
+		attr: { type: "button", "aria-label": t("Close picker" as any) },
+	});
+	setIcon(closeButton, "x");
+	const searchInput = pickerEl.createEl("input", {
+		type: "text",
+		cls: "slides-rup-design-maker-image-picker-search",
+		attr: {
+			placeholder: t("Search Unsplash images" as any),
+		},
+	});
+	const hintEl = pickerEl.createDiv({
+		cls: "slides-rup-design-maker-image-picker-hint",
+		text: t("Type keyword and press Enter" as any),
+	});
+	const listEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-list",
+	);
+
+	let selectedIndex = -1;
+	let rows: UnsplashImageItem[] = [];
+	let closed = false;
+
+	const close = () => {
+		if (closed) return;
+		closed = true;
+		document.removeEventListener("mousedown", onDocumentMouseDown, true);
+		document.removeEventListener("keydown", onDocumentKeyDown, true);
+		pickerEl.removeClass("is-entering");
+		pickerEl.addClass("is-closing");
+		window.setTimeout(() => pickerEl.remove(), 130);
+	};
+
+	const onDocumentMouseDown = (event: MouseEvent) => {
+		const target = event.target as Node;
+		if (
+			pickerEl.contains(target) ||
+			triggerEl.contains(target as HTMLElement)
+		) {
+			return;
+		}
+		close();
+	};
+
+	const setSelectedIndex = (index: number) => {
+		selectedIndex = index;
+		const items = listEl.querySelectorAll(
+			".slides-rup-design-maker-image-picker-item",
+		);
+		items.forEach((item, idx) => {
+			item.classList.toggle("is-selected", idx === selectedIndex);
+		});
+		const selectedItem = items[selectedIndex] as HTMLElement | undefined;
+		selectedItem?.scrollIntoView({ block: "nearest", inline: "nearest" });
+	};
+
+	const renderRows = () => {
+		listEl.empty();
+		if (!rows.length) {
+			listEl.createDiv({
+				cls: "slides-rup-design-maker-image-picker-empty",
+				text: t("No Unsplash images found" as any),
+			});
+			selectedIndex = -1;
+			return;
+		}
+		rows.forEach((row, index) => {
+			const item = listEl.createDiv(
+				"slides-rup-design-maker-image-picker-item",
+			);
+			const thumbWrap = item.createDiv(
+				"slides-rup-design-maker-image-picker-thumb-wrap",
+			);
+			thumbWrap.createEl("img", {
+				cls: "slides-rup-design-maker-image-picker-thumb",
+				attr: {
+					src: row.thumb || row.url,
+					alt: row.alt || t("Unsplash image" as any),
+					loading: "lazy",
+					referrerpolicy: "no-referrer",
+				},
+			});
+			const meta = item.createDiv(
+				"slides-rup-design-maker-image-picker-meta",
+			);
+			const title = row.alt || t("Unsplash image" as any);
+			meta.createDiv({
+				cls: "slides-rup-design-maker-image-picker-meta-title",
+				text: title,
+			});
+			meta.createDiv({
+				cls: "slides-rup-design-maker-image-picker-meta-author",
+				text: row.author,
+			});
+			item.setAttr("title", `${title} · ${row.author}`);
+			item.addEventListener("click", () => {
+				onSelect(row.url);
+				close();
+			});
+			if (index === 0) item.addClass("is-selected");
+		});
+		setSelectedIndex(0);
+	};
+
+	const runSearch = async () => {
+		const keyword = searchInput.value.trim();
+		if (!keyword) return;
+		hintEl.setText(t("Searching Unsplash..." as any));
+		try {
+			rows = await onSearch(keyword);
+			renderRows();
+			if (rows.length === 1 && rows[0].id.startsWith("random-")) {
+				hintEl.setText(
+					t("Unsplash random mode (no access key)" as any),
+				);
+			} else {
+				hintEl.setText(t("Select image to insert" as any));
+			}
+		} catch (error) {
+			rows = [];
+			renderRows();
+			hintEl.setText(
+				`${t("Failed to load Unsplash images" as any)}: ${error}`,
+			);
+		}
+	};
+
+	const onDocumentKeyDown = (event: KeyboardEvent) => {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			close();
+			return;
+		}
+		if (event.key === "Enter") {
+			if (document.activeElement === searchInput) {
+				event.preventDefault();
+				void runSearch();
+				return;
+			}
+			if (selectedIndex >= 0 && rows[selectedIndex]) {
+				event.preventDefault();
+				onSelect(rows[selectedIndex].url);
+				close();
+			}
+		}
+		if (event.key === "ArrowDown" && rows.length > 0) {
+			event.preventDefault();
+			setSelectedIndex(
+				getNextPickerSelectionIndex(selectedIndex, rows.length, 1),
+			);
+		}
+		if (event.key === "ArrowUp" && rows.length > 0) {
+			event.preventDefault();
+			setSelectedIndex(
+				getNextPickerSelectionIndex(selectedIndex, rows.length, -1),
+			);
+		}
+	};
+
+	const triggerRect = triggerEl.getBoundingClientRect();
+	const pickerRect = pickerEl.getBoundingClientRect();
+	const placement = computeImagePickerPlacement({
+		triggerRect,
+		pickerWidth: pickerRect.width || 360,
+		pickerHeight: pickerRect.height || 320,
+		viewportWidth: window.innerWidth,
+		viewportHeight: window.innerHeight,
+	});
+	pickerEl.style.left = `${placement.left}px`;
+	pickerEl.style.top = `${placement.top}px`;
+	pickerEl.style.maxHeight = `${Math.max(180, placement.maxHeight)}px`;
+	closeButton.addEventListener("click", close);
+	searchInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			void runSearch();
+		}
+	});
+	requestAnimationFrame(() => {
+		pickerEl.removeClass("is-entering");
+		document.addEventListener("mousedown", onDocumentMouseDown, true);
+		document.addEventListener("keydown", onDocumentKeyDown, true);
+		searchInput.focus();
+	});
 }
 
 function openLocalImagePicker(options: {
@@ -1012,6 +1233,8 @@ export function renderDesignInspector(options: {
 		prompt: string,
 		currentStyle: string,
 	) => Promise<string>;
+	unsplashEnabled?: boolean;
+	onSearchUnsplashImages?: (keyword: string) => Promise<UnsplashImageItem[]>;
 	isGlobalCoords?: boolean;
 	onToggleCoords?: (global: boolean) => void;
 	getGlobalCoords?: () => { x: number; y: number } | null;
@@ -1026,6 +1249,8 @@ export function renderDesignInspector(options: {
 		showTitle = true,
 		aiInlineStyleEnabled = false,
 		onGenerateInlineStyleAI,
+		unsplashEnabled = false,
+		onSearchUnsplashImages,
 		isGlobalCoords = false,
 		onToggleCoords,
 		getGlobalCoords,
@@ -1060,6 +1285,82 @@ export function renderDesignInspector(options: {
 		textarea.readOnly = true;
 		return;
 	}
+
+	const contentRow = container.createDiv(
+		"slides-rup-design-maker-field is-stacked",
+	);
+	const contentHeader = contentRow.createDiv(
+		"slides-rup-design-maker-content-header",
+	);
+	contentHeader.createEl("label", { text: t("Block Content") });
+	const contentActions = contentHeader.createDiv(
+		"slides-rup-design-maker-content-actions",
+	);
+	const insertImageButton = contentActions.createEl("button", {
+		cls: "slides-rup-design-maker-content-action",
+		attr: {
+			type: "button",
+			"aria-label": t("Insert local image"),
+		},
+	});
+	setIcon(insertImageButton, "image-plus");
+	insertImageButton.title = t("Insert local image");
+	const insertUnsplashButton = contentActions.createEl("button", {
+		cls: "slides-rup-design-maker-content-action",
+		attr: {
+			type: "button",
+			"aria-label": t("Insert Unsplash image" as any),
+		},
+	});
+	setIcon(insertUnsplashButton, "image");
+	insertUnsplashButton.title = t("Insert Unsplash image" as any);
+	insertImageButton.disabled = !app;
+	insertUnsplashButton.disabled =
+		!app || !unsplashEnabled || !onSearchUnsplashImages;
+	const textarea = contentRow.createEl("textarea", {
+		text: block.content,
+		cls: "slides-rup-design-maker-textarea",
+	});
+	insertImageButton.addEventListener("click", (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!app) return;
+		openLocalImagePicker({
+			app,
+			triggerEl: insertImageButton,
+			onSelect: (path) => {
+				textarea.value = insertImageEmbedIntoContent(
+					textarea.value,
+					path,
+				);
+				textarea.dispatchEvent(new Event("input"));
+				textarea.focus();
+			},
+		});
+	});
+	insertUnsplashButton.addEventListener("click", (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!app || !onSearchUnsplashImages) return;
+		openUnsplashImagePicker({
+			app,
+			triggerEl: insertUnsplashButton,
+			onSearch: onSearchUnsplashImages,
+			onSelect: (url) => {
+				textarea.value = insertMarkdownImageIntoContent(
+					textarea.value,
+					url,
+				);
+				textarea.dispatchEvent(new Event("input"));
+				textarea.focus();
+			},
+		});
+	});
+	textarea.addEventListener("input", () => {
+		onPatchBlock((nextBlock) => {
+			nextBlock.content = textarea.value;
+		});
+	});
 
 	const coordsHeader = container.createDiv(
 		"slides-rup-design-maker-coords-header",
@@ -1301,48 +1602,4 @@ export function renderDesignInspector(options: {
 			});
 		},
 	);
-
-	const contentRow = container.createDiv(
-		"slides-rup-design-maker-field is-stacked",
-	);
-	const contentHeader = contentRow.createDiv(
-		"slides-rup-design-maker-content-header",
-	);
-	contentHeader.createEl("label", { text: t("Block Content") });
-	const insertImageButton = contentHeader.createEl("button", {
-		cls: "slides-rup-design-maker-content-action",
-		attr: {
-			type: "button",
-			"aria-label": t("Insert local image"),
-		},
-	});
-	setIcon(insertImageButton, "image-plus");
-	insertImageButton.title = t("Insert local image");
-	insertImageButton.disabled = !app;
-	const textarea = contentRow.createEl("textarea", {
-		text: block.content,
-		cls: "slides-rup-design-maker-textarea",
-	});
-	insertImageButton.addEventListener("click", (event) => {
-		event.preventDefault();
-		event.stopPropagation();
-		if (!app) return;
-		openLocalImagePicker({
-			app,
-			triggerEl: insertImageButton,
-			onSelect: (path) => {
-				textarea.value = insertImageEmbedIntoContent(
-					textarea.value,
-					path,
-				);
-				textarea.dispatchEvent(new Event("input"));
-				textarea.focus();
-			},
-		});
-	});
-	textarea.addEventListener("input", () => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.content = textarea.value;
-		});
-	});
 }

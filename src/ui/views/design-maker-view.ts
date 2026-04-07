@@ -423,6 +423,12 @@ export class DesignMakerView extends ItemView {
 					currentStyle,
 				);
 			},
+			unsplashEnabled: this.plugin.settings.unsplashEnabled,
+			onSearchUnsplashImages: async (keyword) => {
+				return this.plugin.services.unsplashImageService.searchImages(
+					keyword,
+				);
+			},
 			isGlobalCoords: this.isGlobalCoords,
 			onToggleCoords: (global) => {
 				this.isGlobalCoords = global;

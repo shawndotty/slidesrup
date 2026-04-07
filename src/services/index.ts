@@ -7,6 +7,7 @@ import { SlidesRupSettings } from "../types";
 import { VSCodeService } from "./vscode-service";
 import { SecretStoreService } from "./secret-store-service";
 import { InlineStyleAIService } from "./inline-style-ai-service";
+import { UnsplashImageService } from "./unsplash-image-service";
 
 export function createServices(
 	plugin: Plugin,
@@ -28,6 +29,10 @@ export function createServices(
 		settings,
 		secretStoreService,
 	);
+	const unsplashImageService = new UnsplashImageService(
+		settings,
+		secretStoreService,
+	);
 	const commandService = new CommandService(
 		plugin.addCommand.bind(plugin),
 		plugin.addRibbonIcon.bind(plugin),
@@ -46,5 +51,6 @@ export function createServices(
 		slidesRupStyleService,
 		secretStoreService,
 		inlineStyleAiService,
+		unsplashImageService,
 	};
 }

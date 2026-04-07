@@ -15,6 +15,7 @@ export type SecretStorageMode = "keychain" | "fallback";
 
 const SERVICE_NAME = "slides-rup";
 const AI_ACCOUNT = "ai-openai-compatible";
+const UNSPLASH_ACCOUNT = "unsplash-access-key";
 
 export class SecretStoreService {
 	constructor(
@@ -68,5 +69,34 @@ export class SecretStoreService {
 		this.settings.aiProviderApiKeyFallback = value.trim();
 		await this.saveSettings();
 	}
-}
 
+	async getUnsplashAccessKey(): Promise<string> {
+		const keychain = this.getKeychain();
+		if (keychain) {
+			const value = await keychain.getPassword(
+				SERVICE_NAME,
+				UNSPLASH_ACCOUNT,
+			);
+			return value || "";
+		}
+		return this.settings.unsplashAccessKeyFallback || "";
+	}
+
+	async setUnsplashAccessKey(value: string): Promise<void> {
+		const keychain = this.getKeychain();
+		if (keychain) {
+			if (!value.trim() && keychain.deletePassword) {
+				await keychain.deletePassword(SERVICE_NAME, UNSPLASH_ACCOUNT);
+				return;
+			}
+			await keychain.setPassword(
+				SERVICE_NAME,
+				UNSPLASH_ACCOUNT,
+				value.trim(),
+			);
+			return;
+		}
+		this.settings.unsplashAccessKeyFallback = value.trim();
+		await this.saveSettings();
+	}
+}

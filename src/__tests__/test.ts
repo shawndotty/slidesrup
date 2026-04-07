@@ -38,12 +38,14 @@ import {
 import {
 	buildInlineStylePropertyCompletions,
 	buildInlineStyleValueCompletions,
+	buildMarkdownImageEmbed,
 	clampImagePickerPosition,
 	detectInlineStyleCompletionMode,
 	formatInlineStyleForEditor,
 	computeImagePickerPlacement,
 	getNextPickerSelectionIndex,
 	insertImageEmbedIntoContent,
+	insertMarkdownImageIntoContent,
 	isLocalImagePath,
 	localizeInspectorSelectOptions,
 	resetInspectorI18nWarnCacheForTests,
@@ -58,6 +60,10 @@ import { DEFAULT_SETTINGS } from "../models/default-settings";
 import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
 import { sanitizeInlineStyleAiOutput } from "../services/inline-style-ai-service";
 import { SecretStoreService } from "../services/secret-store-service";
+import {
+	buildMarkdownImageFromUrl,
+	buildUnsplashRandomUrl,
+} from "../services/unsplash-image-service";
 
 function testNestedGridSerialization() {
 	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
@@ -763,6 +769,37 @@ function testInsertLocalImageEmbed() {
 	console.log("testInsertLocalImageEmbed passed");
 }
 
+function testUnsplashImageInsertHelpers() {
+	const url = "https://images.unsplash.com/photo-1";
+	assert.strictEqual(
+		buildMarkdownImageFromUrl(url),
+		"![](https://images.unsplash.com/photo-1)",
+	);
+	assert.strictEqual(
+		buildMarkdownImageEmbed(url),
+		"![](https://images.unsplash.com/photo-1)",
+	);
+	assert.strictEqual(
+		insertMarkdownImageIntoContent("", url),
+		"![](https://images.unsplash.com/photo-1)",
+	);
+	assert.strictEqual(
+		insertMarkdownImageIntoContent("Hello", url),
+		"Hello\n![](https://images.unsplash.com/photo-1)",
+	);
+	const randomUrl = buildUnsplashRandomUrl("mountain night");
+	assert.ok(
+		randomUrl.includes("images.unsplash.com/photo-"),
+		"Fallback Unsplash URL should use stable images.unsplash.com endpoint",
+	);
+	assert.strictEqual(
+		randomUrl,
+		buildUnsplashRandomUrl("mountain night"),
+		"Fallback Unsplash URL should be deterministic for same keyword",
+	);
+	console.log("testUnsplashImageInsertHelpers passed");
+}
+
 function testImagePickerPlacementAndSelection() {
 	const bottomPlacement = computeImagePickerPlacement({
 		triggerRect: {
@@ -1402,6 +1439,7 @@ async function runTests() {
 		testAdvancedSlidesWidthHeightParsing();
 		testInspectorRectFieldRealtimeSync();
 		testInsertLocalImageEmbed();
+		testUnsplashImageInsertHelpers();
 		testImagePickerPlacementAndSelection();
 		testInspectorLocaleKeysCompleteness();
 		testInspectorSelectOptionI18nAndFallback();

@@ -1524,6 +1524,64 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		new Setting(containerEl).setName(t("Unsplash Image Source" as any));
+
+		this.createToggleSetting(containerEl, {
+			name: "Enable Unsplash image insert",
+			desc: "Allow inserting Unsplash images in Design Maker block content",
+			value: this.plugin.settings.unsplashEnabled,
+			onChange: async (value) => {
+				this.plugin.settings.unsplashEnabled = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Unsplash API Base URL",
+			desc: "Set Unsplash API base URL",
+			value: this.plugin.settings.unsplashApiBaseUrl,
+			onChange: async (value) => {
+				this.plugin.settings.unsplashApiBaseUrl = value.trim();
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createToggleSetting(containerEl, {
+			name: "Fallback to random image without Access Key",
+			desc: "When Access Key is empty, use Unsplash source random single image",
+			value: this.plugin.settings.unsplashUseRandomFallbackWithoutKey,
+			onChange: async (value) => {
+				this.plugin.settings.unsplashUseRandomFallbackWithoutKey =
+					value;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		new Setting(containerEl)
+			.setName(t("Unsplash Access Key" as any))
+			.setDesc(
+				keyStoreMode === "keychain"
+					? t("API key is stored in Obsidian keychain" as any)
+					: t(
+							"Keychain unavailable, API key will fallback to plugin settings" as any,
+						),
+			)
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setPlaceholder(t("Enter Access Key" as any));
+				this.plugin.services.secretStoreService
+					.getUnsplashAccessKey()
+					.then((value) => {
+						text.setValue(value);
+					})
+					.catch(() => text.setValue(""));
+				text.onChange(async (value) => {
+					await this.plugin.services.secretStoreService.setUnsplashAccessKey(
+						value,
+					);
+				});
+			});
+
 		containerEl.createEl("h2", {
 			text: t("Customized CSS"),
 			cls: "slides-rup-title",
