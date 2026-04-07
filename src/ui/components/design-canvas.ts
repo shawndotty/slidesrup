@@ -324,7 +324,7 @@ function createTemplateBlock(
 		role: kind,
 		rect,
 		content: contentMap[kind],
-		className: "",
+		className: kind === "image" ? "content full-image" : "",
 		style: "",
 		pad: "",
 		align: "left",
