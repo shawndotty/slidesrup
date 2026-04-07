@@ -40,7 +40,9 @@ import {
 	buildInlineStyleValueCompletions,
 	buildMarkdownImageEmbed,
 	clampImagePickerPosition,
+	clampOpacityValue,
 	detectInlineStyleCompletionMode,
+	formatOpacityPercentLabel,
 	formatInlineStyleForEditor,
 	computeImagePickerPlacement,
 	getNextPickerSelectionIndex,
@@ -48,7 +50,9 @@ import {
 	insertMarkdownImageIntoContent,
 	isLocalImagePath,
 	localizeInspectorSelectOptions,
+	parseInspectorOpacityValue,
 	resetInspectorI18nWarnCacheForTests,
+	resolveOpacityFromTrackPosition,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -749,6 +753,85 @@ function testInspectorRectFieldRealtimeSync() {
 	assert.strictEqual(inputMap.width.value, "40");
 	assert.strictEqual(inputMap.height.value, "25");
 	console.log("testInspectorRectFieldRealtimeSync passed");
+}
+
+function testOpacitySliderValueHelpers() {
+	assert.strictEqual(
+		clampOpacityValue(-0.5),
+		0,
+		"Opacity clamp should keep lower bound at 0",
+	);
+	assert.strictEqual(
+		clampOpacityValue(1.5),
+		1,
+		"Opacity clamp should keep upper bound at 1",
+	);
+	assert.strictEqual(
+		clampOpacityValue(Number.NaN),
+		1,
+		"Opacity clamp should fallback invalid value to 1",
+	);
+
+	assert.strictEqual(
+		parseInspectorOpacityValue(""),
+		1,
+		"Empty opacity should fallback to 1",
+	);
+	assert.strictEqual(
+		parseInspectorOpacityValue("0.42"),
+		0.42,
+		"Valid opacity string should parse as number",
+	);
+	assert.strictEqual(
+		parseInspectorOpacityValue("abc"),
+		1,
+		"Invalid opacity string should fallback to 1",
+	);
+
+	assert.strictEqual(
+		formatOpacityPercentLabel(0.245),
+		"25%",
+		"Opacity label should format to nearest integer percentage",
+	);
+
+	assert.strictEqual(
+		resolveOpacityFromTrackPosition({
+			clientX: 50,
+			trackLeft: 0,
+			trackWidth: 200,
+		}),
+		0.25,
+		"Pointer position should map to proportional opacity value",
+	);
+	assert.strictEqual(
+		resolveOpacityFromTrackPosition({
+			clientX: -20,
+			trackLeft: 0,
+			trackWidth: 200,
+		}),
+		0,
+		"Pointer left overflow should clamp to 0",
+	);
+	assert.strictEqual(
+		resolveOpacityFromTrackPosition({
+			clientX: 300,
+			trackLeft: 0,
+			trackWidth: 200,
+		}),
+		1,
+		"Pointer right overflow should clamp to 1",
+	);
+	assert.strictEqual(
+		resolveOpacityFromTrackPosition({
+			clientX: 100,
+			trackLeft: 0,
+			trackWidth: 0,
+		}),
+		0,
+		"Zero-width slider track should return 0 safely",
+	);
+
+	console.log("testOpacitySliderValueHelpers passed");
 }
 
 function testInsertLocalImageEmbed() {
@@ -1524,6 +1607,7 @@ async function runTests() {
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
 		testInspectorRectFieldRealtimeSync();
+		testOpacitySliderValueHelpers();
 		testInsertLocalImageEmbed();
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();

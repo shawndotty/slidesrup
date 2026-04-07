@@ -1358,6 +1358,149 @@ function createRangeField(
 	});
 }
 
+export function clampOpacityValue(value: number): number {
+	if (!Number.isFinite(value)) return 1;
+	return Math.min(1, Math.max(0, value));
+}
+
+export function parseInspectorOpacityValue(
+	value: string | number | null | undefined,
+): number {
+	if (value === "" || value === null || value === undefined) return 1;
+	const numeric = typeof value === "number" ? value : Number(value);
+	if (Number.isNaN(numeric)) return 1;
+	return clampOpacityValue(numeric);
+}
+
+export function formatOpacityPercentLabel(value: number): string {
+	return `${Math.round(clampOpacityValue(value) * 100)}%`;
+}
+
+export function resolveOpacityFromTrackPosition(options: {
+	clientX: number;
+	trackLeft: number;
+	trackWidth: number;
+}): number {
+	const { clientX, trackLeft, trackWidth } = options;
+	if (trackWidth <= 0) return 0;
+	return clampOpacityValue((clientX - trackLeft) / trackWidth);
+}
+
+function createOpacitySliderField(
+	container: HTMLElement,
+	label: string,
+	value: number,
+	onChange: (value: number) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const control = row.createDiv("slides-rup-design-maker-opacity-control");
+	const slider = control.createDiv("slides-rup-design-maker-opacity-slider");
+	slider.tabIndex = 0;
+	slider.setAttr("role", "slider");
+	slider.setAttr("aria-label", t(label as any));
+	slider.setAttr("aria-valuemin", "0");
+	slider.setAttr("aria-valuemax", "100");
+	const track = slider.createDiv("slides-rup-design-maker-opacity-track");
+	const fill = track.createDiv("slides-rup-design-maker-opacity-fill");
+	const thumb = slider.createDiv("slides-rup-design-maker-opacity-thumb");
+	const percentLabel = control.createSpan({
+		cls: "slides-rup-design-maker-opacity-value",
+	});
+
+	let currentValue = clampOpacityValue(value);
+
+	const syncUI = () => {
+		const percent = Math.round(currentValue * 100);
+		fill.style.width = `${percent}%`;
+		thumb.style.left = `${percent}%`;
+		percentLabel.setText(formatOpacityPercentLabel(currentValue));
+		slider.setAttr("aria-valuenow", `${percent}`);
+		slider.setAttr(
+			"aria-valuetext",
+			formatOpacityPercentLabel(currentValue),
+		);
+	};
+
+	const applyValue = (next: number) => {
+		currentValue = clampOpacityValue(next);
+		syncUI();
+		onChange(currentValue);
+	};
+
+	const valueFromPointer = (clientX: number) => {
+		const rect = track.getBoundingClientRect();
+		return resolveOpacityFromTrackPosition({
+			clientX,
+			trackLeft: rect.left,
+			trackWidth: rect.width,
+		});
+	};
+
+	let isDragging = false;
+	let dragPointerId: number | null = null;
+	const onPointerMove = (event: PointerEvent) => {
+		if (!isDragging || event.pointerId !== dragPointerId) return;
+		event.preventDefault();
+		applyValue(valueFromPointer(event.clientX));
+	};
+	const onPointerUp = (event: PointerEvent) => {
+		if (event.pointerId !== dragPointerId) return;
+		isDragging = false;
+		dragPointerId = null;
+		slider.removeClass("is-dragging");
+		document.removeEventListener("pointermove", onPointerMove, true);
+		document.removeEventListener("pointerup", onPointerUp, true);
+		if (slider.hasPointerCapture(event.pointerId)) {
+			slider.releasePointerCapture(event.pointerId);
+		}
+	};
+
+	slider.addEventListener("pointerdown", (event) => {
+		if (event.button !== 0) return;
+		isDragging = true;
+		dragPointerId = event.pointerId;
+		slider.addClass("is-dragging");
+		slider.setPointerCapture(event.pointerId);
+		applyValue(valueFromPointer(event.clientX));
+		document.addEventListener("pointermove", onPointerMove, true);
+		document.addEventListener("pointerup", onPointerUp, true);
+		event.preventDefault();
+	});
+
+	slider.addEventListener("keydown", (event) => {
+		let next = currentValue;
+		switch (event.key) {
+			case "ArrowLeft":
+			case "ArrowDown":
+				next -= 0.01;
+				break;
+			case "ArrowRight":
+			case "ArrowUp":
+				next += 0.01;
+				break;
+			case "PageDown":
+				next -= 0.1;
+				break;
+			case "PageUp":
+				next += 0.1;
+				break;
+			case "Home":
+				next = 0;
+				break;
+			case "End":
+				next = 1;
+				break;
+			default:
+				return;
+		}
+		event.preventDefault();
+		applyValue(next);
+	});
+
+	syncUI();
+}
+
 export function renderDesignInspector(options: {
 	app?: App;
 	container: HTMLElement;
@@ -1711,13 +1854,10 @@ export function renderDesignInspector(options: {
 			nextBlock.filter = value;
 		});
 	});
-	createRangeField(
+	createOpacitySliderField(
 		container,
 		"Opacity",
-		block.opacity ? Number(block.opacity) : 1,
-		0,
-		1,
-		0.1,
+		parseInspectorOpacityValue(block.opacity),
 		(value) => {
 			onPatchBlock((nextBlock) => {
 				nextBlock.opacity = value === 1 ? "" : value.toString();
