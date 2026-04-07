@@ -141,16 +141,6 @@ section,
 	font-family: var(--sr-dm-body-font);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-	font-family: var(--sr-dm-heading-font);
-	color: var(--sr-dm-primary);
-}
-
 .bg-with-back-color {
 	background: var(--sr-dm-primary);
 	color: #ffffff;

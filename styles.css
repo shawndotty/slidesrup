@@ -1298,6 +1298,7 @@ button.slides-rup-design-maker-layer-collapse {
 	background: var(--background-primary);
 	color: var(--text-muted);
 	cursor: pointer;
+	padding: 0px;
 }
 
 .slides-rup-design-maker-image-picker-action:hover {
@@ -1388,6 +1389,7 @@ button.slides-rup-design-maker-layer-collapse {
 	color: var(--text-normal);
 	cursor: pointer;
 	touch-action: manipulation;
+	justify-content: flex-start;
 }
 
 .slides-rup-design-maker-image-picker-item:hover,
