@@ -17,6 +17,7 @@ import {
 	generateDesignMakerRuntimeCss,
 	generatePageMarkdown,
 	normalizeInlineStyleForTemplate,
+	normalizePaddingForTemplate,
 } from "../services/design-maker-generator";
 import {
 	clampCanvasZoomPercent,
@@ -56,7 +57,9 @@ import {
 	resetInspectorI18nWarnCacheForTests,
 	resolveOpacityFromTrackPosition,
 	composeBorderComposite,
+	composePaddingComposite,
 	isValidInspectorColor,
+	parsePaddingComposite,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -913,6 +916,54 @@ function testBorderCompositeHelpers() {
 	console.log("testBorderCompositeHelpers passed");
 }
 
+function testPaddingCompositeHelpers() {
+	assert.deepStrictEqual(parsePaddingComposite(""), {
+		top: 0,
+		right: 0,
+		bottom: 0,
+		left: 0,
+	});
+	assert.deepStrictEqual(parsePaddingComposite("12px"), {
+		top: 12,
+		right: 12,
+		bottom: 12,
+		left: 12,
+	});
+	assert.deepStrictEqual(parsePaddingComposite("12px 8px"), {
+		top: 12,
+		right: 8,
+		bottom: 12,
+		left: 8,
+	});
+	assert.deepStrictEqual(parsePaddingComposite("12px 8px 4px"), {
+		top: 12,
+		right: 8,
+		bottom: 4,
+		left: 8,
+	});
+	assert.deepStrictEqual(parsePaddingComposite("12px 8px 4px 2px"), {
+		top: 12,
+		right: 8,
+		bottom: 4,
+		left: 2,
+	});
+	assert.strictEqual(
+		composePaddingComposite({ top: 12, right: 8, bottom: 4, left: 2 }),
+		"12px 8px 4px 2px",
+	);
+	assert.strictEqual(
+		normalizePaddingForTemplate("12px 8px"),
+		"12px 8px 12px 8px",
+		"Generator should normalize two-value shorthand to four values",
+	);
+	assert.strictEqual(
+		normalizePaddingForTemplate(""),
+		"",
+		"Empty padding should stay empty in generator normalization",
+	);
+	console.log("testPaddingCompositeHelpers passed");
+}
+
 function testInsertLocalImageEmbed() {
 	assert.strictEqual(isLocalImagePath("assets/logo.png"), true);
 	assert.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
@@ -1713,6 +1764,7 @@ async function runTests() {
 		testOpacitySliderValueHelpers();
 		testBackgroundColorPickerValueHelpers();
 		testBorderCompositeHelpers();
+		testPaddingCompositeHelpers();
 		testInsertLocalImageEmbed();
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();

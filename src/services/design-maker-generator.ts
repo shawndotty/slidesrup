@@ -19,6 +19,46 @@ export function normalizeInlineStyleForTemplate(style: string): string {
 	return `${declarations.join("; ")};`;
 }
 
+function clampPaddingValue(value: number): number {
+	if (!Number.isFinite(value)) return 0;
+	return Math.max(0, Math.round(value));
+}
+
+function parsePaddingTokenToPx(token: string): number {
+	const normalized = (token || "").trim().toLowerCase();
+	if (!normalized) return 0;
+	const match = normalized.match(/^(-?\d+)(px)?$/);
+	if (!match) return 0;
+	return clampPaddingValue(Number(match[1]));
+}
+
+export function normalizePaddingForTemplate(pad: string): string {
+	const tokens = (pad || "")
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 4)
+		.map(parsePaddingTokenToPx);
+	if (!tokens.length) return "";
+	let top = 0;
+	let right = 0;
+	let bottom = 0;
+	let left = 0;
+	if (tokens.length === 1) {
+		top = right = bottom = left = tokens[0];
+	} else if (tokens.length === 2) {
+		top = bottom = tokens[0];
+		right = left = tokens[1];
+	} else if (tokens.length === 3) {
+		top = tokens[0];
+		right = left = tokens[1];
+		bottom = tokens[2];
+	} else {
+		[top, right, bottom, left] = tokens;
+	}
+	return `${top}px ${right}px ${bottom}px ${left}px`;
+}
+
 function serializeAttributes(
 	block: DesignGridBlock,
 	defaultRectUnit: DesignRectUnit,
@@ -44,7 +84,8 @@ function serializeAttributes(
 
 	if (block.className.trim()) attrs.class = block.className.trim();
 	if (block.align.trim()) attrs.align = block.align.trim();
-	if (block.pad.trim()) attrs.pad = block.pad.trim();
+	const normalizedPadding = normalizePaddingForTemplate(block.pad);
+	if (normalizedPadding) attrs.pad = normalizedPadding;
 	const normalizedStyle = normalizeInlineStyleForTemplate(block.style);
 	if (normalizedStyle) attrs.style = normalizedStyle;
 	if (block.flow.trim()) attrs.flow = block.flow.trim();

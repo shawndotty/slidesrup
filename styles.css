@@ -1526,6 +1526,14 @@ button.slides-rup-design-maker-layer-collapse {
 	align-items: center;
 }
 
+.slides-rup-design-maker-padding-controls {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+	width: 100%;
+	align-items: center;
+}
+
 .slides-rup-design-maker-color-input {
 	flex: 0 0 42px;
 	padding: 0;

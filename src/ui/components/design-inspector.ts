@@ -1299,6 +1299,75 @@ export function composeBorderComposite(parts: {
 	return `${width}px ${style} ${color}`;
 }
 
+export function clampPaddingValue(value: number): number {
+	if (!Number.isFinite(value)) return 0;
+	return Math.max(0, Math.round(value));
+}
+
+function parsePaddingTokenToPx(token: string): number {
+	const normalized = (token || "").trim().toLowerCase();
+	if (!normalized) return 0;
+	const match = normalized.match(/^(-?\d+)(px)?$/);
+	if (!match) return 0;
+	return clampPaddingValue(Number(match[1]));
+}
+
+export function parsePaddingComposite(pad: string): {
+	top: number;
+	right: number;
+	bottom: number;
+	left: number;
+} {
+	const tokens = (pad || "")
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 4)
+		.map(parsePaddingTokenToPx);
+	if (!tokens.length) {
+		return { top: 0, right: 0, bottom: 0, left: 0 };
+	}
+	if (tokens.length === 1) {
+		return {
+			top: tokens[0],
+			right: tokens[0],
+			bottom: tokens[0],
+			left: tokens[0],
+		};
+	}
+	if (tokens.length === 2) {
+		return {
+			top: tokens[0],
+			right: tokens[1],
+			bottom: tokens[0],
+			left: tokens[1],
+		};
+	}
+	if (tokens.length === 3) {
+		return {
+			top: tokens[0],
+			right: tokens[1],
+			bottom: tokens[2],
+			left: tokens[1],
+		};
+	}
+	return {
+		top: tokens[0],
+		right: tokens[1],
+		bottom: tokens[2],
+		left: tokens[3],
+	};
+}
+
+export function composePaddingComposite(parts: {
+	top: number;
+	right: number;
+	bottom: number;
+	left: number;
+}): string {
+	return `${clampPaddingValue(parts.top)}px ${clampPaddingValue(parts.right)}px ${clampPaddingValue(parts.bottom)}px ${clampPaddingValue(parts.left)}px`;
+}
+
 function createColorPickerField(
 	container: HTMLElement,
 	label: string,
@@ -1434,6 +1503,51 @@ function createBorderCompositeField(
 	});
 
 	syncColorUI(initial.color);
+}
+
+function createPaddingCompositeField(
+	container: HTMLElement,
+	label: string,
+	value: string,
+	onChange: (value: string) => void,
+): void {
+	const initial = parsePaddingComposite(value);
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const controls = row.createDiv("slides-rup-design-maker-padding-controls");
+	const createInput = (fieldLabel: string, initialValue: number) => {
+		const input = controls.createEl("input", {
+			type: "number",
+			cls: "slides-rup-design-maker-input",
+			value: `${initialValue}`,
+			attr: { "aria-label": fieldLabel },
+		});
+		input.min = "0";
+		input.step = "1";
+		return input;
+	};
+	const topInput = createInput("padding-top", initial.top);
+	const rightInput = createInput("padding-right", initial.right);
+	const bottomInput = createInput("padding-bottom", initial.bottom);
+	const leftInput = createInput("padding-left", initial.left);
+
+	const emit = () => {
+		topInput.value = `${clampPaddingValue(Number(topInput.value || 0))}`;
+		rightInput.value = `${clampPaddingValue(Number(rightInput.value || 0))}`;
+		bottomInput.value = `${clampPaddingValue(Number(bottomInput.value || 0))}`;
+		leftInput.value = `${clampPaddingValue(Number(leftInput.value || 0))}`;
+		onChange(
+			composePaddingComposite({
+				top: Number(topInput.value || 0),
+				right: Number(rightInput.value || 0),
+				bottom: Number(bottomInput.value || 0),
+				left: Number(leftInput.value || 0),
+			}),
+		);
+	};
+	[topInput, rightInput, bottomInput, leftInput].forEach((input) => {
+		input.addEventListener("input", emit);
+	});
 }
 
 export function formatInlineStyleForEditor(style: string): string {
@@ -2049,7 +2163,7 @@ export function renderDesignInspector(options: {
 		},
 	);
 
-	createTextField(container, "Padding", block.pad, (value) => {
+	createPaddingCompositeField(container, "Padding", block.pad, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.pad = value;
 		});
