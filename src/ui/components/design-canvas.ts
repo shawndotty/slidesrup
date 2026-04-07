@@ -294,7 +294,7 @@ function createTemplateBlock(
 		content: "<% content %>",
 	};
 
-	const percentRect = { x: 10, y: 10, width: 40, height: 24 };
+	const percentRect = { x: 10, y: 10, width: 40, height: 20 };
 	const rect =
 		rectUnit === "px"
 			? {
@@ -317,7 +317,7 @@ function createTemplateBlock(
 		content: contentMap[kind],
 		className: kind === "text" ? "bg-with-front-color" : "",
 		style: "",
-		pad: "24px",
+		pad: "",
 		align: "left",
 		flow: "",
 		filter: "",

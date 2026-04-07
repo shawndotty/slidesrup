@@ -565,6 +565,10 @@ function openUnsplashImagePicker(options: {
 			placeholder: t("Search Unsplash images" as any),
 		},
 	});
+	const hintEl = pickerEl.createDiv({
+		cls: "slides-rup-design-maker-image-picker-hint",
+		text: t("Type keyword and press Enter" as any),
+	});
 	const ratioControlsEl = pickerEl.createDiv(
 		"slides-rup-design-maker-image-picker-ratio-controls",
 	);
@@ -609,10 +613,7 @@ function openUnsplashImagePicker(options: {
 	const ratioPreviewMeta = ratioPreviewEl.createDiv(
 		"slides-rup-design-maker-image-picker-ratio-preview-meta",
 	);
-	const hintEl = pickerEl.createDiv({
-		cls: "slides-rup-design-maker-image-picker-hint",
-		text: t("Type keyword and press Enter" as any),
-	});
+
 	const listEl = pickerEl.createDiv(
 		"slides-rup-design-maker-image-picker-list",
 	);
