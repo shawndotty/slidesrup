@@ -51,9 +51,11 @@ import {
 	isLocalImagePath,
 	localizeInspectorSelectOptions,
 	normalizeInspectorColorToHex,
+	parseBorderComposite,
 	parseInspectorOpacityValue,
 	resetInspectorI18nWarnCacheForTests,
 	resolveOpacityFromTrackPosition,
+	composeBorderComposite,
 	isValidInspectorColor,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
@@ -873,6 +875,44 @@ function testBackgroundColorPickerValueHelpers() {
 	console.log("testBackgroundColorPickerValueHelpers passed");
 }
 
+function testBorderCompositeHelpers() {
+	const parsed = parseBorderComposite("2px dashed #ff0000");
+	assert.deepStrictEqual(parsed, {
+		width: 2,
+		style: "dashed",
+		color: "#ff0000",
+	});
+	const parsedComplex = parseBorderComposite("1px solid var(--accent-color)");
+	assert.deepStrictEqual(parsedComplex, {
+		width: 1,
+		style: "solid",
+		color: "#ffffff",
+	});
+	const parsedInvalid = parseBorderComposite("invalid-border-value");
+	assert.deepStrictEqual(parsedInvalid, {
+		width: 0,
+		style: "solid",
+		color: "#ffffff",
+	});
+	assert.strictEqual(
+		composeBorderComposite({
+			width: 0,
+			style: "solid",
+			color: "#ffffff",
+		}),
+		"0px solid #ffffff",
+		"Width=0 should still compose structured border value",
+	);
+	const localizedBorderStyle = localizeInspectorSelectOptions([
+		{ value: "solid", label: "Border Solid" },
+	]);
+	assert.ok(
+		localizedBorderStyle[0].label !== "Border Solid",
+		"Border style label should resolve from i18n map",
+	);
+	console.log("testBorderCompositeHelpers passed");
+}
+
 function testInsertLocalImageEmbed() {
 	assert.strictEqual(isLocalImagePath("assets/logo.png"), true);
 	assert.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
@@ -1672,6 +1712,7 @@ async function runTests() {
 		testInspectorRectFieldRealtimeSync();
 		testOpacitySliderValueHelpers();
 		testBackgroundColorPickerValueHelpers();
+		testBorderCompositeHelpers();
 		testInsertLocalImageEmbed();
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();

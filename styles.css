@@ -1518,6 +1518,14 @@ button.slides-rup-design-maker-layer-collapse {
 	width: 100%;
 }
 
+.slides-rup-design-maker-border-controls {
+	display: grid;
+	grid-template-columns: 1fr 2fr 2fr 1fr;
+	gap: 16px;
+	width: 100%;
+	align-items: center;
+}
+
 .slides-rup-design-maker-color-input {
 	flex: 0 0 42px;
 	padding: 0;

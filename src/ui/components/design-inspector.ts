@@ -77,6 +77,16 @@ const INSPECTOR_SELECT_OPTION_I18N_KEYS: Record<string, string> = {
 	"Scale Down Out": "designInspector.option.scaleDownOut",
 	Slower: "designInspector.option.slower",
 	Faster: "designInspector.option.faster",
+	"Border None": "designInspector.option.borderNone",
+	"Border Hidden": "designInspector.option.borderHidden",
+	"Border Dotted": "designInspector.option.borderDotted",
+	"Border Dashed": "designInspector.option.borderDashed",
+	"Border Solid": "designInspector.option.borderSolid",
+	"Border Double": "designInspector.option.borderDouble",
+	"Border Groove": "designInspector.option.borderGroove",
+	"Border Ridge": "designInspector.option.borderRidge",
+	"Border Inset": "designInspector.option.borderInset",
+	"Border Outset": "designInspector.option.borderOutset",
 };
 
 const warnedMissingInspectorOptionLabels = new Set<string>();
@@ -115,6 +125,21 @@ export function localizeInspectorSelectOptions(
 export function resetInspectorI18nWarnCacheForTests(): void {
 	warnedMissingInspectorOptionLabels.clear();
 }
+
+const BORDER_STYLE_OPTIONS = [
+	"none",
+	"hidden",
+	"dotted",
+	"dashed",
+	"solid",
+	"double",
+	"groove",
+	"ridge",
+	"inset",
+	"outset",
+] as const;
+
+type BorderStyleOption = (typeof BORDER_STYLE_OPTIONS)[number];
 
 const INLINE_STYLE_STANDARD_PROPERTIES = [
 	"align-content",
@@ -1224,6 +1249,56 @@ export function normalizeInspectorColorToHex(value: string): string | null {
 	return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
 }
 
+export function clampBorderWidth(value: number): number {
+	if (!Number.isFinite(value)) return 0;
+	return Math.max(0, Math.round(value));
+}
+
+function normalizeBorderStyleOption(value: string): BorderStyleOption {
+	const normalized = (value || "").trim().toLowerCase();
+	return (BORDER_STYLE_OPTIONS as readonly string[]).includes(normalized)
+		? (normalized as BorderStyleOption)
+		: "solid";
+}
+
+export function parseBorderComposite(border: string): {
+	width: number;
+	style: BorderStyleOption;
+	color: string;
+} {
+	const source = (border || "").trim();
+	if (!source) {
+		return { width: 0, style: "solid", color: "#ffffff" };
+	}
+	const widthMatch = source.match(/(\d+)\s*px/i);
+	const width = clampBorderWidth(widthMatch ? Number(widthMatch[1]) : 0);
+	const styleMatch = source.match(
+		/\b(none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)\b/i,
+	);
+	const style = normalizeBorderStyleOption(
+		styleMatch ? styleMatch[1] : "solid",
+	);
+	let color = source;
+	if (widthMatch?.[0]) color = color.replace(widthMatch[0], " ");
+	if (styleMatch?.[0]) color = color.replace(styleMatch[0], " ");
+	color = color.replace(/\s+/g, " ").trim();
+	if (!color || !isValidInspectorColor(color)) color = "#ffffff";
+	return { width, style, color };
+}
+
+export function composeBorderComposite(parts: {
+	width: number;
+	style: string;
+	color: string;
+}): string {
+	const width = clampBorderWidth(parts.width);
+	const style = normalizeBorderStyleOption(parts.style || "solid");
+	const color = isValidInspectorColor((parts.color || "").trim())
+		? (parts.color || "").trim()
+		: "#ffffff";
+	return `${width}px ${style} ${color}`;
+}
+
 function createColorPickerField(
 	container: HTMLElement,
 	label: string,
@@ -1271,6 +1346,94 @@ function createColorPickerField(
 		syncUI(colorInput.value, true);
 	});
 	syncUI(value, false);
+}
+
+function createBorderCompositeField(
+	container: HTMLElement,
+	label: string,
+	value: string,
+	onChange: (value: string) => void,
+): void {
+	const initial = parseBorderComposite(value);
+	const row = container.createDiv("slides-rup-design-maker-field");
+	row.createEl("label", { text: t(label as any) });
+	const controls = row.createDiv("slides-rup-design-maker-border-controls");
+
+	const widthInput = controls.createEl("input", {
+		type: "number",
+		cls: "slides-rup-design-maker-input",
+		value: `${initial.width}`,
+	});
+	widthInput.min = "0";
+	widthInput.step = "1";
+
+	const styleSelect = controls.createEl("select", {
+		cls: "slides-rup-design-maker-input",
+	});
+	localizeInspectorSelectOptions(
+		BORDER_STYLE_OPTIONS.map((style) => ({
+			value: style,
+			label: `Border ${style[0].toUpperCase()}${style.slice(1)}`,
+		})),
+	).forEach((option) => {
+		const optionEl = styleSelect.createEl("option", {
+			value: option.value,
+			text: option.label,
+		});
+		if (option.value === initial.style) optionEl.selected = true;
+	});
+
+	const colorTextInput = controls.createEl("input", {
+		type: "text",
+		value: initial.color,
+		cls: "slides-rup-design-maker-input",
+		attr: { placeholder: t("Hex/RGB/HSL" as any) },
+	});
+
+	const colorInput = controls.createEl("input", {
+		type: "color",
+		cls: "slides-rup-design-maker-input slides-rup-design-maker-color-input",
+	});
+
+	const syncColorUI = (nextColor: string) => {
+		const normalized = nextColor.trim();
+		const valid = isValidInspectorColor(normalized);
+		colorTextInput.toggleClass("is-invalid", !valid);
+		colorTextInput.setAttr("aria-invalid", valid ? "false" : "true");
+		if (!normalized) {
+			colorInput.value = "#ffffff";
+			return;
+		}
+		if (!valid) return;
+		const hex = normalizeInspectorColorToHex(normalized);
+		if (hex) colorInput.value = hex;
+	};
+
+	const emit = () => {
+		const merged = composeBorderComposite({
+			width: Number(widthInput.value || 0),
+			style: styleSelect.value,
+			color: colorTextInput.value,
+		});
+		onChange(merged);
+	};
+
+	widthInput.addEventListener("input", () => {
+		widthInput.value = `${clampBorderWidth(Number(widthInput.value || 0))}`;
+		emit();
+	});
+	styleSelect.addEventListener("change", emit);
+	colorTextInput.addEventListener("input", () => {
+		syncColorUI(colorTextInput.value);
+		if (isValidInspectorColor(colorTextInput.value.trim())) emit();
+	});
+	colorInput.addEventListener("input", () => {
+		colorTextInput.value = colorInput.value;
+		syncColorUI(colorInput.value);
+		emit();
+	});
+
+	syncColorUI(initial.color);
 }
 
 export function formatInlineStyleForEditor(style: string): string {
@@ -1900,7 +2063,7 @@ export function renderDesignInspector(options: {
 			nextBlock.bg = value;
 		});
 	});
-	createTextField(container, "Border", block.border, (value) => {
+	createBorderCompositeField(container, "Border", block.border, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.border = value;
 		});

@@ -35,5 +35,15 @@
 	"designInspector.option.scaleDown": "Scale Down",
 	"designInspector.option.scaleDownOut": "Scale Down Out",
 	"designInspector.option.slower": "Slower",
-	"designInspector.option.faster": "Faster"
+	"designInspector.option.faster": "Faster",
+	"designInspector.option.borderNone": "None",
+	"designInspector.option.borderHidden": "Hidden",
+	"designInspector.option.borderDotted": "Dotted",
+	"designInspector.option.borderDashed": "Dashed",
+	"designInspector.option.borderSolid": "Solid",
+	"designInspector.option.borderDouble": "Double",
+	"designInspector.option.borderGroove": "Groove",
+	"designInspector.option.borderRidge": "Ridge",
+	"designInspector.option.borderInset": "Inset",
+	"designInspector.option.borderOutset": "Outset"
 }

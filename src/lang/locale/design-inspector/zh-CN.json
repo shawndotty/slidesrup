@@ -35,5 +35,15 @@
 	"designInspector.option.scaleDown": "缩小",
 	"designInspector.option.scaleDownOut": "缩小退出",
 	"designInspector.option.slower": "更慢",
-	"designInspector.option.faster": "更快"
+	"designInspector.option.faster": "更快",
+	"designInspector.option.borderNone": "无",
+	"designInspector.option.borderHidden": "隐藏",
+	"designInspector.option.borderDotted": "点线",
+	"designInspector.option.borderDashed": "虚线",
+	"designInspector.option.borderSolid": "实线",
+	"designInspector.option.borderDouble": "双线",
+	"designInspector.option.borderGroove": "凹槽",
+	"designInspector.option.borderRidge": "脊线",
+	"designInspector.option.borderInset": "内嵌",
+	"designInspector.option.borderOutset": "外嵌"
 }
