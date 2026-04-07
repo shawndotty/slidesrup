@@ -596,6 +596,7 @@ export default {
 		"钥匙串不可用，API Key 将回退存储到插件设置",
 	"Enter API Key": "输入 API Key",
 	"AI Inline Style Assistant": "AI 内联样式助手",
+	"Generate Filter with AI": "AI 生成滤镜",
 	"Describe desired style effect": "描述你想要的样式效果",
 	"Use natural language to describe expected visual effect":
 		"用自然语言描述你希望实现的视觉效果",
@@ -608,6 +609,9 @@ export default {
 	"Generating inline style...": "正在生成内联样式...",
 	"AI inline style generated": "AI 内联样式已生成",
 	"Failed to generate inline style": "内联样式生成失败",
+	"AI Filter System Prompt": "AI Filter 系统提示词",
+	"Optional custom system prompt for AI filter value generation":
+		"用于 AI 生成 filter 值的可选自定义系统提示词",
 	"Unsplash Image Source": "Unsplash 图源",
 	"Unsplash ratio presets": "Unsplash 比例预设",
 	"Comma separated ratios, for example: 16:9,4:3,1:1":

@@ -64,7 +64,10 @@ import zhCN from "../lang/locale/zh-cn";
 import zhTW from "../lang/locale/zh-tw";
 import { DEFAULT_SETTINGS } from "../models/default-settings";
 import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
-import { sanitizeInlineStyleAiOutput } from "../services/inline-style-ai-service";
+import {
+	sanitizeFilterAiOutput,
+	sanitizeInlineStyleAiOutput,
+} from "../services/inline-style-ai-service";
 import { SecretStoreService } from "../services/secret-store-service";
 import {
 	buildMarkdownImageFromUrl,
@@ -1586,6 +1589,30 @@ function testInlineStyleAiOutputSanitization() {
 	console.log("testInlineStyleAiOutputSanitization passed");
 }
 
+function testFilterAiOutputSanitization() {
+	assert.strictEqual(
+		sanitizeFilterAiOutput("blur(2px) saturate(120%)"),
+		"blur(2px) saturate(120%)",
+		"Should keep valid filter function chain",
+	);
+	assert.strictEqual(
+		sanitizeFilterAiOutput("filter: contrast(110%)"),
+		"contrast(110%)",
+		"Should strip filter prefix and keep value",
+	);
+	assert.throws(
+		() => sanitizeFilterAiOutput("```css\nfilter: blur(2px);\n```"),
+		/invalid filter syntax/,
+		"Semicolon-containing output should be rejected",
+	);
+	assert.throws(
+		() => sanitizeFilterAiOutput("@media (max-width:600px){filter: blur(2px)}"),
+		/invalid filter syntax/,
+		"At-rules should be rejected",
+	);
+	console.log("testFilterAiOutputSanitization passed");
+}
+
 async function testSecretStoreFallbackBehavior() {
 	const app = {} as any;
 	const settings = {
@@ -1662,6 +1689,7 @@ async function runTests() {
 		testInlineStyleCompletionDataSourceAndMode();
 		await testDispatchThemeColorChange();
 		testInlineStyleAiOutputSanitization();
+		testFilterAiOutputSanitization();
 		await testSecretStoreFallbackBehavior();
 		console.log("All tests passed 100%!");
 	} catch (err) {

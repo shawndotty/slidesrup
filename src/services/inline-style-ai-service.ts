@@ -22,6 +22,37 @@ export function sanitizeInlineStyleAiOutput(raw: string): string {
 	return `${declarations.join(";\n")};`;
 }
 
+export function sanitizeFilterAiOutput(raw: string): string {
+	const text = raw
+		.replace(/```css/gi, "")
+		.replace(/```/g, "")
+		.trim()
+		.replace(/\s+/g, " ");
+	if (!text) {
+		throw new Error("AI output does not contain valid filter value");
+	}
+	if (/[{}@;]/.test(text)) {
+		throw new Error("AI output contains invalid filter syntax");
+	}
+	const normalized = text.replace(/^filter\s*:\s*/i, "").trim();
+	if (!normalized) {
+		throw new Error("AI output does not contain valid filter value");
+	}
+	const functionPattern =
+		/(blur|brightness|contrast|drop-shadow|grayscale|hue-rotate|invert|opacity|saturate|sepia)\(([^()]*)\)/gi;
+	const matches = [...normalized.matchAll(functionPattern)];
+	if (!matches.length) {
+		throw new Error("AI output does not contain valid filter value");
+	}
+	const rebuilt = matches
+		.map((match) => `${match[1]}(${(match[2] || "").trim()})`)
+		.join(" ");
+	if (!rebuilt.trim() || rebuilt.length !== normalized.length) {
+		throw new Error("AI output contains invalid filter syntax");
+	}
+	return rebuilt;
+}
+
 export class InlineStyleAIService {
 	constructor(
 		private settings: SlidesRupSettings,
@@ -41,13 +72,20 @@ export class InlineStyleAIService {
 		].join(" ");
 	}
 
-	async generateInlineStyle(
-		prompt: string,
-		currentStyle: string,
+	private buildFilterSystemPrompt(): string {
+		const customPrompt = (this.settings.aiFilterSystemPrompt || "").trim();
+		if (customPrompt) return customPrompt;
+		return [
+			"You generate CSS filter values only.",
+			"Return ONLY filter value text, no 'filter:' prefix, no semicolon, no markdown, no explanation.",
+			"Allow single or combined functions, e.g. blur(2px) saturate(120%).",
+		].join(" ");
+	}
+
+	private async callModel(
+		systemPrompt: string,
+		userPrompt: string,
 	): Promise<string> {
-		if (!this.settings.aiInlineStyleEnabled) {
-			throw new Error("AI inline style feature is disabled");
-		}
 		const baseUrl = (this.settings.aiProviderBaseUrl || "").trim();
 		const model = (this.settings.aiProviderModel || "").trim();
 		if (!baseUrl || !model) {
@@ -69,14 +107,8 @@ export class InlineStyleAIService {
 				model,
 				temperature: 0.2,
 				messages: [
-					{ role: "system", content: this.buildSystemPrompt() },
-					{
-						role: "user",
-						content: [
-							`Current inline style:\n${currentStyle || "(empty)"}`,
-							`Requested effect:\n${prompt}`,
-						].join("\n\n"),
-					},
+					{ role: "system", content: systemPrompt },
+					{ role: "user", content: userPrompt },
 				],
 			}),
 		});
@@ -85,6 +117,40 @@ export class InlineStyleAIService {
 		if (!content.trim()) {
 			throw new Error("AI returned empty response");
 		}
+		return content;
+	}
+
+	async generateInlineStyle(
+		prompt: string,
+		currentStyle: string,
+	): Promise<string> {
+		if (!this.settings.aiInlineStyleEnabled) {
+			throw new Error("AI inline style feature is disabled");
+		}
+		const content = await this.callModel(
+			this.buildSystemPrompt(),
+			[
+				`Current inline style:\n${currentStyle || "(empty)"}`,
+				`Requested effect:\n${prompt}`,
+			].join("\n\n"),
+		);
 		return sanitizeInlineStyleAiOutput(content);
+	}
+
+	async generateFilterValue(
+		prompt: string,
+		currentFilter: string,
+	): Promise<string> {
+		if (!this.settings.aiInlineStyleEnabled) {
+			throw new Error("AI inline style feature is disabled");
+		}
+		const content = await this.callModel(
+			this.buildFilterSystemPrompt(),
+			[
+				`Current filter value:\n${currentFilter || "(empty)"}`,
+				`Requested visual effect:\n${prompt}`,
+			].join("\n\n"),
+		);
+		return sanitizeFilterAiOutput(content);
 	}
 }

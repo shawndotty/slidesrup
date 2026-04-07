@@ -659,6 +659,7 @@ export default {
 		"Keychain unavailable, API key will fallback to plugin settings",
 	"Enter API Key": "Enter API Key",
 	"AI Inline Style Assistant": "AI Inline Style Assistant",
+	"Generate Filter with AI": "Generate Filter with AI",
 	"Describe desired style effect": "Describe desired style effect",
 	"Use natural language to describe expected visual effect":
 		"Use natural language to describe expected visual effect",
@@ -671,6 +672,9 @@ export default {
 	"Generating inline style...": "Generating inline style...",
 	"AI inline style generated": "AI inline style generated",
 	"Failed to generate inline style": "Failed to generate inline style",
+	"AI Filter System Prompt": "AI Filter System Prompt",
+	"Optional custom system prompt for AI filter value generation":
+		"Optional custom system prompt for AI filter value generation",
 	"Unsplash Image Source": "Unsplash Image Source",
 	"Unsplash ratio presets": "Unsplash ratio presets",
 	"Comma separated ratios, for example: 16:9,4:3,1:1":

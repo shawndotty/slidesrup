@@ -172,6 +172,8 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	aiProviderApiKeyFallback: "",
 	aiInlineStyleSystemPrompt:
 		"You are an inline CSS declaration assistant. Return only CSS declarations for a style attribute. Strict rules: no selectors, no braces, no @rules, no comments, no markdown, no explanations. Output plain text declarations only in the format 'property: value;' with one declaration per line. Prefer safe, broadly supported CSS properties and values. Keep existing intent and avoid unnecessary changes.",
+	aiFilterSystemPrompt:
+		"You generate CSS filter value only. Return only filter function chain like blur(2px) saturate(120%), without 'filter:' prefix, semicolon, markdown or explanation.",
 	unsplashEnabled: true,
 	unsplashUseRandomFallbackWithoutKey: true,
 	unsplashApiBaseUrl: "https://api.unsplash.com",

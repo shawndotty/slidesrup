@@ -1352,6 +1352,54 @@ function createCssEditorField(
 	});
 }
 
+function createFilterField(
+	container: HTMLElement,
+	app: App | undefined,
+	label: string,
+	value: string,
+	aiEnabled: boolean,
+	onGenerateFilterAI:
+		| ((prompt: string, currentFilter: string) => Promise<string>)
+		| undefined,
+	onChange: (value: string) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field is-stacked");
+	const header = row.createDiv("slides-rup-design-maker-inline-style-header");
+	header.createEl("label", { text: t(label as any) });
+	const aiButton = header.createEl("button", {
+		cls: "slides-rup-design-maker-inline-style-ai-btn",
+		attr: {
+			type: "button",
+			"aria-label": t("Generate Filter with AI" as any),
+		},
+	});
+	setIcon(aiButton, "sparkles");
+	const input = row.createEl("input", {
+		type: "text",
+		value,
+		cls: "slides-rup-design-maker-input",
+	});
+	input.addEventListener("input", () => onChange(input.value));
+	const canUseAI = Boolean(app && aiEnabled && onGenerateFilterAI);
+	if (!canUseAI) {
+		aiButton.disabled = true;
+		aiButton.addClass("is-disabled");
+		return;
+	}
+	aiButton.addEventListener("click", async () => {
+		if (!app || !onGenerateFilterAI) return;
+		const modal = new InlineStyleAIModal(
+			app,
+			onGenerateFilterAI,
+			input.value,
+		);
+		const generated = await modal.openAndGetValue();
+		if (!generated) return;
+		input.value = generated;
+		onChange(generated);
+	});
+}
+
 function createRectField(
 	container: HTMLElement,
 	label: string,
@@ -1602,6 +1650,10 @@ export function renderDesignInspector(options: {
 		prompt: string,
 		currentStyle: string,
 	) => Promise<string>;
+	onGenerateFilterAI?: (
+		prompt: string,
+		currentFilter: string,
+	) => Promise<string>;
 	unsplashEnabled?: boolean;
 	unsplashAspectRatioPresets?: string[];
 	unsplashInitialAspectRatio?: string;
@@ -1626,6 +1678,7 @@ export function renderDesignInspector(options: {
 		showTitle = true,
 		aiInlineStyleEnabled = false,
 		onGenerateInlineStyleAI,
+		onGenerateFilterAI,
 		unsplashEnabled = false,
 		unsplashAspectRatioPresets = ["16:9", "4:3", "1:1"],
 		unsplashInitialAspectRatio = "16:9",
@@ -1940,11 +1993,19 @@ export function renderDesignInspector(options: {
 			});
 		},
 	);
-	createTextField(container, "Filter", block.filter, (value) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.filter = value;
-		});
-	});
+	createFilterField(
+		container,
+		app,
+		"Filter",
+		block.filter,
+		aiInlineStyleEnabled,
+		onGenerateFilterAI,
+		(value) => {
+			onPatchBlock((nextBlock) => {
+				nextBlock.filter = value;
+			});
+		},
+	);
 	createOpacitySliderField(
 		container,
 		"Opacity",
