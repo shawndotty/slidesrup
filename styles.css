@@ -1663,7 +1663,6 @@ button.slides-rup-design-maker-layer-collapse {
 .slides-rup-design-maker-rendered-image {
 	display: block;
 	object-fit: contain;
-	border-radius: 8px;
 	pointer-events: none;
 }
 
