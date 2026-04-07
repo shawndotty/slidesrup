@@ -541,6 +541,29 @@ export function insertMarkdownImageIntoContent(
 	return `${current}\n${embed}`;
 }
 
+export function resolvePickerHost(triggerEl: HTMLElement): {
+	hostDocument: Document;
+	hostWindow: Window;
+} {
+	const hostDocument = triggerEl.ownerDocument || document;
+	const hostWindow = hostDocument.defaultView || window;
+	return { hostDocument, hostWindow };
+}
+
+function createPickerRootElement(
+	hostDocument: Document,
+	cls: string,
+): HTMLElement {
+	const runtimeDocument =
+		(globalThis as any).document && (globalThis as any).document.body
+			? ((globalThis as any).document as Document)
+			: hostDocument;
+	const pickerEl = runtimeDocument.createElement("div");
+	pickerEl.className = cls;
+	hostDocument.body.appendChild(pickerEl);
+	return pickerEl as HTMLElement;
+}
+
 function openUnsplashImagePicker(options: {
 	app: App;
 	triggerEl: HTMLElement;
@@ -566,7 +589,9 @@ function openUnsplashImagePicker(options: {
 		onRememberAspectRatio,
 		onSelect,
 	} = options;
-	const pickerEl = document.body.createDiv(
+	const { hostDocument, hostWindow } = resolvePickerHost(triggerEl);
+	const pickerEl = createPickerRootElement(
+		hostDocument,
 		"slides-rup-design-maker-image-picker",
 	);
 	pickerEl.addClass("is-unsplash-picker");
@@ -672,11 +697,11 @@ function openUnsplashImagePicker(options: {
 	const close = () => {
 		if (closed) return;
 		closed = true;
-		document.removeEventListener("mousedown", onDocumentMouseDown, true);
-		document.removeEventListener("keydown", onDocumentKeyDown, true);
+		hostDocument.removeEventListener("mousedown", onDocumentMouseDown, true);
+		hostDocument.removeEventListener("keydown", onDocumentKeyDown, true);
 		pickerEl.removeClass("is-entering");
 		pickerEl.addClass("is-closing");
-		window.setTimeout(() => pickerEl.remove(), 130);
+		hostWindow.setTimeout(() => pickerEl.remove(), 130);
 	};
 
 	const onDocumentMouseDown = (event: MouseEvent) => {
@@ -789,7 +814,7 @@ function openUnsplashImagePicker(options: {
 			return;
 		}
 		if (event.key === "Enter") {
-			if (document.activeElement === searchInput) {
+			if (hostDocument.activeElement === searchInput) {
 				event.preventDefault();
 				void runSearch();
 				return;
@@ -820,8 +845,8 @@ function openUnsplashImagePicker(options: {
 		triggerRect,
 		pickerWidth: pickerRect.width || 360,
 		pickerHeight: pickerRect.height || 320,
-		viewportWidth: window.innerWidth,
-		viewportHeight: window.innerHeight,
+		viewportWidth: hostWindow.innerWidth,
+		viewportHeight: hostWindow.innerHeight,
 	});
 	pickerEl.style.left = `${placement.left}px`;
 	pickerEl.style.top = `${placement.top}px`;
@@ -870,10 +895,10 @@ function openUnsplashImagePicker(options: {
 			void runSearch();
 		}
 	});
-	requestAnimationFrame(() => {
+	hostWindow.requestAnimationFrame(() => {
 		pickerEl.removeClass("is-entering");
-		document.addEventListener("mousedown", onDocumentMouseDown, true);
-		document.addEventListener("keydown", onDocumentKeyDown, true);
+		hostDocument.addEventListener("mousedown", onDocumentMouseDown, true);
+		hostDocument.addEventListener("keydown", onDocumentKeyDown, true);
 		searchInput.focus();
 	});
 }
@@ -884,13 +909,15 @@ function openLocalImagePicker(options: {
 	onSelect: (path: string) => void;
 }): void {
 	const { app, triggerEl, onSelect } = options;
+	const { hostDocument, hostWindow } = resolvePickerHost(triggerEl);
 	const imagePaths = app.vault
 		.getFiles()
 		.filter((file: TFile) => isLocalImagePath(file.path))
 		.map((file) => file.path)
 		.sort((a, b) => a.localeCompare(b));
 
-	const pickerEl = document.body.createDiv(
+	const pickerEl = createPickerRootElement(
+		hostDocument,
 		"slides-rup-design-maker-image-picker",
 	);
 	pickerEl.addClass("is-entering");
@@ -960,8 +987,8 @@ function openLocalImagePicker(options: {
 			top,
 			pickerWidth: rect.width || 360,
 			pickerHeight: rect.height || 320,
-			viewportWidth: window.innerWidth,
-			viewportHeight: window.innerHeight,
+			viewportWidth: hostWindow.innerWidth,
+			viewportHeight: hostWindow.innerHeight,
 		});
 		currentLeft = clamped.left;
 		currentTop = clamped.top;
@@ -976,8 +1003,8 @@ function openLocalImagePicker(options: {
 			triggerRect: rect,
 			pickerWidth: pickerRect.width || 360,
 			pickerHeight: pickerRect.height || 320,
-			viewportWidth: window.innerWidth,
-			viewportHeight: window.innerHeight,
+			viewportWidth: hostWindow.innerWidth,
+			viewportHeight: hostWindow.innerHeight,
 		});
 		pickerEl.setAttr("data-placement", placement.placement);
 		pickerEl.style.maxHeight = `${Math.max(180, placement.maxHeight)}px`;
@@ -1016,18 +1043,18 @@ function openLocalImagePicker(options: {
 	const close = () => {
 		if (isClosed) return;
 		isClosed = true;
-		document.removeEventListener("mousedown", onDocumentMouseDown, true);
-		document.removeEventListener(
+		hostDocument.removeEventListener("mousedown", onDocumentMouseDown, true);
+		hostDocument.removeEventListener(
 			"pointermove",
 			onDocumentPointerMove,
 			true,
 		);
-		document.removeEventListener("pointerup", onDocumentPointerUp, true);
-		window.removeEventListener("resize", onWindowResize);
-		document.removeEventListener("keydown", onDocumentKeyDown, true);
+		hostDocument.removeEventListener("pointerup", onDocumentPointerUp, true);
+		hostWindow.removeEventListener("resize", onWindowResize);
+		hostDocument.removeEventListener("keydown", onDocumentKeyDown, true);
 		pickerEl.removeClass("is-entering");
 		pickerEl.addClass("is-closing");
-		window.setTimeout(() => pickerEl.remove(), 130);
+		hostWindow.setTimeout(() => pickerEl.remove(), 130);
 	};
 
 	const onDocumentMouseDown = (event: MouseEvent) => {
@@ -1162,13 +1189,13 @@ function openLocalImagePicker(options: {
 	renderList();
 	placePicker();
 
-	requestAnimationFrame(() => {
+	hostWindow.requestAnimationFrame(() => {
 		pickerEl.removeClass("is-entering");
-		document.addEventListener("pointermove", onDocumentPointerMove, true);
-		document.addEventListener("pointerup", onDocumentPointerUp, true);
-		document.addEventListener("mousedown", onDocumentMouseDown, true);
-		window.addEventListener("resize", onWindowResize);
-		document.addEventListener("keydown", onDocumentKeyDown, true);
+		hostDocument.addEventListener("pointermove", onDocumentPointerMove, true);
+		hostDocument.addEventListener("pointerup", onDocumentPointerUp, true);
+		hostDocument.addEventListener("mousedown", onDocumentMouseDown, true);
+		hostWindow.addEventListener("resize", onWindowResize);
+		hostDocument.addEventListener("keydown", onDocumentKeyDown, true);
 		searchInput.focus();
 	});
 }

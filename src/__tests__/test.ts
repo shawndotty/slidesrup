@@ -65,6 +65,7 @@ import {
 	composePaddingComposite,
 	isValidInspectorColor,
 	parsePaddingComposite,
+	resolvePickerHost,
 	syncInspectorRectFields,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
@@ -386,6 +387,23 @@ function testResolveHostDocumentForPopoutWindow() {
 		"Should prefer container.ownerDocument for popout-window safety",
 	);
 	console.log("testResolveHostDocumentForPopoutWindow passed");
+}
+
+function testResolvePickerHostForPopoutWindow() {
+	const ownerDoc = { body: {}, defaultView: { innerWidth: 800 } } as any;
+	const triggerEl = { ownerDocument: ownerDoc } as HTMLElement;
+	const resolved = resolvePickerHost(triggerEl);
+	assert.strictEqual(
+		resolved.hostDocument,
+		ownerDoc,
+		"Should prefer trigger ownerDocument for picker host",
+	);
+	assert.strictEqual(
+		resolved.hostWindow,
+		ownerDoc.defaultView,
+		"Should use ownerDocument.defaultView for picker host window",
+	);
+	console.log("testResolvePickerHostForPopoutWindow passed");
 }
 
 function testGridPlainTextFallbackRendering() {
@@ -1818,6 +1836,7 @@ async function runTests() {
 		testNestedBlockVisibilityToggle();
 		testCanvasZoomTransformMath();
 		testResolveHostDocumentForPopoutWindow();
+		testResolvePickerHostForPopoutWindow();
 		testGridPlainTextFallbackRendering();
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
