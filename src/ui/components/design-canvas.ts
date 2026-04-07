@@ -6,7 +6,10 @@ import {
 	DesignCanvasBlock,
 	DesignRectUnit,
 } from "src/types/design-maker";
-import { renderBlockContent } from "./design-block-renderer";
+import {
+	getPlainTextForBlock,
+	renderBlockContent,
+} from "./design-block-renderer";
 
 type InsertBlockKind = "grid" | "text" | "image" | "placeholder" | "content";
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
@@ -605,10 +608,18 @@ export function renderDesignCanvas(options: {
 			el.remove();
 			return;
 		}
-		if (!result.rendered && !block.content?.trim()) {
-			// Don't override if there's no text but we have children
-			if (!block.children || block.children.length === 0) {
-				el.setText(t("Empty Block"));
+		if (!result.rendered) {
+			const plainText = getPlainTextForBlock(result);
+			if (plainText) {
+				el.createDiv({
+					cls: "slides-rup-design-maker-block-text",
+					text: plainText,
+				});
+			} else if (!block.children || block.children.length === 0) {
+				el.createDiv({
+					cls: "slides-rup-design-maker-block-text is-empty",
+					text: t("Empty Block"),
+				});
 			}
 		}
 

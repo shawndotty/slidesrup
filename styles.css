@@ -1018,6 +1018,19 @@ button.slides-rup-design-maker-layer-collapse {
 	max-height: 100%;
 }
 
+.slides-rup-design-maker-block-text,
+.slides-rup-design-maker-preview-block-text {
+	width: 100%;
+	color: inherit;
+	white-space: pre-wrap;
+	line-height: 1.5;
+	word-break: break-word;
+}
+
+.slides-rup-design-maker-block-text.is-empty {
+	color: var(--text-muted);
+}
+
 .slides-rup-design-maker-block.is-selected,
 .slides-rup-design-maker-preview-block.is-selected {
 	border-color: var(--interactive-accent);

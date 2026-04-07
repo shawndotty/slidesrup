@@ -6,7 +6,10 @@ import {
 	DesignCanvasBlock,
 	DesignRectUnit,
 } from "src/types/design-maker";
-import { renderBlockContent } from "./design-block-renderer";
+import {
+	getPlainTextForBlock,
+	renderBlockContent,
+} from "./design-block-renderer";
 import { applyBlockRectStyles, applyGridFlexStyles } from "./design-canvas";
 
 const DESIGN_MAKER_SLIDE_WIDTH = 1920;
@@ -135,9 +138,13 @@ export function renderDesignPreview(options: {
 			el.remove();
 			return;
 		}
-		if (!result.rendered && !block.content?.trim()) {
-			if (!block.children || block.children.length === 0) {
-				el.setText(result.textContent);
+		if (!result.rendered) {
+			const plainText = getPlainTextForBlock(result);
+			if (plainText) {
+				el.createDiv({
+					cls: "slides-rup-design-maker-preview-block-text",
+					text: plainText,
+				});
 			}
 		}
 

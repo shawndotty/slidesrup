@@ -6,6 +6,12 @@ export interface BlockRenderResult {
 	textContent: string;
 }
 
+export function getPlainTextForBlock(result: BlockRenderResult): string {
+	if (result.rendered) return "";
+	const textContent = result.textContent ?? "";
+	return textContent.trim().length > 0 ? textContent : "";
+}
+
 interface RenderContext {
 	app?: App;
 	sourcePath?: string;

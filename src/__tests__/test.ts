@@ -25,6 +25,10 @@ import {
 	computePanForZoom,
 } from "../ui/components/design-canvas";
 import {
+	getPlainTextForBlock,
+	renderBlockContent,
+} from "../ui/components/design-block-renderer";
+import {
 	computeThumbnailVirtualWindow,
 	formatThumbnailBlockCount,
 	getNextThumbnailIndex,
@@ -366,6 +370,45 @@ function testCanvasZoomTransformMath() {
 	assert.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
 
 	console.log("testCanvasZoomTransformMath passed");
+}
+
+function testGridPlainTextFallbackRendering() {
+	const plainResult = renderBlockContent({} as HTMLElement, "Hello Grid");
+	assert.strictEqual(
+		plainResult.rendered,
+		false,
+		"Plain text content should not be handled by rich renderer",
+	);
+	assert.strictEqual(
+		getPlainTextForBlock(plainResult),
+		"Hello Grid",
+		"Plain text should fallback to text-node rendering path",
+	);
+
+	const styleHost = {
+		createEl: () => ({ textContent: "" }),
+	} as any as HTMLElement;
+	const styleAndTextResult = renderBlockContent(
+		styleHost,
+		"<style>.x{color:red;}</style>Visible text",
+	);
+	assert.strictEqual(
+		getPlainTextForBlock(styleAndTextResult),
+		"Visible text",
+		"Style blocks should be stripped and keep visible text fallback",
+	);
+
+	const renderedResult = {
+		rendered: true,
+		hidden: false,
+		textContent: "ignored",
+	};
+	assert.strictEqual(
+		getPlainTextForBlock(renderedResult),
+		"",
+		"Rendered rich content should not duplicate plain text fallback",
+	);
+	console.log("testGridPlainTextFallbackRendering passed");
 }
 
 function testDesignTemplateUnitConsistency() {
@@ -1758,6 +1801,7 @@ async function runTests() {
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
 		testCanvasZoomTransformMath();
+		testGridPlainTextFallbackRendering();
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
 		testInspectorRectFieldRealtimeSync();
