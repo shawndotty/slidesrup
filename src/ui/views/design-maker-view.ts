@@ -424,10 +424,30 @@ export class DesignMakerView extends ItemView {
 				);
 			},
 			unsplashEnabled: this.plugin.settings.unsplashEnabled,
-			onSearchUnsplashImages: async (keyword) => {
+			unsplashAspectRatioPresets:
+				this.plugin.services.unsplashImageService.getAspectRatioPresets(),
+			unsplashInitialAspectRatio:
+				this.plugin.services.unsplashImageService.getRecentAspectRatio(),
+			unsplashDefaultCropWidth:
+				this.plugin.settings.unsplashCropBaseWidth || 1920,
+			unsplashDefaultCropHeight:
+				this.plugin.settings.unsplashCropBaseHeight || 1080,
+			onSearchUnsplashImages: async (
+				keyword: string,
+				options?: {
+					aspectRatio?: string;
+					baseCropWidth?: number;
+					baseCropHeight?: number;
+				},
+			) => {
 				return this.plugin.services.unsplashImageService.searchImages(
 					keyword,
+					options,
 				);
+			},
+			onRememberUnsplashAspectRatio: async (ratio: string) => {
+				this.plugin.settings.unsplashRecentAspectRatio = ratio;
+				await this.plugin.saveSettings();
 			},
 			isGlobalCoords: this.isGlobalCoords,
 			onToggleCoords: (global) => {

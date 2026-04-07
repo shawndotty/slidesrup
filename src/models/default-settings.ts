@@ -176,4 +176,9 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 	unsplashUseRandomFallbackWithoutKey: true,
 	unsplashApiBaseUrl: "https://api.unsplash.com",
 	unsplashAccessKeyFallback: "",
+	unsplashCropBaseWidth: 1920,
+	unsplashCropBaseHeight: 1080,
+	unsplashAspectRatioPresets: "16:9,4:3,1:1,3:2,21:9,9:16",
+	unsplashAspectRatioCustom: "",
+	unsplashRecentAspectRatio: "16:9",
 };

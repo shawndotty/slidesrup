@@ -1546,6 +1546,50 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createTextSetting(containerEl, {
+			name: "Unsplash ratio presets",
+			desc: "Comma separated ratios, for example: 16:9,4:3,1:1",
+			value: this.plugin.settings.unsplashAspectRatioPresets,
+			onChange: async (value) => {
+				this.plugin.settings.unsplashAspectRatioPresets = value.trim();
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Unsplash custom ratio",
+			desc: "Optional custom ratio, for example: 5:4",
+			value: this.plugin.settings.unsplashAspectRatioCustom,
+			onChange: async (value) => {
+				this.plugin.settings.unsplashAspectRatioCustom = value.trim();
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Unsplash default crop width",
+			desc: "Default crop width for inserted images",
+			value: `${this.plugin.settings.unsplashCropBaseWidth}`,
+			onChange: async (value) => {
+				const next = Number(value || 1920);
+				this.plugin.settings.unsplashCropBaseWidth =
+					Number.isFinite(next) && next > 0 ? Math.round(next) : 1920;
+				await this.plugin.saveSettings();
+			},
+		});
+
+		this.createTextSetting(containerEl, {
+			name: "Unsplash default crop height",
+			desc: "Default crop height for inserted images",
+			value: `${this.plugin.settings.unsplashCropBaseHeight}`,
+			onChange: async (value) => {
+				const next = Number(value || 1080);
+				this.plugin.settings.unsplashCropBaseHeight =
+					Number.isFinite(next) && next > 0 ? Math.round(next) : 1080;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		this.createToggleSetting(containerEl, {
 			name: "Fallback to random image without Access Key",
 			desc: "When Access Key is empty, use Unsplash source random single image",

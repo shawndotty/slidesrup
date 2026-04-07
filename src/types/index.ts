@@ -184,6 +184,11 @@ export interface SlidesRupSettings {
 	unsplashUseRandomFallbackWithoutKey: boolean;
 	unsplashApiBaseUrl: string;
 	unsplashAccessKeyFallback: string;
+	unsplashCropBaseWidth: number;
+	unsplashCropBaseHeight: number;
+	unsplashAspectRatioPresets: string;
+	unsplashAspectRatioCustom: string;
+	unsplashRecentAspectRatio: string;
 }
 
 export interface NocoDBTable {

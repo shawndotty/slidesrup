@@ -19,7 +19,12 @@ import {
 	DesignRectUnit,
 } from "src/types/design-maker";
 import { InlineStyleAIModal } from "../modals/inline-style-ai-modal";
-import type { UnsplashImageItem } from "src/services/unsplash-image-service";
+import {
+	parseAspectRatio,
+	resolveCropDimensions,
+	type UnsplashImageItem,
+	type UnsplashSearchOptions,
+} from "src/services/unsplash-image-service";
 
 const LOCAL_IMAGE_EXTENSIONS = new Set([
 	"png",
@@ -514,10 +519,28 @@ export function insertMarkdownImageIntoContent(
 function openUnsplashImagePicker(options: {
 	app: App;
 	triggerEl: HTMLElement;
-	onSearch: (keyword: string) => Promise<UnsplashImageItem[]>;
+	initialAspectRatio: string;
+	aspectRatioPresets: string[];
+	defaultCropWidth: number;
+	defaultCropHeight: number;
+	onSearch: (
+		keyword: string,
+		searchOptions?: UnsplashSearchOptions,
+	) => Promise<UnsplashImageItem[]>;
+	onRememberAspectRatio?: (ratio: string) => void;
 	onSelect: (url: string) => void;
 }): void {
-	const { app, triggerEl, onSearch, onSelect } = options;
+	const {
+		app,
+		triggerEl,
+		initialAspectRatio,
+		aspectRatioPresets,
+		defaultCropWidth,
+		defaultCropHeight,
+		onSearch,
+		onRememberAspectRatio,
+		onSelect,
+	} = options;
 	const pickerEl = document.body.createDiv(
 		"slides-rup-design-maker-image-picker",
 	);
@@ -542,6 +565,50 @@ function openUnsplashImagePicker(options: {
 			placeholder: t("Search Unsplash images" as any),
 		},
 	});
+	const ratioControlsEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-ratio-controls",
+	);
+	ratioControlsEl.createEl("label", {
+		text: t("Ratio presets" as any),
+		cls: "slides-rup-design-maker-image-picker-ratio-label",
+	});
+	const ratioSelect = ratioControlsEl.createEl("select", {
+		cls: "slides-rup-design-maker-image-picker-ratio-select",
+	});
+	const ratioValues = Array.from(
+		new Set(
+			aspectRatioPresets
+				.map((item) => (item || "").trim())
+				.filter((item) => !!parseAspectRatio(item)),
+		),
+	);
+	if (!ratioValues.length) ratioValues.push("16:9");
+	ratioValues.forEach((ratio) => {
+		ratioSelect.createEl("option", {
+			value: ratio,
+			text: ratio,
+		});
+	});
+	ratioSelect.createEl("option", {
+		value: "__custom__",
+		text: `${t("Custom ratio" as any)}…`,
+	});
+	const customRatioInput = ratioControlsEl.createEl("input", {
+		type: "text",
+		cls: "slides-rup-design-maker-image-picker-ratio-custom",
+		attr: {
+			placeholder: t("Use custom ratio" as any),
+		},
+	});
+	const ratioPreviewEl = pickerEl.createDiv(
+		"slides-rup-design-maker-image-picker-ratio-preview",
+	);
+	const ratioPreviewFrame = ratioPreviewEl.createDiv(
+		"slides-rup-design-maker-image-picker-ratio-preview-frame",
+	);
+	const ratioPreviewMeta = ratioPreviewEl.createDiv(
+		"slides-rup-design-maker-image-picker-ratio-preview-meta",
+	);
 	const hintEl = pickerEl.createDiv({
 		cls: "slides-rup-design-maker-image-picker-hint",
 		text: t("Type keyword and press Enter" as any),
@@ -553,6 +620,28 @@ function openUnsplashImagePicker(options: {
 	let selectedIndex = -1;
 	let rows: UnsplashImageItem[] = [];
 	let closed = false;
+	let currentRatio = parseAspectRatio(initialAspectRatio)?.label || "16:9";
+
+	const updateRatioPreview = () => {
+		const crop = resolveCropDimensions({
+			aspectRatio: currentRatio,
+			baseCropWidth: defaultCropWidth,
+			baseCropHeight: defaultCropHeight,
+		});
+		ratioPreviewFrame.style.aspectRatio = `${crop.ratioLabel.replace(":", " / ")}`;
+		ratioPreviewMeta.setText(
+			`${t("Current ratio" as any)}: ${crop.ratioLabel} · ${t("Crop size" as any)}: ${crop.width}×${crop.height}`,
+		);
+	};
+
+	const applyRatio = (rawRatio: string): boolean => {
+		const parsed = parseAspectRatio(rawRatio);
+		if (!parsed) return false;
+		currentRatio = parsed.label;
+		onRememberAspectRatio?.(currentRatio);
+		updateRatioPreview();
+		return true;
+	};
 
 	const close = () => {
 		if (closed) return;
@@ -640,7 +729,16 @@ function openUnsplashImagePicker(options: {
 		if (!keyword) return;
 		hintEl.setText(t("Searching Unsplash..." as any));
 		try {
-			rows = await onSearch(keyword);
+			const crop = resolveCropDimensions({
+				aspectRatio: currentRatio,
+				baseCropWidth: defaultCropWidth,
+				baseCropHeight: defaultCropHeight,
+			});
+			rows = await onSearch(keyword, {
+				aspectRatio: currentRatio,
+				baseCropWidth: crop.width,
+				baseCropHeight: crop.height,
+			});
 			renderRows();
 			if (rows.length === 1 && rows[0].id.startsWith("random-")) {
 				hintEl.setText(
@@ -703,6 +801,43 @@ function openUnsplashImagePicker(options: {
 	pickerEl.style.top = `${placement.top}px`;
 	pickerEl.style.maxHeight = `${Math.max(180, placement.maxHeight)}px`;
 	closeButton.addEventListener("click", close);
+	const resolvedInitialRatio = parseAspectRatio(initialAspectRatio);
+	if (
+		resolvedInitialRatio &&
+		ratioValues.includes(resolvedInitialRatio.label)
+	) {
+		ratioSelect.value = resolvedInitialRatio.label;
+		currentRatio = resolvedInitialRatio.label;
+		customRatioInput.style.display = "none";
+	} else {
+		ratioSelect.value = "__custom__";
+		customRatioInput.value = currentRatio;
+		customRatioInput.style.display = "";
+	}
+	updateRatioPreview();
+	ratioSelect.addEventListener("change", () => {
+		if (ratioSelect.value === "__custom__") {
+			customRatioInput.style.display = "";
+			customRatioInput.focus();
+			return;
+		}
+		customRatioInput.style.display = "none";
+		applyRatio(ratioSelect.value);
+	});
+	customRatioInput.addEventListener("change", () => {
+		if (!applyRatio(customRatioInput.value)) {
+			hintEl.setText(t("Invalid ratio, fallback to 16:9" as any));
+			customRatioInput.value = "16:9";
+			applyRatio("16:9");
+		}
+	});
+	customRatioInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			customRatioInput.blur();
+			void runSearch();
+		}
+	});
 	searchInput.addEventListener("keydown", (event) => {
 		if (event.key === "Enter") {
 			event.preventDefault();
@@ -1234,7 +1369,15 @@ export function renderDesignInspector(options: {
 		currentStyle: string,
 	) => Promise<string>;
 	unsplashEnabled?: boolean;
-	onSearchUnsplashImages?: (keyword: string) => Promise<UnsplashImageItem[]>;
+	unsplashAspectRatioPresets?: string[];
+	unsplashInitialAspectRatio?: string;
+	unsplashDefaultCropWidth?: number;
+	unsplashDefaultCropHeight?: number;
+	onSearchUnsplashImages?: (
+		keyword: string,
+		searchOptions?: UnsplashSearchOptions,
+	) => Promise<UnsplashImageItem[]>;
+	onRememberUnsplashAspectRatio?: (ratio: string) => void;
 	isGlobalCoords?: boolean;
 	onToggleCoords?: (global: boolean) => void;
 	getGlobalCoords?: () => { x: number; y: number } | null;
@@ -1250,7 +1393,12 @@ export function renderDesignInspector(options: {
 		aiInlineStyleEnabled = false,
 		onGenerateInlineStyleAI,
 		unsplashEnabled = false,
+		unsplashAspectRatioPresets = ["16:9", "4:3", "1:1"],
+		unsplashInitialAspectRatio = "16:9",
+		unsplashDefaultCropWidth = 1920,
+		unsplashDefaultCropHeight = 1080,
 		onSearchUnsplashImages,
+		onRememberUnsplashAspectRatio,
 		isGlobalCoords = false,
 		onToggleCoords,
 		getGlobalCoords,
@@ -1345,7 +1493,12 @@ export function renderDesignInspector(options: {
 		openUnsplashImagePicker({
 			app,
 			triggerEl: insertUnsplashButton,
+			initialAspectRatio: unsplashInitialAspectRatio,
+			aspectRatioPresets: unsplashAspectRatioPresets,
+			defaultCropWidth: unsplashDefaultCropWidth,
+			defaultCropHeight: unsplashDefaultCropHeight,
 			onSearch: onSearchUnsplashImages,
+			onRememberAspectRatio: onRememberUnsplashAspectRatio,
 			onSelect: (url) => {
 				textarea.value = insertMarkdownImageIntoContent(
 					textarea.value,

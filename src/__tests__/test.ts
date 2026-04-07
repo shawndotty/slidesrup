@@ -62,7 +62,11 @@ import { sanitizeInlineStyleAiOutput } from "../services/inline-style-ai-service
 import { SecretStoreService } from "../services/secret-store-service";
 import {
 	buildMarkdownImageFromUrl,
+	buildUnsplashCroppedImageUrl,
 	buildUnsplashRandomUrl,
+	parseAspectRatio,
+	parseAspectRatioPresetList,
+	resolveCropDimensions,
 } from "../services/unsplash-image-service";
 
 function testNestedGridSerialization() {
@@ -797,7 +801,85 @@ function testUnsplashImageInsertHelpers() {
 		buildUnsplashRandomUrl("mountain night"),
 		"Fallback Unsplash URL should be deterministic for same keyword",
 	);
+	assert.ok(
+		randomUrl.includes("fit=crop"),
+		"Fallback Unsplash URL should include crop params",
+	);
+	assert.ok(
+		randomUrl.includes("w=1920") && randomUrl.includes("h=1080"),
+		"Fallback Unsplash URL should default to 1920x1080 crop",
+	);
+	const customCropRandom = buildUnsplashRandomUrl("mountain night", {
+		aspectRatio: "1:1",
+		baseCropWidth: 1200,
+		baseCropHeight: 1200,
+	});
+	assert.ok(
+		customCropRandom.includes("w=1200") && customCropRandom.includes("h=1200"),
+		"Fallback random URL should respect custom crop dimensions",
+	);
+	const croppedUrl = buildUnsplashCroppedImageUrl(
+		"https://images.unsplash.com/photo-1?ixid=abc",
+		{ width: 1440, height: 1080 },
+	);
+	assert.ok(
+		croppedUrl.includes("w=1440") && croppedUrl.includes("h=1080"),
+		"Cropped URL builder should append width/height params",
+	);
 	console.log("testUnsplashImageInsertHelpers passed");
+}
+
+function testUnsplashRatioParsingAndCropResolve() {
+	assert.deepStrictEqual(parseAspectRatio("16:9"), {
+		label: "16:9",
+		width: 16,
+		height: 9,
+	});
+	assert.deepStrictEqual(parseAspectRatio(" 4 / 3 "), {
+		label: "4:3",
+		width: 4,
+		height: 3,
+	});
+	assert.strictEqual(parseAspectRatio("0:3"), null);
+	assert.strictEqual(parseAspectRatio("abc"), null);
+
+	assert.deepStrictEqual(parseAspectRatioPresetList("16:9,4:3,16:9,1:1"), [
+		"16:9",
+		"4:3",
+		"1:1",
+	]);
+
+	const cropDefault = resolveCropDimensions({
+		aspectRatio: "16:9",
+		baseCropWidth: 1920,
+		baseCropHeight: 1080,
+	});
+	assert.deepStrictEqual(cropDefault, {
+		width: 1920,
+		height: 1080,
+		ratioLabel: "16:9",
+	});
+	const cropSquare = resolveCropDimensions({
+		aspectRatio: "1:1",
+		baseCropWidth: 1920,
+		baseCropHeight: 1080,
+	});
+	assert.deepStrictEqual(cropSquare, {
+		width: 1080,
+		height: 1080,
+		ratioLabel: "1:1",
+	});
+	const cropPortrait = resolveCropDimensions({
+		aspectRatio: "9:16",
+		baseCropWidth: 1920,
+		baseCropHeight: 1080,
+	});
+	assert.deepStrictEqual(cropPortrait, {
+		width: 608,
+		height: 1080,
+		ratioLabel: "9:16",
+	});
+	console.log("testUnsplashRatioParsingAndCropResolve passed");
 }
 
 function testImagePickerPlacementAndSelection() {
@@ -897,6 +979,10 @@ function testInspectorLocaleKeysCompleteness() {
 		"Pin picker",
 		"Unpin picker",
 		"Close picker",
+		"Ratio presets",
+		"Custom ratio",
+		"Current ratio",
+		"Crop size",
 		"Enter to insert · Esc to close",
 		"Slide Thumbnails",
 		"Switch to page",
@@ -1440,6 +1526,7 @@ async function runTests() {
 		testInspectorRectFieldRealtimeSync();
 		testInsertLocalImageEmbed();
 		testUnsplashImageInsertHelpers();
+		testUnsplashRatioParsingAndCropResolve();
 		testImagePickerPlacementAndSelection();
 		testInspectorLocaleKeysCompleteness();
 		testInspectorSelectOptionI18nAndFallback();

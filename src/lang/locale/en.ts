@@ -632,6 +632,12 @@ export default {
 		"Unsplash random mode (no access key)",
 	"Select image to insert": "Select image to insert",
 	"Failed to load Unsplash images": "Failed to load Unsplash images",
+	"Ratio presets": "Ratio presets",
+	"Custom ratio": "Custom ratio",
+	"Current ratio": "Current ratio",
+	"Crop size": "Crop size",
+	"Use custom ratio": "Use custom ratio",
+	"Invalid ratio, fallback to 16:9": "Invalid ratio, fallback to 16:9",
 	"Pin picker": "Pin picker",
 	"Unpin picker": "Unpin picker",
 	"Close picker": "Close picker",
@@ -666,6 +672,18 @@ export default {
 	"AI inline style generated": "AI inline style generated",
 	"Failed to generate inline style": "Failed to generate inline style",
 	"Unsplash Image Source": "Unsplash Image Source",
+	"Unsplash ratio presets": "Unsplash ratio presets",
+	"Comma separated ratios, for example: 16:9,4:3,1:1":
+		"Comma separated ratios, for example: 16:9,4:3,1:1",
+	"Unsplash custom ratio": "Unsplash custom ratio",
+	"Optional custom ratio, for example: 5:4":
+		"Optional custom ratio, for example: 5:4",
+	"Unsplash default crop width": "Unsplash default crop width",
+	"Default crop width for inserted images":
+		"Default crop width for inserted images",
+	"Unsplash default crop height": "Unsplash default crop height",
+	"Default crop height for inserted images":
+		"Default crop height for inserted images",
 	"Unsplash Access Key": "Unsplash Access Key",
 	"Enter Access Key": "Enter Access Key",
 	"CSS Class": "CSS Class",
