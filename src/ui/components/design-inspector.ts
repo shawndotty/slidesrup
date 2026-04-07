@@ -2048,11 +2048,7 @@ export function renderDesignInspector(options: {
 			});
 		},
 	);
-	createTextField(container, "CSS Class", block.className, (value) => {
-		onPatchBlock((nextBlock) => {
-			nextBlock.className = value;
-		});
-	});
+
 	createTextField(container, "Padding", block.pad, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.pad = value;
@@ -2183,18 +2179,24 @@ export function renderDesignInspector(options: {
 		container,
 		"Rotate",
 		block.rotate ? Number(block.rotate) : 0,
-		0,
+		-360,
 		360,
 		1,
 		(value) => {
 			onPatchBlock((nextBlock) => {
-				nextBlock.rotate = value === 0 ? "" : value.toString();
+				nextBlock.rotate =
+					value === -360 || value === 360 ? "" : value.toString();
 			});
 		},
 	);
 	createTextField(container, "Fragment", block.frag, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.frag = value;
+		});
+	});
+	createTextField(container, "CSS Class", block.className, (value) => {
+		onPatchBlock((nextBlock) => {
+			nextBlock.className = value;
 		});
 	});
 	createCssEditorField(
