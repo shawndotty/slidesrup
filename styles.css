@@ -1049,6 +1049,12 @@ button.slides-rup-design-maker-layer-collapse {
 	animation: slides-rup-design-maker-selected-glow 150ms ease-out;
 }
 
+.slides-rup-design-maker-preview-block.is-selected {
+	border: none;
+	box-shadow: none;
+	animation: none;
+}
+
 @keyframes slides-rup-design-maker-selected-glow {
 	0% {
 		box-shadow:
