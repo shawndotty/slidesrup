@@ -2176,6 +2176,8 @@ export function renderDesignInspector(options: {
 	onRememberUnsplashAspectRatio?: (ratio: string) => void;
 	isGlobalCoords?: boolean;
 	onToggleCoords?: (global: boolean) => void;
+	isPxCoords?: boolean;
+	onTogglePxCoords?: (enabled: boolean) => void;
 	getGlobalCoords?: () => { x: number; y: number } | null;
 	setGlobalCoords?: (x: number, y: number) => void;
 	onPatchBlock: (patcher: (block: DesignGridBlock) => void) => void;
@@ -2199,6 +2201,8 @@ export function renderDesignInspector(options: {
 		onRememberUnsplashAspectRatio,
 		isGlobalCoords = false,
 		onToggleCoords,
+		isPxCoords = false,
+		onTogglePxCoords,
 		getGlobalCoords,
 		setGlobalCoords,
 	} = options;
@@ -2352,8 +2356,11 @@ export function renderDesignInspector(options: {
 		"slides-rup-design-maker-coords-header",
 	);
 	coordsHeader.createEl("strong", { text: t("Coordinates" as any) });
+	const coordsControls = coordsHeader.createDiv(
+		"slides-rup-design-maker-content-actions",
+	);
 
-	const toggleContainer = coordsHeader.createDiv(
+	const toggleContainer = coordsControls.createDiv(
 		"slides-rup-design-maker-coords-toggle",
 	);
 	const relativeLabel = toggleContainer.createSpan({
@@ -2374,6 +2381,25 @@ export function renderDesignInspector(options: {
 	toggleBtn.addEventListener("click", () => {
 		if (onToggleCoords) onToggleCoords(!isGlobalCoords);
 	});
+	const pxToggleContainer = coordsControls.createDiv(
+		"slides-rup-design-maker-coords-toggle",
+	);
+	const pctLabel = pxToggleContainer.createSpan({
+		text: t("Pct" as any),
+		cls: "slides-rup-design-maker-coords-label",
+	});
+	const pxToggleBtn = pxToggleContainer.createEl("button", {
+		text: isPxCoords ? t("PX" as any) : t("Pct" as any),
+	});
+	const pxLabel = pxToggleContainer.createSpan({
+		text: t("PX" as any),
+		cls: "slides-rup-design-maker-coords-label",
+	});
+	pctLabel.style.opacity = isPxCoords ? "0.5" : "1";
+	pxLabel.style.opacity = isPxCoords ? "1" : "0.5";
+	pxToggleBtn.addEventListener("click", () => {
+		if (onTogglePxCoords) onTogglePxCoords(!isPxCoords);
+	});
 
 	let displayX = block.rect.x;
 	let displayY = block.rect.y;
@@ -2386,8 +2412,7 @@ export function renderDesignInspector(options: {
 		}
 	}
 
-	const rectUnit: DesignRectUnit =
-		block.extraAttributes.rectUnit === "px" ? "px" : "percent";
+	const rectUnit: DesignRectUnit = isPxCoords ? "px" : "percent";
 
 	createRectField(container, "X", "x", displayX, rectUnit, (value) => {
 		if (isGlobalCoords && setGlobalCoords) {

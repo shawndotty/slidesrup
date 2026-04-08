@@ -532,6 +532,15 @@ export class DesignMakerView extends ItemView {
 				});
 				this._renderCanvasAndPreview();
 			},
+			isPxCoords: (() => {
+				const block = this._getSelectedBlock();
+				return block && block.type === "grid"
+					? this._getEffectiveRectUnit(block) === "px"
+					: false;
+			})(),
+			onTogglePxCoords: (enabled) => {
+				this._toggleSelectedBlockRectUnit(enabled);
+			},
 			onPatchBlock: (patcher) => {
 				const block = this._getSelectedBlock();
 				if (!block || block.type !== "grid") return;
@@ -1150,6 +1159,108 @@ export class DesignMakerView extends ItemView {
 			}
 		}
 		return null;
+	}
+
+	private _getEffectiveRectUnit(block: DesignGridBlock): DesignRectUnit {
+		return block.extraAttributes.rectUnit === "px"
+			? "px"
+			: (this._getCurrentPage().rectUnit ?? "percent");
+	}
+
+	private _resolveBlockRectPx(
+		blockId: string,
+	): { x: number; y: number; width: number; height: number } | null {
+		const found = this._findBlockById(
+			this._getCurrentPage().blocks,
+			blockId,
+		);
+		if (!found || found.block.type !== "grid") return null;
+		const block = found.block as DesignGridBlock;
+		const unit = this._getEffectiveRectUnit(block);
+		let baseWidth = this._getSlideBaseWidth();
+		let baseHeight = this._getSlideBaseHeight();
+		if (found.parent) {
+			const parentRectPx = this._resolveBlockRectPx(found.parent.id);
+			if (!parentRectPx) return null;
+			baseWidth = parentRectPx.width;
+			baseHeight = parentRectPx.height;
+		}
+		if (unit === "px") {
+			return {
+				x: block.rect.x,
+				y: block.rect.y,
+				width: block.rect.width,
+				height: block.rect.height,
+			};
+		}
+		return {
+			x: (block.rect.x / 100) * baseWidth,
+			y: (block.rect.y / 100) * baseHeight,
+			width: (block.rect.width / 100) * baseWidth,
+			height: (block.rect.height / 100) * baseHeight,
+		};
+	}
+
+	private _getBlockParentBaseSizePx(
+		blockId: string,
+	): { width: number; height: number } | null {
+		const found = this._findBlockById(
+			this._getCurrentPage().blocks,
+			blockId,
+		);
+		if (!found || found.block.type !== "grid") return null;
+		if (!found.parent) {
+			return {
+				width: this._getSlideBaseWidth(),
+				height: this._getSlideBaseHeight(),
+			};
+		}
+		const parentRectPx = this._resolveBlockRectPx(found.parent.id);
+		if (!parentRectPx) return null;
+		return {
+			width: parentRectPx.width,
+			height: parentRectPx.height,
+		};
+	}
+
+	private _toggleSelectedBlockRectUnit(toPx: boolean): void {
+		const block = this._getSelectedBlock();
+		if (!block || block.type !== "grid") return;
+		const base = this._getBlockParentBaseSizePx(block.id);
+		if (!base || base.width <= 0 || base.height <= 0) return;
+		const currentUnit = this._getEffectiveRectUnit(block);
+		if (!block.extraAttributes) block.extraAttributes = {};
+		if (toPx && currentUnit !== "px") {
+			block.rect.x = Math.round((block.rect.x / 100) * base.width);
+			block.rect.y = Math.round((block.rect.y / 100) * base.height);
+			block.rect.width = Math.max(
+				1,
+				Math.round((block.rect.width / 100) * base.width),
+			);
+			block.rect.height = Math.max(
+				1,
+				Math.round((block.rect.height / 100) * base.height),
+			);
+		}
+		if (!toPx && currentUnit === "px") {
+			block.rect.x = Math.round((block.rect.x / base.width) * 100);
+			block.rect.y = Math.round((block.rect.y / base.height) * 100);
+			block.rect.width = Math.max(
+				1,
+				Math.round((block.rect.width / base.width) * 100),
+			);
+			block.rect.height = Math.max(
+				1,
+				Math.round((block.rect.height / base.height) * 100),
+			);
+		}
+		if (toPx) {
+			block.extraAttributes.rectUnit = "px";
+		} else if (block.extraAttributes.rectUnit === "px") {
+			delete block.extraAttributes.rectUnit;
+		}
+		this._syncPageSource();
+		this._render();
 	}
 
 	private _moveBlock(request: LayerMoveRequest): void {

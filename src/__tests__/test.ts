@@ -1276,6 +1276,10 @@ function testImagePickerPlacementAndSelection() {
 function testInspectorLocaleKeysCompleteness() {
 	const requiredKeys = [
 		"Coordinates",
+		"Pixel Coordinates",
+		"Percent Coordinates",
+		"PX",
+		"Pct",
 		"Rel",
 		"Glob",
 		"X",
