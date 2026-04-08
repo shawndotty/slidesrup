@@ -1000,6 +1000,15 @@ button.slides-rup-design-maker-layer-collapse {
 		box-shadow 150ms ease;
 }
 
+.slides-rup-design-maker-preview-block {
+	border: none;
+}
+
+.slides-rup-design-maker-content-actions {
+	display: flex;
+	gap: 8px;
+}
+
 .slides-rup-design-maker-canvas-panel.is-pan-ready .slides-rup-design-maker-canvas,
 .slides-rup-design-maker-canvas-panel.is-pan-ready .slides-rup-design-maker-block {
 	cursor: grab;

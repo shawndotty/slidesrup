@@ -2404,7 +2404,7 @@ export function renderDesignInspector(options: {
 	let displayX = block.rect.x;
 	let displayY = block.rect.y;
 
-	if (isGlobalCoords && getGlobalCoords) {
+	if (!isPxCoords && isGlobalCoords && getGlobalCoords) {
 		const global = getGlobalCoords();
 		if (global) {
 			displayX = global.x;
@@ -2415,7 +2415,7 @@ export function renderDesignInspector(options: {
 	const rectUnit: DesignRectUnit = isPxCoords ? "px" : "percent";
 
 	createRectField(container, "X", "x", displayX, rectUnit, (value) => {
-		if (isGlobalCoords && setGlobalCoords) {
+		if (!isPxCoords && isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(value, displayY);
 		} else {
 			onPatchBlock((nextBlock) => {
@@ -2424,7 +2424,7 @@ export function renderDesignInspector(options: {
 		}
 	});
 	createRectField(container, "Y", "y", displayY, rectUnit, (value) => {
-		if (isGlobalCoords && setGlobalCoords) {
+		if (!isPxCoords && isGlobalCoords && setGlobalCoords) {
 			setGlobalCoords(displayX, value);
 		} else {
 			onPatchBlock((nextBlock) => {

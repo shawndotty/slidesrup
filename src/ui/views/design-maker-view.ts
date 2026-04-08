@@ -1460,13 +1460,12 @@ export class DesignMakerView extends ItemView {
 		if (!this.inspectorEl || !this.selectedBlockId) return;
 		const block = this._getSelectedBlock();
 		if (!block || block.type !== "grid") return;
+		const rectUnit = this._getEffectiveRectUnit(block);
 		const global = this.isGlobalCoords
-			? this._getSelectedBlockGlobalCoords()
+			? rectUnit === "percent"
+				? this._getSelectedBlockGlobalCoords()
+				: null
 			: null;
-		const rectUnit: DesignRectUnit =
-			block.extraAttributes.rectUnit === "px"
-				? "px"
-				: (this._getCurrentPage().rectUnit ?? "percent");
 		syncInspectorRectFields({
 			container: this.inspectorEl,
 			rect: {
