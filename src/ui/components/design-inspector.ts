@@ -697,7 +697,11 @@ function openUnsplashImagePicker(options: {
 	const close = () => {
 		if (closed) return;
 		closed = true;
-		hostDocument.removeEventListener("mousedown", onDocumentMouseDown, true);
+		hostDocument.removeEventListener(
+			"mousedown",
+			onDocumentMouseDown,
+			true,
+		);
 		hostDocument.removeEventListener("keydown", onDocumentKeyDown, true);
 		pickerEl.removeClass("is-entering");
 		pickerEl.addClass("is-closing");
@@ -1043,13 +1047,21 @@ function openLocalImagePicker(options: {
 	const close = () => {
 		if (isClosed) return;
 		isClosed = true;
-		hostDocument.removeEventListener("mousedown", onDocumentMouseDown, true);
+		hostDocument.removeEventListener(
+			"mousedown",
+			onDocumentMouseDown,
+			true,
+		);
 		hostDocument.removeEventListener(
 			"pointermove",
 			onDocumentPointerMove,
 			true,
 		);
-		hostDocument.removeEventListener("pointerup", onDocumentPointerUp, true);
+		hostDocument.removeEventListener(
+			"pointerup",
+			onDocumentPointerUp,
+			true,
+		);
 		hostWindow.removeEventListener("resize", onWindowResize);
 		hostDocument.removeEventListener("keydown", onDocumentKeyDown, true);
 		pickerEl.removeClass("is-entering");
@@ -1191,7 +1203,11 @@ function openLocalImagePicker(options: {
 
 	hostWindow.requestAnimationFrame(() => {
 		pickerEl.removeClass("is-entering");
-		hostDocument.addEventListener("pointermove", onDocumentPointerMove, true);
+		hostDocument.addEventListener(
+			"pointermove",
+			onDocumentPointerMove,
+			true,
+		);
 		hostDocument.addEventListener("pointerup", onDocumentPointerUp, true);
 		hostDocument.addEventListener("mousedown", onDocumentMouseDown, true);
 		hostWindow.addEventListener("resize", onWindowResize);
@@ -1819,6 +1835,99 @@ export function formatOpacityPercentLabel(value: number): string {
 	return `${Math.round(clampOpacityValue(value) * 100)}%`;
 }
 
+export const MANAGED_HTML_ELEMENTS = [
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+	"h6",
+	"p",
+	"li",
+	"strong",
+	"em",
+	"a",
+];
+
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function getHtmlElementColors(
+	block: DesignGridBlock,
+): Record<string, string> {
+	const id = (block.extraAttributes?.id || "").trim();
+	if (!id) return {};
+	const escapedId = escapeRegExp(id);
+	const styleRegex = new RegExp(
+		`<style\\s+id="${escapedId}-colors"\\s*>([\\s\\S]*?)<\\/style>`,
+		"i",
+	);
+	const match = block.content.match(styleRegex);
+	if (!match) return {};
+	const css = match[1] || "";
+	const result: Record<string, string> = {};
+	MANAGED_HTML_ELEMENTS.forEach((element) => {
+		const selectorRegex = new RegExp(
+			`#${escapedId}\\s+${element}\\s*\\{\\s*color\\s*:\\s*([^;\\}]+)\\s*;?\\s*\\}`,
+			"i",
+		);
+		const colorMatch = css.match(selectorRegex);
+		if (colorMatch?.[1]) {
+			result[element] = colorMatch[1].trim();
+		}
+	});
+	return result;
+}
+
+export function updateHtmlElementColors(
+	block: DesignGridBlock,
+	colors: Record<string, string>,
+): void {
+	const normalizedColors = MANAGED_HTML_ELEMENTS.reduce(
+		(acc, element) => {
+			const value = (colors[element] || "").trim();
+			if (value) acc[element] = value;
+			return acc;
+		},
+		{} as Record<string, string>,
+	);
+	const hasAnyColor = Object.keys(normalizedColors).length > 0;
+	if (!block.extraAttributes) block.extraAttributes = {};
+	let id = (block.extraAttributes.id || "").trim();
+	if (!id && hasAnyColor) {
+		id = `grid-${Date.now()}`;
+		block.extraAttributes.id = id;
+	}
+	if (!id) return;
+	const escapedId = escapeRegExp(id);
+	const styleRegex = new RegExp(
+		`\\n?<style\\s+id="${escapedId}-colors"\\s*>[\\s\\S]*?<\\/style>\\n?`,
+		"i",
+	);
+	const trimmedContent = block.content.trim();
+	if (!hasAnyColor) {
+		block.content = trimmedContent.replace(styleRegex, "").trim();
+		return;
+	}
+	const styleLines = MANAGED_HTML_ELEMENTS.filter((element) =>
+		Boolean(normalizedColors[element]),
+	).map(
+		(element) =>
+			`#${id} ${element} { color: ${normalizedColors[element]}; }`,
+	);
+	const styleBlock = `<style id="${id}-colors">\n${styleLines.join("\n")}\n</style>`;
+	if (styleRegex.test(trimmedContent)) {
+		block.content = trimmedContent
+			.replace(styleRegex, `\n${styleBlock}\n`)
+			.trim();
+		return;
+	}
+	block.content = trimmedContent
+		? `${styleBlock}\n\n${trimmedContent}`
+		: styleBlock;
+}
+
 export function resolveOpacityFromTrackPosition(options: {
 	clientX: number;
 	trackLeft: number;
@@ -1942,6 +2051,87 @@ function createOpacitySliderField(
 	});
 
 	syncUI();
+}
+
+function createElementColorCompositeField(
+	container: HTMLElement,
+	label: string,
+	block: DesignGridBlock,
+	onChange: (colors: Record<string, string>) => void,
+): void {
+	const row = container.createDiv("slides-rup-design-maker-field is-stacked");
+	row.createEl("label", { text: t(label as any) });
+	const panel = row.createDiv("slides-rup-design-maker-element-colors-panel");
+	const currentColors = {
+		...getHtmlElementColors(block),
+	};
+	const emit = () => {
+		onChange({
+			...currentColors,
+		});
+	};
+	MANAGED_HTML_ELEMENTS.forEach((element) => {
+		const item = panel.createDiv(
+			"slides-rup-design-maker-element-color-item",
+		);
+		item.createEl("span", {
+			text: element.toUpperCase(),
+			cls: "slides-rup-design-maker-element-color-name",
+		});
+		const controls = item.createDiv(
+			"slides-rup-design-maker-color-controls",
+		);
+		const initialValue = currentColors[element] || "";
+		const textInput = controls.createEl("input", {
+			type: "text",
+			value: initialValue,
+			cls: "slides-rup-design-maker-input",
+			attr: { placeholder: t("Hex/RGB/HSL" as any) },
+		});
+		const colorInput = controls.createEl("input", {
+			type: "color",
+			cls: "slides-rup-design-maker-input slides-rup-design-maker-color-input",
+		});
+		const resetButton = controls.createEl("button", {
+			text: "↺",
+			cls: "slides-rup-design-maker-element-color-reset",
+			attr: {
+				type: "button",
+				title: t("Use Default Value" as any),
+				"aria-label": t("Use Default Value" as any),
+			},
+		});
+		const syncUI = (next: string, emitChange: boolean) => {
+			const normalized = next.trim();
+			const valid = isValidInspectorColor(normalized);
+			textInput.toggleClass("is-invalid", !valid);
+			textInput.setAttr("aria-invalid", valid ? "false" : "true");
+			if (!normalized) {
+				colorInput.value = "#000000";
+				delete currentColors[element];
+				if (emitChange) emit();
+				return;
+			}
+			if (!valid) return;
+			const hex = normalizeInspectorColorToHex(normalized);
+			if (hex) colorInput.value = hex;
+			currentColors[element] = normalized;
+			if (emitChange) emit();
+		};
+		textInput.addEventListener("input", () => {
+			syncUI(textInput.value, true);
+		});
+		colorInput.addEventListener("input", () => {
+			textInput.value = colorInput.value;
+			syncUI(colorInput.value, true);
+		});
+		resetButton.addEventListener("click", (event) => {
+			event.preventDefault();
+			textInput.value = "";
+			syncUI("", true);
+		});
+		syncUI(initialValue, false);
+	});
 }
 
 export function renderDesignInspector(options: {
@@ -2335,6 +2525,16 @@ export function renderDesignInspector(options: {
 			nextBlock.frag = value;
 		});
 	});
+	createElementColorCompositeField(
+		container,
+		"Block Element Colors",
+		block,
+		(colors) => {
+			onPatchBlock((nextBlock) => {
+				updateHtmlElementColors(nextBlock, colors);
+			});
+		},
+	);
 	createTextField(container, "CSS Class", block.className, (value) => {
 		onPatchBlock((nextBlock) => {
 			nextBlock.className = value;

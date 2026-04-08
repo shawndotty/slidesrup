@@ -555,6 +555,7 @@ export default {
 	Rel: "相对",
 	Glob: "全局",
 	"Block Content": "区块内容",
+	"Block Element Colors": "区块内元素颜色设置",
 	"Insert local image": "插入本地图片",
 	"Insert Unsplash image": "插入 Unsplash 图片",
 	"Search local images": "搜索本地图片",

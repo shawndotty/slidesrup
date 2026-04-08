@@ -617,6 +617,7 @@ export default {
 	Rel: "Rel",
 	Glob: "Glob",
 	"Block Content": "Block Content",
+	"Block Element Colors": "Block Element Colors",
 	"Insert local image": "Insert local image",
 	"Insert Unsplash image": "Insert Unsplash image",
 	"Search local images": "Search local images",

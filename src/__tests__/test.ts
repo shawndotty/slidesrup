@@ -67,6 +67,8 @@ import {
 	parsePaddingComposite,
 	resolvePickerHost,
 	syncInspectorRectFields,
+	getHtmlElementColors,
+	updateHtmlElementColors,
 } from "../ui/components/design-inspector";
 import { GridTransformer } from "../transformers/gridTransformer";
 import { YamlStore } from "../yamlStore";
@@ -1266,6 +1268,7 @@ function testInspectorLocaleKeysCompleteness() {
 		"Search local images",
 		"No local images found",
 		"Image Picker",
+		"Block Element Colors",
 		"Pin picker",
 		"Unpin picker",
 		"Close picker",
@@ -1811,6 +1814,68 @@ async function testSecretStoreFallbackBehavior() {
 	console.log("testSecretStoreFallbackBehavior passed");
 }
 
+function testHtmlElementColorHelpers() {
+	const block = {
+		id: "grid-1",
+		type: "grid",
+		role: "grid",
+		rect: { x: 0, y: 0, width: 50, height: 50 },
+		content: "hello",
+		className: "",
+		style: "",
+		pad: "",
+		align: "",
+		flow: "",
+		filter: "",
+		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
+		extraAttributes: {},
+	} as any;
+	assert.deepStrictEqual(
+		getHtmlElementColors(block),
+		{},
+		"Without style block, element colors should be empty",
+	);
+	updateHtmlElementColors(block, { h1: "#ff0000", p: "rgb(10, 20, 30)" });
+	assert.ok(
+		(block.extraAttributes.id || "").startsWith("grid-"),
+		"When applying first element color, grid id should be auto-generated",
+	);
+	assert.ok(
+		block.content.includes(`<style id="${block.extraAttributes.id}-colors">`),
+		"Content should include managed style block",
+	);
+	assert.ok(
+		block.content.includes(`#${block.extraAttributes.id} h1 { color: #ff0000; }`),
+		"Managed style should contain h1 color rule",
+	);
+	assert.deepStrictEqual(
+		getHtmlElementColors(block),
+		{ h1: "#ff0000", p: "rgb(10, 20, 30)" },
+		"Parser should read managed element colors from style block",
+	);
+	updateHtmlElementColors(block, { p: "rgb(10, 20, 30)" });
+	assert.ok(
+		!block.content.includes(`#${block.extraAttributes.id} h1 { color: #ff0000; }`),
+		"Removing one element value should remove its rule",
+	);
+	updateHtmlElementColors(block, {});
+	assert.ok(
+		!block.content.includes(`<style id="${block.extraAttributes.id}-colors">`),
+		"When all values are empty, managed style block should be removed",
+	);
+	assert.ok(
+		(block.extraAttributes.id || "").startsWith("grid-"),
+		"When all values are empty, grid id should be kept",
+	);
+	console.log("testHtmlElementColorHelpers passed");
+}
+
 async function runTests() {
 	try {
 		(globalThis as any).window = {
@@ -1864,6 +1929,7 @@ async function runTests() {
 		testInlineStyleAiOutputSanitization();
 		testFilterAiOutputSanitization();
 		await testSecretStoreFallbackBehavior();
+		testHtmlElementColorHelpers();
 		console.log("All tests passed 100%!");
 	} catch (err) {
 		console.error(err);
