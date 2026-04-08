@@ -356,6 +356,23 @@ export default {
 	"Use Default Value": "Use Default Value",
 	"Customize Text Colors": "Customize Text Colors",
 	"Advanced Settings": "Advanced Settings",
+	"Enable AI Inline Style Generator": "Enable AI Inline Style Generator",
+	"Enable AI generation for Design Maker inline style":
+		"Enable AI generation for Design Maker inline style",
+	"AI Provider Base URL": "AI Provider Base URL",
+	"Set OpenAI-compatible API base URL": "Set OpenAI-compatible API base URL",
+	"AI Provider Model": "AI Provider Model",
+	"Set default model for AI inline style generation":
+		"Set default model for AI inline style generation",
+	"Enable Unsplash image insert": "Enable Unsplash image insert",
+	"Allow inserting Unsplash images in Design Maker block content":
+		"Allow inserting Unsplash images in Design Maker block content",
+	"Unsplash API Base URL": "Unsplash API Base URL",
+	"Set Unsplash API base URL": "Set Unsplash API base URL",
+	"Fallback to random image without Access Key":
+		"Fallback to random image without Access Key",
+	"When Access Key is empty, use Unsplash source random single image":
+		"When Access Key is empty, use Unsplash source random single image",
 	"Use User Customized CSS": "Use User Customized CSS",
 	"Enable User Customized CSS": "Enable User Customized CSS",
 	"Enable User Font Family Setting": "Enable User Font Family Setting",
@@ -620,6 +637,7 @@ export default {
 	"Block Element Colors": "Block Element Colors",
 	"Insert local image": "Insert local image",
 	"Insert Unsplash image": "Insert Unsplash image",
+	"Insert SVG By AI": "Insert SVG By AI",
 	"Search local images": "Search local images",
 	"Search Unsplash images": "Search Unsplash images",
 	"No local images found": "No local images found",
@@ -667,12 +685,28 @@ export default {
 	"Example: make text white, add blur glass background and rounded corners":
 		"Example: make text white, add blur glass background and rounded corners",
 	"Generated inline style": "Generated inline style",
-	"Review before applying to current block": "Review before applying to current block",
+	"Review before applying to current block":
+		"Review before applying to current block",
 	"Generate with AI": "Generate with AI",
 	"Apply Generated Style": "Apply Generated Style",
+	"Apply Generated SVG": "Apply Generated SVG",
 	"Generating inline style...": "Generating inline style...",
+	"Generating SVG...": "Generating SVG...",
 	"AI inline style generated": "AI inline style generated",
+	"AI SVG generated": "AI SVG generated",
 	"Failed to generate inline style": "Failed to generate inline style",
+	"Failed to generate SVG": "Failed to generate SVG",
+	"AI Inline Style System Prompt": "AI Inline Style System Prompt",
+	"Optional custom system prompt for AI inline style generation":
+		"Optional custom system prompt for AI inline style generation",
+	"Generate SVG with AI": "Generate SVG with AI",
+	"Describe desired SVG shape": "Describe desired SVG shape",
+	"Use natural language to describe expected SVG":
+		"Use natural language to describe expected SVG",
+	"Generated SVG": "Generated SVG",
+	"AI SVG System Prompt": "AI SVG System Prompt",
+	"Optional custom system prompt for AI SVG generation":
+		"Optional custom system prompt for AI SVG generation",
 	"AI Filter System Prompt": "AI Filter System Prompt",
 	"Optional custom system prompt for AI filter value generation":
 		"Optional custom system prompt for AI filter value generation",

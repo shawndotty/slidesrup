@@ -181,6 +181,7 @@ export interface SlidesRupSettings {
 	aiProviderApiKeyFallback: string;
 	aiInlineStyleSystemPrompt: string;
 	aiFilterSystemPrompt: string;
+	aiSvgSystemPrompt: string;
 	unsplashEnabled: boolean;
 	unsplashUseRandomFallbackWithoutKey: boolean;
 	unsplashApiBaseUrl: string;

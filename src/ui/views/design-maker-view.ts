@@ -455,6 +455,12 @@ export class DesignMakerView extends ItemView {
 					currentFilter,
 				);
 			},
+			onGenerateSvgAI: async (prompt, currentContent) => {
+				return this.plugin.services.inlineStyleAiService.generateSvg(
+					prompt,
+					currentContent,
+				);
+			},
 			unsplashEnabled: this.plugin.settings.unsplashEnabled,
 			unsplashAspectRatioPresets:
 				this.plugin.services.unsplashImageService.getAspectRatioPresets(),

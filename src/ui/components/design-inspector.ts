@@ -541,6 +541,14 @@ export function insertMarkdownImageIntoContent(
 	return `${current}\n${embed}`;
 }
 
+export function insertSvgIntoContent(content: string, svg: string): string {
+	const snippet = (svg || "").trim();
+	if (!snippet) return (content || "").trimEnd();
+	const current = (content || "").trimEnd();
+	if (!current) return snippet;
+	return `${current}\n${snippet}`;
+}
+
 export function resolvePickerHost(triggerEl: HTMLElement): {
 	hostDocument: Document;
 	hostWindow: Window;
@@ -2148,6 +2156,10 @@ export function renderDesignInspector(options: {
 		prompt: string,
 		currentFilter: string,
 	) => Promise<string>;
+	onGenerateSvgAI?: (
+		prompt: string,
+		currentContent: string,
+	) => Promise<string>;
 	unsplashEnabled?: boolean;
 	unsplashAspectRatioPresets?: string[];
 	unsplashInitialAspectRatio?: string;
@@ -2173,6 +2185,7 @@ export function renderDesignInspector(options: {
 		aiInlineStyleEnabled = false,
 		onGenerateInlineStyleAI,
 		onGenerateFilterAI,
+		onGenerateSvgAI,
 		unsplashEnabled = false,
 		unsplashAspectRatioPresets = ["16:9", "4:3", "1:1"],
 		unsplashInitialAspectRatio = "16:9",
@@ -2243,9 +2256,20 @@ export function renderDesignInspector(options: {
 	});
 	setIcon(insertUnsplashButton, "image");
 	insertUnsplashButton.title = t("Insert Unsplash image" as any);
+	const insertSvgAiButton = contentActions.createEl("button", {
+		cls: "slides-rup-design-maker-content-action",
+		attr: {
+			type: "button",
+			"aria-label": t("Insert SVG By AI" as any),
+		},
+	});
+	setIcon(insertSvgAiButton, "sparkles");
+	insertSvgAiButton.title = t("Insert SVG By AI" as any);
 	insertImageButton.disabled = !app;
 	insertUnsplashButton.disabled =
 		!app || !unsplashEnabled || !onSearchUnsplashImages;
+	insertSvgAiButton.disabled =
+		!app || !aiInlineStyleEnabled || !onGenerateSvgAI;
 	const textarea = contentRow.createEl("textarea", {
 		text: block.content,
 		cls: "slides-rup-design-maker-textarea",
@@ -2289,6 +2313,30 @@ export function renderDesignInspector(options: {
 				textarea.focus();
 			},
 		});
+	});
+	insertSvgAiButton.addEventListener("click", async (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!app || !onGenerateSvgAI) return;
+		const modal = new InlineStyleAIModal(
+			app,
+			onGenerateSvgAI,
+			textarea.value,
+			t("Generate SVG with AI" as any),
+			t("Describe desired SVG shape" as any),
+			t("Use natural language to describe expected SVG" as any),
+			t("Use natural language to describe expected SVG" as any),
+			t("Generated SVG" as any),
+			t("Apply Generated SVG" as any),
+			t("Generating SVG..." as any),
+			t("AI SVG generated" as any),
+			t("Failed to generate SVG" as any),
+		);
+		const generatedSvg = await modal.openAndGetValue();
+		if (!generatedSvg) return;
+		textarea.value = insertSvgIntoContent(textarea.value, generatedSvg);
+		textarea.dispatchEvent(new Event("input"));
+		textarea.focus();
 	});
 	textarea.addEventListener("input", () => {
 		onPatchBlock((nextBlock) => {

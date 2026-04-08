@@ -54,6 +54,7 @@ import {
 	getNextPickerSelectionIndex,
 	insertImageEmbedIntoContent,
 	insertMarkdownImageIntoContent,
+	insertSvgIntoContent,
 	isLocalImagePath,
 	localizeInspectorSelectOptions,
 	normalizeInspectorColorToHex,
@@ -80,6 +81,7 @@ import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
 import {
 	sanitizeFilterAiOutput,
 	sanitizeInlineStyleAiOutput,
+	sanitizeSvgAiOutput,
 } from "../services/inline-style-ai-service";
 import { SecretStoreService } from "../services/secret-store-service";
 import {
@@ -1065,6 +1067,22 @@ function testInsertLocalImageEmbed() {
 	console.log("testInsertLocalImageEmbed passed");
 }
 
+function testInsertSvgIntoContent() {
+	const svg = `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="30" fill="currentColor" /></svg>`;
+	assert.strictEqual(insertSvgIntoContent("", svg), svg);
+	assert.strictEqual(
+		insertSvgIntoContent("Hello", svg),
+		`Hello\n${svg}`,
+		"Should append SVG on a new line for non-empty content",
+	);
+	assert.strictEqual(
+		insertSvgIntoContent("Hello\n", svg),
+		`Hello\n${svg}`,
+		"Should normalize trailing newline before append",
+	);
+	console.log("testInsertSvgIntoContent passed");
+}
+
 function testUnsplashImageInsertHelpers() {
 	const url = "https://images.unsplash.com/photo-1";
 	assert.strictEqual(
@@ -1265,6 +1283,7 @@ function testInspectorLocaleKeysCompleteness() {
 		"Width",
 		"Height",
 		"Insert local image",
+		"Insert SVG By AI",
 		"Search local images",
 		"No local images found",
 		"Image Picker",
@@ -1276,6 +1295,16 @@ function testInspectorLocaleKeysCompleteness() {
 		"Custom ratio",
 		"Current ratio",
 		"Crop size",
+		"Generate SVG with AI",
+		"Describe desired SVG shape",
+		"Use natural language to describe expected SVG",
+		"Generated SVG",
+		"Apply Generated SVG",
+		"Generating SVG...",
+		"AI SVG generated",
+		"Failed to generate SVG",
+		"AI SVG System Prompt",
+		"Optional custom system prompt for AI SVG generation",
 		"Enter to insert · Esc to close",
 		"Slide Thumbnails",
 		"Switch to page",
@@ -1760,6 +1789,36 @@ function testInlineStyleAiOutputSanitization() {
 	console.log("testInlineStyleAiOutputSanitization passed");
 }
 
+function testSvgAiOutputSanitization() {
+	assert.strictEqual(
+		sanitizeSvgAiOutput("```svg\n<svg viewBox='0 0 10 10'></svg>\n```"),
+		"<svg viewBox='0 0 10 10'></svg>",
+		"Should extract fenced SVG snippet",
+	);
+	assert.throws(
+		() => sanitizeSvgAiOutput("not svg"),
+		/valid SVG/,
+		"Non-SVG output should be rejected",
+	);
+	assert.throws(
+		() =>
+			sanitizeSvgAiOutput(
+				"<svg viewBox='0 0 10 10'><script>alert(1)</script></svg>",
+			),
+		/unsafe SVG content/,
+		"Script tags should be rejected",
+	);
+	assert.throws(
+		() =>
+			sanitizeSvgAiOutput(
+				"<svg viewBox='0 0 10 10'><rect onload='x()' /></svg>",
+			),
+		/unsafe SVG content/,
+		"Event handler attributes should be rejected",
+	);
+	console.log("testSvgAiOutputSanitization passed");
+}
+
 function testFilterAiOutputSanitization() {
 	assert.strictEqual(
 		sanitizeFilterAiOutput("blur(2px) saturate(120%)"),
@@ -1911,6 +1970,7 @@ async function runTests() {
 		testBorderCompositeHelpers();
 		testPaddingCompositeHelpers();
 		testInsertLocalImageEmbed();
+		testInsertSvgIntoContent();
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();
 		testImagePickerPlacementAndSelection();
@@ -1927,6 +1987,7 @@ async function runTests() {
 		testInlineStyleCompletionDataSourceAndMode();
 		await testDispatchThemeColorChange();
 		testInlineStyleAiOutputSanitization();
+		testSvgAiOutputSanitization();
 		testFilterAiOutputSanitization();
 		await testSecretStoreFallbackBehavior();
 		testHtmlElementColorHelpers();

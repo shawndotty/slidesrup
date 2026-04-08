@@ -307,6 +307,24 @@ export default {
 	"Use Default Value": "使用預設值",
 	"Customize Text Colors": "自訂文字顏色",
 	"Advanced Settings": "進階設置",
+	"Enable AI Inline Style Generator": "啟用 AI 內聯樣式生成器",
+	"Enable AI generation for Design Maker inline style":
+		"啟用 Design Maker 內聯樣式的 AI 生成功能",
+	"AI Provider Base URL": "AI 服務 Base URL",
+	"Set OpenAI-compatible API base URL":
+		"設定 OpenAI 相容 API 的基礎位址",
+	"AI Provider Model": "AI 服務模型",
+	"Set default model for AI inline style generation":
+		"設定 AI 內聯樣式生成的預設模型",
+	"Enable Unsplash image insert": "啟用 Unsplash 圖片插入",
+	"Allow inserting Unsplash images in Design Maker block content":
+		"允許在 Design Maker 區塊內容中插入 Unsplash 圖片",
+	"Unsplash API Base URL": "Unsplash API Base URL",
+	"Set Unsplash API base URL": "設定 Unsplash API 的基礎位址",
+	"Fallback to random image without Access Key":
+		"無 Access Key 時回退為隨機圖片",
+	"When Access Key is empty, use Unsplash source random single image":
+		"當 Access Key 為空時，使用 Unsplash 隨機單圖來源",
 	"Use User Customized CSS": "使用用戶自訂 CSS",
 	"Enable User Customized CSS": "啟用用戶自訂 CSS",
 	"Enable User Font Family Setting": "啟用用戶字體設置",
@@ -558,6 +576,7 @@ export default {
 	"Block Element Colors": "區塊內元素顏色設定",
 	"Insert local image": "插入本地圖片",
 	"Insert Unsplash image": "插入 Unsplash 圖片",
+	"Insert SVG By AI": "AI 插入 SVG",
 	"Search local images": "搜尋本地圖片",
 	"Search Unsplash images": "搜尋 Unsplash 圖片",
 	"No local images found": "未找到本地圖片",
@@ -608,9 +627,24 @@ export default {
 	"Review before applying to current block": "套用到目前區塊前請先檢查",
 	"Generate with AI": "AI 生成",
 	"Apply Generated Style": "套用生成樣式",
+	"Apply Generated SVG": "套用生成 SVG",
 	"Generating inline style...": "正在生成內聯樣式...",
+	"Generating SVG...": "正在生成 SVG...",
 	"AI inline style generated": "AI 內聯樣式已生成",
+	"AI SVG generated": "AI SVG 已生成",
 	"Failed to generate inline style": "內聯樣式生成失敗",
+	"Failed to generate SVG": "SVG 生成失敗",
+	"AI Inline Style System Prompt": "AI 內聯樣式系統提示詞",
+	"Optional custom system prompt for AI inline style generation":
+		"用於 AI 生成內聯樣式的可選自訂系統提示詞",
+	"Generate SVG with AI": "AI 生成 SVG",
+	"Describe desired SVG shape": "描述你想要的 SVG 圖形",
+	"Use natural language to describe expected SVG":
+		"用自然語言描述你希望生成的 SVG",
+	"Generated SVG": "生成的 SVG",
+	"AI SVG System Prompt": "AI SVG 系統提示詞",
+	"Optional custom system prompt for AI SVG generation":
+		"用於 AI 生成 SVG 的可選自訂系統提示詞",
 	"AI Filter System Prompt": "AI Filter 系統提示詞",
 	"Optional custom system prompt for AI filter value generation":
 		"用於 AI 生成 filter 值的可選自訂系統提示詞",

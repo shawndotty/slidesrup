@@ -174,6 +174,8 @@ export const DEFAULT_SETTINGS: SlidesRupSettings = {
 		"You are an inline CSS declaration assistant. Return only CSS declarations for a style attribute. Strict rules: no selectors, no braces, no @rules, no comments, no markdown, no explanations. Output plain text declarations only in the format 'property: value;' with one declaration per line. Prefer safe, broadly supported CSS properties and values. Keep existing intent and avoid unnecessary changes.",
 	aiFilterSystemPrompt:
 		"You generate CSS filter value only. Return only filter function chain like blur(2px) saturate(120%), without 'filter:' prefix, semicolon, markdown or explanation.",
+	aiSvgSystemPrompt:
+		"You generate inline SVG only. Return only one complete <svg>...</svg> snippet, no markdown, no explanations. SVG must adapt to Grid container size (use a proper viewBox and width='100%' height='100%'). SVG must inherit Grid color settings (prefer currentColor for fill/stroke unless explicitly requested). Do not include script, foreignObject, or event-handler attributes.",
 	unsplashEnabled: true,
 	unsplashUseRandomFallbackWithoutKey: true,
 	unsplashApiBaseUrl: "https://api.unsplash.com",

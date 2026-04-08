@@ -53,6 +53,32 @@ export function sanitizeFilterAiOutput(raw: string): string {
 	return rebuilt;
 }
 
+export function sanitizeSvgAiOutput(raw: string): string {
+	const text = raw
+		.replace(/```svg/gi, "")
+		.replace(/```xml/gi, "")
+		.replace(/```/g, "")
+		.trim();
+	if (!text) {
+		throw new Error("AI output does not contain valid SVG");
+	}
+	const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+	if (!svgMatch) {
+		throw new Error("AI output does not contain valid SVG");
+	}
+	const svg = svgMatch[0].trim();
+	if (/<script[\s>]/i.test(svg)) {
+		throw new Error("AI output contains unsafe SVG content");
+	}
+	if (/on[a-z]+\s*=/i.test(svg)) {
+		throw new Error("AI output contains unsafe SVG content");
+	}
+	if (/<foreignObject[\s>]/i.test(svg)) {
+		throw new Error("AI output contains unsafe SVG content");
+	}
+	return svg;
+}
+
 export class InlineStyleAIService {
 	constructor(
 		private settings: SlidesRupSettings,
@@ -79,6 +105,18 @@ export class InlineStyleAIService {
 			"You generate CSS filter values only.",
 			"Return ONLY filter value text, no 'filter:' prefix, no semicolon, no markdown, no explanation.",
 			"Allow single or combined functions, e.g. blur(2px) saturate(120%).",
+		].join(" ");
+	}
+
+	private buildSvgSystemPrompt(): string {
+		const customPrompt = (this.settings.aiSvgSystemPrompt || "").trim();
+		if (customPrompt) return customPrompt;
+		return [
+			"You generate inline SVG only.",
+			"Return ONLY one complete <svg>...</svg>, no markdown, no explanation.",
+			"SVG must adapt to Grid container size by using a valid viewBox and width='100%' height='100%'.",
+			"SVG must inherit Grid color settings; prefer currentColor for fill/stroke unless user explicitly asks another color.",
+			"Do not output script, foreignObject, or any event handler attributes.",
 		].join(" ");
 	}
 
@@ -152,5 +190,19 @@ export class InlineStyleAIService {
 			].join("\n\n"),
 		);
 		return sanitizeFilterAiOutput(content);
+	}
+
+	async generateSvg(prompt: string, currentContent: string): Promise<string> {
+		if (!this.settings.aiInlineStyleEnabled) {
+			throw new Error("AI inline style feature is disabled");
+		}
+		const content = await this.callModel(
+			this.buildSvgSystemPrompt(),
+			[
+				`Current block content:\n${currentContent || "(empty)"}`,
+				`Requested SVG shape:\n${prompt}`,
+			].join("\n\n"),
+		);
+		return sanitizeSvgAiOutput(content);
 	}
 }

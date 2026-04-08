@@ -1534,6 +1534,16 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			},
 		});
 
+		this.createTextAreaSetting(containerEl, {
+			name: "AI SVG System Prompt",
+			desc: "Optional custom system prompt for AI SVG generation",
+			value: this.plugin.settings.aiSvgSystemPrompt,
+			onChange: async (value) => {
+				this.plugin.settings.aiSvgSystemPrompt = value;
+				await this.plugin.saveSettings();
+			},
+		});
+
 		new Setting(containerEl).setName(t("Unsplash Image Source" as any));
 
 		this.createToggleSetting(containerEl, {
