@@ -47,6 +47,7 @@ import {
 	buildMarkdownImageEmbed,
 	clampImagePickerPosition,
 	clampOpacityValue,
+	createStrictBinaryToggleController,
 	detectInlineStyleCompletionMode,
 	formatOpacityPercentLabel,
 	formatInlineStyleForEditor,
@@ -1273,6 +1274,90 @@ function testImagePickerPlacementAndSelection() {
 	console.log("testImagePickerPlacementAndSelection passed");
 }
 
+function testStrictBinaryToggleContinuousClicks() {
+	const history: boolean[] = [];
+	const toggle = createStrictBinaryToggleController({
+		initialValue: false,
+		onChange: (next) => {
+			history.push(next);
+		},
+	});
+	const clickedValues = [
+		toggle.toggle(),
+		toggle.toggle(),
+		toggle.toggle(),
+		toggle.toggle(),
+	];
+	assert.deepStrictEqual(
+		clickedValues,
+		[true, false, true, false],
+		"连续点击必须严格在 true/false 间二值翻转",
+	);
+	assert.deepStrictEqual(
+		history,
+		[true, false, true, false],
+		"回调值必须与实际翻转状态严格一致",
+	);
+	assert.strictEqual(toggle.getValue(), false, "四次翻转后应回到初始 false");
+	console.log("testStrictBinaryToggleContinuousClicks passed");
+}
+
+function testStrictBinaryToggleBoundaryCases() {
+	const withoutCallback = createStrictBinaryToggleController({});
+	assert.strictEqual(
+		withoutCallback.getValue(),
+		false,
+		"未传 initialValue 时应默认 false",
+	);
+	assert.strictEqual(
+		withoutCallback.toggle(),
+		true,
+		"无回调场景仍需正常翻转到 true",
+	);
+	assert.strictEqual(
+		withoutCallback.toggle(),
+		false,
+		"无回调场景第二次应翻转回 false",
+	);
+	withoutCallback.setValue(true);
+	assert.strictEqual(withoutCallback.getValue(), true, "setValue(true) 应生效");
+	withoutCallback.setValue(false);
+	assert.strictEqual(
+		withoutCallback.getValue(),
+		false,
+		"setValue(false) 应生效",
+	);
+	console.log("testStrictBinaryToggleBoundaryCases passed");
+}
+
+async function testStrictBinaryToggleAsyncCallback() {
+	const history: boolean[] = [];
+	const toggle = createStrictBinaryToggleController({
+		initialValue: true,
+		onChange: async (next) => {
+			await Promise.resolve();
+			history.push(next);
+		},
+	});
+	const first = toggle.toggle();
+	const second = toggle.toggle();
+	assert.strictEqual(first, false, "第一次异步翻转应从 true 到 false");
+	assert.strictEqual(second, true, "第二次异步翻转应从 false 到 true");
+	assert.strictEqual(
+		toggle.getValue(),
+		true,
+		"异步回调不应影响严格二值状态机最终状态",
+	);
+	await Promise.resolve();
+	await Promise.resolve();
+	assert.deepStrictEqual(
+		history,
+		[false, true],
+		"异步回调应按点击顺序接收每次翻转结果",
+	);
+	console.log("testStrictBinaryToggleAsyncCallback passed");
+}
+
 function testInspectorLocaleKeysCompleteness() {
 	const requiredKeys = [
 		"Coordinates",
@@ -1978,6 +2063,9 @@ async function runTests() {
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();
 		testImagePickerPlacementAndSelection();
+		testStrictBinaryToggleContinuousClicks();
+		testStrictBinaryToggleBoundaryCases();
+		await testStrictBinaryToggleAsyncCallback();
 		testInspectorLocaleKeysCompleteness();
 		testInspectorSelectOptionI18nAndFallback();
 		testThumbnailVirtualizationMath();

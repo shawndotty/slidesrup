@@ -2146,6 +2146,43 @@ function createElementColorCompositeField(
 	});
 }
 
+export function createStrictBinaryToggleController(options: {
+	initialValue?: boolean;
+	onChange?: (nextValue: boolean) => void | Promise<void>;
+}): {
+	getValue: () => boolean;
+	setValue: (value: boolean) => void;
+	toggle: () => boolean;
+} {
+	const { initialValue = false, onChange } = options;
+	let currentValue = initialValue === true;
+	const notifyChange = (nextValue: boolean) => {
+		if (!onChange) return;
+		try {
+			const result = onChange(nextValue);
+			if (
+				result &&
+				typeof (result as Promise<void>).then === "function"
+			) {
+				(result as Promise<void>).catch(() => {});
+			}
+		} catch {
+			// keep strict binary state even if callback fails
+		}
+	};
+	return {
+		getValue: () => currentValue,
+		setValue: (value: boolean) => {
+			currentValue = value === true;
+		},
+		toggle: () => {
+			currentValue = !currentValue;
+			notifyChange(currentValue);
+			return currentValue;
+		},
+	};
+}
+
 export function renderDesignInspector(options: {
 	app?: App;
 	container: HTMLElement;
@@ -2367,19 +2404,26 @@ export function renderDesignInspector(options: {
 		text: t("Rel" as any),
 		cls: "slides-rup-design-maker-coords-label",
 	});
+	const coordsToggle = createStrictBinaryToggleController({
+		initialValue: isGlobalCoords,
+		onChange: onToggleCoords,
+	});
 	const toggleBtn = toggleContainer.createEl("button", {
-		text: isGlobalCoords ? t("Glob" as any) : t("Rel" as any),
+		text: coordsToggle.getValue() ? t("Glob" as any) : t("Rel" as any),
 	});
 	const globalLabel = toggleContainer.createSpan({
 		text: t("Glob" as any),
 		cls: "slides-rup-design-maker-coords-label",
 	});
-
-	relativeLabel.style.opacity = isGlobalCoords ? "0.5" : "1";
-	globalLabel.style.opacity = isGlobalCoords ? "1" : "0.5";
-
+	const syncCoordsToggleUI = (value: boolean) => {
+		toggleBtn.setText(value ? t("Glob" as any) : t("Rel" as any));
+		relativeLabel.style.opacity = value ? "0.5" : "1";
+		globalLabel.style.opacity = value ? "1" : "0.5";
+	};
+	syncCoordsToggleUI(coordsToggle.getValue());
 	toggleBtn.addEventListener("click", () => {
-		if (onToggleCoords) onToggleCoords(!isGlobalCoords);
+		const next = coordsToggle.toggle();
+		syncCoordsToggleUI(next);
 	});
 	const pxToggleContainer = coordsControls.createDiv(
 		"slides-rup-design-maker-coords-toggle",
@@ -2388,17 +2432,26 @@ export function renderDesignInspector(options: {
 		text: t("Pct" as any),
 		cls: "slides-rup-design-maker-coords-label",
 	});
+	const pxCoordsToggle = createStrictBinaryToggleController({
+		initialValue: isPxCoords,
+		onChange: onTogglePxCoords,
+	});
 	const pxToggleBtn = pxToggleContainer.createEl("button", {
-		text: isPxCoords ? t("PX" as any) : t("Pct" as any),
+		text: pxCoordsToggle.getValue() ? t("PX" as any) : t("Pct" as any),
 	});
 	const pxLabel = pxToggleContainer.createSpan({
 		text: t("PX" as any),
 		cls: "slides-rup-design-maker-coords-label",
 	});
-	pctLabel.style.opacity = isPxCoords ? "0.5" : "1";
-	pxLabel.style.opacity = isPxCoords ? "1" : "0.5";
+	const syncPxToggleUI = (value: boolean) => {
+		pxToggleBtn.setText(value ? t("PX" as any) : t("Pct" as any));
+		pctLabel.style.opacity = value ? "0.5" : "1";
+		pxLabel.style.opacity = value ? "1" : "0.5";
+	};
+	syncPxToggleUI(pxCoordsToggle.getValue());
 	pxToggleBtn.addEventListener("click", () => {
-		if (onTogglePxCoords) onTogglePxCoords(!isPxCoords);
+		const next = pxCoordsToggle.toggle();
+		syncPxToggleUI(next);
 	});
 
 	let displayX = block.rect.x;
