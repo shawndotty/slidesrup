@@ -551,6 +551,8 @@ export default {
 	"Reload Design": "重新載入設計",
 	"Design Pages": "設計頁面",
 	"Load Design": "匯入設計",
+	"Open page note in new tab": "在新分頁開啟頁面筆記",
+	"Page note file not found": "找不到頁面筆記檔案",
 	"Contains source only blocks": "包含僅支援原始碼編輯的區塊",
 	"Show Block": "顯示區塊",
 	"Hide Block": "隱藏區塊",

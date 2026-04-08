@@ -1,4 +1,4 @@
-import { debounce, ItemView, Notice, WorkspaceLeaf } from "obsidian";
+import { debounce, ItemView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import { t } from "src/lang/helpers";
 import {
 	generateDesignMakerRuntimeCss,
@@ -354,6 +354,9 @@ export class DesignMakerView extends ItemView {
 				found.block.hiddenInDesign = hidden;
 				this._renderCanvasAndPreview();
 				this._render(); // update eye icon in list
+			},
+			onOpenPageFile: (filePath) => {
+				void this._openPageFileInNewTab(filePath);
 			},
 		});
 
@@ -1113,6 +1116,17 @@ export class DesignMakerView extends ItemView {
 		this.selectedBlockId = null;
 		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 		this._render();
+	}
+
+	private async _openPageFileInNewTab(filePath: string): Promise<void> {
+		const target = this.app.vault.getAbstractFileByPath(filePath);
+		if (!(target instanceof TFile)) {
+			new Notice(t("Page note file not found"));
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf("tab");
+		await leaf.openFile(target, { active: true });
+		this.app.workspace.revealLeaf(leaf);
 	}
 
 	private _switchActivePage(direction: -1 | 1): void {

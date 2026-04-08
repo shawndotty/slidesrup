@@ -612,6 +612,8 @@ export default {
 	"Reload Design": "Reload Design",
 	"Design Pages": "Design Pages",
 	"Load Design": "Load Design",
+	"Open page note in new tab": "Open page note in new tab",
+	"Page note file not found": "Page note file not found",
 	"Contains source only blocks": "Contains source only blocks",
 	"Show Block": "Show Block",
 	"Hide Block": "Hide Block",

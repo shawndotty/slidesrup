@@ -697,11 +697,18 @@ h3.slides-rup-title {
 	font-size: 14px;
 }
 
+.slides-rup-design-maker-page-item-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
 .slides-rup-design-maker-page-item {
 	display: block;
-	width: 100%;
+	flex: 1;
 	text-align: left;
-	margin-bottom: 8px;
+	margin-bottom: 0;
 }
 
 .slides-rup-design-maker-page-item.is-active {
@@ -712,6 +719,37 @@ h3.slides-rup-title {
 .slides-rup-design-maker-page-item.has-warning::after {
 	content: "⚠️";
 	margin-left: 8px;
+}
+
+.slides-rup-design-maker-page-link-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	background: transparent;
+	box-shadow: none;
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	border-radius: 6px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.slides-rup-design-maker-page-link-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.slides-rup-design-maker-page-link-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.slides-rup-design-maker-page-link-btn svg {
+	width: 14px;
+	height: 14px;
 }
 
 .slides-rup-design-maker-layer-list {

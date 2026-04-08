@@ -550,6 +550,8 @@ export default {
 	"Reload Design": "重新加载设计",
 	"Design Pages": "设计页面",
 	"Load Design": "导入设计",
+	"Open page note in new tab": "在新标签打开页面笔记",
+	"Page note file not found": "未找到页面笔记文件",
 	"Contains source only blocks": "包含仅支持源码编辑的区块",
 	"Show Block": "显示区块",
 	"Hide Block": "隐藏区块",

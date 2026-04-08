@@ -93,6 +93,7 @@ export function renderDesignPageList(options: {
 	onSelect: (pageType: DesignPageType) => void;
 	onSelectBlock: (blockId: string | null) => void;
 	onToggleBlockVisibility: (blockId: string, hidden: boolean) => void;
+	onOpenPageFile?: (filePath: string) => void | Promise<void>;
 	onMoveBlock?: (request: LayerMoveRequest) => void;
 }): void {
 	const {
@@ -103,6 +104,7 @@ export function renderDesignPageList(options: {
 		onSelect,
 		onSelectBlock,
 		onToggleBlockVisibility,
+		onOpenPageFile,
 		onMoveBlock,
 	} = options;
 	container.empty();
@@ -313,7 +315,10 @@ export function renderDesignPageList(options: {
 	};
 
 	Object.values(draft.pages).forEach((page) => {
-		const button = container.createEl("button", {
+		const pageItemEl = container.createDiv(
+			"slides-rup-design-maker-page-item-row",
+		);
+		const button = pageItemEl.createEl("button", {
 			text: page.label,
 			cls: "slides-rup-design-maker-page-item",
 		});
@@ -325,6 +330,23 @@ export function renderDesignPageList(options: {
 			button.setAttr("aria-label", t("Contains source only blocks"));
 		}
 		button.addEventListener("click", () => onSelect(page.type));
+		const openPageButton = pageItemEl.createEl("button", {
+			cls: "slides-rup-design-maker-page-link-btn",
+			attr: {
+				type: "button",
+				"aria-label": t("Open page note in new tab"),
+				title: t("Open page note in new tab"),
+			},
+		});
+		setIcon(openPageButton, "external-link");
+		if (!onOpenPageFile) {
+			openPageButton.disabled = true;
+		}
+		openPageButton.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			void onOpenPageFile?.(page.filePath);
+		});
 
 		if (page.type === activePageType && page.blocks.length > 0) {
 			const blockListContainer = container.createDiv(
