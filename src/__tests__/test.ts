@@ -85,6 +85,7 @@ import {
 	sanitizeSvgAiOutput,
 } from "../services/inline-style-ai-service";
 import { SecretStoreService } from "../services/secret-store-service";
+import { createDuplicatedGridBlock } from "../services/design-grid-duplication";
 import {
 	buildMarkdownImageFromUrl,
 	buildUnsplashCroppedImageUrl,
@@ -1274,6 +1275,68 @@ function testImagePickerPlacementAndSelection() {
 	console.log("testImagePickerPlacementAndSelection passed");
 }
 
+function testDuplicateGridBlockExtraAttributesIsolation() {
+	const target: any = {
+		id: "grid-origin",
+		type: "grid",
+		role: "grid",
+		rect: { x: 10, y: 20, width: 30, height: 40 },
+		content: "demo",
+		className: "",
+		style: "",
+		pad: "",
+		align: "",
+		flow: "",
+		filter: "",
+		justifyContent: "",
+		bg: "",
+		border: "",
+		animate: "",
+		opacity: "",
+		rotate: "",
+		frag: "",
+		extraAttributes: {
+			rectUnit: "px",
+			foo: "bar",
+		},
+		children: [{ id: "child-1" }],
+	};
+	const duplicated = createDuplicatedGridBlock({
+		target,
+		offset: 12,
+		idFactory: () => "grid-copy",
+	});
+
+	assert.notStrictEqual(
+		duplicated.extraAttributes,
+		target.extraAttributes,
+		"Duplicated block should clone extraAttributes to avoid shared reference",
+	);
+	assert.strictEqual(
+		duplicated.extraAttributes.rectUnit,
+		"px",
+		"Duplicated block should preserve rectUnit value",
+	);
+	duplicated.extraAttributes.rectUnit = "percent";
+	assert.strictEqual(
+		target.extraAttributes.rectUnit,
+		"px",
+		"Changing duplicate rectUnit should not affect original",
+	);
+	target.extraAttributes.rectUnit = "px";
+	assert.strictEqual(
+		duplicated.extraAttributes.rectUnit,
+		"percent",
+		"Duplicate should keep its own state after original changes",
+	);
+	assert.deepStrictEqual(
+		duplicated.children,
+		[],
+		"Duplicate should keep existing behavior of resetting children",
+	);
+	console.log("testDuplicateGridBlockExtraAttributesIsolation passed");
+}
+
 function testStrictBinaryToggleContinuousClicks() {
 	const history: boolean[] = [];
 	const toggle = createStrictBinaryToggleController({
@@ -2063,6 +2126,7 @@ async function runTests() {
 		testUnsplashImageInsertHelpers();
 		testUnsplashRatioParsingAndCropResolve();
 		testImagePickerPlacementAndSelection();
+		testDuplicateGridBlockExtraAttributesIsolation();
 		testStrictBinaryToggleContinuousClicks();
 		testStrictBinaryToggleBoundaryCases();
 		await testStrictBinaryToggleAsyncCallback();

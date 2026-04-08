@@ -41,6 +41,7 @@ import {
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
 } from "src/constants";
 import { dispatchThemeColorChange } from "src/services/theme-color-dispatch";
+import { createDuplicatedGridBlock } from "src/services/design-grid-duplication";
 
 export class DesignMakerView extends ItemView {
 	private plugin: any;
@@ -1620,19 +1621,7 @@ export class DesignMakerView extends ItemView {
 			new Notice(t("SR-SideBar block already exists"));
 			return;
 		}
-		const nextBlock: DesignGridBlock = {
-			...target,
-			id: `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-			rect: {
-				...target.rect,
-				x: Math.min(100 - target.rect.width, target.rect.x + offset),
-				y: Math.min(100 - target.rect.height, target.rect.y + offset),
-			},
-		};
-		// recursive duplicate of children if necessary? Actually spread operator copies the children array reference.
-		// We should deep clone children if we want to fully support duplicate.
-		// For now, let's omit children or just empty them to avoid duplicate IDs
-		nextBlock.children = [];
+		const nextBlock = createDuplicatedGridBlock({ target, offset });
 
 		if (found.parent) {
 			found.parent.children!.push(nextBlock);
