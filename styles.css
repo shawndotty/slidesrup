@@ -821,7 +821,7 @@ button.slides-rup-design-maker-layer-collapse {
 	gap: 4px;
 	font-size: 12px;
 	background: var(--background-modifier-form-field);
-	padding: 4px 6px;
+	padding: 0px 6px;
 	border-radius: 14px;
 	border: 1px solid var(--background-modifier-border);
 }
