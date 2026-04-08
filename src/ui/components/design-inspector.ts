@@ -1670,11 +1670,15 @@ function createCssEditorField(
 		);
 		const generatedStyle = await modal.openAndGetValue();
 		if (!generatedStyle) return;
+		const currentText = editorView.state.doc.toString();
+		const insertText = currentText
+			? `${currentText}\n${generatedStyle}`
+			: generatedStyle;
 		editorView.dispatch({
 			changes: {
 				from: 0,
 				to: editorView.state.doc.length,
-				insert: generatedStyle,
+				insert: insertText,
 			},
 		});
 	});
@@ -1723,7 +1727,7 @@ function createFilterField(
 		);
 		const generated = await modal.openAndGetValue();
 		if (!generated) return;
-		input.value = generated;
+		input.value += `${input.value ? " " : ""}${generated}`;
 		onChange(generated);
 	});
 }
