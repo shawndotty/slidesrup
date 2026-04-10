@@ -2,7 +2,7 @@ import { setIcon } from "obsidian";
 import { t } from "src/lang/helpers";
 import {
 	DesignDraft,
-	DesignPageType,
+	DesignPageId,
 	DesignCanvasBlock,
 	DesignGridBlock,
 } from "src/types/design-maker";
@@ -88,9 +88,9 @@ export function getInsertIndexForReversedLayerOrder(options: {
 export function renderDesignPageList(options: {
 	container: HTMLElement;
 	draft: DesignDraft;
-	activePageType: DesignPageType;
+	activePageType: DesignPageId;
 	selectedBlockId: string | null;
-	onSelect: (pageType: DesignPageType) => void;
+	onSelect: (pageType: DesignPageId) => void;
 	onSelectBlock: (blockId: string | null) => void;
 	onToggleBlockVisibility: (blockId: string, hidden: boolean) => void;
 	onOpenPageFile?: (filePath: string) => void | Promise<void>;

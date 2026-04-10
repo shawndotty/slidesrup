@@ -1,5 +1,5 @@
 import { t } from "src/lang/helpers";
-import { DesignPageType } from "src/types/design-maker";
+import { DesignPageId, DesignPageType } from "src/types/design-maker";
 
 export interface DesignPageDefinition {
 	type: DesignPageType;
@@ -52,6 +52,27 @@ export function getDesignPageDefinition(type: DesignPageType) {
 
 export function getDesignPageLabel(type: DesignPageType): string {
 	return t((getDesignPageDefinition(type)?.labelKey || "Slide") as any);
+}
+
+export function isDesignMarkdownFile(fileName: string): boolean {
+	return /\.md$/i.test(fileName);
+}
+
+export function buildAdditionalPageDraftMeta(
+	fileName: string,
+	filePath: string,
+): {
+	type: DesignPageId;
+	label: string;
+	fileName: string;
+	filePath: string;
+} {
+	return {
+		type: `extra:${fileName}`,
+		label: getDesignPageDisplayName(fileName),
+		fileName,
+		filePath,
+	};
 }
 
 export function getDesignPageDisplayName(fileName: string): string {

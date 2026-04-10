@@ -18,13 +18,16 @@ import {
 	DESIGN_MAKER_VIEW_TYPE,
 	DesignDraft,
 	DesignPageDraft,
+	DesignPageId,
 	DesignPageType,
 } from "src/types/design-maker";
 import {
+	buildAdditionalPageDraftMeta,
 	DESIGN_PAGE_DEFINITIONS,
 	getDesignPageFileName,
 	getDesignThemeFileName,
 	inferDesignNameFromPath,
+	isDesignMarkdownFile,
 	normalizeDesignName,
 } from "./design-maker-schema";
 import { parseDesignPageDraft, parseThemeDraft } from "./design-maker-parser";
@@ -232,9 +235,11 @@ export class DesignMaker {
 
 	async loadDesignDraft(designPath: string): Promise<DesignDraft> {
 		const designName = inferDesignNameFromPath(designPath);
-		const pages = {} as Record<DesignPageType, DesignPageDraft>;
+		const pages: Record<string, DesignPageDraft> = {};
+		const reservedNames = new Set<string>();
 		for (const definition of DESIGN_PAGE_DEFINITIONS) {
 			const fileName = getDesignPageFileName(definition.type, designName);
+			reservedNames.add(fileName);
 			const filePath = `${designPath}/${fileName}`;
 			const markdown = await this._readFileIfExists(
 				filePath,
@@ -244,6 +249,20 @@ export class DesignMaker {
 				definition.type,
 				designName,
 				filePath,
+				markdown,
+			);
+		}
+		const additionalFiles = this._collectAdditionalMarkdownFiles(
+			designPath,
+			reservedNames,
+		);
+		for (const file of additionalFiles) {
+			const meta = buildAdditionalPageDraftMeta(file.name, file.path);
+			const markdown = await this.app.vault.read(file);
+			pages[meta.type] = parseDesignPageDraft(
+				meta.type,
+				designName,
+				meta.filePath,
 				markdown,
 			);
 		}
@@ -262,9 +281,15 @@ export class DesignMaker {
 		};
 	}
 
-	async saveDesignDraft(draft: DesignDraft): Promise<void> {
-		for (const definition of DESIGN_PAGE_DEFINITIONS) {
-			const page = draft.pages[definition.type];
+	async saveDesignDraft(
+		draft: DesignDraft,
+		options?: { dirtyPageIds?: Iterable<string> },
+	): Promise<void> {
+		const dirtyPageIds = options?.dirtyPageIds
+			? new Set(options.dirtyPageIds)
+			: null;
+		for (const page of Object.values(draft.pages)) {
+			if (dirtyPageIds && !dirtyPageIds.has(page.type)) continue;
 			page.rawMarkdown = generatePageMarkdown(page);
 			await this._writeOrCreateFile(page.filePath, page.rawMarkdown);
 		}
@@ -285,7 +310,7 @@ export class DesignMaker {
 
 	reparsePage(
 		designName: string,
-		pageType: DesignPageType,
+		pageType: DesignPageId,
 		filePath: string,
 		rawMarkdown: string,
 	): DesignPageDraft {
@@ -337,6 +362,19 @@ export class DesignMaker {
 			? "Designs"
 			: DesignMaker.MY_DESIGN_FOLDER;
 		return `${this.settings.slidesRupFrameworkFolder}/${folderName}/Design-${designName}`;
+	}
+
+	private _collectAdditionalMarkdownFiles(
+		designPath: string,
+		reservedNames: Set<string>,
+	): TFile[] {
+		const folder = this.app.vault.getAbstractFileByPath(designPath);
+		if (!(folder instanceof TFolder)) return [];
+		return folder.children
+			.filter((item): item is TFile => item instanceof TFile)
+			.filter((file) => isDesignMarkdownFile(file.name))
+			.filter((file) => !reservedNames.has(file.name))
+			.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
 	private async _copyDesignFile(

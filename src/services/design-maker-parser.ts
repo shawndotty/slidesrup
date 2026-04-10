@@ -2,16 +2,13 @@ import {
 	DesignCanvasBlock,
 	DesignGridBlock,
 	DesignPageDraft,
-	DesignPageType,
+	DesignPageId,
 	DesignRectUnit,
 	ThemeStyleDraft,
 } from "src/types/design-maker";
 import { DEFAULT_SETTINGS } from "src/models/default-settings";
 import type { SlidesRupSettings } from "src/types";
-import {
-	getDesignPageDisplayName,
-	getDesignPageFileName,
-} from "./design-maker-schema";
+import { getDesignPageDisplayName } from "./design-maker-schema";
 
 let blockSeed = 0;
 
@@ -639,12 +636,12 @@ function parseGridBlocks(
 }
 
 export function parseDesignPageDraft(
-	pageType: DesignPageType,
+	pageType: DesignPageId,
 	designName: string,
 	filePath: string,
 	markdown: string,
 ): DesignPageDraft {
-	const fileName = getDesignPageFileName(pageType, designName);
+	const fileName = filePath.split("/").pop() || `${pageType}.md`;
 	const footnotesState = {
 		hasFootnotesBlock: false,
 		hasSideBarBlock: false,

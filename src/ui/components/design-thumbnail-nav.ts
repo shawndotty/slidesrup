@@ -1,5 +1,5 @@
 import { t } from "src/lang/helpers";
-import { DesignPageDraft, DesignPageType } from "src/types/design-maker";
+import { DesignPageDraft, DesignPageId } from "src/types/design-maker";
 
 const THUMBNAIL_ITEM_WIDTH = 140;
 const THUMBNAIL_ITEM_HEIGHT = 64;
@@ -101,7 +101,7 @@ function createThumbnailItem(options: {
 	page: DesignPageDraft;
 	index: number;
 	isActive: boolean;
-	onSelect: (pageType: DesignPageType) => void;
+	onSelect: (pageType: DesignPageId) => void;
 	virtualized: boolean;
 	itemWidth: number;
 	gap: number;
@@ -196,8 +196,8 @@ function ensureActiveItemVisible(options: {
 export function renderDesignThumbnailNav(options: {
 	container: HTMLElement;
 	pages: DesignPageDraft[];
-	activePageType: DesignPageType;
-	onSelect: (pageType: DesignPageType) => void;
+	activePageType: DesignPageId;
+	onSelect: (pageType: DesignPageId) => void;
 	initialScrollLeft?: number;
 	onScrollLeftChange?: (scrollLeft: number) => void;
 }): void {

@@ -9,6 +9,8 @@ export type DesignPageType =
 	| "blank"
 	| "backCover";
 
+export type DesignPageId = DesignPageType | string;
+
 export type DesignBlockRole =
 	| "grid"
 	| "text"
@@ -76,7 +78,7 @@ export interface ThemeStyleDraft {
 }
 
 export interface DesignPageDraft {
-	type: DesignPageType;
+	type: DesignPageId;
 	label: string;
 	fileName: string;
 	filePath: string;
@@ -91,7 +93,7 @@ export interface DesignDraft {
 	designName: string;
 	designPath: string;
 	sourceDesignName: string;
-	pages: Record<DesignPageType, DesignPageDraft>;
+	pages: Record<string, DesignPageDraft>;
 	theme: ThemeStyleDraft;
 }
 

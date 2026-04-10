@@ -11,7 +11,7 @@ import {
 	DesignGridBlock,
 	DesignCanvasBlock,
 	DesignMakerViewState,
-	DesignPageType,
+	DesignPageId,
 	DesignRectUnit,
 } from "src/types/design-maker";
 import {
@@ -49,7 +49,8 @@ export class DesignMakerView extends ItemView {
 	private designState: DesignMakerViewState | null = null;
 	private draft: DesignDraft | null = null;
 	private presentationCss: string = "";
-	private activePageType: DesignPageType = "cover";
+	private activePageId: DesignPageId = "cover";
+	private dirtyPageIds = new Set<string>();
 	private selectedBlockId: string | null = null;
 	private pageListEl: HTMLElement | null = null;
 	private centerTabsEl: HTMLElement | null = null;
@@ -199,15 +200,19 @@ export class DesignMakerView extends ItemView {
 	}): Promise<void> {
 		if (!this.designState?.designPath) return;
 		const keepActivePage = options?.keepActivePage === true;
-		const previousPageType = this.activePageType;
+		const previousPageId = this.activePageId;
 		try {
 			this.draft = await this.designMaker.loadDesignDraft(
 				this.designState.designPath,
 			);
-			if (keepActivePage && this.draft.pages[previousPageType]) {
-				this.activePageType = previousPageType;
+			this.dirtyPageIds.clear();
+			if (keepActivePage && this.draft.pages[previousPageId]) {
+				this.activePageId = previousPageId;
+			} else if (this.draft.pages.cover) {
+				this.activePageId = "cover";
 			} else {
-				this.activePageType = "cover";
+				const firstPage = this._getOrderedPages()[0];
+				this.activePageId = firstPage?.type || "cover";
 			}
 			this.selectedBlockId = null;
 			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
@@ -335,7 +340,7 @@ export class DesignMakerView extends ItemView {
 		renderDesignPageList({
 			container: this.pageListEl,
 			draft: this.draft,
-			activePageType: this.activePageType,
+			activePageType: this.activePageId,
 			selectedBlockId: this.selectedBlockId,
 			onSelect: (pageType) => {
 				this._setActivePage(pageType);
@@ -572,7 +577,7 @@ export class DesignMakerView extends ItemView {
 		renderDesignThumbnailNav({
 			container: this.thumbnailNavEl,
 			pages: this._getOrderedPages(),
-			activePageType: this.activePageType,
+			activePageType: this.activePageId,
 			initialScrollLeft: this.thumbnailNavScrollLeft,
 			onScrollLeftChange: (scrollLeft) => {
 				this.thumbnailNavScrollLeft = scrollLeft;
@@ -628,6 +633,7 @@ export class DesignMakerView extends ItemView {
 				this._patchBlockById(blockId, patcher, {
 					syncPageSource: mode !== "live",
 				});
+				this._markCurrentPageDirty();
 				if (mode === "live") {
 					this._syncSelectedInspectorRectFields();
 					return;
@@ -636,6 +642,7 @@ export class DesignMakerView extends ItemView {
 			},
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
+				this._markCurrentPageDirty();
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
 				this._render();
@@ -724,7 +731,9 @@ export class DesignMakerView extends ItemView {
 		saveButton.addEventListener("click", async () => {
 			if (!this.draft) return;
 			this.draft.theme.rawCss = this.cssSourceValue;
-			await this.designMaker.saveDesignDraft(this.draft);
+			await this.designMaker.saveDesignDraft(this.draft, {
+				dirtyPageIds: this.dirtyPageIds,
+			});
 			await this._loadDraft({ keepActivePage: true });
 		});
 
@@ -777,6 +786,7 @@ export class DesignMakerView extends ItemView {
 			slideBaseHeight: this._getSlideBaseHeight(),
 			onAddBlock: (block) => {
 				this._getCurrentPage().blocks.push(block);
+				this._markCurrentPageDirty();
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
 				this._render();
@@ -788,6 +798,7 @@ export class DesignMakerView extends ItemView {
 				}
 				const block = this._createFootnotesBlock();
 				this._getCurrentPage().blocks.push(block);
+				this._markCurrentPageDirty();
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
 				this._render();
@@ -799,6 +810,7 @@ export class DesignMakerView extends ItemView {
 				}
 				const block = this._createSideBarBlock();
 				this._getCurrentPage().blocks.push(block);
+				this._markCurrentPageDirty();
 				this.selectedBlockId = block.id;
 				this._syncPageSource();
 				this._render();
@@ -1065,7 +1077,8 @@ export class DesignMakerView extends ItemView {
 				page.filePath,
 				this.pageSourceValue,
 			);
-			this.draft.pages[this.activePageType] = reparsed;
+			this.draft.pages[this.activePageId] = reparsed;
+			this._markCurrentPageDirty();
 			this.selectedBlockId = null;
 			this._notifyUnitWarnings(this.draft);
 			this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
@@ -1102,7 +1115,7 @@ export class DesignMakerView extends ItemView {
 		if (!this.draft) {
 			throw new Error("Design draft is not loaded.");
 		}
-		return this.draft.pages[this.activePageType];
+		return this.draft.pages[this.activePageId];
 	}
 
 	private _getOrderedPages() {
@@ -1110,10 +1123,10 @@ export class DesignMakerView extends ItemView {
 		return Object.values(this.draft.pages);
 	}
 
-	private _setActivePage(pageType: DesignPageType): void {
+	private _setActivePage(pageType: DesignPageId): void {
 		if (!this.draft) return;
-		if (this.activePageType === pageType) return;
-		this.activePageType = pageType;
+		if (this.activePageId === pageType) return;
+		this.activePageId = pageType;
 		this.selectedBlockId = null;
 		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
 		this._render();
@@ -1135,7 +1148,7 @@ export class DesignMakerView extends ItemView {
 		const pages = this._getOrderedPages();
 		if (pages.length === 0) return;
 		const currentIndex = pages.findIndex(
-			(page) => page.type === this.activePageType,
+			(page) => page.type === this.activePageId,
 		);
 		const nextIndex = getNextThumbnailIndex({
 			currentIndex,
@@ -1274,6 +1287,7 @@ export class DesignMakerView extends ItemView {
 		} else if (block.extraAttributes.rectUnit === "px") {
 			delete block.extraAttributes.rectUnit;
 		}
+		this._markCurrentPageDirty();
 		this._syncPageSource();
 		this._render();
 	}
@@ -1366,6 +1380,7 @@ export class DesignMakerView extends ItemView {
 			);
 		}
 
+		this._markCurrentPageDirty();
 		this._syncPageSource();
 		this._render();
 	}
@@ -1441,6 +1456,7 @@ export class DesignMakerView extends ItemView {
 		);
 		if (!found || found.block.type !== "grid") return;
 		patcher(found.block as DesignGridBlock);
+		this._markCurrentPageDirty();
 		if (options?.syncPageSource !== false) {
 			this._syncPageSource();
 		}
@@ -1629,6 +1645,7 @@ export class DesignMakerView extends ItemView {
 			page.blocks.push(nextBlock);
 		}
 
+		this._markCurrentPageDirty();
 		this.selectedBlockId = nextBlock.id;
 		this._syncPageSource();
 		this._render();
@@ -1648,6 +1665,7 @@ export class DesignMakerView extends ItemView {
 		if (this.selectedBlockId === blockId) {
 			this.selectedBlockId = null;
 		}
+		this._markCurrentPageDirty();
 		this._syncPageSource();
 		this._render();
 	}
@@ -1736,6 +1754,11 @@ export class DesignMakerView extends ItemView {
 
 	private _syncPageSource(): void {
 		this.pageSourceValue = generatePageMarkdown(this._getCurrentPage());
+	}
+
+	private _markCurrentPageDirty(): void {
+		const page = this._getCurrentPage();
+		this.dirtyPageIds.add(page.type);
 	}
 
 	private _renderEmptyState(message: string): void {
