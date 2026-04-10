@@ -25,12 +25,17 @@ import { markdown } from "@codemirror/lang-markdown";
 import { GithubService } from "../services/github-service";
 import { GiteeService } from "../services/gitee-service";
 import { dispatchThemeColorChange } from "../services/theme-color-dispatch";
+import {
+	saveUserCustomCss,
+	subscribeCustomCssChange,
+} from "src/services/custom-css-sync";
 
 type SettingsKeys = keyof SlidesRup["settings"];
 
 export class SlidesRupSettingTab extends PluginSettingTab {
 	plugin: SlidesRup;
 	private apiService: ApiService;
+	private customCssUnsubscribe: (() => void) | null = null;
 
 	constructor(app: App, plugin: SlidesRup) {
 		super(app, plugin);
@@ -98,6 +103,11 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 				);
 			}
 		});
+	}
+
+	hide(): void {
+		this.customCssUnsubscribe?.();
+		this.customCssUnsubscribe = null;
 	}
 
 	private renderLicensePurchaseInfo(containerEl: HTMLElement) {
@@ -1675,10 +1685,13 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			.setDesc(t("Input Your Customized CSS"))
 			.setClass("slides-rup-custom-css");
 
-		// 创建一个 div 元素作为 CodeMirror 的容器
+		this.customCssUnsubscribe?.();
+		this.customCssUnsubscribe = null;
+
+		let isApplyingExternalCustomCss = false;
 		const editorContainer = containerEl.createDiv("slides-rup-css-editor");
 
-		new EditorView({
+		const customCssEditor = new EditorView({
 			state: EditorState.create({
 				doc: this.plugin.settings.customCss || "",
 				extensions: [
@@ -1689,11 +1702,9 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 						? [oneDark]
 						: []), // 仅在暗色模式下加载 oneDark 主题
 					EditorView.updateListener.of((update) => {
-						// 监听编辑器内容的变化
-						if (update.docChanged) {
+						if (update.docChanged && !isApplyingExternalCustomCss) {
 							const newCss = update.state.doc.toString();
-							// 使用 debounce 来防止频繁保存，提升性能
-							saveCssSetting(newCss);
+							void saveCssSetting(newCss);
 						}
 					}),
 				],
@@ -1701,21 +1712,28 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			parent: editorContainer,
 		});
 
-		// 如果你希望根据 Obsidian 当前的主题自动切换，可以进一步判断 document.body 的 class（比如 "theme-dark"），
-		// 并动态切换 oneDark 或默认主题。
-
-		// 保存设置的方法（防抖处理）
 		const saveCssSetting = debounce(
-			(newCss: string) => {
-				this.plugin.settings.customCss = newCss;
-				this.plugin.saveSettings();
-				this.plugin.services.slidesRupStyleService.modifyStyleSection(
-					"userStyle",
-				);
+			async (newCss: string) => {
+				await saveUserCustomCss(this.plugin, newCss);
 			},
 			500,
 			true,
 		);
+		this.customCssUnsubscribe = subscribeCustomCssChange((newCss) => {
+			const currentCss = customCssEditor.state.doc.toString();
+			if (currentCss === newCss) {
+				return;
+			}
+			isApplyingExternalCustomCss = true;
+			customCssEditor.dispatch({
+				changes: {
+					from: 0,
+					to: customCssEditor.state.doc.length,
+					insert: newCss,
+				},
+			});
+			isApplyingExternalCustomCss = false;
+		});
 
 		new Setting(containerEl)
 			.setName(t("User Customized Marp CSS"))

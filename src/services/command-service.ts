@@ -18,6 +18,7 @@ import {
 	ADVANCED_SLIDES_PLUGIN_FOLDER,
 } from "../constants";
 import { ApiService } from "./api-services";
+import { CUSTOM_STYLE_EDITOR_VIEW_TYPE } from "src/types/custom-style-editor";
 
 export class CommandService {
 	private slidesMaker: SlidesMaker;
@@ -410,6 +411,27 @@ export class CommandService {
 						this.designMaker.openDesignMaker(),
 					);
 				}
+			},
+		});
+
+		this.addCommand({
+			id: "slides-rup:open-custom-style-editor",
+			name: "Custom Style Editor",
+			callback: async () => {
+				const existingLeaf =
+					this.app.workspace.getLeavesOfType(
+						CUSTOM_STYLE_EDITOR_VIEW_TYPE,
+					)[0];
+				if (existingLeaf) {
+					this.app.workspace.revealLeaf(existingLeaf);
+					return;
+				}
+				const leaf = this.app.workspace.getLeaf("tab");
+				await leaf.setViewState({
+					type: CUSTOM_STYLE_EDITOR_VIEW_TYPE,
+					active: true,
+				});
+				this.app.workspace.revealLeaf(leaf);
 			},
 		});
 

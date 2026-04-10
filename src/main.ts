@@ -11,6 +11,8 @@ import { BlocksSuggest } from "./editor/blocks-sugguest";
 import { PlaceHoldersSuggest } from "./editor/place-holders-sugguest";
 import { DESIGN_MAKER_VIEW_TYPE } from "./types/design-maker";
 import { DesignMakerView } from "./ui/views/design-maker-view";
+import { CUSTOM_STYLE_EDITOR_VIEW_TYPE } from "./types/custom-style-editor";
+import { CustomStyleEditorView } from "./ui/views/custom-style-editor-view";
 
 export default class SlidesRup extends Plugin {
 	settings: SlidesRupSettings;
@@ -35,6 +37,10 @@ export default class SlidesRup extends Plugin {
 		this.registerView(
 			DESIGN_MAKER_VIEW_TYPE,
 			(leaf) => new DesignMakerView(leaf, this),
+		);
+		this.registerView(
+			CUSTOM_STYLE_EDITOR_VIEW_TYPE,
+			(leaf) => new CustomStyleEditorView(leaf, this),
 		);
 
 		await this.services.slidesRupStyleService.updateUserDesignCssSettings();

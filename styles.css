@@ -321,6 +321,14 @@ h3.slides-rup-title {
 	margin-bottom: 16px;
 }
 
+.slides-rup-custom-style-editor-view {
+	height: 100%;
+	padding: 16px;
+}
+
+.slides-rup-custom-style-editor-view .slides-rup-css-editor {
+	min-height: 420px;
+}
 
 .slidesrup-license-container {
     background-color: var(--background-secondary);

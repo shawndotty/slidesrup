@@ -1,0 +1,912 @@
+/* List Variables */
+:root {
+  --r-list-padding: 8px 0;
+}
+
+.reveal ul ul,
+.reveal ul ol,
+.reveal ol ol,
+.reveal ol ul {
+  margin-left: 0;
+  list-style-position: inside;
+}
+
+.reveal ol,
+.reveal dl,
+.reveal ul {
+  margin-left: 0;
+  list-style-position: inside;
+}
+
+.reveal ul {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+/* List Reset */
+
+.reveal .slides section li {
+  list-style: inherit;
+  padding: var(--r-list-padding);
+}
+
+.reveal .slides section li li {
+  border-left: none;
+  margin-bottom: 0;
+  padding-left: 2em;
+}
+
+.reveal .slides section ol li {
+  background: none;
+  border-left: none;
+}
+
+.reveal .slides section ul li {
+  list-style: none;
+}
+
+.reveal .slides section > div > ul li.current-fragment,
+.reveal .slides section > div > .content > .block > ul li.current-fragment,
+.reveal .slides section > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+/* Grid List */
+
+.reveal .slides .grid-list > div > ul,
+.reveal .slides .grid-list > div > .content > .block > ul,
+.reveal .slides .grid-list > div > .content > ul {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.reveal .slides .grid-list > div > ul > li:nth-child(even),
+.reveal .slides .grid-list > div > .content > .block > ul > li:nth-child(even),
+.reveal .slides .grid-list > div > .content > ul > li:nth-child(even) {
+  margin-left: -2px;
+}
+
+.reveal .slides .grid-list > div > ul > li,
+.reveal .slides .grid-list > div > .content > .block > ul > li,
+.reveal .slides .grid-list > div > .content > ul > li {
+  width: 50%;
+  box-sizing: border-box;
+  border: 2px solid var(--r-list-main-color);
+  border-radius: 0;
+  padding: 20px;
+  background-color: transparent;
+  margin-top: -2px;
+}
+
+.reveal .slides .grid-list > div > ul li.current-fragment,
+.reveal .slides .grid-list > div > .content > .block > ul li.current-fragment,
+.reveal .slides .grid-list > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+/* Box List */
+
+.reveal .slides .box-list > div > ul,
+.reveal .slides .box-list > div > .content > .block > ul,
+.reveal .slides .box-list > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+  width: 100%;
+}
+
+.reveal .slides .box-list > div > ul li,
+.reveal .slides .box-list > div > .content > .block > ul li,
+.reveal .slides .box-list > div > .content > ul li {
+  border: none;
+  background-color: transparent;
+}
+
+.reveal .slides .box-list > div > ul > li,
+.reveal .slides .box-list > div > .content > .block > ul > li,
+.reveal .slides .box-list > div > .content > ul > li {
+  border: 2px solid var(--r-list-main-color);
+  padding: 20px;
+}
+
+.reveal .slides .box-list > div > ul li.current-fragment,
+.reveal .slides .box-list > div > .content > .block > ul li.current-fragment,
+.reveal .slides .box-list > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+/* Fancy List */
+
+.reveal .slides .fancy-list > div > ul,
+.reveal .slides .fancy-list > div > .content > .block > ul,
+.reveal .slides .fancy-list > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+  width: 100%;
+}
+
+.reveal .slides .fancy-list > div > ul li,
+.reveal .slides .fancy-list > div > .content > .block > ul li,
+.reveal .slides .fancy-list > div > .content > ul li {
+  border: none;
+  background-color: var(--r-list-background-color);
+}
+
+.reveal .slides .fancy-list > div > ul ul,
+.reveal .slides .fancy-list > div > .content > .block > ul ul,
+.reveal .slides .fancy-list > div > .content > ul ul {
+  margin-top: 20px;
+}
+
+.reveal .slides .fancy-list > div > ul > li,
+.reveal .slides .fancy-list > div > .content > .block > ul > li,
+.reveal .slides .fancy-list > div > .content > ul > li {
+  padding: 30px;
+  position: relative;
+  border-radius: 20px;
+}
+
+.reveal .slides .fancy-list > div > ul > li li,
+.reveal .slides .fancy-list > div > .content > .block > ul > li li,
+.reveal .slides .fancy-list > div > .content > ul > li li {
+  padding-left: 1em;
+}
+
+.reveal .slides .fancy-list > div > ul li.current-fragment,
+.reveal .slides .fancy-list > div > .content > .block > ul li.current-fragment,
+.reveal .slides .fancy-list > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+/* Fancy List Row */
+
+.reveal .slides .fancy-list-row > div > ul,
+.reveal .slides .fancy-list-row > div > .content > .block > ul,
+.reveal .slides .fancy-list-row > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  width: 100%;
+}
+
+.reveal .slides .fancy-list-row > div > ul li,
+.reveal .slides .fancy-list-row > div > .content > .block > ul li,
+.reveal .slides .fancy-list-row > div > .content > ul li {
+  border: none;
+  background-color: var(--r-list-background-color);
+}
+
+.reveal .slides .fancy-list-row > div > ul ul,
+.reveal .slides .fancy-list-row > div > .content > .block > ul ul,
+.reveal .slides .fancy-list-row > div > .content > ul ul {
+  margin-top: 10px;
+}
+
+.reveal .slides .fancy-list-row > div > ul > li,
+.reveal .slides .fancy-list-row > div > .content > .block > ul > li,
+.reveal .slides .fancy-list-row > div > .content > ul > li {
+  padding: 30px;
+  position: relative;
+  border-radius: 20px;
+  margin-bottom: 30px;
+}
+
+.reveal .slides .fancy-list-row > div > ul > li li,
+.reveal .slides .fancy-list-row > div > .content > .block > ul > li li,
+.reveal .slides .fancy-list-row > div > .content > ul > li li {
+  padding-left: 1em;
+}
+
+.reveal .slides .fancy-list-row > div > ul li.current-fragment,
+.reveal
+  .slides
+  .fancy-list-row
+  > div
+  > .content
+  > .block
+  > ul
+  li.current-fragment,
+.reveal .slides .fancy-list-row > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+/* Fancy List With Order */
+
+.reveal .slides .fancy-list-with-order > div > ul,
+.reveal .slides .fancy-list-with-order > div > .content > .block > ul,
+.reveal .slides .fancy-list-with-order > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+  width: 100%;
+  counter-reset: step;
+}
+
+.reveal .slides .fancy-list-with-order > div > ul li,
+.reveal .slides .fancy-list-with-order > div > .content > .block > ul li,
+.reveal .slides .fancy-list-with-order > div > .content > ul li {
+  border: none;
+  background-color: var(--r-list-background-color);
+}
+
+.reveal .slides .fancy-list-with-order > div > ul ul,
+.reveal .slides .fancy-list-with-order > div > .content > .block > ul ul,
+.reveal .slides .fancy-list-with-order > div > .content > ul ul {
+  margin-top: 20px;
+}
+
+.reveal .slides .fancy-list-with-order > div > ul > li,
+.reveal .slides .fancy-list-with-order > div > .content > .block > ul > li,
+.reveal .slides .fancy-list-with-order > div > .content > ul > li {
+  padding: 20px 20px 20px 60px;
+  position: relative;
+  border-radius: 20px;
+}
+
+.reveal .slides .fancy-list-with-order > div > ul > li li,
+.reveal .slides .fancy-list-with-order > div > .content > .block > ul > li li,
+.reveal .slides .fancy-list-with-order > div > .content > ul > li li {
+  padding-left: 1em;
+}
+
+.reveal .slides .fancy-list-with-order > div > ul > li::before,
+.reveal
+  .slides
+  .fancy-list-with-order
+  > div
+  > .content
+  > .block
+  > ul
+  > li::before,
+.reveal .slides .fancy-list-with-order > div > .content > ul > li::before {
+  content: counter(step);
+  counter-increment: step;
+  text-align: center;
+  line-height: 40px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: var(--r-list-strong-color);
+  color: var(--r-list-strong-c-color);
+  position: absolute;
+  z-index: 10;
+  top: 22px;
+  left: 10px;
+  border-radius: 50px;
+}
+
+.reveal .slides .fancy-list-with-order > div > ul > li::after,
+.reveal
+  .slides
+  .fancy-list-with-order
+  > div
+  > .content
+  > .block
+  > ul
+  > li::after,
+.reveal .slides .fancy-list-with-order > div > .content > ul > li::after {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--r-background-color);
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 99;
+  border-radius: 16px;
+}
+
+/* Fancy-list-with-order-row */
+
+.reveal .slides .fancy-list-with-order-row > div > ul,
+.reveal .slides .fancy-list-with-order-row > div > .content > .block > ul,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul {
+  display: flex;
+  flex-flow: column;
+  gap: 20px;
+  counter-reset: step;
+  width: 100%;
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul li,
+.reveal .slides .fancy-list-with-order-row > div > .content > .block > ul li,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul li {
+  border: none;
+  background-color: var(--r-list-background-color);
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul ul,
+.reveal .slides .fancy-list-with-order-row > div > .content > .block > ul ul,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul ul {
+  margin-top: 20px;
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul > li,
+.reveal .slides .fancy-list-with-order-row > div > .content > .block > ul > li,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul > li {
+  padding: 30px 60px;
+  position: relative;
+  border-radius: 20px;
+  flex: 1;
+  text-align: left;
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul > li li,
+.reveal
+  .slides
+  .fancy-list-with-order-row
+  > div
+  > .content
+  > .block
+  > ul
+  > li
+  li,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul > li li {
+  font-size: 30px;
+  text-align: left;
+  padding-left: 1em;
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul > li::before,
+.reveal
+  .slides
+  .fancy-list-with-order-row
+  > div
+  > .content
+  > .block
+  > ul
+  > li::before,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul > li::before {
+  content: counter(step);
+  counter-increment: step;
+  text-align: center;
+  line-height: 40px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: var(--r-list-strong-color);
+  color: var(--r-list-strong-c-color);
+  position: absolute;
+  z-index: 10;
+  top: 32px;
+  left: 10px;
+  border-radius: 50px;
+}
+
+.reveal .slides .fancy-list-with-order-row > div > ul > li::after,
+.reveal
+  .slides
+  .fancy-list-with-order-row
+  > div
+  > .content
+  > .block
+  > ul
+  > li::after,
+.reveal .slides .fancy-list-with-order-row > div > .content > ul > li::after {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--r-background-color);
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 99;
+  border-radius: 16px;
+}
+
+/* Order List With Border */
+.reveal .slides .order-list-with-border {
+  display: flex !important;
+  gap: 4em;
+  align-items: center;
+}
+
+.reveal .slides .order-list-with-border > div > ul,
+.reveal .slides .order-list-with-border > div > .content > .block > ul,
+.reveal .slides .order-list-with-border > div > .content > ul {
+  display: flex;
+  flex-direction: column;
+  counter-reset: step;
+  width: 100%;
+}
+
+.reveal .slides .order-list-with-border > div > ul > li,
+.reveal .slides .order-list-with-border > div > .content > .block > ul > li,
+.reveal .slides .order-list-with-border > div > .content > ul > li {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px 0 20px 60px;
+  border-bottom: 1px solid var(--r-dark-gray-color);
+}
+
+.reveal .slides .order-list-with-border > div > ul > li:last-child,
+.reveal
+  .slides
+  .order-list-with-border
+  > div
+  > .content
+  > .block
+  > ul
+  > li:last-child,
+.reveal .slides .order-list-with-border > div > .content > ul > li:last-child {
+  border-bottom: none;
+}
+
+.reveal .slides .order-list-with-border > div > ul > li::before,
+.reveal
+  .slides
+  .order-list-with-border
+  > div
+  > .content
+  > .block
+  > ul
+  > li::before,
+.reveal .slides .order-list-with-border > div > .content > ul > li::before {
+  content: counter(step);
+  counter-increment: step;
+  text-align: center;
+  line-height: 40px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: var(--r-list-strong-color);
+  border-radius: 20px 0 20px 0;
+  position: absolute;
+  left: 0px;
+  top: 22px;
+  color: var(--r-list-strong-c-color);
+}
+
+.reveal .slides .order-list-with-border > div > ul > li li,
+.reveal .slides .order-list-with-border > div > .content > .block > ul > li li,
+.reveal .slides .order-list-with-border > div > .content > ul > li li {
+  padding: 0;
+  margin-top: 6px;
+  font-size: 0.9em;
+}
+
+/* Grid Step List */
+
+.reveal .slides .grid-step-list > div > ul,
+.reveal .slides .grid-step-list > div > .content > .block > ul,
+.reveal .slides .grid-step-list > div > .content > ul {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  gap: 40px;
+  counter-reset: step;
+}
+
+.reveal .slides .grid-step-list > div > ul > li,
+.reveal .slides .grid-step-list > div > .content > .block > ul > li,
+.reveal .slides .grid-step-list > div > .content > ul > li {
+  flex: 1;
+  flex-wrap: wrap;
+  background-color: var(--r-grid-bg-front-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-top: 5px solid var(--r-border-color);
+  font-size: 0.8em;
+  padding: 20px;
+}
+
+.reveal .slides .grid-step-list > div > ul > li.current-fragment,
+.reveal
+  .slides
+  .grid-step-list
+  > div
+  > .content
+  > .block
+  > ul
+  > li.current-fragment,
+.reveal .slides .grid-step-list > div > .content > ul > li.current-fragment {
+  color: var(--r-accent-color);
+  font-weight: 600;
+}
+
+.reveal .slides .grid-step-list > div > ul > li.alt.current-fragment,
+.reveal
+  .slides
+  .grid-step-list
+  > div
+  > .content
+  > .block
+  > ul
+  > li.alt.current-fragment,
+.reveal
+  .slides
+  .grid-step-list
+  > div
+  > .content
+  > ul
+  > li.alt.current-fragment {
+  color: var(--r-complementary-color);
+}
+
+.reveal .slides .grid-step-list > div > ul > li > ul,
+.reveal .slides .grid-step-list > div > .content > .block > ul > li > ul,
+.reveal .slides .grid-step-list > div > .content > ul > li > ul {
+  width: 100%;
+  padding: 0;
+}
+
+.reveal .slides .grid-step-list > div > ul > li > ul > li,
+.reveal .slides .grid-step-list > div > .content > .block > ul > li > ul > li,
+.reveal .slides .grid-step-list > div > .content > ul > li > ul > li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8em;
+}
+
+.reveal .slides .grid-step-list > div > ul > li::before,
+.reveal .slides .grid-step-list > div > .content > .block > ul > li::before,
+.reveal .slides .grid-step-list > div > .content > ul > li::before {
+  content: counter(step);
+  counter-increment: step;
+  text-align: center;
+  line-height: 40px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: var(--r-list-strong-color);
+  border-radius: 20px;
+  position: absolute;
+  left: 50%;
+  margin-left: -20px;
+  top: 20px;
+  color: var(--r-list-strong-c-color);
+}
+
+/* Grid Step List Verticle */
+
+.reveal .slides .grid-step-list-v > div > ul,
+.reveal .slides .grid-step-list-v > div > .content > .block > ul,
+.reveal .slides .grid-step-list-v > div > .content > ul {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  flex-direction: column;
+  counter-reset: step;
+}
+
+.reveal .slides .grid-step-list-v > div > ul > li,
+.reveal .slides .grid-step-list-v > div > .content > .block > ul > li,
+.reveal .slides .grid-step-list-v > div > .content > ul > li {
+  flex: 1;
+  flex-wrap: wrap;
+  background-color: var(--r-grid-bg-front-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 5px solid var(--r-border-color);
+  position: relative;
+  padding: 20px;
+}
+
+.reveal .slides .grid-step-list-v > div > ul > li.current-fragment,
+.reveal
+  .slides
+  .grid-step-list-v
+  > div
+  > .content
+  > .block
+  > ul
+  > li.current-fragment,
+.reveal .slides .grid-step-list-v > div > .content > ul > li.current-fragment,
+.reveal .slides .grid-step-list-v > div > ul > li:has(.current-fragment),
+.reveal
+  .slides
+  .grid-step-list-v
+  > div
+  > .content
+  > .block
+  > ul
+  > li:has(.current-fragment),
+.reveal
+  .slides
+  .grid-step-list-v
+  > div
+  > .content
+  > ul
+  > li:has(.current-fragment) {
+  color: var(--r-accent-color);
+  font-weight: 600;
+}
+
+.reveal .slides .grid-step-list-v > div > ul > li::before,
+.reveal .slides .grid-step-list-v > div > .content > .block > ul > li::before,
+.reveal .slides .grid-step-list-v > div > .content > ul > li::before {
+  content: counter(step);
+  counter-increment: step;
+  text-align: center;
+  line-height: 40px;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: var(--r-list-strong-color);
+  border-radius: 20px;
+  position: absolute;
+  left: 20px;
+  top: 24px;
+  color: var(--r-list-strong-c-color);
+}
+
+.reveal .slides .grid-step-list-v > div > ul > li::after,
+.reveal .slides .grid-step-list-v > div > .content > .block > ul > li::after,
+.reveal .slides .grid-step-list-v > div > .content > ul > li::after {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--r-background-color);
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 99;
+  border-radius: 16px;
+}
+
+/* Pyramid List */
+
+.reveal .slides .pyramid-list > div > ul,
+.reveal .slides .pyramid-list > div > .content > .block > ul,
+.reveal .slides .pyramid-list > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  width: 100%;
+  justify-items: center;
+  margin: auto;
+}
+
+.reveal .slides .pyramid-list > div > ul li,
+.reveal .slides .pyramid-list > div > .content > .block > ul li,
+.reveal .slides .pyramid-list > div > .content > ul li {
+  border: none;
+  background-color: var(--r-list-background-color);
+  text-align: center;
+}
+
+.reveal .slides .pyramid-list > div > ul ul,
+.reveal .slides .pyramid-list > div > .content > .block > ul ul,
+.reveal .slides .pyramid-list > div > .content > ul ul {
+  margin-top: 10px;
+}
+
+.reveal .slides .pyramid-list > div > ul > li,
+.reveal .slides .pyramid-list > div > .content > .block > ul > li,
+.reveal .slides .pyramid-list > div > .content > ul > li {
+  padding: 8px 16px;
+  position: relative;
+  border-radius: 20px;
+  margin-bottom: 30px;
+}
+
+.reveal .slides .pyramid-list > div > ul > li li,
+.reveal .slides .pyramid-list > div > .content > .block > ul > li li,
+.reveal .slides .pyramid-list > div > .content > ul > li li {
+  padding-left: 1em;
+}
+
+.reveal .slides .pyramid-list > div > ul li.current-fragment,
+.reveal
+  .slides
+  .pyramid-list
+  > div
+  > .content
+  > .block
+  > ul
+  li.current-fragment,
+.reveal .slides .pyramid-list > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+.reveal .slides .pyramid-list > div > ul > li:first-child,
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:first-child,
+.reveal .slides .pyramid-list > div > .content > ul > li:first-child {
+  width: 18%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(2),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(2),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(2) {
+  width: 24%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(3),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(3),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(3) {
+  width: 30%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(4),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(4),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(4) {
+  width: 36%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(5),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(5),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(5) {
+  width: 42%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(6),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(6),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(6) {
+  width: 48%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(7),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(7),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(7) {
+  width: 54%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(8),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(8),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(8) {
+  width: 60%;
+}
+
+.reveal .slides .pyramid-list > div > ul > li:nth-child(9),
+.reveal .slides .pyramid-list > div > .content > .block > ul > li:nth-child(9),
+.reveal .slides .pyramid-list > div > .content > ul > li:nth-child(9) {
+  width: 66%;
+}
+
+/* Venn List */
+
+.reveal .slides .venn-list > div > ul,
+.reveal .slides .venn-list > div > .content > .block > ul,
+.reveal .slides .venn-list > div > .content > ul {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  width: 100%;
+  justify-items: center;
+  margin: auto;
+  position: relative;
+  height: 100%;
+}
+
+.reveal .slides .venn-list > div > ul li,
+.reveal .slides .venn-list > div > .content > .block > ul li,
+.reveal .slides .venn-list > div > .content > ul li {
+  border: none;
+  text-align: center;
+}
+
+.reveal .slides .venn-list > div > ul ul,
+.reveal .slides .venn-list > div > .content > .block > ul ul,
+.reveal .slides .venn-list > div > .content > ul ul {
+  margin-top: 10px;
+}
+
+.reveal .slides .venn-list > div > ul > li,
+.reveal .slides .venn-list > div > .content > .block > ul > li,
+.reveal .slides .venn-list > div > .content > ul > li {
+  width: 400px;
+  height: 400px;
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  background-color: rgba(225, 225, 225, 0.7);
+}
+
+.reveal .slides .venn-list > div > ul > li li,
+.reveal .slides .venn-list > div > .content > .block > ul > li li,
+.reveal .slides .venn-list > div > .content > ul > li li {
+  padding: 0;
+}
+
+.reveal .slides .venn-list > div > ul li.current-fragment,
+.reveal .slides .venn-list > div > .content > .block > ul li.current-fragment,
+.reveal .slides .venn-list > div > .content > ul li.current-fragment {
+  color: var(--r-list-strong-color);
+}
+
+.reveal .slides .venn-list > div > ul > li:first-child,
+.reveal .slides .venn-list > div > .content > .block > ul > li:first-child,
+.reveal .slides .venn-list > div > .content > ul > li:first-child {
+  top: 50px;
+  left: 50%;
+  margin-left: -200px;
+}
+
+.reveal .slides .venn-list > div > ul > li:nth-child(2),
+.reveal .slides .venn-list > div > .content > .block > ul > li:nth-child(2),
+.reveal .slides .venn-list > div > .content > ul > li:nth-child(2) {
+  top: 300px;
+  left: 50%;
+  margin-left: -350px;
+}
+
+.reveal .slides .venn-list > div > ul > li:last-child,
+.reveal .slides .venn-list > div > .content > .block > ul > li:last-child,
+.reveal .slides .venn-list > div > .content > ul > li:last-child {
+  top: 300px;
+  right: 50%;
+  margin-right: -350px;
+}
+
+.reveal .slides .venn-list > div > ul > li ul,
+.reveal .slides .venn-list > div > .content > .block > ul > li ul,
+.reveal .slides .venn-list > div > .content > ul > li ul {
+  position: absolute;
+}
+
+.reveal .slides .venn-list > div > ul > li:first-child > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > .block
+  > ul
+  > li:first-child
+  > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > ul
+  > li:first-child
+  > ul:first-child {
+  top: -70px;
+}
+
+.reveal .slides .venn-list > div > ul > li:nth-child(2) > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > .block
+  > ul
+  > li:nth-child(2)
+  > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > ul
+  > li:nth-child(2)
+  > ul:first-child {
+  bottom: -60px;
+}
+
+.reveal .slides .venn-list > div > ul > li:last-child > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > .block
+  > ul
+  > li:last-child
+  > ul:first-child,
+.reveal
+  .slides
+  .venn-list
+  > div
+  > .content
+  > ul
+  > li:last-child
+  > ul:first-child {
+  bottom: -60px;
+}
