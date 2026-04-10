@@ -1010,6 +1010,7 @@ button.slides-rup-design-maker-layer-collapse {
 	width: 1920px;
 	height: 1080px;
 	background:  var(--background-primary);
+	--sr-dm-accent-rgb: var(--interactive-accent-rgb, 0, 102, 255);
 	overflow: hidden;
 }
 
@@ -1018,8 +1019,8 @@ button.slides-rup-design-maker-layer-collapse {
 	position: absolute;
 	inset: 0;
 	background: 
-		linear-gradient(rgba(var(--interactive-accent-rgb), 0.12) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(var(--interactive-accent-rgb), 0.12) 1px, transparent 1px);
+		linear-gradient(rgba(var(--sr-dm-accent-rgb), 0.12) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(var(--sr-dm-accent-rgb), 0.12) 1px, transparent 1px);
 	background-size: 5% 5%;
 	pointer-events: none;
 	z-index: 4;
@@ -1028,8 +1029,8 @@ button.slides-rup-design-maker-layer-collapse {
 .slides-rup-design-maker-block,
 .slides-rup-design-maker-preview-block {
 	position: absolute;
-	border: 1px solid rgba(var(--interactive-accent-rgb), 0.45);
-	background: rgba(var(--interactive-accent-rgb), 0.08);
+	border: 1px solid rgba(var(--sr-dm-accent-rgb), 0.45);
+	background: rgba(var(--sr-dm-accent-rgb), 0.08);
 	overflow: hidden;
 	cursor: move;
 	white-space: pre-wrap;
@@ -1082,8 +1083,8 @@ button.slides-rup-design-maker-layer-collapse {
 .slides-rup-design-maker-preview-block.is-selected {
 	border-color: var(--interactive-accent);
 	box-shadow:
-		0 0 0 2px rgba(var(--interactive-accent-rgb), 0.55),
-		0 0 0 4px rgba(var(--interactive-accent-rgb), 0.2);
+		0 0 0 2px rgba(var(--sr-dm-accent-rgb), 0.55),
+		0 0 0 4px rgba(var(--sr-dm-accent-rgb), 0.2);
 	animation: slides-rup-design-maker-selected-glow 150ms ease-out;
 }
 
@@ -1096,13 +1097,13 @@ button.slides-rup-design-maker-layer-collapse {
 @keyframes slides-rup-design-maker-selected-glow {
 	0% {
 		box-shadow:
-			0 0 0 0 rgba(var(--interactive-accent-rgb), 0.75),
-			0 0 0 0 rgba(var(--interactive-accent-rgb), 0.3);
+			0 0 0 0 rgba(var(--sr-dm-accent-rgb), 0.75),
+			0 0 0 0 rgba(var(--sr-dm-accent-rgb), 0.3);
 	}
 	100% {
 		box-shadow:
-			0 0 0 2px rgba(var(--interactive-accent-rgb), 0.55),
-			0 0 0 4px rgba(var(--interactive-accent-rgb), 0.2);
+			0 0 0 2px rgba(var(--sr-dm-accent-rgb), 0.55),
+			0 0 0 4px rgba(var(--sr-dm-accent-rgb), 0.2);
 	}
 }
 
@@ -1120,12 +1121,12 @@ button.slides-rup-design-maker-layer-collapse {
 	0% {
 		border-color: var(--interactive-accent);
 		box-shadow:
-			0 0 0 2px rgba(var(--interactive-accent-rgb), 0.55),
-			0 0 0 4px rgba(var(--interactive-accent-rgb), 0.2);
+			0 0 0 2px rgba(var(--sr-dm-accent-rgb), 0.55),
+			0 0 0 4px rgba(var(--sr-dm-accent-rgb), 0.2);
 	}
 	100% {
-		border-color: rgba(var(--interactive-accent-rgb), 0.45);
-		box-shadow: 0 0 0 0 rgba(var(--interactive-accent-rgb), 0);
+		border-color: rgba(var(--sr-dm-accent-rgb), 0.45);
+		box-shadow: 0 0 0 0 rgba(var(--sr-dm-accent-rgb), 0);
 	}
 }
 
@@ -1133,8 +1134,8 @@ button.slides-rup-design-maker-layer-collapse {
 	0% {
 		border-color: var(--interactive-accent);
 		box-shadow:
-			0 0 0 2px rgba(var(--interactive-accent-rgb), 0.55),
-			0 0 0 4px rgba(var(--interactive-accent-rgb), 0.2);
+			0 0 0 2px rgba(var(--sr-dm-accent-rgb), 0.55),
+			0 0 0 4px rgba(var(--sr-dm-accent-rgb), 0.2);
 	}
 	100% {
 		border-color: rgba(239, 68, 68, 0.95);
@@ -1660,6 +1661,7 @@ button.slides-rup-design-maker-layer-collapse {
 	overflow: hidden;
 	background: var(--sr-dm-background, #ffffff);
 	color: var(--sr-dm-text, #111111);
+	--sr-dm-accent-rgb: var(--interactive-accent-rgb, 0, 102, 255);
 	font-family: var(--sr-dm-body-font, inherit);
 }
 
