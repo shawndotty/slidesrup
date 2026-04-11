@@ -49,12 +49,21 @@ export class CustomStyleEditorView extends ItemView {
 		event: KeyboardEvent,
 		view: EditorView,
 	): boolean {
-		if (
-			(event.metaKey || event.ctrlKey) &&
-			!event.altKey &&
-			(event.key === "/" || event.code === "Slash")
-		) {
+		const isModKey = event.metaKey || event.ctrlKey;
+		const isSlashByShiftedDigit =
+			event.shiftKey &&
+			(event.code === "Digit7" ||
+				event.code === "Digit8" ||
+				event.code === "IntlRo");
+		const isSlashLikeKey =
+			event.key === "/" ||
+			event.key === "?" ||
+			event.code === "Slash" ||
+			event.code === "NumpadDivide" ||
+			isSlashByShiftedDigit;
+		if (isModKey && isSlashLikeKey) {
 			event.preventDefault();
+			event.stopPropagation();
 			return this.handleToggleComment(view);
 		}
 
