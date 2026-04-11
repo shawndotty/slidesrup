@@ -1,13 +1,19 @@
 import { ItemView, WorkspaceLeaf, debounce } from "obsidian";
-import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
+import { basicSetup } from "@codemirror/basic-setup";
 import { css } from "@codemirror/lang-css";
 import { autocompletion } from "@codemirror/autocomplete";
+import { EditorSelection, EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import SlidesRup from "src/main";
-import { saveUserCustomCss, subscribeCustomCssChange } from "src/services/custom-css-sync";
+import {
+	saveUserCustomCss,
+	subscribeCustomCssChange,
+} from "src/services/custom-css-sync";
 import { CUSTOM_STYLE_EDITOR_VIEW_TYPE } from "src/types/custom-style-editor";
 
 export class CustomStyleEditorView extends ItemView {
+	private readonly indentUnit = "  ";
 	private plugin: SlidesRup;
 	private editorView: EditorView | null = null;
 	private isApplyingExternalUpdate = false;
@@ -37,12 +43,103 @@ export class CustomStyleEditorView extends ItemView {
 		return "braces";
 	}
 
+	private handleIndentKeyDown(
+		event: KeyboardEvent,
+		view: EditorView,
+	): boolean {
+		if (event.key !== "Tab") {
+			return false;
+		}
+		event.preventDefault();
+		const { state } = view;
+		const changedLineStarts = new Set<number>();
+		const changes: { from: number; to?: number; insert: string }[] = [];
+
+		for (const range of state.selection.ranges) {
+			if (event.shiftKey) {
+				const startLine = state.doc.lineAt(range.from).number;
+				const endBasePos =
+					range.empty || range.to === range.from
+						? range.to
+						: range.to - 1;
+				const endLine = state.doc.lineAt(endBasePos).number;
+				for (
+					let lineNumber = startLine;
+					lineNumber <= endLine;
+					lineNumber++
+				) {
+					const line = state.doc.line(lineNumber);
+					if (changedLineStarts.has(line.from)) {
+						continue;
+					}
+					if (line.text.startsWith(this.indentUnit)) {
+						changes.push({
+							from: line.from,
+							to: line.from + this.indentUnit.length,
+							insert: "",
+						});
+						changedLineStarts.add(line.from);
+					} else if (line.text.startsWith("\t")) {
+						changes.push({
+							from: line.from,
+							to: line.from + 1,
+							insert: "",
+						});
+						changedLineStarts.add(line.from);
+					}
+				}
+				continue;
+			}
+
+			if (range.empty) {
+				changes.push({ from: range.from, insert: this.indentUnit });
+				continue;
+			}
+
+			const startLine = state.doc.lineAt(range.from).number;
+			const endLine = state.doc.lineAt(range.to - 1).number;
+			for (
+				let lineNumber = startLine;
+				lineNumber <= endLine;
+				lineNumber++
+			) {
+				const line = state.doc.line(lineNumber);
+				if (changedLineStarts.has(line.from)) {
+					continue;
+				}
+				changes.push({ from: line.from, insert: this.indentUnit });
+				changedLineStarts.add(line.from);
+			}
+		}
+
+		if (changes.length > 0) {
+			if (
+				!event.shiftKey &&
+				state.selection.ranges.every((range) => range.empty)
+			) {
+				const changeSet = state.changes(changes);
+				const nextRanges = state.selection.ranges.map((range) =>
+					EditorSelection.cursor(changeSet.mapPos(range.from, 1)),
+				);
+				view.dispatch({
+					changes: changeSet,
+					selection: EditorSelection.create(nextRanges),
+				});
+				return true;
+			}
+			view.dispatch({ changes });
+		}
+		return true;
+	}
+
 	async onOpen(): Promise<void> {
 		this.contentEl.empty();
 		this.contentEl.addClass("slides-rup-custom-style-editor-view");
 		this.contentEl.createEl("h2", { text: "Custom Style Editor" });
 		this.contentEl.createEl("p", { text: "Input Your Customized CSS" });
-		const editorContainer = this.contentEl.createDiv("slides-rup-css-editor");
+		const editorContainer = this.contentEl.createDiv(
+			"slides-rup-css-editor",
+		);
 		this.editorView = new EditorView({
 			state: EditorState.create({
 				doc: this.plugin.settings.customCss || "",
@@ -53,8 +150,15 @@ export class CustomStyleEditorView extends ItemView {
 					...(document.body.classList.contains("theme-dark")
 						? [oneDark]
 						: []),
+					EditorView.domEventHandlers({
+						keydown: (event, view) =>
+							this.handleIndentKeyDown(event, view),
+					}),
 					EditorView.updateListener.of((update) => {
-						if (!update.docChanged || this.isApplyingExternalUpdate) {
+						if (
+							!update.docChanged ||
+							this.isApplyingExternalUpdate
+						) {
 							return;
 						}
 						const newCss = update.state.doc.toString();
