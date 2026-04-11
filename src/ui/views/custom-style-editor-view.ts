@@ -14,6 +14,8 @@ import { CUSTOM_STYLE_EDITOR_VIEW_TYPE } from "src/types/custom-style-editor";
 
 export class CustomStyleEditorView extends ItemView {
 	private readonly indentUnit = "  ";
+	private readonly lineCommentPrefix = "/* ";
+	private readonly lineCommentSuffix = " */";
 	private plugin: SlidesRup;
 	private editorView: EditorView | null = null;
 	private isApplyingExternalUpdate = false;
@@ -47,6 +49,15 @@ export class CustomStyleEditorView extends ItemView {
 		event: KeyboardEvent,
 		view: EditorView,
 	): boolean {
+		if (
+			(event.metaKey || event.ctrlKey) &&
+			!event.altKey &&
+			(event.key === "/" || event.code === "Slash")
+		) {
+			event.preventDefault();
+			return this.handleToggleComment(view);
+		}
+
 		if (event.key !== "Tab") {
 			return false;
 		}
@@ -127,6 +138,100 @@ export class CustomStyleEditorView extends ItemView {
 				});
 				return true;
 			}
+			view.dispatch({ changes });
+		}
+		return true;
+	}
+
+	private handleToggleComment(view: EditorView): boolean {
+		const { state } = view;
+		const lineNumbers: number[] = [];
+		const lineSet = new Set<number>();
+		const changes: { from: number; to?: number; insert: string }[] = [];
+
+		for (const range of state.selection.ranges) {
+			const startLine = state.doc.lineAt(range.from).number;
+			const endPos = range.empty
+				? range.to
+				: Math.max(range.to - 1, range.from);
+			const endLine = state.doc.lineAt(endPos).number;
+			for (
+				let lineNumber = startLine;
+				lineNumber <= endLine;
+				lineNumber++
+			) {
+				if (lineSet.has(lineNumber)) {
+					continue;
+				}
+				lineSet.add(lineNumber);
+				lineNumbers.push(lineNumber);
+			}
+		}
+
+		const canUncomment = lineNumbers.every((lineNumber) => {
+			const text = state.doc.line(lineNumber).text;
+			const trimmedStart = text.trimStart();
+			const trimmedEnd = text.trimEnd();
+			return trimmedStart.startsWith("/*") && trimmedEnd.endsWith("*/");
+		});
+
+		for (const lineNumber of lineNumbers) {
+			const line = state.doc.line(lineNumber);
+			const text = line.text;
+
+			if (canUncomment) {
+				const prefixIndex = text.indexOf("/*");
+				const suffixIndex = text.lastIndexOf("*/");
+				if (
+					prefixIndex < 0 ||
+					suffixIndex < 0 ||
+					suffixIndex <= prefixIndex
+				) {
+					continue;
+				}
+
+				const prefixLength = text.startsWith(
+					this.lineCommentPrefix,
+					prefixIndex,
+				)
+					? this.lineCommentPrefix.length
+					: 2;
+				const suffixWithSpaceStart =
+					suffixIndex > 0 && text[suffixIndex - 1] === " "
+						? suffixIndex - 1
+						: suffixIndex;
+				const suffixLength = text.startsWith(
+					this.lineCommentSuffix,
+					suffixWithSpaceStart,
+				)
+					? this.lineCommentSuffix.length
+					: 2;
+
+				changes.push({
+					from: line.from + suffixWithSpaceStart,
+					to: line.from + suffixWithSpaceStart + suffixLength,
+					insert: "",
+				});
+				changes.push({
+					from: line.from + prefixIndex,
+					to: line.from + prefixIndex + prefixLength,
+					insert: "",
+				});
+				continue;
+			}
+
+			const indentLength = text.length - text.trimStart().length;
+			changes.push({
+				from: line.from + indentLength,
+				insert: this.lineCommentPrefix,
+			});
+			changes.push({
+				from: line.to,
+				insert: this.lineCommentSuffix,
+			});
+		}
+
+		if (changes.length > 0) {
 			view.dispatch({ changes });
 		}
 		return true;
