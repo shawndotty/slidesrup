@@ -1402,7 +1402,7 @@ export class SlidesMaker {
 				slideNavOn ? baseLayoutName : baseLayoutWithoutNavName
 			}]]"`,
 			"pdfSeparateFragments: false",
-			"verticalSeparator: \\*\\*\\*",
+			"verticalSeparator: \\*\\*\\*\\n",
 			"theme: white",
 			"transition: none",
 			userFrontmatter.trim(),
