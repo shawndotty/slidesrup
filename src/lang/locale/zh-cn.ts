@@ -311,8 +311,7 @@ export default {
 	"Enable AI generation for Design Maker inline style":
 		"启用 Design Maker 内联样式的 AI 生成功能",
 	"AI Provider Base URL": "AI 服务 Base URL",
-	"Set OpenAI-compatible API base URL":
-		"设置 OpenAI 兼容 API 的基础地址",
+	"Set OpenAI-compatible API base URL": "设置 OpenAI 兼容 API 的基础地址",
 	"AI Provider Model": "AI 服务模型",
 	"Set default model for AI inline style generation":
 		"设置 AI 内联样式生成的默认模型",
@@ -321,7 +320,8 @@ export default {
 		"允许在 Design Maker 区块内容中插入 Unsplash 图片",
 	"Unsplash API Base URL": "Unsplash API Base URL",
 	"Set Unsplash API base URL": "设置 Unsplash API 的基础地址",
-	"Fallback to random image without Access Key": "无 Access Key 时回退为随机图片",
+	"Fallback to random image without Access Key":
+		"无 Access Key 时回退为随机图片",
 	"When Access Key is empty, use Unsplash source random single image":
 		"当 Access Key 为空时，使用 Unsplash 随机单图源",
 	"Use User Customized CSS": "使用用户自定义 CSS",
@@ -616,7 +616,8 @@ export default {
 	"Select AI provider protocol": "选择 AI 提供商协议",
 	"OpenAI Compatible": "OpenAI 兼容接口",
 	"AI Provider API Key": "AI 服务 API Key",
-	"API key is stored in Obsidian keychain": "API Key 已存储在 Obsidian 钥匙串",
+	"API key is stored in Obsidian keychain":
+		"API Key 已存储在 Obsidian 钥匙串",
 	"Keychain unavailable, API key will fallback to plugin settings":
 		"钥匙串不可用，API Key 将回退存储到插件设置",
 	"Enter API Key": "输入 API Key",
@@ -657,8 +658,7 @@ export default {
 	"Comma separated ratios, for example: 16:9,4:3,1:1":
 		"用逗号分隔比例，例如：16:9,4:3,1:1",
 	"Unsplash custom ratio": "Unsplash 自定义比例",
-	"Optional custom ratio, for example: 5:4":
-		"可选自定义比例，例如：5:4",
+	"Optional custom ratio, for example: 5:4": "可选自定义比例，例如：5:4",
 	"Unsplash default crop width": "Unsplash 默认裁剪宽度",
 	"Default crop width for inserted images": "插入图片的默认裁剪宽度",
 	"Unsplash default crop height": "Unsplash 默认裁剪高度",
@@ -747,4 +747,5 @@ export default {
 	Faster: "更快",
 	Filter: "滤镜",
 	Align: "对齐",
+	"Open Custom Style Editor": "打开自定义样式编辑器",
 };

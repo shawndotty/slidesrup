@@ -814,4 +814,5 @@ export default {
 	Faster: "Faster",
 	Filter: "Filter",
 	Align: "Align",
+	"Open Custom Style Editor": "Open Custom Style Editor",
 };

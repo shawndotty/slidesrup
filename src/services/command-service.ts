@@ -34,17 +34,21 @@ export class CommandService {
 		private addRibbonIcon: (
 			icon: string,
 			title: string,
-			callback: (evt: MouseEvent) => void
+			callback: (evt: MouseEvent) => void,
 		) => void,
 		private app: App,
 		private plugin: any,
 		private settings: SlidesRupSettings,
 		private templaterService: TemplaterService,
 		private vscodeService: VSCodeService,
-		private apiService: ApiService
+		private apiService: ApiService,
 	) {
 		this.slidesMaker = new SlidesMaker(this.app, this.settings);
-		this.designMaker = new DesignMaker(this.app, this.settings, this.plugin);
+		this.designMaker = new DesignMaker(
+			this.app,
+			this.settings,
+			this.plugin,
+		);
 		this.noteMaker = new NoteMaker(this.app);
 		this.marpSlidesMaker = new MarpSlidesMaker(this.app, this.settings);
 		this.marpSlidesService = new MarpSlidesService(this.app);
@@ -62,30 +66,30 @@ export class CommandService {
 			this.settings;
 		return Boolean(
 			userChecked &&
-				updateAPIKeyIsValid &&
-				userEmail &&
-				updateAPIKey?.includes("patquQB1Cd93hSAlC")
+			updateAPIKeyIsValid &&
+			userEmail &&
+			updateAPIKey?.includes("patquQB1Cd93hSAlC"),
 		);
 	}
 
 	// 优化：抽取公共逻辑，减少重复代码
 	private async _templaterTriggerSwitch(
-		action: () => Promise<void>
+		action: () => Promise<void>,
 	): Promise<void> {
 		const triggerAtCreate = this.templaterService.getTemplaterSetting(
-			"trigger_on_file_creation"
+			"trigger_on_file_creation",
 		);
 		if (triggerAtCreate) {
 			await this.templaterService.setTemplaterSetting(
 				"trigger_on_file_creation",
-				false
+				false,
 			);
 		}
 		await action();
 		if (triggerAtCreate) {
 			await this.templaterService.setTemplaterSetting(
 				"trigger_on_file_creation",
-				true
+				true,
 			);
 		}
 	}
@@ -98,7 +102,7 @@ export class CommandService {
 			tableID?: string;
 		},
 		filterRecordsByDate: boolean = false,
-		apiKey: string = this.settings.updateAPIKey
+		apiKey: string = this.settings.updateAPIKey,
 	): Promise<void> {
 		if (!apiKey) {
 			new Notice(t("You must provide an API Key to run this command"));
@@ -107,8 +111,8 @@ export class CommandService {
 		if (!this.settings.userEmail) {
 			new Notice(
 				t(
-					"You need to provide the email for your account to run this command"
-				)
+					"You need to provide the email for your account to run this command",
+				),
 			);
 			return;
 		}
@@ -116,7 +120,7 @@ export class CommandService {
 		await this._templaterTriggerSwitch(async () => {
 			const fieldNames = buildFieldNames(
 				false,
-				this.settings.slidesRupRunningLanguage
+				this.settings.slidesRupRunningLanguage,
 			);
 			const nocoDBSettings: NocoDBSettings = {
 				apiKey: apiKey,
@@ -131,7 +135,7 @@ export class CommandService {
 			await myObsidian.onlyFetchFromNocoDB(
 				nocoDBSettings.tables[0],
 				this.settings.updateAPIKeyIsValid,
-				filterRecordsByDate
+				filterRecordsByDate,
 			);
 		});
 	}
@@ -150,7 +154,7 @@ export class CommandService {
 				tableID?: string;
 			},
 			reloadOB: boolean = false,
-			filterRecordsByDate: boolean = false
+			filterRecordsByDate: boolean = false,
 		) => {
 			this.addCommand({
 				id,
@@ -158,7 +162,7 @@ export class CommandService {
 				callback: async () => {
 					await this.runNocoDBCommand(
 						tableConfig,
-						filterRecordsByDate
+						filterRecordsByDate,
 					);
 					if (reloadOB) {
 						this.app.commands.executeCommandById("app:reload");
@@ -175,7 +179,7 @@ export class CommandService {
 				tableID: this.settings?.updateIDs?.style?.tableID || "",
 				viewID: this.settings?.updateIDs?.style?.viewID || "",
 				targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}/dist`,
-			}
+			},
 		);
 
 		createNocoDBCommand(
@@ -186,7 +190,7 @@ export class CommandService {
 				tableID: this.settings?.updateIDs?.marpTheme?.tableID || "",
 				viewID: this.settings?.updateIDs?.marpTheme?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
-			}
+			},
 		);
 
 		createNocoDBCommand(
@@ -197,7 +201,7 @@ export class CommandService {
 				tableID: this.settings?.updateIDs?.templates?.tableID || "",
 				viewID: this.settings?.updateIDs?.templates?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
-			}
+			},
 		);
 
 		createNocoDBCommand(
@@ -214,7 +218,7 @@ export class CommandService {
 					viewID: update?.viewID || "",
 					targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 				};
-			})()
+			})(),
 		);
 
 		createNocoDBCommand(
@@ -225,7 +229,7 @@ export class CommandService {
 				tableID: this.settings?.updateIDs?.demo?.tableID || "",
 				viewID: this.settings?.updateIDs?.demo?.viewID || "",
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
-			}
+			},
 		);
 
 		createNocoDBCommand(
@@ -238,7 +242,7 @@ export class CommandService {
 				targetFolderPath: this.settings.slidesRupFrameworkFolder,
 			},
 			false,
-			true
+			true,
 		);
 
 		this.addCommand({
@@ -285,7 +289,7 @@ export class CommandService {
 							viewID: update?.viewID || "",
 							targetFolderPath: `${this.app.vault.configDir}/${this.presentationPluginFolder}`,
 						};
-					})()
+					})(),
 				);
 				new Notice(t("Reveal template updated."));
 
@@ -307,17 +311,17 @@ export class CommandService {
 
 				await this.marpSlidesService.setPluginSetting(
 					"EnableHTML",
-					true
+					true,
 				);
 
 				await this.marpSlidesService.setPluginSetting(
 					"EnableMarkdownItPlugins",
-					true
+					true,
 				);
 
 				await this.marpSlidesService.setPluginSetting(
 					"ThemePath",
-					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`
+					`${this.settings.slidesRupFrameworkFolder}/MarpThemes`,
 				);
 
 				await this.vscodeService.addDefaultMarpThemesForVSCode();
@@ -331,7 +335,7 @@ export class CommandService {
 			name: t("Create New Slides"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
-					this.slidesMaker.createSlides()
+					this.slidesMaker.createSlides(),
 				);
 			},
 		});
@@ -341,7 +345,7 @@ export class CommandService {
 			name: t("Add Chapter"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
-					this.slidesMaker.addSlideChapter()
+					this.slidesMaker.addSlideChapter(),
 				);
 			},
 		});
@@ -351,7 +355,7 @@ export class CommandService {
 			name: t("Add Page"),
 			callback: async () => {
 				await this._templaterTriggerSwitch(() =>
-					this.slidesMaker.addSlidePage()
+					this.slidesMaker.addSlidePage(),
 				);
 			},
 		});
@@ -363,7 +367,7 @@ export class CommandService {
 			callback: async () => {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
-						this.slidesMaker.convertMDToSlide()
+						this.slidesMaker.convertMDToSlide(),
 					);
 				}
 			},
@@ -373,7 +377,7 @@ export class CommandService {
 		this.addRibbonIcon("presentation", t("Convert to Slide"), async () => {
 			if (this._checkUserType()) {
 				await this._templaterTriggerSwitch(() =>
-					this.slidesMaker.convertMDToSlide()
+					this.slidesMaker.convertMDToSlide(),
 				);
 			}
 		});
@@ -384,7 +388,7 @@ export class CommandService {
 			callback: async () => {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
-						this.designMaker.makeNewBlankDesign()
+						this.designMaker.makeNewBlankDesign(),
 					);
 				}
 			},
@@ -396,7 +400,7 @@ export class CommandService {
 			callback: async () => {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
-						this.designMaker.makeNewDesignFromCurrentDesign()
+						this.designMaker.makeNewDesignFromCurrentDesign(),
 					);
 				}
 			},
@@ -416,12 +420,11 @@ export class CommandService {
 
 		this.addCommand({
 			id: "slides-rup:open-custom-style-editor",
-			name: "Custom Style Editor",
+			name: t("Open Custom Style Editor"),
 			callback: async () => {
-				const existingLeaf =
-					this.app.workspace.getLeavesOfType(
-						CUSTOM_STYLE_EDITOR_VIEW_TYPE,
-					)[0];
+				const existingLeaf = this.app.workspace.getLeavesOfType(
+					CUSTOM_STYLE_EDITOR_VIEW_TYPE,
+				)[0];
 				if (existingLeaf) {
 					this.app.workspace.revealLeaf(existingLeaf);
 					return;
@@ -441,7 +444,7 @@ export class CommandService {
 			callback: async () => {
 				if (this._checkUserType()) {
 					await this._templaterTriggerSwitch(() =>
-						this.marpSlidesMaker.convertMDToMarpSlide()
+						this.marpSlidesMaker.convertMDToMarpSlide(),
 					);
 				}
 			},
@@ -487,7 +490,7 @@ export class CommandService {
 	}
 
 	private async executeWithReload(
-		callback: () => Promise<void>
+		callback: () => Promise<void>,
 	): Promise<void> {
 		await callback();
 		setTimeout(() => {

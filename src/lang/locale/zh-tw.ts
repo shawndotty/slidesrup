@@ -311,8 +311,7 @@ export default {
 	"Enable AI generation for Design Maker inline style":
 		"啟用 Design Maker 內聯樣式的 AI 生成功能",
 	"AI Provider Base URL": "AI 服務 Base URL",
-	"Set OpenAI-compatible API base URL":
-		"設定 OpenAI 相容 API 的基礎位址",
+	"Set OpenAI-compatible API base URL": "設定 OpenAI 相容 API 的基礎位址",
 	"AI Provider Model": "AI 服務模型",
 	"Set default model for AI inline style generation":
 		"設定 AI 內聯樣式生成的預設模型",
@@ -659,8 +658,7 @@ export default {
 	"Comma separated ratios, for example: 16:9,4:3,1:1":
 		"以逗號分隔比例，例如：16:9,4:3,1:1",
 	"Unsplash custom ratio": "Unsplash 自訂比例",
-	"Optional custom ratio, for example: 5:4":
-		"可選自訂比例，例如：5:4",
+	"Optional custom ratio, for example: 5:4": "可選自訂比例，例如：5:4",
 	"Unsplash default crop width": "Unsplash 預設裁切寬度",
 	"Default crop width for inserted images": "插入圖片的預設裁切寬度",
 	"Unsplash default crop height": "Unsplash 預設裁切高度",
@@ -749,4 +747,5 @@ export default {
 	Faster: "更快",
 	Filter: "濾鏡",
 	Align: "對齊",
+	"Open Custom Style Editor": "打開自訂樣式編輯器",
 };
