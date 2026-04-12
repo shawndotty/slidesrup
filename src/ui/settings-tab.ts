@@ -1334,10 +1334,14 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 			"fancy-list-with-order": "Fancy List With Order",
 			"fancy-list-with-order-row": "Fancy List With Order Row",
 			"grid-list": "Grid List",
-			"grid-step-list": "Grid Step List",
-			"grid-step-list-v": "Grid Step List Vertical",
+			"grid-order-list": "Grid Order List",
 			"box-list": "Box List",
 			"order-list-with-border": "Order List With Border",
+			"pest-list": "PEST List",
+			"swot-list": "SWOT List",
+			"vs-list": "VS List",
+			"venn-list": "Venn List",
+			"pyramid-list": "Pyramid List",
 		};
 
 		containerEl.createEl("h3", {

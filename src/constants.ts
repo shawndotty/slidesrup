@@ -13,7 +13,24 @@ export const TEMPLATE_PLACE_HOLDERS = {
 	slideName: "SLIDE_NAME",
 };
 
-export const DEFAULT_DESIGNS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+export const DEFAULT_DESIGNS = [
+	"A",
+	"AVH",
+	"B",
+	"BVH",
+	"C",
+	"CVH",
+	"D",
+	"DVH",
+	"E",
+	"EVH",
+	"F",
+	"FVH",
+	"G",
+	"GVH",
+	"H",
+	"HVH",
+];
 
 /**
  * 设计器主题面板扩展项开关（Feature Flag）
@@ -31,11 +48,15 @@ export const SLIDESRUP_LIST_CLASSES = [
 	"fancy-list-with-order",
 	"fancy-list-with-order-row",
 	"grid-list",
+	"grid-order-list",
 	"grid-step-list",
 	"grid-step-list-v",
 	"order-list-with-border",
 	"venn-list",
 	"pyramid-list",
+	"pest-list",
+	"swot-list",
+	"vs-list",
 	"reverse-list-fragment",
 	"two-columns-list-1-2",
 	"two-columns-list-2-1",
