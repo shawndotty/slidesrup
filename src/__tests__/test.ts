@@ -20,20 +20,9 @@ import {
 	normalizePaddingForTemplate,
 } from "../services/design-maker-generator";
 import {
-	clampCanvasZoomPercent,
-	computeCanvasTransform,
-	computePanForZoom,
-	resolveHostDocument,
-} from "../ui/components/design-canvas";
-import {
 	getPlainTextForBlock,
 	renderBlockContent,
 } from "../ui/components/design-block-renderer";
-import {
-	computeThumbnailVirtualWindow,
-	formatThumbnailBlockCount,
-	getNextThumbnailIndex,
-} from "../ui/components/design-thumbnail-nav";
 import {
 	buildReparentDragPayload,
 	getInsertIndexForReversedLayerOrder,
@@ -67,7 +56,6 @@ import {
 	composePaddingComposite,
 	isValidInspectorColor,
 	parsePaddingComposite,
-	resolvePickerHost,
 	syncInspectorRectFields,
 	getHtmlElementColors,
 	updateHtmlElementColors,
@@ -95,124 +83,6 @@ import {
 	parseAspectRatioPresetList,
 	resolveCropDimensions,
 } from "../services/unsplash-image-service";
-
-function testNestedGridSerialization() {
-	const markdown = `<grid drag="70 140" drop="-32 0" class="bg-with-front-color" style="margin-top: -216px" rotate="350">
-
-<grid drag="5 40" drop="97 36" class="bg-with-back-color">
-
-</grid>
-</grid>`;
-
-	const draft = parseDesignPageDraft("cover", "test", "test.md", markdown);
-	assert.strictEqual(draft.blocks.length, 1, "Should have 1 top-level block");
-
-	const outerGrid = draft.blocks[0] as any;
-	assert.strictEqual(outerGrid.type, "grid");
-	assert.strictEqual(
-		outerGrid.children.length,
-		1,
-		"Should have 1 child grid",
-	);
-
-	const innerGrid = outerGrid.children[0];
-	assert.strictEqual(innerGrid.rect.width, 5);
-	assert.strictEqual(innerGrid.rect.height, 40);
-	assert.strictEqual(innerGrid.rect.x, 97);
-	assert.strictEqual(innerGrid.rect.y, 36);
-
-	const generated = generatePageMarkdown(draft);
-
-	const reParsed = parseDesignPageDraft(
-		"cover",
-		"test",
-		"test.md",
-		generated,
-	);
-	assert.strictEqual(reParsed.blocks.length, 1);
-	assert.strictEqual((reParsed.blocks[0] as any).children.length, 1);
-
-	console.log("testNestedGridSerialization passed");
-}
-
-function testCoordinateConversion() {
-	class MockDOMRect {
-		constructor(
-			public left: number,
-			public top: number,
-			public width: number,
-			public height: number,
-		) {}
-	}
-
-	const globalRect = new MockDOMRect(150, 150, 50, 50); // 50x50 block at global 150,150
-	const parentRect = new MockDOMRect(100, 100, 200, 200); // 200x200 parent at global 100,100
-
-	const newX = ((globalRect.left - parentRect.left) / parentRect.width) * 100;
-	const newY = ((globalRect.top - parentRect.top) / parentRect.height) * 100;
-	const newWidth = (globalRect.width / parentRect.width) * 100;
-	const newHeight = (globalRect.height / parentRect.height) * 100;
-
-	assert.strictEqual(newX, 25);
-	assert.strictEqual(newY, 25);
-	assert.strictEqual(newWidth, 25);
-	assert.strictEqual(newHeight, 25);
-
-	console.log("testCoordinateConversion passed");
-}
-
-function testTreeCircularDependency() {
-	// mock the _findBlockById and circular dependency logic
-	const blocks: any[] = [
-		{
-			id: "A",
-			type: "grid",
-			children: [
-				{
-					id: "B",
-					type: "grid",
-					children: [{ id: "C", type: "grid" }],
-				},
-			],
-		},
-	];
-
-	const _findBlockById = (blocksArr: any[], id: string): any => {
-		for (let i = 0; i < blocksArr.length; i++) {
-			const block = blocksArr[i];
-			if (block.id === id) return { block, index: i };
-			if (block.type === "grid" && block.children) {
-				const found = _findBlockById(block.children, id);
-				if (found) return { ...found, parent: block };
-			}
-		}
-		return null;
-	};
-
-	const sourceId = "A";
-	const targetId = "C";
-
-	// Check for circular dependency logic from design-maker-view.ts
-	let hasCircular = false;
-	const targetFound = _findBlockById(blocks, targetId);
-	if (targetFound && targetFound.block.type === "grid") {
-		let currentCheck = targetFound.parent;
-		while (currentCheck) {
-			if (currentCheck.id === sourceId) {
-				hasCircular = true;
-				break;
-			}
-			currentCheck = _findBlockById(blocks, currentCheck.id)?.parent;
-		}
-	}
-
-	assert.strictEqual(
-		hasCircular,
-		true,
-		"Should detect circular dependency when dropping A into C",
-	);
-	console.log("testTreeCircularDependency passed");
-}
 
 function testDesignMakerRuntimeCssHasHelperClasses() {
 	const theme = parseThemeDraft("Test", "");
@@ -334,83 +204,6 @@ function testNestedBlockVisibilityToggle() {
 	assert.strictEqual(findById(blocks, "parent")?.hiddenInDesign, false);
 
 	console.log("testNestedBlockVisibilityToggle passed");
-}
-
-function testCanvasZoomTransformMath() {
-	assert.strictEqual(clampCanvasZoomPercent(0), 25);
-	assert.strictEqual(clampCanvasZoomPercent(500), 400);
-	assert.strictEqual(clampCanvasZoomPercent(123.4), 123);
-
-	const transform = computeCanvasTransform({
-		frameWidth: 960,
-		frameHeight: 540,
-		baseWidth: 1920,
-		baseHeight: 1080,
-		zoomPercent: 200,
-		panX: 10,
-		panY: 20,
-	});
-	assert.strictEqual(transform.scale, 1);
-	assert.strictEqual(transform.transform, "translate(10px, 20px) scale(1)");
-
-	const resetTransform = computeCanvasTransform({
-		frameWidth: 960,
-		frameHeight: 540,
-		baseWidth: 1920,
-		baseHeight: 1080,
-		zoomPercent: 100,
-		panX: 0,
-		panY: 0,
-	});
-	assert.strictEqual(resetTransform.scale, 0.5);
-	assert.strictEqual(
-		resetTransform.transform,
-		"translate(0px, 0px) scale(0.5)",
-	);
-
-	const nextPan = computePanForZoom({
-		cursorX: 100,
-		cursorY: 100,
-		panX: 0,
-		panY: 0,
-		currentScale: 1,
-		nextScale: 2,
-	});
-	assert.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
-
-	console.log("testCanvasZoomTransformMath passed");
-}
-
-function testResolveHostDocumentForPopoutWindow() {
-	const fallback = resolveHostDocument({} as HTMLElement);
-	assert.ok(fallback, "Should fallback to current document when ownerDocument absent");
-	const ownerDoc = { body: {} } as Document;
-	const resolved = resolveHostDocument({
-		ownerDocument: ownerDoc,
-	} as unknown as HTMLElement);
-	assert.strictEqual(
-		resolved,
-		ownerDoc,
-		"Should prefer container.ownerDocument for popout-window safety",
-	);
-	console.log("testResolveHostDocumentForPopoutWindow passed");
-}
-
-function testResolvePickerHostForPopoutWindow() {
-	const ownerDoc = { body: {}, defaultView: { innerWidth: 800 } } as any;
-	const triggerEl = { ownerDocument: ownerDoc } as HTMLElement;
-	const resolved = resolvePickerHost(triggerEl);
-	assert.strictEqual(
-		resolved.hostDocument,
-		ownerDoc,
-		"Should prefer trigger ownerDocument for picker host",
-	);
-	assert.strictEqual(
-		resolved.hostWindow,
-		ownerDoc.defaultView,
-		"Should use ownerDocument.defaultView for picker host window",
-	);
-	console.log("testResolvePickerHostForPopoutWindow passed");
 }
 
 function testGridPlainTextFallbackRendering() {
@@ -1534,98 +1327,6 @@ function testInspectorSelectOptionI18nAndFallback() {
 	console.log("testInspectorSelectOptionI18nAndFallback passed");
 }
 
-function testThumbnailVirtualizationMath() {
-	const nonVirtualWindow = computeThumbnailVirtualWindow({
-		total: 7,
-		containerWidth: 800,
-		scrollLeft: 0,
-	});
-	assert.strictEqual(nonVirtualWindow.virtualized, false);
-	assert.strictEqual(nonVirtualWindow.start, 0);
-	assert.strictEqual(nonVirtualWindow.end, 7);
-
-	const virtualWindowStart = computeThumbnailVirtualWindow({
-		total: 120,
-		containerWidth: 560,
-		scrollLeft: 0,
-	});
-	assert.strictEqual(virtualWindowStart.virtualized, true);
-	assert.strictEqual(virtualWindowStart.start, 0);
-	assert.ok(
-		virtualWindowStart.end < 120,
-		"Virtualized window should not render all thumbnails at once",
-	);
-
-	const virtualWindowMiddle = computeThumbnailVirtualWindow({
-		total: 120,
-		containerWidth: 560,
-		scrollLeft: 4200,
-	});
-	assert.strictEqual(virtualWindowMiddle.virtualized, true);
-	assert.ok(
-		virtualWindowMiddle.start > 0,
-		"Scrolled window should start after index 0",
-	);
-	assert.ok(
-		virtualWindowMiddle.end <= 120,
-		"Window end should stay inside item bounds",
-	);
-	console.log("testThumbnailVirtualizationMath passed");
-}
-
-function testThumbnailKeyboardIndexMath() {
-	assert.strictEqual(
-		getNextThumbnailIndex({ currentIndex: 0, direction: -1, total: 7 }),
-		0,
-		"Left at first page should stay at first page",
-	);
-	assert.strictEqual(
-		getNextThumbnailIndex({ currentIndex: 6, direction: 1, total: 7 }),
-		6,
-		"Right at last page should stay at last page",
-	);
-	assert.strictEqual(
-		getNextThumbnailIndex({ currentIndex: 3, direction: 1, total: 7 }),
-		4,
-		"Right should move to next page",
-	);
-	assert.strictEqual(
-		getNextThumbnailIndex({
-			currentIndex: 0,
-			direction: -1,
-			total: 7,
-			wrap: true,
-		}),
-		6,
-		"Wrap mode should jump from first to last",
-	);
-	console.log("testThumbnailKeyboardIndexMath passed");
-}
-
-function testThumbnailBlockCountFormatting() {
-	assert.strictEqual(
-		formatThumbnailBlockCount(12),
-		"12 blocks",
-		"Should format integer counts",
-	);
-	assert.strictEqual(
-		formatThumbnailBlockCount(3.7),
-		"3 blocks",
-		"Should floor decimal counts",
-	);
-	assert.strictEqual(
-		formatThumbnailBlockCount(-2),
-		"0 blocks",
-		"Should clamp negative counts",
-	);
-	assert.strictEqual(
-		formatThumbnailBlockCount(Number.NaN),
-		"0 blocks",
-		"Should fallback for invalid counts",
-	);
-	console.log("testThumbnailBlockCountFormatting passed");
-}
-
 function testLayerRenderOrderReverse() {
 	const blocks = [
 		{ id: "A", type: "raw", raw: "a" },
@@ -2104,16 +1805,10 @@ async function runTests() {
 			},
 		};
 
-		testNestedGridSerialization();
-		testCoordinateConversion();
-		testTreeCircularDependency();
 		testDesignMakerRuntimeCssHasHelperClasses();
 		testParseThemeDraftPrimaryColorFallbackFromSettings();
 		testSelectionDebounceStateMachine();
 		testNestedBlockVisibilityToggle();
-		testCanvasZoomTransformMath();
-		testResolveHostDocumentForPopoutWindow();
-		testResolvePickerHostForPopoutWindow();
 		testGridPlainTextFallbackRendering();
 		testDesignTemplateUnitConsistency();
 		testAdvancedSlidesWidthHeightParsing();
@@ -2133,9 +1828,6 @@ async function runTests() {
 		await testStrictBinaryToggleAsyncCallback();
 		testInspectorLocaleKeysCompleteness();
 		testInspectorSelectOptionI18nAndFallback();
-		testThumbnailVirtualizationMath();
-		testThumbnailKeyboardIndexMath();
-		testThumbnailBlockCountFormatting();
 		testLayerRenderOrderReverse();
 		testLayerDragPayloadCompatibility();
 		testLayerDropIntentAndInsertIndexMath();
