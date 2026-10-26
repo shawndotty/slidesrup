@@ -185,11 +185,13 @@ export class SlidesRupSettingTab extends PluginSettingTab {
 											await GithubService.installPluginFrom(
 												this.app,
 												repoUrl,
+												this.plugin.manifest.id,
 											);
 										} else {
 											await GiteeService.installPluginFrom(
 												this.app,
 												repoUrl,
+												this.plugin.manifest.id,
 											);
 										}
 										b.setButtonText(t("Updated"));

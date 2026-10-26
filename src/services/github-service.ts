@@ -7,8 +7,13 @@ export class GithubService {
 	 * Installs or updates a plugin from a GitHub repository URL.
 	 * @param app The Obsidian App instance
 	 * @param repoUrl The GitHub repository URL (e.g., https://github.com/owner/repo)
+	 * @param previousId 当前运行中的插件 id；远端 manifest.id 与它不同时走「换 id」路径
 	 */
-	static async installPluginFrom(app: App, repoUrl: string): Promise<void> {
+	static async installPluginFrom(
+		app: App,
+		repoUrl: string,
+		previousId?: string,
+	): Promise<void> {
 		let notice: Notice | null = null;
 		try {
 			// 1. Parse the repository URL
@@ -123,7 +128,11 @@ export class GithubService {
 			const plugins = app.plugins;
 			try {
 				if (plugins) {
-					await PluginService.reloadAndEnablePlugin(app, pluginId);
+					await PluginService.reloadAndEnablePlugin(
+						app,
+						pluginId,
+						previousId,
+					);
 
 					new Notice(
 						`${t("Plugin")} "${manifest.name}" ${t(

@@ -2,6 +2,7 @@
 
 import { moment } from "obsidian";
 import { getAppInstance } from "src/utils";
+import { PLUGIN_ID } from "src/constants";
 import en from "./locale/en";
 import inspectorEnUS from "./locale/design-inspector/en-US.json";
 import inspectorZhCN from "./locale/design-inspector/zh-CN.json";
@@ -36,7 +37,7 @@ function _get_current_lang(): string {
 		const app = getAppInstance();
 		// Use plugin settings for language, fallback to Obsidian's moment.locale()
 		const slidesRupRunningLanguage =
-			app.plugins.plugins["slides-rup"]?.settings
+			app.plugins.plugins[PLUGIN_ID]?.settings
 				?.slidesRupRunningLanguage ?? "ob";
 		return slidesRupRunningLanguage === "ob"
 			? moment.locale()

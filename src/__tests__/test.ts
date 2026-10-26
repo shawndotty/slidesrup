@@ -86,6 +86,7 @@ import {
 } from "../services/inline-style-ai-service";
 import { SecretStoreService } from "../services/secret-store-service";
 import { createDuplicatedGridBlock } from "../services/design-grid-duplication";
+import { PLUGIN_ID } from "../constants";
 import {
 	buildMarkdownImageFromUrl,
 	buildUnsplashCroppedImageUrl,
@@ -1482,7 +1483,7 @@ function testInspectorLocaleKeysCompleteness() {
 
 function testInspectorSelectOptionI18nAndFallback() {
 	const settings = (globalThis as any).window.app.plugins.plugins[
-		"slides-rup"
+		PLUGIN_ID
 	].settings;
 	settings.slidesRupRunningLanguage = "zh-cn";
 	resetInspectorI18nWarnCacheForTests();
@@ -2093,7 +2094,7 @@ async function runTests() {
 			app: {
 				plugins: {
 					plugins: {
-						"slides-rup": {
+						[PLUGIN_ID]: {
 							settings: {
 								slidesRupRunningLanguage: "en",
 							},

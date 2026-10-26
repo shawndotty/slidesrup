@@ -7,8 +7,13 @@ export class GiteeService {
 	 * 从 Gitee 仓库地址安装或更新插件
 	 * @param app Obsidian App 实例
 	 * @param repoUrl Gitee 仓库地址（例如：https://gitee.com/owner/repo 或 owner/repo）
+	 * @param previousId 当前运行中的插件 id；远端 manifest.id 与它不同时走「换 id」路径
 	 */
-	static async installPluginFrom(app: App, repoUrl: string): Promise<void> {
+	static async installPluginFrom(
+		app: App,
+		repoUrl: string,
+		previousId?: string,
+	): Promise<void> {
 		let notice: Notice | null = null;
 		try {
 			const repoInfo = this.parseRepoUrl(repoUrl);
@@ -128,7 +133,11 @@ export class GiteeService {
 			const plugins = app.plugins;
 			try {
 				if (plugins) {
-					await PluginService.reloadAndEnablePlugin(app, pluginId);
+					await PluginService.reloadAndEnablePlugin(
+						app,
+						pluginId,
+						previousId,
+					);
 
 					new Notice(
 						`${t("Plugin")} "${manifest.name}" ${t("installed/updated successfully")} & ${t("reloaded")}`,

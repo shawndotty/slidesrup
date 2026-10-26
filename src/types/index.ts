@@ -1,3 +1,5 @@
+import type { Hotkey, PluginManifest } from "obsidian";
+
 // 扩展 App 类型以包含 commands 属性
 declare module "obsidian" {
 	interface App {
@@ -8,6 +10,20 @@ declare module "obsidian" {
 			plugins: {
 				[key: string]: any;
 			};
+			manifests: { [key: string]: PluginManifest & { dir: string } };
+			enabledPlugins: Set<string>;
+			enablePlugin(id: string): Promise<void>;
+			disablePlugin(id: string): Promise<void>;
+			loadManifests(): Promise<void>;
+			saveConfig(): Promise<void>;
+		};
+		hotkeyManager: {
+			// 注意：本文件下方自定义了 `Record` 接口，会遮蔽全局 Record 泛型，
+			// 这里只能用索引签名。
+			customKeys: { [commandId: string]: Hotkey[] };
+			setHotkeys(id: string, keys: Hotkey[]): void;
+			removeHotkeys(id: string): void;
+			save(): Promise<void>;
 		};
 		dom: {
 			appContainerEl: HTMLElement;

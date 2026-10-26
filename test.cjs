@@ -37,6 +37,26 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
 
 // src/__tests__/test.ts
 var module2 = __toESM(require("module"));
@@ -47,6 +67,11 @@ var import_obsidian2 = require("obsidian");
 
 // src/utils/index.ts
 var import_obsidian = require("obsidian");
+
+// src/constants.ts
+var PLUGIN_ID = "slidesrup";
+
+// src/utils/index.ts
 function getAppInstance() {
   if (typeof window !== "undefined" && window.obsidianApp) {
     return window.obsidianApp;
@@ -133,13 +158,21 @@ var en_default = {
   "Enter the full path to the SlidesRup Framework folder": "Enter the full path to the SlidesRup Framework folder",
   "Create New Slides": "Create New Slides",
   "Slide Design A": "Slide Design A",
+  "Slide Design AVH": "Slide Design AVH",
   "Slide Design B": "Slide Design B",
+  "Slide Design BVH": "Slide Design BVH",
   "Slide Design C": "Slide Design C",
+  "Slide Design CVH": "Slide Design CVH",
   "Slide Design D": "Slide Design D",
+  "Slide Design DVH": "Slide Design DVH",
   "Slide Design E": "Slide Design E",
+  "Slide Design EVH": "Slide Design EVH",
   "Slide Design F": "Slide Design F",
+  "Slide Design FVH": "Slide Design FVH",
   "Slide Design G": "Slide Design G",
+  "Slide Design GVH": "Slide Design GVH",
   "Slide Design H": "Slide Design H",
+  "Slide Design HVH": "Slide Design HVH",
   "Slide Design": "Slide Design",
   "Please select a slide design": "Please select a slide design",
   "New Slide": "New Slide",
@@ -365,6 +398,18 @@ var en_default = {
   "Use Default Value": "Use Default Value",
   "Customize Text Colors": "Customize Text Colors",
   "Advanced Settings": "Advanced Settings",
+  "Enable AI Inline Style Generator": "Enable AI Inline Style Generator",
+  "Enable AI generation for Design Maker inline style": "Enable AI generation for Design Maker inline style",
+  "AI Provider Base URL": "AI Provider Base URL",
+  "Set OpenAI-compatible API base URL": "Set OpenAI-compatible API base URL",
+  "AI Provider Model": "AI Provider Model",
+  "Set default model for AI inline style generation": "Set default model for AI inline style generation",
+  "Enable Unsplash image insert": "Enable Unsplash image insert",
+  "Allow inserting Unsplash images in Design Maker block content": "Allow inserting Unsplash images in Design Maker block content",
+  "Unsplash API Base URL": "Unsplash API Base URL",
+  "Set Unsplash API base URL": "Set Unsplash API base URL",
+  "Fallback to random image without Access Key": "Fallback to random image without Access Key",
+  "When Access Key is empty, use Unsplash source random single image": "When Access Key is empty, use Unsplash source random single image",
   "Use User Customized CSS": "Use User Customized CSS",
   "Enable User Customized CSS": "Enable User Customized CSS",
   "Enable User Font Family Setting": "Enable User Font Family Setting",
@@ -407,10 +452,16 @@ var en_default = {
   "Fancy List With Order": "Fancy List With Order",
   "Fancy List With Order Row": "Fancy List With Order Row",
   "Grid List": "Grid List",
+  "Grid Order List": "Grid Order List",
   "Grid Step List": "Grid Step List",
   "Grid Step List Vertical": "Grid Step List Vertical",
   "Box List": "Box List",
   "Order List With Border": "Order List With Border",
+  "Venn List": "Venn List",
+  "Pyramid List": "Pyramid List",
+  "PEST List": "PEST List",
+  "SWOT List": "SWOT List",
+  "VS List": "VS List",
   "Default TOC Page List Class": "Default TOC Page List Class",
   "Please select the default list class for TOC pages": "Please select the default list class for TOC pages",
   "Default Chapter Page List Class": "Default Chapter Page List Class",
@@ -566,6 +617,8 @@ var en_default = {
   "Reload Design": "Reload Design",
   "Design Pages": "Design Pages",
   "Load Design": "Load Design",
+  "Open page note in new tab": "Open page note in new tab",
+  "Page note file not found": "Page note file not found",
   "Contains source only blocks": "Contains source only blocks",
   "Show Block": "Show Block",
   "Hide Block": "Hide Block",
@@ -585,13 +638,35 @@ var en_default = {
   "Select a block": "Select a block",
   "This block is source only": "This block is source only",
   Coordinates: "Coordinates",
+  "Pixel Coordinates": "Pixel Coordinates",
+  "Percent Coordinates": "Percent Coordinates",
+  PX: "PX",
+  Pct: "Pct",
   Rel: "Rel",
   Glob: "Glob",
   "Block Content": "Block Content",
+  "Block Element Colors": "Block Element Colors",
   "Insert local image": "Insert local image",
+  "Insert Unsplash image": "Insert Unsplash image",
+  "Insert SVG By AI": "Insert SVG By AI",
   "Search local images": "Search local images",
+  "Search Unsplash images": "Search Unsplash images",
   "No local images found": "No local images found",
+  "No Unsplash images found": "No Unsplash images found",
   "Image Picker": "Image Picker",
+  "Unsplash Picker": "Unsplash Picker",
+  "Type keyword and press Enter": "Type keyword and press Enter",
+  "Unsplash image": "Unsplash image",
+  "Searching Unsplash...": "Searching Unsplash...",
+  "Unsplash random mode (no access key)": "Unsplash random mode (no access key)",
+  "Select image to insert": "Select image to insert",
+  "Failed to load Unsplash images": "Failed to load Unsplash images",
+  "Ratio presets": "Ratio presets",
+  "Custom ratio": "Custom ratio",
+  "Current ratio": "Current ratio",
+  "Crop size": "Crop size",
+  "Use custom ratio": "Use custom ratio",
+  "Invalid ratio, fallback to 16:9": "Invalid ratio, fallback to 16:9",
   "Pin picker": "Pin picker",
   "Unpin picker": "Unpin picker",
   "Close picker": "Close picker",
@@ -602,6 +677,51 @@ var en_default = {
   "Next thumbnails": "Next thumbnails",
   "Loading page preview": "Loading page preview",
   "Preview unavailable": "Preview unavailable",
+  "AI Assistant": "AI Assistant",
+  "AI Provider": "AI Provider",
+  "Select AI provider protocol": "Select AI provider protocol",
+  "OpenAI Compatible": "OpenAI Compatible",
+  "AI Provider API Key": "AI Provider API Key",
+  "API key is stored in Obsidian keychain": "API key is stored in Obsidian keychain",
+  "Keychain unavailable, API key will fallback to plugin settings": "Keychain unavailable, API key will fallback to plugin settings",
+  "Enter API Key": "Enter API Key",
+  "AI Inline Style Assistant": "AI Inline Style Assistant",
+  "Generate Filter with AI": "Generate Filter with AI",
+  "Describe desired style effect": "Describe desired style effect",
+  "Use natural language to describe expected visual effect": "Use natural language to describe expected visual effect",
+  "Example: make text white, add blur glass background and rounded corners": "Example: make text white, add blur glass background and rounded corners",
+  "Generated inline style": "Generated inline style",
+  "Review before applying to current block": "Review before applying to current block",
+  "Generate with AI": "Generate with AI",
+  "Apply Generated Style": "Apply Generated Style",
+  "Apply Generated SVG": "Apply Generated SVG",
+  "Generating inline style...": "Generating inline style...",
+  "Generating SVG...": "Generating SVG...",
+  "AI inline style generated": "AI inline style generated",
+  "AI SVG generated": "AI SVG generated",
+  "Failed to generate inline style": "Failed to generate inline style",
+  "Failed to generate SVG": "Failed to generate SVG",
+  "AI Inline Style System Prompt": "AI Inline Style System Prompt",
+  "Optional custom system prompt for AI inline style generation": "Optional custom system prompt for AI inline style generation",
+  "Generate SVG with AI": "Generate SVG with AI",
+  "Describe desired SVG shape": "Describe desired SVG shape",
+  "Use natural language to describe expected SVG": "Use natural language to describe expected SVG",
+  "Generated SVG": "Generated SVG",
+  "AI SVG System Prompt": "AI SVG System Prompt",
+  "Optional custom system prompt for AI SVG generation": "Optional custom system prompt for AI SVG generation",
+  "AI Filter System Prompt": "AI Filter System Prompt",
+  "Optional custom system prompt for AI filter value generation": "Optional custom system prompt for AI filter value generation",
+  "Unsplash Image Source": "Unsplash Image Source",
+  "Unsplash ratio presets": "Unsplash ratio presets",
+  "Comma separated ratios, for example: 16:9,4:3,1:1": "Comma separated ratios, for example: 16:9,4:3,1:1",
+  "Unsplash custom ratio": "Unsplash custom ratio",
+  "Optional custom ratio, for example: 5:4": "Optional custom ratio, for example: 5:4",
+  "Unsplash default crop width": "Unsplash default crop width",
+  "Default crop width for inserted images": "Default crop width for inserted images",
+  "Unsplash default crop height": "Unsplash default crop height",
+  "Default crop height for inserted images": "Default crop height for inserted images",
+  "Unsplash Access Key": "Unsplash Access Key",
+  "Enter Access Key": "Enter Access Key",
   "CSS Class": "CSS Class",
   "Inline Style": "Inline Style",
   "Page Source": "Page Source",
@@ -683,7 +803,8 @@ var en_default = {
   Slower: "Slower",
   Faster: "Faster",
   Filter: "Filter",
-  Align: "Align"
+  Align: "Align",
+  "Open Custom Style Editor": "Open Custom Style Editor"
 };
 
 // src/lang/locale/design-inspector/en-US.json
@@ -724,7 +845,17 @@ var en_US_default = {
   "designInspector.option.scaleDown": "Scale Down",
   "designInspector.option.scaleDownOut": "Scale Down Out",
   "designInspector.option.slower": "Slower",
-  "designInspector.option.faster": "Faster"
+  "designInspector.option.faster": "Faster",
+  "designInspector.option.borderNone": "None",
+  "designInspector.option.borderHidden": "Hidden",
+  "designInspector.option.borderDotted": "Dotted",
+  "designInspector.option.borderDashed": "Dashed",
+  "designInspector.option.borderSolid": "Solid",
+  "designInspector.option.borderDouble": "Double",
+  "designInspector.option.borderGroove": "Groove",
+  "designInspector.option.borderRidge": "Ridge",
+  "designInspector.option.borderInset": "Inset",
+  "designInspector.option.borderOutset": "Outset"
 };
 
 // src/lang/locale/design-inspector/zh-CN.json
@@ -765,7 +896,17 @@ var zh_CN_default = {
   "designInspector.option.scaleDown": "\u7F29\u5C0F",
   "designInspector.option.scaleDownOut": "\u7F29\u5C0F\u9000\u51FA",
   "designInspector.option.slower": "\u66F4\u6162",
-  "designInspector.option.faster": "\u66F4\u5FEB"
+  "designInspector.option.faster": "\u66F4\u5FEB",
+  "designInspector.option.borderNone": "\u65E0",
+  "designInspector.option.borderHidden": "\u9690\u85CF",
+  "designInspector.option.borderDotted": "\u70B9\u7EBF",
+  "designInspector.option.borderDashed": "\u865A\u7EBF",
+  "designInspector.option.borderSolid": "\u5B9E\u7EBF",
+  "designInspector.option.borderDouble": "\u53CC\u7EBF",
+  "designInspector.option.borderGroove": "\u51F9\u69FD",
+  "designInspector.option.borderRidge": "\u810A\u7EBF",
+  "designInspector.option.borderInset": "\u5185\u5D4C",
+  "designInspector.option.borderOutset": "\u5916\u5D4C"
 };
 
 // src/lang/locale/zh-cn.ts
@@ -840,13 +981,21 @@ var zh_cn_default = {
   "Enter the full path to the SlidesRup Framework folder": "\u8F93\u5165 SlidesRup \u6846\u67B6\u6587\u4EF6\u5939\u7684\u5B8C\u6574\u8DEF\u5F84",
   "Create New Slides": "\u521B\u5EFA\u65B0\u7684\u6F14\u793A",
   "Slide Design A": "\u6F14\u793A\u8BBE\u8BA1A",
+  "Slide Design AVH": "\u6F14\u793A\u8BBE\u8BA1AVH",
   "Slide Design B": "\u6F14\u793A\u8BBE\u8BA1B",
+  "Slide Design BVH": "\u6F14\u793A\u8BBE\u8BA1BVH",
   "Slide Design C": "\u6F14\u793A\u8BBE\u8BA1C",
+  "Slide Design CVH": "\u6F14\u793A\u8BBE\u8BA1CVH",
   "Slide Design D": "\u6F14\u793A\u8BBE\u8BA1D",
+  "Slide Design DVH": "\u6F14\u793A\u8BBE\u8BA1DVH",
   "Slide Design E": "\u6F14\u793A\u8BBE\u8BA1E",
+  "Slide Design EVH": "\u6F14\u793A\u8BBE\u8BA1EVH",
   "Slide Design F": "\u6F14\u793A\u8BBE\u8BA1F",
+  "Slide Design FVH": "\u6F14\u793A\u8BBE\u8BA1FVH",
   "Slide Design G": "\u6F14\u793A\u8BBE\u8BA1G",
+  "Slide Design GVH": "\u6F14\u793A\u8BBE\u8BA1GVH",
   "Slide Design H": "\u6F14\u793A\u8BBE\u8BA1H",
+  "Slide Design HVH": "\u6F14\u793A\u8BBE\u8BA1HVH",
   "Slide Design": "\u6F14\u793A\u8BBE\u8BA1",
   "Please select a slide design": "\u8BF7\u9009\u62E9\u6F14\u793A\u8BBE\u8BA1",
   "New Slide": "\u65B0\u6F14\u793A",
@@ -1049,6 +1198,18 @@ var zh_cn_default = {
   "Use Default Value": "\u4F7F\u7528\u9ED8\u8BA4\u503C",
   "Customize Text Colors": "\u81EA\u5B9A\u4E49\u6587\u672C\u989C\u8272",
   "Advanced Settings": "\u9AD8\u7EA7\u8BBE\u7F6E",
+  "Enable AI Inline Style Generator": "\u542F\u7528 AI \u5185\u8054\u6837\u5F0F\u751F\u6210\u5668",
+  "Enable AI generation for Design Maker inline style": "\u542F\u7528 Design Maker \u5185\u8054\u6837\u5F0F\u7684 AI \u751F\u6210\u529F\u80FD",
+  "AI Provider Base URL": "AI \u670D\u52A1 Base URL",
+  "Set OpenAI-compatible API base URL": "\u8BBE\u7F6E OpenAI \u517C\u5BB9 API \u7684\u57FA\u7840\u5730\u5740",
+  "AI Provider Model": "AI \u670D\u52A1\u6A21\u578B",
+  "Set default model for AI inline style generation": "\u8BBE\u7F6E AI \u5185\u8054\u6837\u5F0F\u751F\u6210\u7684\u9ED8\u8BA4\u6A21\u578B",
+  "Enable Unsplash image insert": "\u542F\u7528 Unsplash \u56FE\u7247\u63D2\u5165",
+  "Allow inserting Unsplash images in Design Maker block content": "\u5141\u8BB8\u5728 Design Maker \u533A\u5757\u5185\u5BB9\u4E2D\u63D2\u5165 Unsplash \u56FE\u7247",
+  "Unsplash API Base URL": "Unsplash API Base URL",
+  "Set Unsplash API base URL": "\u8BBE\u7F6E Unsplash API \u7684\u57FA\u7840\u5730\u5740",
+  "Fallback to random image without Access Key": "\u65E0 Access Key \u65F6\u56DE\u9000\u4E3A\u968F\u673A\u56FE\u7247",
+  "When Access Key is empty, use Unsplash source random single image": "\u5F53 Access Key \u4E3A\u7A7A\u65F6\uFF0C\u4F7F\u7528 Unsplash \u968F\u673A\u5355\u56FE\u6E90",
   "Use User Customized CSS": "\u4F7F\u7528\u7528\u6237\u81EA\u5B9A\u4E49 CSS",
   "Enable User Customized CSS": "\u542F\u7528\u7528\u6237\u81EA\u5B9A\u4E49 CSS",
   "Enable User Font Family Setting": "\u542F\u7528\u7528\u6237\u5B57\u4F53\u8BBE\u7F6E",
@@ -1092,10 +1253,16 @@ var zh_cn_default = {
   "Fancy List With Order": "\u5E26\u5E8F\u53F7\u7684\u7CBE\u7F8E\u5217\u8868",
   "Fancy List With Order Row": "\u5E26\u5E8F\u53F7\u7684\u7CBE\u7F8E\u5217\u8868\u6574\u884C\u663E\u793A",
   "Grid List": "\u7F51\u683C\u5217\u8868",
+  "Grid Order List": "\u7F51\u683C\u6709\u5E8F\u5217\u8868",
   "Grid Step List": "\u7F51\u683C\u6B65\u9AA4\u5217\u8868",
   "Grid Step List Vertical": "\u5782\u76F4\u7F51\u683C\u6B65\u9AA4\u5217\u8868",
   "Box List": "\u65B9\u6846\u5217\u8868",
   "Order List With Border": "\u5E26\u8FB9\u6846\u7684\u6709\u5E8F\u5217\u8868",
+  "Venn List": "Venn\u5217\u8868",
+  "Pyramid List": "\u91D1\u5B57\u5854\u5217\u8868",
+  "PEST List": "PEST\u5217\u8868",
+  "SWOT List": "SWOT\u5217\u8868",
+  "VS List": "VS\u5217\u8868",
   "Default TOC Page List Class": "\u76EE\u5F55\u9875\u9ED8\u8BA4\u5217\u8868\u6837\u5F0F",
   "Please select the default list class for TOC pages": "\u8BF7\u9009\u62E9\u76EE\u5F55\u9875\u7684\u9ED8\u8BA4\u5217\u8868\u6837\u5F0F",
   "Default Chapter Page List Class": "\u7AE0\u8282\u9875\u9ED8\u8BA4\u5217\u8868\u6837\u5F0F",
@@ -1251,6 +1418,8 @@ var zh_cn_default = {
   "Reload Design": "\u91CD\u65B0\u52A0\u8F7D\u8BBE\u8BA1",
   "Design Pages": "\u8BBE\u8BA1\u9875\u9762",
   "Load Design": "\u5BFC\u5165\u8BBE\u8BA1",
+  "Open page note in new tab": "\u5728\u65B0\u6807\u7B7E\u6253\u5F00\u9875\u9762\u7B14\u8BB0",
+  "Page note file not found": "\u672A\u627E\u5230\u9875\u9762\u7B14\u8BB0\u6587\u4EF6",
   "Contains source only blocks": "\u5305\u542B\u4EC5\u652F\u6301\u6E90\u7801\u7F16\u8F91\u7684\u533A\u5757",
   "Show Block": "\u663E\u793A\u533A\u5757",
   "Hide Block": "\u9690\u85CF\u533A\u5757",
@@ -1270,13 +1439,35 @@ var zh_cn_default = {
   "Select a block": "\u8BF7\u9009\u62E9\u4E00\u4E2A\u533A\u5757",
   "This block is source only": "\u8BE5\u533A\u5757\u4EC5\u652F\u6301\u6E90\u7801\u7F16\u8F91",
   Coordinates: "\u5750\u6807",
+  "Pixel Coordinates": "\u50CF\u7D20\u5750\u6807",
+  "Percent Coordinates": "\u767E\u5206\u6BD4\u5750\u6807",
+  PX: "\u50CF\u7D20",
+  Pct: "\u767E\u5206\u6BD4",
   Rel: "\u76F8\u5BF9",
   Glob: "\u5168\u5C40",
   "Block Content": "\u533A\u5757\u5185\u5BB9",
+  "Block Element Colors": "\u533A\u5757\u5185\u5143\u7D20\u989C\u8272\u8BBE\u7F6E",
   "Insert local image": "\u63D2\u5165\u672C\u5730\u56FE\u7247",
+  "Insert Unsplash image": "\u63D2\u5165 Unsplash \u56FE\u7247",
+  "Insert SVG By AI": "AI \u63D2\u5165 SVG",
   "Search local images": "\u641C\u7D22\u672C\u5730\u56FE\u7247",
+  "Search Unsplash images": "\u641C\u7D22 Unsplash \u56FE\u7247",
   "No local images found": "\u672A\u627E\u5230\u672C\u5730\u56FE\u7247",
+  "No Unsplash images found": "\u672A\u627E\u5230 Unsplash \u56FE\u7247",
   "Image Picker": "\u56FE\u7247\u9009\u62E9\u5668",
+  "Unsplash Picker": "Unsplash \u56FE\u7247\u9009\u62E9\u5668",
+  "Type keyword and press Enter": "\u8F93\u5165\u5173\u952E\u8BCD\u540E\u6309\u56DE\u8F66\u641C\u7D22",
+  "Unsplash image": "Unsplash \u56FE\u7247",
+  "Searching Unsplash...": "\u6B63\u5728\u641C\u7D22 Unsplash...",
+  "Unsplash random mode (no access key)": "\u672A\u914D\u7F6E Access Key\uFF0C\u5DF2\u5207\u6362\u968F\u673A\u5355\u56FE\u6A21\u5F0F",
+  "Select image to insert": "\u8BF7\u9009\u62E9\u4E00\u5F20\u56FE\u7247\u63D2\u5165",
+  "Failed to load Unsplash images": "\u52A0\u8F7D Unsplash \u56FE\u7247\u5931\u8D25",
+  "Ratio presets": "\u6BD4\u4F8B\u9884\u8BBE",
+  "Custom ratio": "\u81EA\u5B9A\u4E49\u6BD4\u4F8B",
+  "Current ratio": "\u5F53\u524D\u6BD4\u4F8B",
+  "Crop size": "\u88C1\u526A\u5C3A\u5BF8",
+  "Use custom ratio": "\u4F7F\u7528\u81EA\u5B9A\u4E49\u6BD4\u4F8B",
+  "Invalid ratio, fallback to 16:9": "\u6BD4\u4F8B\u65E0\u6548\uFF0C\u5DF2\u56DE\u9000\u5230 16:9",
   "Pin picker": "\u7F6E\u9876\u9009\u62E9\u5668",
   "Unpin picker": "\u53D6\u6D88\u7F6E\u9876",
   "Close picker": "\u5173\u95ED\u9009\u62E9\u5668",
@@ -1287,6 +1478,51 @@ var zh_cn_default = {
   "Next thumbnails": "\u5411\u540E\u6EDA\u52A8\u7F29\u7565\u56FE",
   "Loading page preview": "\u6B63\u5728\u52A0\u8F7D\u9875\u9762\u9884\u89C8",
   "Preview unavailable": "\u9884\u89C8\u4E0D\u53EF\u7528",
+  "AI Assistant": "AI \u52A9\u624B",
+  "AI Provider": "AI \u670D\u52A1\u63D0\u4F9B\u5546",
+  "Select AI provider protocol": "\u9009\u62E9 AI \u63D0\u4F9B\u5546\u534F\u8BAE",
+  "OpenAI Compatible": "OpenAI \u517C\u5BB9\u63A5\u53E3",
+  "AI Provider API Key": "AI \u670D\u52A1 API Key",
+  "API key is stored in Obsidian keychain": "API Key \u5DF2\u5B58\u50A8\u5728 Obsidian \u94A5\u5319\u4E32",
+  "Keychain unavailable, API key will fallback to plugin settings": "\u94A5\u5319\u4E32\u4E0D\u53EF\u7528\uFF0CAPI Key \u5C06\u56DE\u9000\u5B58\u50A8\u5230\u63D2\u4EF6\u8BBE\u7F6E",
+  "Enter API Key": "\u8F93\u5165 API Key",
+  "AI Inline Style Assistant": "AI \u5185\u8054\u6837\u5F0F\u52A9\u624B",
+  "Generate Filter with AI": "AI \u751F\u6210\u6EE4\u955C",
+  "Describe desired style effect": "\u63CF\u8FF0\u4F60\u60F3\u8981\u7684\u6837\u5F0F\u6548\u679C",
+  "Use natural language to describe expected visual effect": "\u7528\u81EA\u7136\u8BED\u8A00\u63CF\u8FF0\u4F60\u5E0C\u671B\u5B9E\u73B0\u7684\u89C6\u89C9\u6548\u679C",
+  "Example: make text white, add blur glass background and rounded corners": "\u793A\u4F8B\uFF1A\u8BA9\u6587\u5B57\u53D8\u767D\u3001\u6DFB\u52A0\u6BDB\u73BB\u7483\u80CC\u666F\u548C\u5706\u89D2",
+  "Generated inline style": "\u751F\u6210\u7684\u5185\u8054\u6837\u5F0F",
+  "Review before applying to current block": "\u5E94\u7528\u5230\u5F53\u524D\u533A\u5757\u524D\u8BF7\u5148\u68C0\u67E5",
+  "Generate with AI": "AI \u751F\u6210",
+  "Apply Generated Style": "\u5E94\u7528\u751F\u6210\u6837\u5F0F",
+  "Apply Generated SVG": "\u5E94\u7528\u751F\u6210 SVG",
+  "Generating inline style...": "\u6B63\u5728\u751F\u6210\u5185\u8054\u6837\u5F0F...",
+  "Generating SVG...": "\u6B63\u5728\u751F\u6210 SVG...",
+  "AI inline style generated": "AI \u5185\u8054\u6837\u5F0F\u5DF2\u751F\u6210",
+  "AI SVG generated": "AI SVG \u5DF2\u751F\u6210",
+  "Failed to generate inline style": "\u5185\u8054\u6837\u5F0F\u751F\u6210\u5931\u8D25",
+  "Failed to generate SVG": "SVG \u751F\u6210\u5931\u8D25",
+  "AI Inline Style System Prompt": "AI \u5185\u8054\u6837\u5F0F\u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "Optional custom system prompt for AI inline style generation": "\u7528\u4E8E AI \u751F\u6210\u5185\u8054\u6837\u5F0F\u7684\u53EF\u9009\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "Generate SVG with AI": "AI \u751F\u6210 SVG",
+  "Describe desired SVG shape": "\u63CF\u8FF0\u4F60\u60F3\u8981\u7684 SVG \u56FE\u5F62",
+  "Use natural language to describe expected SVG": "\u7528\u81EA\u7136\u8BED\u8A00\u63CF\u8FF0\u4F60\u5E0C\u671B\u751F\u6210\u7684 SVG",
+  "Generated SVG": "\u751F\u6210\u7684 SVG",
+  "AI SVG System Prompt": "AI SVG \u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "Optional custom system prompt for AI SVG generation": "\u7528\u4E8E AI \u751F\u6210 SVG \u7684\u53EF\u9009\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "AI Filter System Prompt": "AI Filter \u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "Optional custom system prompt for AI filter value generation": "\u7528\u4E8E AI \u751F\u6210 filter \u503C\u7684\u53EF\u9009\u81EA\u5B9A\u4E49\u7CFB\u7EDF\u63D0\u793A\u8BCD",
+  "Unsplash Image Source": "Unsplash \u56FE\u6E90",
+  "Unsplash ratio presets": "Unsplash \u6BD4\u4F8B\u9884\u8BBE",
+  "Comma separated ratios, for example: 16:9,4:3,1:1": "\u7528\u9017\u53F7\u5206\u9694\u6BD4\u4F8B\uFF0C\u4F8B\u5982\uFF1A16:9,4:3,1:1",
+  "Unsplash custom ratio": "Unsplash \u81EA\u5B9A\u4E49\u6BD4\u4F8B",
+  "Optional custom ratio, for example: 5:4": "\u53EF\u9009\u81EA\u5B9A\u4E49\u6BD4\u4F8B\uFF0C\u4F8B\u5982\uFF1A5:4",
+  "Unsplash default crop width": "Unsplash \u9ED8\u8BA4\u88C1\u526A\u5BBD\u5EA6",
+  "Default crop width for inserted images": "\u63D2\u5165\u56FE\u7247\u7684\u9ED8\u8BA4\u88C1\u526A\u5BBD\u5EA6",
+  "Unsplash default crop height": "Unsplash \u9ED8\u8BA4\u88C1\u526A\u9AD8\u5EA6",
+  "Default crop height for inserted images": "\u63D2\u5165\u56FE\u7247\u7684\u9ED8\u8BA4\u88C1\u526A\u9AD8\u5EA6",
+  "Unsplash Access Key": "Unsplash Access Key",
+  "Enter Access Key": "\u8F93\u5165 Access Key",
   "CSS Class": "CSS \u7C7B\u540D",
   "Inline Style": "\u5185\u8054\u6837\u5F0F",
   "Page Source": "\u9875\u9762\u6E90\u7801",
@@ -1368,7 +1604,8 @@ var zh_cn_default = {
   Slower: "\u66F4\u6162",
   Faster: "\u66F4\u5FEB",
   Filter: "\u6EE4\u955C",
-  Align: "\u5BF9\u9F50"
+  Align: "\u5BF9\u9F50",
+  "Open Custom Style Editor": "\u6253\u5F00\u81EA\u5B9A\u4E49\u6837\u5F0F\u7F16\u8F91\u5668"
 };
 
 // src/lang/locale/zh-tw.ts
@@ -1443,13 +1680,21 @@ var zh_tw_default = {
   "Enter the full path to the SlidesRup Framework folder": "\u8F38\u5165 SlidesRup \u6846\u67B6\u8CC7\u6599\u593E\u7684\u5B8C\u6574\u8DEF\u5F91",
   "Create New Slides": "\u5EFA\u7ACB\u65B0\u7684\u7C21\u5831",
   "Slide Design A": "\u7C21\u5831\u8A2D\u8A08A",
+  "Slide Design AVH": "\u7C21\u5831\u8A2D\u8A08AVH",
   "Slide Design B": "\u7C21\u5831\u8A2D\u8A08B",
+  "Slide Design BVH": "\u7C21\u5831\u8A2D\u8A08BVH",
   "Slide Design C": "\u7C21\u5831\u8A2D\u8A08C",
+  "Slide Design CVH": "\u7C21\u5831\u8A2D\u8A08CVH",
   "Slide Design D": "\u7C21\u5831\u8A2D\u8A08D",
+  "Slide Design DVH": "\u7C21\u5831\u8A2D\u8A08DVH",
   "Slide Design E": "\u7C21\u5831\u8A2D\u8A08E",
+  "Slide Design EVH": "\u7C21\u5831\u8A2D\u8A08EVH",
   "Slide Design F": "\u7C21\u5831\u8A2D\u8A08F",
+  "Slide Design FVH": "\u7C21\u5831\u8A2D\u8A08FVH",
   "Slide Design G": "\u7C21\u5831\u8A2D\u8A08G",
+  "Slide Design GVH": "\u7C21\u5831\u8A2D\u8A08GVH",
   "Slide Design H": "\u7C21\u5831\u8A2D\u8A08H",
+  "Slide Design HVH": "\u7C21\u5831\u8A2D\u8A08HVH",
   "Slide Design": "\u7C21\u5831\u8A2D\u8A08",
   "Please select a slide design": "\u8ACB\u9078\u64C7\u7C21\u5831\u8A2D\u8A08",
   "New Slide": "\u65B0\u7C21\u5831",
@@ -1651,6 +1896,18 @@ var zh_tw_default = {
   "Use Default Value": "\u4F7F\u7528\u9810\u8A2D\u503C",
   "Customize Text Colors": "\u81EA\u8A02\u6587\u5B57\u984F\u8272",
   "Advanced Settings": "\u9032\u968E\u8A2D\u7F6E",
+  "Enable AI Inline Style Generator": "\u555F\u7528 AI \u5167\u806F\u6A23\u5F0F\u751F\u6210\u5668",
+  "Enable AI generation for Design Maker inline style": "\u555F\u7528 Design Maker \u5167\u806F\u6A23\u5F0F\u7684 AI \u751F\u6210\u529F\u80FD",
+  "AI Provider Base URL": "AI \u670D\u52D9 Base URL",
+  "Set OpenAI-compatible API base URL": "\u8A2D\u5B9A OpenAI \u76F8\u5BB9 API \u7684\u57FA\u790E\u4F4D\u5740",
+  "AI Provider Model": "AI \u670D\u52D9\u6A21\u578B",
+  "Set default model for AI inline style generation": "\u8A2D\u5B9A AI \u5167\u806F\u6A23\u5F0F\u751F\u6210\u7684\u9810\u8A2D\u6A21\u578B",
+  "Enable Unsplash image insert": "\u555F\u7528 Unsplash \u5716\u7247\u63D2\u5165",
+  "Allow inserting Unsplash images in Design Maker block content": "\u5141\u8A31\u5728 Design Maker \u5340\u584A\u5167\u5BB9\u4E2D\u63D2\u5165 Unsplash \u5716\u7247",
+  "Unsplash API Base URL": "Unsplash API Base URL",
+  "Set Unsplash API base URL": "\u8A2D\u5B9A Unsplash API \u7684\u57FA\u790E\u4F4D\u5740",
+  "Fallback to random image without Access Key": "\u7121 Access Key \u6642\u56DE\u9000\u70BA\u96A8\u6A5F\u5716\u7247",
+  "When Access Key is empty, use Unsplash source random single image": "\u7576 Access Key \u70BA\u7A7A\u6642\uFF0C\u4F7F\u7528 Unsplash \u96A8\u6A5F\u55AE\u5716\u4F86\u6E90",
   "Use User Customized CSS": "\u4F7F\u7528\u7528\u6236\u81EA\u8A02 CSS",
   "Enable User Customized CSS": "\u555F\u7528\u7528\u6236\u81EA\u8A02 CSS",
   "Enable User Font Family Setting": "\u555F\u7528\u7528\u6236\u5B57\u9AD4\u8A2D\u7F6E",
@@ -1694,10 +1951,16 @@ var zh_tw_default = {
   "Fancy List With Order": "\u5E36\u5E8F\u865F\u7684\u7CBE\u7F8E\u5217\u8868",
   "Fancy List With Order Row": "\u5E36\u5E8F\u865F\u7684\u7CBE\u7F8E\u5217\u8868\u6574\u884C\u986F\u793A",
   "Grid List": "\u7DB2\u683C\u5217\u8868",
+  "Grid Order List": "\u7DB2\u683C\u6709\u5E8F\u5217\u8868",
   "Grid Step List": "\u7DB2\u683C\u6B65\u9A5F\u5217\u8868",
   "Grid Step List Vertical": "\u5782\u76F4\u7DB2\u683C\u6B65\u9A5F\u5217\u8868",
   "Box List": "\u65B9\u6846\u5217\u8868",
   "Order List With Border": "\u5E36\u908A\u6846\u7684\u6709\u5E8F\u5217\u8868",
+  "Venn List": "Venn\u5217\u8868",
+  "Pyramid List": "\u91D1\u5B57\u5854\u5217\u8868",
+  "PEST List": "PEST\u5217\u8868",
+  "SWOT List": "SWOT\u5217\u8868",
+  "VS List": "VS\u5217\u8868",
   "Default TOC Page List Class": "\u76EE\u9304\u9801\u9810\u8A2D\u5217\u8868\u6A23\u5F0F",
   "Please select the default list class for TOC pages": "\u8ACB\u9078\u64C7\u76EE\u9304\u9801\u7684\u9810\u8A2D\u5217\u8868\u6A23\u5F0F",
   "Default Chapter Page List Class": "\u7AE0\u7BC0\u9801\u9810\u8A2D\u5217\u8868\u6A23\u5F0F",
@@ -1853,6 +2116,8 @@ var zh_tw_default = {
   "Reload Design": "\u91CD\u65B0\u8F09\u5165\u8A2D\u8A08",
   "Design Pages": "\u8A2D\u8A08\u9801\u9762",
   "Load Design": "\u532F\u5165\u8A2D\u8A08",
+  "Open page note in new tab": "\u5728\u65B0\u5206\u9801\u958B\u555F\u9801\u9762\u7B46\u8A18",
+  "Page note file not found": "\u627E\u4E0D\u5230\u9801\u9762\u7B46\u8A18\u6A94\u6848",
   "Contains source only blocks": "\u5305\u542B\u50C5\u652F\u63F4\u539F\u59CB\u78BC\u7DE8\u8F2F\u7684\u5340\u584A",
   "Show Block": "\u986F\u793A\u5340\u584A",
   "Hide Block": "\u96B1\u85CF\u5340\u584A",
@@ -1872,13 +2137,35 @@ var zh_tw_default = {
   "Select a block": "\u8ACB\u9078\u64C7\u4E00\u500B\u5340\u584A",
   "This block is source only": "\u6B64\u5340\u584A\u50C5\u652F\u63F4\u539F\u59CB\u78BC\u7DE8\u8F2F",
   Coordinates: "\u5EA7\u6A19",
+  "Pixel Coordinates": "\u50CF\u7D20\u5EA7\u6A19",
+  "Percent Coordinates": "\u767E\u5206\u6BD4\u5EA7\u6A19",
+  PX: "\u50CF\u7D20",
+  Pct: "\u767E\u5206\u6BD4",
   Rel: "\u76F8\u5C0D",
   Glob: "\u5168\u57DF",
   "Block Content": "\u5340\u584A\u5167\u5BB9",
+  "Block Element Colors": "\u5340\u584A\u5167\u5143\u7D20\u984F\u8272\u8A2D\u5B9A",
   "Insert local image": "\u63D2\u5165\u672C\u5730\u5716\u7247",
+  "Insert Unsplash image": "\u63D2\u5165 Unsplash \u5716\u7247",
+  "Insert SVG By AI": "AI \u63D2\u5165 SVG",
   "Search local images": "\u641C\u5C0B\u672C\u5730\u5716\u7247",
+  "Search Unsplash images": "\u641C\u5C0B Unsplash \u5716\u7247",
   "No local images found": "\u672A\u627E\u5230\u672C\u5730\u5716\u7247",
+  "No Unsplash images found": "\u672A\u627E\u5230 Unsplash \u5716\u7247",
   "Image Picker": "\u5716\u7247\u9078\u64C7\u5668",
+  "Unsplash Picker": "Unsplash \u5716\u7247\u9078\u64C7\u5668",
+  "Type keyword and press Enter": "\u8F38\u5165\u95DC\u9375\u5B57\u5F8C\u6309 Enter \u641C\u5C0B",
+  "Unsplash image": "Unsplash \u5716\u7247",
+  "Searching Unsplash...": "\u6B63\u5728\u641C\u5C0B Unsplash...",
+  "Unsplash random mode (no access key)": "\u672A\u8A2D\u5B9A Access Key\uFF0C\u5DF2\u5207\u63DB\u96A8\u6A5F\u55AE\u5716\u6A21\u5F0F",
+  "Select image to insert": "\u8ACB\u9078\u64C7\u4E00\u5F35\u5716\u7247\u63D2\u5165",
+  "Failed to load Unsplash images": "\u8F09\u5165 Unsplash \u5716\u7247\u5931\u6557",
+  "Ratio presets": "\u6BD4\u4F8B\u9810\u8A2D",
+  "Custom ratio": "\u81EA\u8A02\u6BD4\u4F8B",
+  "Current ratio": "\u76EE\u524D\u6BD4\u4F8B",
+  "Crop size": "\u88C1\u5207\u5C3A\u5BF8",
+  "Use custom ratio": "\u4F7F\u7528\u81EA\u8A02\u6BD4\u4F8B",
+  "Invalid ratio, fallback to 16:9": "\u6BD4\u4F8B\u7121\u6548\uFF0C\u5DF2\u56DE\u9000\u5230 16:9",
   "Pin picker": "\u7F6E\u9802\u9078\u64C7\u5668",
   "Unpin picker": "\u53D6\u6D88\u7F6E\u9802",
   "Close picker": "\u95DC\u9589\u9078\u64C7\u5668",
@@ -1889,6 +2176,51 @@ var zh_tw_default = {
   "Next thumbnails": "\u5411\u5F8C\u6372\u52D5\u7E2E\u5716",
   "Loading page preview": "\u6B63\u5728\u8F09\u5165\u9801\u9762\u9810\u89BD",
   "Preview unavailable": "\u9810\u89BD\u4E0D\u53EF\u7528",
+  "AI Assistant": "AI \u52A9\u624B",
+  "AI Provider": "AI \u670D\u52D9\u63D0\u4F9B\u5546",
+  "Select AI provider protocol": "\u9078\u64C7 AI \u63D0\u4F9B\u5546\u5354\u8B70",
+  "OpenAI Compatible": "OpenAI \u76F8\u5BB9\u4ECB\u9762",
+  "AI Provider API Key": "AI \u670D\u52D9 API Key",
+  "API key is stored in Obsidian keychain": "API Key \u5DF2\u5132\u5B58\u5728 Obsidian \u9470\u5319\u5708",
+  "Keychain unavailable, API key will fallback to plugin settings": "\u9470\u5319\u5708\u4E0D\u53EF\u7528\uFF0CAPI Key \u5C07\u56DE\u9000\u5132\u5B58\u81F3\u5916\u639B\u8A2D\u5B9A",
+  "Enter API Key": "\u8F38\u5165 API Key",
+  "AI Inline Style Assistant": "AI \u5167\u806F\u6A23\u5F0F\u52A9\u624B",
+  "Generate Filter with AI": "AI \u751F\u6210\u6FFE\u93E1",
+  "Describe desired style effect": "\u63CF\u8FF0\u4F60\u60F3\u8981\u7684\u6A23\u5F0F\u6548\u679C",
+  "Use natural language to describe expected visual effect": "\u7528\u81EA\u7136\u8A9E\u8A00\u63CF\u8FF0\u4F60\u5E0C\u671B\u5BE6\u73FE\u7684\u8996\u89BA\u6548\u679C",
+  "Example: make text white, add blur glass background and rounded corners": "\u7BC4\u4F8B\uFF1A\u8B93\u6587\u5B57\u8B8A\u767D\u3001\u52A0\u5165\u6BDB\u73BB\u7483\u80CC\u666F\u548C\u5713\u89D2",
+  "Generated inline style": "\u751F\u6210\u7684\u5167\u806F\u6A23\u5F0F",
+  "Review before applying to current block": "\u5957\u7528\u5230\u76EE\u524D\u5340\u584A\u524D\u8ACB\u5148\u6AA2\u67E5",
+  "Generate with AI": "AI \u751F\u6210",
+  "Apply Generated Style": "\u5957\u7528\u751F\u6210\u6A23\u5F0F",
+  "Apply Generated SVG": "\u5957\u7528\u751F\u6210 SVG",
+  "Generating inline style...": "\u6B63\u5728\u751F\u6210\u5167\u806F\u6A23\u5F0F...",
+  "Generating SVG...": "\u6B63\u5728\u751F\u6210 SVG...",
+  "AI inline style generated": "AI \u5167\u806F\u6A23\u5F0F\u5DF2\u751F\u6210",
+  "AI SVG generated": "AI SVG \u5DF2\u751F\u6210",
+  "Failed to generate inline style": "\u5167\u806F\u6A23\u5F0F\u751F\u6210\u5931\u6557",
+  "Failed to generate SVG": "SVG \u751F\u6210\u5931\u6557",
+  "AI Inline Style System Prompt": "AI \u5167\u806F\u6A23\u5F0F\u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "Optional custom system prompt for AI inline style generation": "\u7528\u65BC AI \u751F\u6210\u5167\u806F\u6A23\u5F0F\u7684\u53EF\u9078\u81EA\u8A02\u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "Generate SVG with AI": "AI \u751F\u6210 SVG",
+  "Describe desired SVG shape": "\u63CF\u8FF0\u4F60\u60F3\u8981\u7684 SVG \u5716\u5F62",
+  "Use natural language to describe expected SVG": "\u7528\u81EA\u7136\u8A9E\u8A00\u63CF\u8FF0\u4F60\u5E0C\u671B\u751F\u6210\u7684 SVG",
+  "Generated SVG": "\u751F\u6210\u7684 SVG",
+  "AI SVG System Prompt": "AI SVG \u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "Optional custom system prompt for AI SVG generation": "\u7528\u65BC AI \u751F\u6210 SVG \u7684\u53EF\u9078\u81EA\u8A02\u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "AI Filter System Prompt": "AI Filter \u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "Optional custom system prompt for AI filter value generation": "\u7528\u65BC AI \u751F\u6210 filter \u503C\u7684\u53EF\u9078\u81EA\u8A02\u7CFB\u7D71\u63D0\u793A\u8A5E",
+  "Unsplash Image Source": "Unsplash \u5716\u6E90",
+  "Unsplash ratio presets": "Unsplash \u6BD4\u4F8B\u9810\u8A2D",
+  "Comma separated ratios, for example: 16:9,4:3,1:1": "\u4EE5\u9017\u865F\u5206\u9694\u6BD4\u4F8B\uFF0C\u4F8B\u5982\uFF1A16:9,4:3,1:1",
+  "Unsplash custom ratio": "Unsplash \u81EA\u8A02\u6BD4\u4F8B",
+  "Optional custom ratio, for example: 5:4": "\u53EF\u9078\u81EA\u8A02\u6BD4\u4F8B\uFF0C\u4F8B\u5982\uFF1A5:4",
+  "Unsplash default crop width": "Unsplash \u9810\u8A2D\u88C1\u5207\u5BEC\u5EA6",
+  "Default crop width for inserted images": "\u63D2\u5165\u5716\u7247\u7684\u9810\u8A2D\u88C1\u5207\u5BEC\u5EA6",
+  "Unsplash default crop height": "Unsplash \u9810\u8A2D\u88C1\u5207\u9AD8\u5EA6",
+  "Default crop height for inserted images": "\u63D2\u5165\u5716\u7247\u7684\u9810\u8A2D\u88C1\u5207\u9AD8\u5EA6",
+  "Unsplash Access Key": "Unsplash Access Key",
+  "Enter Access Key": "\u8F38\u5165 Access Key",
   "CSS Class": "CSS \u985E\u540D",
   "Inline Style": "\u5167\u806F\u6A23\u5F0F",
   "Page Source": "\u9801\u9762\u539F\u59CB\u78BC",
@@ -1970,7 +2302,8 @@ var zh_tw_default = {
   Slower: "\u66F4\u6162",
   Faster: "\u66F4\u5FEB",
   Filter: "\u6FFE\u93E1",
-  Align: "\u5C0D\u9F4A"
+  Align: "\u5C0D\u9F4A",
+  "Open Custom Style Editor": "\u6253\u958B\u81EA\u8A02\u6A23\u5F0F\u7DE8\u8F2F\u5668"
 };
 
 // src/lang/helpers.ts
@@ -1986,7 +2319,7 @@ function _get_current_lang() {
   var _a, _b, _c;
   try {
     const app = getAppInstance();
-    const slidesRupRunningLanguage = (_c = (_b = (_a = app.plugins.plugins["slides-rup"]) == null ? void 0 : _a.settings) == null ? void 0 : _b.slidesRupRunningLanguage) != null ? _c : "ob";
+    const slidesRupRunningLanguage = (_c = (_b = (_a = app.plugins.plugins[PLUGIN_ID]) == null ? void 0 : _a.settings) == null ? void 0 : _b.slidesRupRunningLanguage) != null ? _c : "ob";
     return slidesRupRunningLanguage === "ob" ? import_obsidian2.moment.locale() : slidesRupRunningLanguage;
   } catch (e) {
     console.error(
@@ -2015,47 +2348,184 @@ function t(str) {
   return (_b = (_a = locale[key]) != null ? _a : EN_BASE_LOCALE[key]) != null ? _b : key;
 }
 
+// src/models/default-settings.ts
+var DEFAULT_SETTINGS = {
+  updateAPIKey: "",
+  updateAPIKeyIsValid: false,
+  slidesRupFrameworkFolder: "",
+  slidesRupRunningLanguage: "ob",
+  userEmail: "",
+  userChecked: false,
+  newSlideLocationOption: "current",
+  assignedNewSlideLocation: "",
+  defaultDesign: "none",
+  templatesFolder: "",
+  demoFolder: "",
+  userSlideTemplate: "",
+  userChapterTemplate: "",
+  userChapterAndPagesTemplate: "",
+  userPageTemplate: "",
+  userBaseLayoutTemplate: "",
+  userTocTemplate: "",
+  presenter: "Johnny",
+  tagline: "SlidesRup",
+  slogan: t("SLIDESRUP_SLOGAN"),
+  dateFormat: "",
+  enableUserTemplates: true,
+  customizeSlideFolderName: true,
+  addChapterWithSubPages: true,
+  presentationPlugin: "slidesExtended",
+  pluginDownloadSource: "gitee",
+  updateIDs: {
+    style: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    marpTheme: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    templates: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    demo: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    reveal: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    revealAS: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    },
+    help: {
+      baseID: "",
+      tableID: "",
+      viewID: ""
+    }
+  },
+  slidesRupThemeColor: "#0044FF",
+  slidesRupHue: 225,
+  slidesRupSaturation: 100,
+  slidesRupLightness: 50,
+  slidesRupHeadingFont: "sysKaiti",
+  slidesRupMainFont: "sysKaiti",
+  slidesRupMainFontSize: 36,
+  // 各级标题默认与 Heading 一致
+  slidesRupH1Font: "sysKaiti",
+  slidesRupH2Font: "sysKaiti",
+  slidesRupH3Font: "sysKaiti",
+  slidesRupH4Font: "sysKaiti",
+  slidesRupH5Font: "sysKaiti",
+  slidesRupH6Font: "sysKaiti",
+  // 各级标题字号默认值
+  slidesRupH1Size: 108,
+  slidesRupH2Size: 72,
+  slidesRupH3Size: 64,
+  slidesRupH4Size: 56,
+  slidesRupH5Size: 48,
+  slidesRupH6Size: 40,
+  // 标题文字变换默认值
+  slidesRupHeadingTextTransform: "none",
+  // 各级标题颜色默认值
+  slidesRupH1Color: "#111111",
+  // 近乎纯黑
+  slidesRupH2Color: "#222222",
+  // 深黑灰
+  slidesRupH3Color: "#333333",
+  // 标准黑灰
+  slidesRupH4Color: "#444444",
+  // 稍浅黑灰
+  slidesRupH5Color: "#666666",
+  // 中灰
+  slidesRupH6Color: "#888888",
+  // 浅灰
+  // Header Settings
+  slidesRupTaglineFont: "sysKaiti",
+  slidesRupTaglineSize: 36,
+  slidesRupTaglineColor: "#ffffff",
+  slidesRupSloganFont: "sysKaiti",
+  slidesRupSloganSize: 36,
+  slidesRupSloganColor: "#ffffff",
+  slidesRupNavFont: "sysKaiti",
+  slidesRupNavSize: 36,
+  slidesRupNavColor: "#ffffff",
+  // 正文颜色默认值
+  slidesRupBodyColor: "#111111",
+  slidesRupParagraphColor: "#111111",
+  slidesRupListColor: "#111111",
+  slidesRupStrongColor: "#e74c3c",
+  slidesRupEmColor: "#FFD600",
+  slidesRupLinkColor: "#3498db",
+  enableSlidesRupFontFamilyUserSetting: false,
+  enableSlidesRupFontSizeUserSetting: false,
+  enableSlidesRupColorUserSetting: false,
+  customCss: "",
+  customMarpCss: "",
+  enableCustomCss: false,
+  slidesRupSlideMode: "light",
+  slidesRupUserDesigns: "none",
+  slidesRupUserDesignsCss: [],
+  slidesRupAutoConvertLinks: true,
+  slidesRupEnableParagraphFragments: true,
+  slidesRupDefaultTOCListClass: "order-list-with-border",
+  slidesRupDefaultChapterListClass: "order-list-with-border",
+  slidesRupDefaultContentListClass: "fancy-list-row",
+  slidesRupDefaultBlankListClass: "fancy-list-row",
+  slidesRupDefaultBackCoverListClass: "order-list-with-border",
+  slidesRupUserTOCPageListClass: "",
+  slidesRupUserChapterPageListClass: "",
+  slidesRupUserContentPageListClass: "",
+  slidesRupUserBlankPageListClass: "",
+  slidesRupUserBackCoverPageListClass: "",
+  slidesRupDefaultSlideSize: "p16-9",
+  slidesRupContentPageSlideType: "h",
+  slidesRupSlideNavigationMode: "default",
+  slidesRupDefaultTOCPageNumber: 2,
+  slidesRupUserSpecificFrontmatterOptions: "",
+  slidesRupTurnOnFragmentsInTOCSlide: true,
+  slidesRupTurnOnFragmentsInChapterSlides: true,
+  slidesRupTrunOnBaseLayoutNav: true,
+  slidesRupSeparateNavAndToc: false,
+  slidesRupEnableHeadingOBURI: true,
+  userAddedListClasses: "",
+  userAddedColumnClasses: "",
+  enableDesignMaker: true,
+  designMakerDefaultBaseDesign: "A",
+  designMakerShowAdvancedSourceEditor: false,
+  designMakerSyncVsCodeThemeOnSave: true,
+  designMakerPreviewScale: 100,
+  designMakerSlideBaseWidth: 1920,
+  designMakerSlideBaseHeight: 1080,
+  aiInlineStyleEnabled: false,
+  aiProviderType: "openai-compatible",
+  aiProviderBaseUrl: "https://api.openai.com/v1",
+  aiProviderModel: "gpt-4.1-mini",
+  aiProviderApiKeyFallback: "",
+  aiInlineStyleSystemPrompt: "You are an inline CSS declaration assistant. Return only CSS declarations for a style attribute. Strict rules: no selectors, no braces, no @rules, no comments, no markdown, no explanations. Output plain text declarations only in the format 'property: value;' with one declaration per line. Prefer safe, broadly supported CSS properties and values. Keep existing intent and avoid unnecessary changes.",
+  aiFilterSystemPrompt: "You generate CSS filter value only. Return only filter function chain like blur(2px) saturate(120%), without 'filter:' prefix, semicolon, markdown or explanation.",
+  aiSvgSystemPrompt: "You generate inline SVG only. Return only one complete <svg>...</svg> snippet, no markdown, no explanations. SVG must adapt to Grid container size (use a proper viewBox and width='100%' height='100%'). SVG must inherit Grid color settings (prefer currentColor for fill/stroke unless explicitly requested). Do not include script, foreignObject, or event-handler attributes.",
+  unsplashEnabled: true,
+  unsplashUseRandomFallbackWithoutKey: true,
+  unsplashApiBaseUrl: "https://api.unsplash.com",
+  unsplashAccessKeyFallback: "",
+  unsplashCropBaseWidth: 1920,
+  unsplashCropBaseHeight: 1080,
+  unsplashAspectRatioPresets: "16:9,4:3,1:1,3:2,21:9,9:16",
+  unsplashAspectRatioCustom: "",
+  unsplashRecentAspectRatio: "16:9"
+};
+
 // src/services/design-maker-schema.ts
-var DESIGN_PAGE_DEFINITIONS = [
-  {
-    type: "cover",
-    labelKey: "Cover",
-    getFileName: (designName) => `${t("Cover")}-${designName}.md`
-  },
-  {
-    type: "toc",
-    labelKey: "TOC",
-    getFileName: (designName) => `${t("TOC")}-${designName}.md`
-  },
-  {
-    type: "chapter",
-    labelKey: "Chapter",
-    getFileName: (designName) => `${t("Chapter")}-${designName}.md`
-  },
-  {
-    type: "content",
-    labelKey: "ContentPage",
-    getFileName: (designName) => `${t("ContentPage")}-${designName}.md`
-  },
-  {
-    type: "contentWithoutNav",
-    labelKey: "ContentPage",
-    getFileName: (designName) => `${t("ContentPage")}-${t("WithoutNav")}-${designName}.md`
-  },
-  {
-    type: "blank",
-    labelKey: "BlankPage",
-    getFileName: (designName) => `${t("BlankPage")}-${designName}.md`
-  },
-  {
-    type: "backCover",
-    labelKey: "BackCover",
-    getFileName: (designName) => `${t("BackCover")}-${designName}.md`
-  }
-];
-function getDesignPageDefinition(type) {
-  return DESIGN_PAGE_DEFINITIONS.find((item) => item.type === type);
-}
 function getDesignPageDisplayName(fileName) {
   const normalizedFileName = fileName.replace(/\.[^/.]+$/, "");
   const lastHyphenIndex = normalizedFileName.lastIndexOf("-");
@@ -2063,10 +2533,6 @@ function getDesignPageDisplayName(fileName) {
     return normalizedFileName;
   }
   return normalizedFileName.slice(0, lastHyphenIndex);
-}
-function getDesignPageFileName(type, designName) {
-  var _a;
-  return ((_a = getDesignPageDefinition(type)) == null ? void 0 : _a.getFileName(designName)) || "";
 }
 
 // src/services/design-maker-parser.ts
@@ -2588,7 +3054,7 @@ function parseGridBlocks(markdown, footnotesState, rectUnit, warnings, parentRec
   return blocks;
 }
 function parseDesignPageDraft(pageType, designName, filePath, markdown) {
-  const fileName = getDesignPageFileName(pageType, designName);
+  const fileName = filePath.split("/").pop() || `${pageType}.md`;
   const footnotesState = {
     hasFootnotesBlock: false,
     hasSideBarBlock: false
@@ -2640,16 +3106,21 @@ function readNumberValue(css, key, fallback) {
   const parsed = Number(value.replace(/[^\d.]/g, ""));
   return Number.isFinite(parsed) ? parsed : fallback;
 }
-function parseThemeDraft(designName, cssContent) {
+function parseThemeDraft(designName, cssContent, settings) {
   const lines = cssContent.split("\n");
   const headerDirectives = lines.filter((line) => {
     const trimmed = line.trim();
     return trimmed.startsWith("/* @theme") || trimmed.startsWith("@import");
   });
   const rawCss = lines.filter((line) => !headerDirectives.includes(line)).join("\n").trim();
+  const fallbackPrimaryColor = (settings == null ? void 0 : settings.slidesRupThemeColor) || DEFAULT_SETTINGS.slidesRupThemeColor;
   return {
     themeName: `sr-design-${designName.toLowerCase()}`,
-    primaryColor: readCssValue(rawCss, "--sr-dm-primary", "#0044ff"),
+    primaryColor: readCssValue(
+      rawCss,
+      "--sr-dm-primary",
+      fallbackPrimaryColor
+    ),
     secondaryColor: readCssValue(rawCss, "--sr-dm-secondary", "#7c3aed"),
     backgroundColor: readCssValue(rawCss, "--sr-dm-background", "#ffffff"),
     textColor: readCssValue(rawCss, "--sr-dm-text", "#111111"),
@@ -2675,6 +3146,42 @@ function normalizeInlineStyleForTemplate(style) {
     return "";
   return `${declarations.join("; ")};`;
 }
+function clampPaddingValue(value) {
+  if (!Number.isFinite(value))
+    return 0;
+  return Math.max(0, Math.round(value));
+}
+function parsePaddingTokenToPx(token) {
+  const normalized = (token || "").trim().toLowerCase();
+  if (!normalized)
+    return 0;
+  const match = normalized.match(/^(-?\d+)(px)?$/);
+  if (!match)
+    return 0;
+  return clampPaddingValue(Number(match[1]));
+}
+function normalizePaddingForTemplate(pad) {
+  const tokens = (pad || "").trim().split(/\s+/).filter(Boolean).slice(0, 4).map(parsePaddingTokenToPx);
+  if (!tokens.length)
+    return "";
+  let top = 0;
+  let right = 0;
+  let bottom = 0;
+  let left = 0;
+  if (tokens.length === 1) {
+    top = right = bottom = left = tokens[0];
+  } else if (tokens.length === 2) {
+    top = bottom = tokens[0];
+    right = left = tokens[1];
+  } else if (tokens.length === 3) {
+    top = tokens[0];
+    right = left = tokens[1];
+    bottom = tokens[2];
+  } else {
+    [top, right, bottom, left] = tokens;
+  }
+  return `${top}px ${right}px ${bottom}px ${left}px`;
+}
 function serializeAttributes(block, defaultRectUnit) {
   const rectUnit = block.extraAttributes.rectUnit === "px" ? "px" : defaultRectUnit;
   const attrs = {
@@ -2691,8 +3198,9 @@ function serializeAttributes(block, defaultRectUnit) {
     attrs.class = block.className.trim();
   if (block.align.trim())
     attrs.align = block.align.trim();
-  if (block.pad.trim())
-    attrs.pad = block.pad.trim();
+  const normalizedPadding = normalizePaddingForTemplate(block.pad);
+  if (normalizedPadding)
+    attrs.pad = normalizedPadding;
   const normalizedStyle = normalizeInlineStyleForTemplate(block.style);
   if (normalizedStyle)
     attrs.style = normalizedStyle;
@@ -2767,8 +3275,6 @@ ${root} .bg-with-back-color {
 ${root} .bg-with-front-color {
 	background: color-mix(in srgb, var(--sr-dm-background) 90%, var(--sr-dm-secondary) 10%);
 	color: var(--sr-dm-text);
-	border-radius: var(--sr-dm-radius);
-	box-shadow: 0 18px 40px rgba(15, 23, 42, var(--sr-dm-shadow-opacity));
 }
 
 ${root} .has-dark-background {
@@ -2788,8 +3294,231 @@ ${theme.rawCss.trim()}
 
 // src/ui/components/design-block-renderer.ts
 var import_obsidian3 = require("obsidian");
+function getPlainTextForBlock(result) {
+  var _a;
+  if (result.rendered)
+    return "";
+  const textContent = (_a = result.textContent) != null ? _a : "";
+  return textContent.trim().length > 0 ? textContent : "";
+}
+function stripHtmlComments(content) {
+  return content.replace(/<!--[\s\S]*?-->/g, "").trim();
+}
+function extractStyleBlocks(content) {
+  const matches = content.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || [];
+  return matches.map(
+    (item) => item.replace(/^<style\b[^>]*>/i, "").replace(/<\/style>$/i, "").trim()
+  ).filter(Boolean);
+}
+function stripStyleBlocks(content) {
+  return content.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").trim();
+}
+function extractSvgMarkup(content) {
+  const matches = content.match(/<svg[\s\S]*?<\/svg>/gi);
+  if (!matches || matches.length === 0)
+    return null;
+  return matches.join("\n");
+}
+function extractImageUrl(content) {
+  const markdownImageMatch = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
+  if (markdownImageMatch == null ? void 0 : markdownImageMatch[1])
+    return markdownImageMatch[1];
+  const obsidianImageMatch = content.match(/!\[\[([^|\]]+)/);
+  if ((obsidianImageMatch == null ? void 0 : obsidianImageMatch[1]) && looksLikeImageResource(obsidianImageMatch[1])) {
+    return obsidianImageMatch[1];
+  }
+  return null;
+}
+function extractObsidianEmbedTarget(content) {
+  var _a;
+  const obsidianEmbedMatch = content.match(/!\[\[([^|\]]+)/);
+  return ((_a = obsidianEmbedMatch == null ? void 0 : obsidianEmbedMatch[1]) == null ? void 0 : _a.trim()) || null;
+}
+function looksLikeImageResource(target) {
+  return /\.(png|jpg|jpeg|gif|svg|webp|bmp|avif)$/i.test(target.trim());
+}
+function resolveObsidianImageUrl(target, context) {
+  const normalized = target.trim();
+  if (!normalized)
+    return normalized;
+  if (/^https?:\/\//i.test(normalized) || /^data:/i.test(normalized) || /^file:/i.test(normalized) || normalized.startsWith("/")) {
+    return normalized;
+  }
+  const app = context == null ? void 0 : context.app;
+  if (!app)
+    return normalized;
+  const sourcePath = (context == null ? void 0 : context.sourcePath) || "";
+  const linked = app.metadataCache.getFirstLinkpathDest(
+    normalized,
+    sourcePath
+  );
+  if (linked instanceof import_obsidian3.TFile) {
+    return app.vault.getResourcePath(linked);
+  }
+  const direct = app.vault.getAbstractFileByPath(normalized);
+  if (direct instanceof import_obsidian3.TFile) {
+    return app.vault.getResourcePath(direct);
+  }
+  return normalized;
+}
+function renderSvg(container, markup) {
+  container.addClass("slides-rup-design-maker-has-svg-content");
+  const wrapper = container.createDiv("slides-rup-design-maker-rendered-svg");
+  wrapper.innerHTML = markup;
+  return true;
+}
+function renderImage(container, url) {
+  const img = container.createEl("img", {
+    cls: "slides-rup-design-maker-rendered-image"
+  });
+  img.src = url;
+  img.alt = "";
+  return true;
+}
+function injectHiddenStyles(container, styleBlocks) {
+  styleBlocks.forEach((styleText) => {
+    const styleEl = container.createEl("style");
+    styleEl.textContent = styleText;
+  });
+}
+function extractPlaceholderTokens(content) {
+  const matches = content.match(/<%[\s\S]*?%>|\{\{[\s\S]*?\}\}/g) || [];
+  return matches.map((item) => item.trim()).filter(Boolean);
+}
+function normalizePlaceholderLabel(token) {
+  return token.replace(/^<%\??\s*/, "").replace(/\s*%>$/, "").replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "").replace(/_/g, " ").trim();
+}
+function toDisplayPlaceholderLabel(label) {
+  if (!label)
+    return "";
+  const normalized = label.replace(/\s+/g, " ").trim();
+  if (normalized.toLowerCase() === "toc")
+    return "TOC";
+  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+function getPlaceholderMeta(token) {
+  const normalized = normalizePlaceholderLabel(token).toLowerCase();
+  if (normalized.includes("content")) {
+    return {
+      icon: "\u25A3",
+      className: "is-layout",
+      label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token))
+    };
+  }
+  if (normalized.includes("toc") || normalized.includes("nav") || normalized.includes("chapter") || normalized.includes("page index")) {
+    return {
+      icon: "\u2630",
+      className: "is-navigation",
+      label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token))
+    };
+  }
+  if (normalized.includes("author") || normalized.includes("presenter") || normalized.includes("date")) {
+    return {
+      icon: "\u25D4",
+      className: "is-metadata",
+      label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token))
+    };
+  }
+  if (normalized.includes("tagline") || normalized.includes("logo") || normalized.includes("slogan") || normalized.includes("chapter name") || normalized.includes("slide name")) {
+    return {
+      icon: "\u2726",
+      className: "is-branding",
+      label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token))
+    };
+  }
+  return {
+    icon: "\u25C7",
+    className: "is-variable",
+    label: toDisplayPlaceholderLabel(normalizePlaceholderLabel(token))
+  };
+}
+function renderPlaceholders(container, tokens) {
+  const wrapper = container.createDiv(
+    "slides-rup-design-maker-placeholder-stack"
+  );
+  tokens.forEach((token) => {
+    const meta = getPlaceholderMeta(token);
+    const chip = wrapper.createDiv(
+      `slides-rup-design-maker-placeholder-chip ${meta.className}`
+    );
+    chip.createDiv({
+      cls: "slides-rup-design-maker-placeholder-icon",
+      text: meta.icon
+    });
+    chip.createDiv({
+      cls: "slides-rup-design-maker-placeholder-label",
+      text: meta.label
+    });
+  });
+  return true;
+}
+function renderBlockContent(container, content, context) {
+  const contentWithoutComments = stripHtmlComments(content);
+  if (!contentWithoutComments) {
+    return {
+      rendered: false,
+      hidden: false,
+      textContent: ""
+    };
+  }
+  const styleBlocks = extractStyleBlocks(contentWithoutComments);
+  const normalizedContent = stripStyleBlocks(contentWithoutComments);
+  if (styleBlocks.length > 0) {
+    injectHiddenStyles(container, styleBlocks);
+  }
+  const svgMarkup = extractSvgMarkup(contentWithoutComments);
+  if (svgMarkup) {
+    return {
+      rendered: renderSvg(container, svgMarkup),
+      hidden: false,
+      textContent: normalizedContent || ""
+    };
+  }
+  if (!normalizedContent) {
+    return {
+      rendered: false,
+      hidden: false,
+      textContent: ""
+    };
+  }
+  const imageUrl = extractImageUrl(normalizedContent);
+  if (imageUrl) {
+    return {
+      rendered: renderImage(
+        container,
+        resolveObsidianImageUrl(imageUrl, context)
+      ),
+      hidden: false,
+      textContent: normalizedContent
+    };
+  }
+  const tokens = extractPlaceholderTokens(normalizedContent);
+  const embedTarget = extractObsidianEmbedTarget(normalizedContent);
+  if (embedTarget && !looksLikeImageResource(embedTarget)) {
+    tokens.push(embedTarget);
+  }
+  const remainingText = normalizedContent.replace(/<%[\s\S]*?%>|\{\{[\s\S]*?\}\}/g, "").replace(/!\[\[[^|\]]+(?:\|[^\]]+)?\]\]/g, "").trim();
+  if (tokens.length > 0 && !remainingText) {
+    return {
+      rendered: renderPlaceholders(container, tokens),
+      hidden: false,
+      textContent: normalizedContent
+    };
+  }
+  return {
+    rendered: false,
+    hidden: false,
+    textContent: normalizedContent
+  };
+}
 
 // src/ui/components/design-canvas.ts
+function resolveHostDocument(container) {
+  if (container.ownerDocument)
+    return container.ownerDocument;
+  const fallback = globalThis.document;
+  return fallback || {};
+}
 function clampCanvasZoomPercent(value) {
   if (!Number.isFinite(value))
     return 100;
@@ -2936,7 +3665,125 @@ function getInsertIndexForReversedLayerOrder(options) {
 }
 
 // src/ui/components/design-inspector.ts
+var import_obsidian7 = require("obsidian");
+
+// src/ui/modals/inline-style-ai-modal.ts
 var import_obsidian5 = require("obsidian");
+
+// src/services/unsplash-image-service.ts
+var import_obsidian6 = require("obsidian");
+var DEFAULT_UNSPLASH_CROP_WIDTH = 1920;
+var DEFAULT_UNSPLASH_CROP_HEIGHT = 1080;
+var DEFAULT_ASPECT_RATIO = "16:9";
+var DEFAULT_RATIO_PRESETS = "16:9,4:3,1:1,3:2,21:9,9:16";
+function buildMarkdownImageFromUrl(url) {
+  return `![](${url.trim()})`;
+}
+function normalizePositiveInt(value, fallback, min = 1, max = 8192) {
+  if (!Number.isFinite(value))
+    return fallback;
+  const next = Math.round(value);
+  if (next < min || next > max)
+    return fallback;
+  return next;
+}
+function splitRatioValue(input) {
+  const trimmed = (input || "").trim();
+  if (!trimmed)
+    return null;
+  const separator = trimmed.includes(":") ? ":" : "/";
+  const parts = trimmed.split(separator).map((part) => part.trim());
+  if (parts.length !== 2 || !parts[0] || !parts[1])
+    return null;
+  return [parts[0], parts[1]];
+}
+function parseAspectRatio(input) {
+  const parts = splitRatioValue(input);
+  if (!parts)
+    return null;
+  const width = Number(parts[0]);
+  const height = Number(parts[1]);
+  if (!Number.isFinite(width) || !Number.isFinite(height))
+    return null;
+  if (width <= 0 || height <= 0)
+    return null;
+  return {
+    label: `${Math.round(width)}:${Math.round(height)}`,
+    width: Math.round(width),
+    height: Math.round(height)
+  };
+}
+function resolveUnsplashAspectRatio(input, fallback = DEFAULT_ASPECT_RATIO) {
+  return parseAspectRatio(input) || parseAspectRatio(fallback);
+}
+function parseAspectRatioPresetList(input) {
+  const source = (input || "").trim() || DEFAULT_RATIO_PRESETS;
+  const seen = /* @__PURE__ */ new Set();
+  return source.split(",").map((item) => item.trim()).filter((item) => item.length > 0).map((item) => resolveUnsplashAspectRatio(item).label).filter((item) => {
+    if (seen.has(item))
+      return false;
+    seen.add(item);
+    return true;
+  });
+}
+function resolveCropDimensions(options) {
+  var _a, _b;
+  const baseWidth = normalizePositiveInt(
+    Number((_a = options == null ? void 0 : options.baseCropWidth) != null ? _a : DEFAULT_UNSPLASH_CROP_WIDTH),
+    DEFAULT_UNSPLASH_CROP_WIDTH
+  );
+  const baseHeight = normalizePositiveInt(
+    Number((_b = options == null ? void 0 : options.baseCropHeight) != null ? _b : DEFAULT_UNSPLASH_CROP_HEIGHT),
+    DEFAULT_UNSPLASH_CROP_HEIGHT
+  );
+  const ratio = resolveUnsplashAspectRatio((options == null ? void 0 : options.aspectRatio) || "");
+  const ratioValue = ratio.width / ratio.height;
+  const baseRatio = baseWidth / baseHeight;
+  if (ratioValue >= baseRatio) {
+    return {
+      width: baseWidth,
+      height: Math.max(1, Math.round(baseWidth / ratioValue)),
+      ratioLabel: ratio.label
+    };
+  }
+  return {
+    width: Math.max(1, Math.round(baseHeight * ratioValue)),
+    height: baseHeight,
+    ratioLabel: ratio.label
+  };
+}
+function buildUnsplashCroppedImageUrl(rawOrUrl, crop) {
+  const source = (rawOrUrl || "").trim();
+  if (!source)
+    return "";
+  try {
+    const url = new URL(source);
+    url.searchParams.set("auto", "format");
+    url.searchParams.set("fit", "crop");
+    url.searchParams.set("crop", "entropy");
+    url.searchParams.set("w", `${crop.width}`);
+    url.searchParams.set("h", `${crop.height}`);
+    url.searchParams.set("q", "80");
+    return url.toString();
+  } catch (e) {
+    return source;
+  }
+}
+function buildUnsplashRandomUrl(keyword, options) {
+  const crop = resolveCropDimensions(options);
+  const pool = [
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+    "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+    "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d"
+  ];
+  const normalized = (keyword || "").trim().toLowerCase();
+  const hash = normalized.split("").reduce((acc, ch) => acc * 31 + ch.charCodeAt(0) >>> 0, 0);
+  return buildUnsplashCroppedImageUrl(pool[hash % pool.length], crop);
+}
+
+// src/ui/components/design-inspector.ts
 var LOCAL_IMAGE_EXTENSIONS = /* @__PURE__ */ new Set([
   "png",
   "jpg",
@@ -2986,7 +3833,17 @@ var INSPECTOR_SELECT_OPTION_I18N_KEYS = {
   "Scale Down": "designInspector.option.scaleDown",
   "Scale Down Out": "designInspector.option.scaleDownOut",
   Slower: "designInspector.option.slower",
-  Faster: "designInspector.option.faster"
+  Faster: "designInspector.option.faster",
+  "Border None": "designInspector.option.borderNone",
+  "Border Hidden": "designInspector.option.borderHidden",
+  "Border Dotted": "designInspector.option.borderDotted",
+  "Border Dashed": "designInspector.option.borderDashed",
+  "Border Solid": "designInspector.option.borderSolid",
+  "Border Double": "designInspector.option.borderDouble",
+  "Border Groove": "designInspector.option.borderGroove",
+  "Border Ridge": "designInspector.option.borderRidge",
+  "Border Inset": "designInspector.option.borderInset",
+  "Border Outset": "designInspector.option.borderOutset"
 };
 var warnedMissingInspectorOptionLabels = /* @__PURE__ */ new Set();
 function warnMissingInspectorOptionI18n(label) {
@@ -3018,6 +3875,18 @@ function localizeInspectorSelectOptions(options) {
 function resetInspectorI18nWarnCacheForTests() {
   warnedMissingInspectorOptionLabels.clear();
 }
+var BORDER_STYLE_OPTIONS = [
+  "none",
+  "hidden",
+  "dotted",
+  "dashed",
+  "solid",
+  "double",
+  "groove",
+  "ridge",
+  "inset",
+  "outset"
+];
 var INLINE_STYLE_STANDARD_PROPERTIES = [
   "align-content",
   "align-items",
@@ -3327,6 +4196,9 @@ function isLocalImagePath(path) {
 function buildWikiImageEmbed(path) {
   return `![[${path.trim()}]]`;
 }
+function buildMarkdownImageEmbed(url) {
+  return `![](${url.trim()})`;
+}
 function insertImageEmbedIntoContent(content, imagePath) {
   const embed = buildWikiImageEmbed(imagePath);
   const current = (content || "").trimEnd();
@@ -3334,6 +4206,165 @@ function insertImageEmbedIntoContent(content, imagePath) {
     return embed;
   return `${current}
 ${embed}`;
+}
+function insertMarkdownImageIntoContent(content, imageUrl) {
+  const embed = buildMarkdownImageEmbed(imageUrl);
+  const current = (content || "").trimEnd();
+  if (!current)
+    return embed;
+  return `${current}
+${embed}`;
+}
+function insertSvgIntoContent(content, svg) {
+  const snippet = (svg || "").trim();
+  if (!snippet)
+    return (content || "").trimEnd();
+  const current = (content || "").trimEnd();
+  if (!current)
+    return snippet;
+  return `${current}
+${snippet}`;
+}
+function resolvePickerHost(triggerEl) {
+  const hostDocument = triggerEl.ownerDocument || document;
+  const hostWindow = hostDocument.defaultView || window;
+  return { hostDocument, hostWindow };
+}
+function isValidInspectorColor(value) {
+  const normalized = (value || "").trim();
+  if (!normalized)
+    return true;
+  const supportsApi = typeof CSS !== "undefined" && typeof CSS.supports === "function";
+  if (supportsApi && CSS.supports("color", normalized))
+    return true;
+  if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(normalized)) {
+    return true;
+  }
+  if (/^rgba?\(\s*[-\d.%\s,]+\)$/i.test(normalized))
+    return true;
+  if (/^hsla?\(\s*[-\d.%\s,]+\)$/i.test(normalized))
+    return true;
+  return false;
+}
+function normalizeInspectorColorToHex(value) {
+  const normalized = (value || "").trim();
+  if (!normalized)
+    return null;
+  if (/^#([0-9a-f]{6})$/i.test(normalized))
+    return normalized.toLowerCase();
+  if (/^#([0-9a-f]{3})$/i.test(normalized)) {
+    const hex = normalized.slice(1);
+    return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`.toLowerCase();
+  }
+  if (typeof document === "undefined")
+    return null;
+  const probe = document.createElement("span");
+  probe.style.color = normalized;
+  if (!probe.style.color)
+    return null;
+  document.body.appendChild(probe);
+  const computed = getComputedStyle(probe).color;
+  probe.remove();
+  const match = computed.match(
+    /^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\s*\)$/i
+  );
+  if (!match)
+    return null;
+  const [r, g, b] = [match[1], match[2], match[3]].map(
+    (n) => Math.max(0, Math.min(255, Number(n)))
+  );
+  return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+}
+function clampBorderWidth(value) {
+  if (!Number.isFinite(value))
+    return 0;
+  return Math.max(0, Math.round(value));
+}
+function normalizeBorderStyleOption(value) {
+  const normalized = (value || "").trim().toLowerCase();
+  return BORDER_STYLE_OPTIONS.includes(normalized) ? normalized : "solid";
+}
+function parseBorderComposite(border) {
+  const source = (border || "").trim();
+  if (!source) {
+    return { width: 0, style: "solid", color: "#ffffff" };
+  }
+  const widthMatch = source.match(/(\d+)\s*px/i);
+  const width = clampBorderWidth(widthMatch ? Number(widthMatch[1]) : 0);
+  const styleMatch = source.match(
+    /\b(none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)\b/i
+  );
+  const style = normalizeBorderStyleOption(
+    styleMatch ? styleMatch[1] : "solid"
+  );
+  let color = source;
+  if (widthMatch == null ? void 0 : widthMatch[0])
+    color = color.replace(widthMatch[0], " ");
+  if (styleMatch == null ? void 0 : styleMatch[0])
+    color = color.replace(styleMatch[0], " ");
+  color = color.replace(/\s+/g, " ").trim();
+  if (!color || !isValidInspectorColor(color))
+    color = "#ffffff";
+  return { width, style, color };
+}
+function composeBorderComposite(parts) {
+  const width = clampBorderWidth(parts.width);
+  const style = normalizeBorderStyleOption(parts.style || "solid");
+  const color = isValidInspectorColor((parts.color || "").trim()) ? (parts.color || "").trim() : "#ffffff";
+  return `${width}px ${style} ${color}`;
+}
+function clampPaddingValue2(value) {
+  if (!Number.isFinite(value))
+    return 0;
+  return Math.max(0, Math.round(value));
+}
+function parsePaddingTokenToPx2(token) {
+  const normalized = (token || "").trim().toLowerCase();
+  if (!normalized)
+    return 0;
+  const match = normalized.match(/^(-?\d+)(px)?$/);
+  if (!match)
+    return 0;
+  return clampPaddingValue2(Number(match[1]));
+}
+function parsePaddingComposite(pad) {
+  const tokens = (pad || "").trim().split(/\s+/).filter(Boolean).slice(0, 4).map(parsePaddingTokenToPx2);
+  if (!tokens.length) {
+    return { top: 0, right: 0, bottom: 0, left: 0 };
+  }
+  if (tokens.length === 1) {
+    return {
+      top: tokens[0],
+      right: tokens[0],
+      bottom: tokens[0],
+      left: tokens[0]
+    };
+  }
+  if (tokens.length === 2) {
+    return {
+      top: tokens[0],
+      right: tokens[1],
+      bottom: tokens[0],
+      left: tokens[1]
+    };
+  }
+  if (tokens.length === 3) {
+    return {
+      top: tokens[0],
+      right: tokens[1],
+      bottom: tokens[2],
+      left: tokens[1]
+    };
+  }
+  return {
+    top: tokens[0],
+    right: tokens[1],
+    bottom: tokens[2],
+    left: tokens[3]
+  };
+}
+function composePaddingComposite(parts) {
+  return `${clampPaddingValue2(parts.top)}px ${clampPaddingValue2(parts.right)}px ${clampPaddingValue2(parts.bottom)}px ${clampPaddingValue2(parts.left)}px`;
 }
 function formatInlineStyleForEditor(style) {
   const declarations = style.split(";").map((part) => part.trim()).filter(Boolean);
@@ -3353,6 +4384,146 @@ function syncInspectorRectFields(options) {
     input.value = formatRectInputValue(Math.round(rect[key]), rectUnit);
     input.setAttr("data-rect-unit", rectUnit);
   });
+}
+function clampOpacityValue(value) {
+  if (!Number.isFinite(value))
+    return 1;
+  return Math.min(1, Math.max(0, value));
+}
+function parseInspectorOpacityValue(value) {
+  if (value === "" || value === null || value === void 0)
+    return 1;
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (Number.isNaN(numeric))
+    return 1;
+  return clampOpacityValue(numeric);
+}
+function formatOpacityPercentLabel(value) {
+  return `${Math.round(clampOpacityValue(value) * 100)}%`;
+}
+var MANAGED_HTML_ELEMENTS = [
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "p",
+  "li",
+  "strong",
+  "em",
+  "a"
+];
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function getHtmlElementColors(block) {
+  var _a;
+  const id = (((_a = block.extraAttributes) == null ? void 0 : _a.id) || "").trim();
+  if (!id)
+    return {};
+  const escapedId = escapeRegExp(id);
+  const styleRegex = new RegExp(
+    `<style\\s+id="${escapedId}-colors"\\s*>([\\s\\S]*?)<\\/style>`,
+    "i"
+  );
+  const match = block.content.match(styleRegex);
+  if (!match)
+    return {};
+  const css = match[1] || "";
+  const result = {};
+  MANAGED_HTML_ELEMENTS.forEach((element) => {
+    const selectorRegex = new RegExp(
+      `#${escapedId}\\s+${element}\\s*\\{\\s*color\\s*:\\s*([^;\\}]+)\\s*;?\\s*\\}`,
+      "i"
+    );
+    const colorMatch = css.match(selectorRegex);
+    if (colorMatch == null ? void 0 : colorMatch[1]) {
+      result[element] = colorMatch[1].trim();
+    }
+  });
+  return result;
+}
+function updateHtmlElementColors(block, colors) {
+  const normalizedColors = MANAGED_HTML_ELEMENTS.reduce(
+    (acc, element) => {
+      const value = (colors[element] || "").trim();
+      if (value)
+        acc[element] = value;
+      return acc;
+    },
+    {}
+  );
+  const hasAnyColor = Object.keys(normalizedColors).length > 0;
+  if (!block.extraAttributes)
+    block.extraAttributes = {};
+  let id = (block.extraAttributes.id || "").trim();
+  if (!id && hasAnyColor) {
+    id = `grid-${Date.now()}`;
+    block.extraAttributes.id = id;
+  }
+  if (!id)
+    return;
+  const escapedId = escapeRegExp(id);
+  const styleRegex = new RegExp(
+    `\\n?<style\\s+id="${escapedId}-colors"\\s*>[\\s\\S]*?<\\/style>\\n?`,
+    "i"
+  );
+  const trimmedContent = block.content.trim();
+  if (!hasAnyColor) {
+    block.content = trimmedContent.replace(styleRegex, "").trim();
+    return;
+  }
+  const styleLines = MANAGED_HTML_ELEMENTS.filter(
+    (element) => Boolean(normalizedColors[element])
+  ).map(
+    (element) => `#${id} ${element} { color: ${normalizedColors[element]}; }`
+  );
+  const styleBlock = `<style id="${id}-colors">
+${styleLines.join("\n")}
+</style>`;
+  if (styleRegex.test(trimmedContent)) {
+    block.content = trimmedContent.replace(styleRegex, `
+${styleBlock}
+`).trim();
+    return;
+  }
+  block.content = trimmedContent ? `${styleBlock}
+
+${trimmedContent}` : styleBlock;
+}
+function resolveOpacityFromTrackPosition(options) {
+  const { clientX, trackLeft, trackWidth } = options;
+  if (trackWidth <= 0)
+    return 0;
+  return clampOpacityValue((clientX - trackLeft) / trackWidth);
+}
+function createStrictBinaryToggleController(options) {
+  const { initialValue = false, onChange } = options;
+  let currentValue = initialValue === true;
+  const notifyChange = (nextValue) => {
+    if (!onChange)
+      return;
+    try {
+      const result = onChange(nextValue);
+      if (result && typeof result.then === "function") {
+        result.catch(() => {
+        });
+      }
+    } catch (e) {
+    }
+  };
+  return {
+    getValue: () => currentValue,
+    setValue: (value) => {
+      currentValue = value === true;
+    },
+    toggle: () => {
+      currentValue = !currentValue;
+      notifyChange(currentValue);
+      return currentValue;
+    }
+  };
 }
 
 // src/yamlStore.ts
@@ -3694,6 +4865,176 @@ var GridTransformer = class {
   }
 };
 
+// src/services/theme-color-dispatch.ts
+function dispatchThemeColorChange(plugin, color) {
+  return __async(this, null, function* () {
+    plugin.settings.slidesRupThemeColor = color;
+    yield plugin.saveSettings();
+    yield plugin.services.slidesRupStyleService.modifyStyleSection("hsl");
+  });
+}
+
+// src/services/inline-style-ai-service.ts
+var import_obsidian8 = require("obsidian");
+function sanitizeInlineStyleAiOutput(raw) {
+  const text = raw.replace(/```css/gi, "").replace(/```/g, "").trim();
+  if (!text)
+    return "";
+  if (/[{}]/.test(text) || /@[a-z-]+/i.test(text)) {
+    throw new Error("AI output contains non-inline CSS syntax");
+  }
+  const declarations = text.split(";").map((part) => part.trim()).filter(Boolean).filter((part) => /^[a-zA-Z-][\w-]*\s*:\s*.+$/.test(part));
+  if (!declarations.length) {
+    throw new Error("AI output does not contain valid declarations");
+  }
+  return `${declarations.join(";\n")};`;
+}
+function sanitizeFilterAiOutput(raw) {
+  const text = raw.replace(/```css/gi, "").replace(/```/g, "").trim().replace(/\s+/g, " ");
+  if (!text) {
+    throw new Error("AI output does not contain valid filter value");
+  }
+  if (/[{}@;]/.test(text)) {
+    throw new Error("AI output contains invalid filter syntax");
+  }
+  const normalized = text.replace(/^filter\s*:\s*/i, "").trim();
+  if (!normalized) {
+    throw new Error("AI output does not contain valid filter value");
+  }
+  const functionPattern = /(blur|brightness|contrast|drop-shadow|grayscale|hue-rotate|invert|opacity|saturate|sepia)\(([^()]*)\)/gi;
+  const matches = [...normalized.matchAll(functionPattern)];
+  if (!matches.length) {
+    throw new Error("AI output does not contain valid filter value");
+  }
+  const rebuilt = matches.map((match) => `${match[1]}(${(match[2] || "").trim()})`).join(" ");
+  if (!rebuilt.trim() || rebuilt.length !== normalized.length) {
+    throw new Error("AI output contains invalid filter syntax");
+  }
+  return rebuilt;
+}
+function sanitizeSvgAiOutput(raw) {
+  const text = raw.replace(/```svg/gi, "").replace(/```xml/gi, "").replace(/```/g, "").trim();
+  if (!text) {
+    throw new Error("AI output does not contain valid SVG");
+  }
+  const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+  if (!svgMatch) {
+    throw new Error("AI output does not contain valid SVG");
+  }
+  const svg = svgMatch[0].trim();
+  if (/<script[\s>]/i.test(svg)) {
+    throw new Error("AI output contains unsafe SVG content");
+  }
+  if (/on[a-z]+\s*=/i.test(svg)) {
+    throw new Error("AI output contains unsafe SVG content");
+  }
+  if (/<foreignObject[\s>]/i.test(svg)) {
+    throw new Error("AI output contains unsafe SVG content");
+  }
+  return svg;
+}
+
+// src/services/secret-store-service.ts
+var SERVICE_NAME = "slides-rup";
+var AI_ACCOUNT = "ai-openai-compatible";
+var UNSPLASH_ACCOUNT = "unsplash-access-key";
+var SecretStoreService = class {
+  constructor(app, settings, saveSettings) {
+    this.app = app;
+    this.settings = settings;
+    this.saveSettings = saveSettings;
+  }
+  getKeychain() {
+    const appAny = this.app;
+    const candidates = [
+      appAny == null ? void 0 : appAny.keychain,
+      appAny == null ? void 0 : appAny.passwordManager,
+      appAny == null ? void 0 : appAny.credentialManager
+    ];
+    for (const candidate of candidates) {
+      if (candidate && typeof candidate.getPassword === "function" && typeof candidate.setPassword === "function") {
+        return candidate;
+      }
+    }
+    return null;
+  }
+  getStorageMode() {
+    return this.getKeychain() ? "keychain" : "fallback";
+  }
+  getAIProviderApiKey() {
+    return __async(this, null, function* () {
+      const keychain = this.getKeychain();
+      if (keychain) {
+        const value = yield keychain.getPassword(SERVICE_NAME, AI_ACCOUNT);
+        return value || "";
+      }
+      return this.settings.aiProviderApiKeyFallback || "";
+    });
+  }
+  setAIProviderApiKey(value) {
+    return __async(this, null, function* () {
+      const keychain = this.getKeychain();
+      if (keychain) {
+        if (!value.trim() && keychain.deletePassword) {
+          yield keychain.deletePassword(SERVICE_NAME, AI_ACCOUNT);
+          return;
+        }
+        yield keychain.setPassword(SERVICE_NAME, AI_ACCOUNT, value.trim());
+        return;
+      }
+      this.settings.aiProviderApiKeyFallback = value.trim();
+      yield this.saveSettings();
+    });
+  }
+  getUnsplashAccessKey() {
+    return __async(this, null, function* () {
+      const keychain = this.getKeychain();
+      if (keychain) {
+        const value = yield keychain.getPassword(
+          SERVICE_NAME,
+          UNSPLASH_ACCOUNT
+        );
+        return value || "";
+      }
+      return this.settings.unsplashAccessKeyFallback || "";
+    });
+  }
+  setUnsplashAccessKey(value) {
+    return __async(this, null, function* () {
+      const keychain = this.getKeychain();
+      if (keychain) {
+        if (!value.trim() && keychain.deletePassword) {
+          yield keychain.deletePassword(SERVICE_NAME, UNSPLASH_ACCOUNT);
+          return;
+        }
+        yield keychain.setPassword(
+          SERVICE_NAME,
+          UNSPLASH_ACCOUNT,
+          value.trim()
+        );
+        return;
+      }
+      this.settings.unsplashAccessKeyFallback = value.trim();
+      yield this.saveSettings();
+    });
+  }
+};
+
+// src/services/design-grid-duplication.ts
+function createDuplicatedGridBlock(options) {
+  const { target, offset, idFactory } = options;
+  const nextBlock = __spreadProps(__spreadValues({}, target), {
+    id: idFactory ? idFactory() : `grid-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    rect: __spreadProps(__spreadValues({}, target.rect), {
+      x: Math.min(100 - target.rect.width, target.rect.x + offset),
+      y: Math.min(100 - target.rect.height, target.rect.y + offset)
+    }),
+    extraAttributes: __spreadValues({}, target.extraAttributes || {})
+  });
+  nextBlock.children = [];
+  return nextBlock;
+}
+
 // src/__tests__/test.ts
 var originalRequire = module2.Module.prototype.require;
 module2.Module.prototype.require = function(...args) {
@@ -3820,6 +5161,34 @@ function testDesignMakerRuntimeCssHasHelperClasses() {
   );
   console.log("testDesignMakerRuntimeCssHasHelperClasses passed");
 }
+function testParseThemeDraftPrimaryColorFallbackFromSettings() {
+  const fallbackTheme = parseThemeDraft("Test", "");
+  import_assert.default.strictEqual(
+    fallbackTheme.primaryColor,
+    DEFAULT_SETTINGS.slidesRupThemeColor,
+    "primaryColor fallback should come from DEFAULT_SETTINGS.slidesRupThemeColor"
+  );
+  const settingsColor = "#123456";
+  const settingsTheme = parseThemeDraft("Test", "", {
+    slidesRupThemeColor: settingsColor
+  });
+  import_assert.default.strictEqual(
+    settingsTheme.primaryColor,
+    settingsColor,
+    "primaryColor fallback should use SlidesRupSettings.slidesRupThemeColor when provided"
+  );
+  const cssTheme = parseThemeDraft(
+    "Test",
+    ":root { --sr-dm-primary: #abcdef; }",
+    { slidesRupThemeColor: settingsColor }
+  );
+  import_assert.default.strictEqual(
+    cssTheme.primaryColor,
+    "#abcdef",
+    "CSS --sr-dm-primary should override settings fallback"
+  );
+  console.log("testParseThemeDraftPrimaryColorFallbackFromSettings passed");
+}
 function testSelectionDebounceStateMachine() {
   const machine = (() => {
     let lastApplied = null;
@@ -3918,6 +5287,72 @@ function testCanvasZoomTransformMath() {
   });
   import_assert.default.deepStrictEqual(nextPan, { panX: -100, panY: -100 });
   console.log("testCanvasZoomTransformMath passed");
+}
+function testResolveHostDocumentForPopoutWindow() {
+  const fallback = resolveHostDocument({});
+  import_assert.default.ok(fallback, "Should fallback to current document when ownerDocument absent");
+  const ownerDoc = { body: {} };
+  const resolved = resolveHostDocument({
+    ownerDocument: ownerDoc
+  });
+  import_assert.default.strictEqual(
+    resolved,
+    ownerDoc,
+    "Should prefer container.ownerDocument for popout-window safety"
+  );
+  console.log("testResolveHostDocumentForPopoutWindow passed");
+}
+function testResolvePickerHostForPopoutWindow() {
+  const ownerDoc = { body: {}, defaultView: { innerWidth: 800 } };
+  const triggerEl = { ownerDocument: ownerDoc };
+  const resolved = resolvePickerHost(triggerEl);
+  import_assert.default.strictEqual(
+    resolved.hostDocument,
+    ownerDoc,
+    "Should prefer trigger ownerDocument for picker host"
+  );
+  import_assert.default.strictEqual(
+    resolved.hostWindow,
+    ownerDoc.defaultView,
+    "Should use ownerDocument.defaultView for picker host window"
+  );
+  console.log("testResolvePickerHostForPopoutWindow passed");
+}
+function testGridPlainTextFallbackRendering() {
+  const plainResult = renderBlockContent({}, "Hello Grid");
+  import_assert.default.strictEqual(
+    plainResult.rendered,
+    false,
+    "Plain text content should not be handled by rich renderer"
+  );
+  import_assert.default.strictEqual(
+    getPlainTextForBlock(plainResult),
+    "Hello Grid",
+    "Plain text should fallback to text-node rendering path"
+  );
+  const styleHost = {
+    createEl: () => ({ textContent: "" })
+  };
+  const styleAndTextResult = renderBlockContent(
+    styleHost,
+    "<style>.x{color:red;}</style>Visible text"
+  );
+  import_assert.default.strictEqual(
+    getPlainTextForBlock(styleAndTextResult),
+    "Visible text",
+    "Style blocks should be stripped and keep visible text fallback"
+  );
+  const renderedResult = {
+    rendered: true,
+    hidden: false,
+    textContent: "ignored"
+  };
+  import_assert.default.strictEqual(
+    getPlainTextForBlock(renderedResult),
+    "",
+    "Rendered rich content should not duplicate plain text fallback"
+  );
+  console.log("testGridPlainTextFallbackRendering passed");
 }
 function testDesignTemplateUnitConsistency() {
   var _a, _b, _c, _d;
@@ -4312,6 +5747,197 @@ function testInspectorRectFieldRealtimeSync() {
   import_assert.default.strictEqual(inputMap.height.value, "25");
   console.log("testInspectorRectFieldRealtimeSync passed");
 }
+function testOpacitySliderValueHelpers() {
+  import_assert.default.strictEqual(
+    clampOpacityValue(-0.5),
+    0,
+    "Opacity clamp should keep lower bound at 0"
+  );
+  import_assert.default.strictEqual(
+    clampOpacityValue(1.5),
+    1,
+    "Opacity clamp should keep upper bound at 1"
+  );
+  import_assert.default.strictEqual(
+    clampOpacityValue(Number.NaN),
+    1,
+    "Opacity clamp should fallback invalid value to 1"
+  );
+  import_assert.default.strictEqual(
+    parseInspectorOpacityValue(""),
+    1,
+    "Empty opacity should fallback to 1"
+  );
+  import_assert.default.strictEqual(
+    parseInspectorOpacityValue("0.42"),
+    0.42,
+    "Valid opacity string should parse as number"
+  );
+  import_assert.default.strictEqual(
+    parseInspectorOpacityValue("abc"),
+    1,
+    "Invalid opacity string should fallback to 1"
+  );
+  import_assert.default.strictEqual(
+    formatOpacityPercentLabel(0.245),
+    "25%",
+    "Opacity label should format to nearest integer percentage"
+  );
+  import_assert.default.strictEqual(
+    resolveOpacityFromTrackPosition({
+      clientX: 50,
+      trackLeft: 0,
+      trackWidth: 200
+    }),
+    0.25,
+    "Pointer position should map to proportional opacity value"
+  );
+  import_assert.default.strictEqual(
+    resolveOpacityFromTrackPosition({
+      clientX: -20,
+      trackLeft: 0,
+      trackWidth: 200
+    }),
+    0,
+    "Pointer left overflow should clamp to 0"
+  );
+  import_assert.default.strictEqual(
+    resolveOpacityFromTrackPosition({
+      clientX: 300,
+      trackLeft: 0,
+      trackWidth: 200
+    }),
+    1,
+    "Pointer right overflow should clamp to 1"
+  );
+  import_assert.default.strictEqual(
+    resolveOpacityFromTrackPosition({
+      clientX: 100,
+      trackLeft: 0,
+      trackWidth: 0
+    }),
+    0,
+    "Zero-width slider track should return 0 safely"
+  );
+  console.log("testOpacitySliderValueHelpers passed");
+}
+function testBackgroundColorPickerValueHelpers() {
+  import_assert.default.strictEqual(
+    isValidInspectorColor("#ff8800"),
+    true,
+    "Hex color should be valid"
+  );
+  import_assert.default.strictEqual(
+    isValidInspectorColor("rgb(12, 34, 56)"),
+    true,
+    "RGB color should be valid"
+  );
+  import_assert.default.strictEqual(
+    isValidInspectorColor("hsl(210, 40%, 50%)"),
+    true,
+    "HSL color should be valid"
+  );
+  import_assert.default.strictEqual(
+    isValidInspectorColor("not-a-color"),
+    false,
+    "Invalid color token should be rejected"
+  );
+  import_assert.default.strictEqual(
+    normalizeInspectorColorToHex("#abc"),
+    "#aabbcc",
+    "Short hex should normalize to 6-digit hex"
+  );
+  import_assert.default.strictEqual(
+    normalizeInspectorColorToHex("#AABBCC"),
+    "#aabbcc",
+    "6-digit hex should normalize to lowercase"
+  );
+  console.log("testBackgroundColorPickerValueHelpers passed");
+}
+function testBorderCompositeHelpers() {
+  const parsed = parseBorderComposite("2px dashed #ff0000");
+  import_assert.default.deepStrictEqual(parsed, {
+    width: 2,
+    style: "dashed",
+    color: "#ff0000"
+  });
+  const parsedComplex = parseBorderComposite("1px solid var(--accent-color)");
+  import_assert.default.deepStrictEqual(parsedComplex, {
+    width: 1,
+    style: "solid",
+    color: "#ffffff"
+  });
+  const parsedInvalid = parseBorderComposite("invalid-border-value");
+  import_assert.default.deepStrictEqual(parsedInvalid, {
+    width: 0,
+    style: "solid",
+    color: "#ffffff"
+  });
+  import_assert.default.strictEqual(
+    composeBorderComposite({
+      width: 0,
+      style: "solid",
+      color: "#ffffff"
+    }),
+    "0px solid #ffffff",
+    "Width=0 should still compose structured border value"
+  );
+  const localizedBorderStyle = localizeInspectorSelectOptions([
+    { value: "solid", label: "Border Solid" }
+  ]);
+  import_assert.default.ok(
+    localizedBorderStyle[0].label !== "Border Solid",
+    "Border style label should resolve from i18n map"
+  );
+  console.log("testBorderCompositeHelpers passed");
+}
+function testPaddingCompositeHelpers() {
+  import_assert.default.deepStrictEqual(parsePaddingComposite(""), {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0
+  });
+  import_assert.default.deepStrictEqual(parsePaddingComposite("12px"), {
+    top: 12,
+    right: 12,
+    bottom: 12,
+    left: 12
+  });
+  import_assert.default.deepStrictEqual(parsePaddingComposite("12px 8px"), {
+    top: 12,
+    right: 8,
+    bottom: 12,
+    left: 8
+  });
+  import_assert.default.deepStrictEqual(parsePaddingComposite("12px 8px 4px"), {
+    top: 12,
+    right: 8,
+    bottom: 4,
+    left: 8
+  });
+  import_assert.default.deepStrictEqual(parsePaddingComposite("12px 8px 4px 2px"), {
+    top: 12,
+    right: 8,
+    bottom: 4,
+    left: 2
+  });
+  import_assert.default.strictEqual(
+    composePaddingComposite({ top: 12, right: 8, bottom: 4, left: 2 }),
+    "12px 8px 4px 2px"
+  );
+  import_assert.default.strictEqual(
+    normalizePaddingForTemplate("12px 8px"),
+    "12px 8px 12px 8px",
+    "Generator should normalize two-value shorthand to four values"
+  );
+  import_assert.default.strictEqual(
+    normalizePaddingForTemplate(""),
+    "",
+    "Empty padding should stay empty in generator normalization"
+  );
+  console.log("testPaddingCompositeHelpers passed");
+}
 function testInsertLocalImageEmbed() {
   import_assert.default.strictEqual(isLocalImagePath("assets/logo.png"), true);
   import_assert.default.strictEqual(isLocalImagePath("assets/photo.JPEG"), true);
@@ -4330,6 +5956,128 @@ function testInsertLocalImageEmbed() {
     "Hello\n![[assets/cover.png]]"
   );
   console.log("testInsertLocalImageEmbed passed");
+}
+function testInsertSvgIntoContent() {
+  const svg = `<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="30" fill="currentColor" /></svg>`;
+  import_assert.default.strictEqual(insertSvgIntoContent("", svg), svg);
+  import_assert.default.strictEqual(
+    insertSvgIntoContent("Hello", svg),
+    `Hello
+${svg}`,
+    "Should append SVG on a new line for non-empty content"
+  );
+  import_assert.default.strictEqual(
+    insertSvgIntoContent("Hello\n", svg),
+    `Hello
+${svg}`,
+    "Should normalize trailing newline before append"
+  );
+  console.log("testInsertSvgIntoContent passed");
+}
+function testUnsplashImageInsertHelpers() {
+  const url = "https://images.unsplash.com/photo-1";
+  import_assert.default.strictEqual(
+    buildMarkdownImageFromUrl(url),
+    "![](https://images.unsplash.com/photo-1)"
+  );
+  import_assert.default.strictEqual(
+    buildMarkdownImageEmbed(url),
+    "![](https://images.unsplash.com/photo-1)"
+  );
+  import_assert.default.strictEqual(
+    insertMarkdownImageIntoContent("", url),
+    "![](https://images.unsplash.com/photo-1)"
+  );
+  import_assert.default.strictEqual(
+    insertMarkdownImageIntoContent("Hello", url),
+    "Hello\n![](https://images.unsplash.com/photo-1)"
+  );
+  const randomUrl = buildUnsplashRandomUrl("mountain night");
+  import_assert.default.ok(
+    randomUrl.includes("images.unsplash.com/photo-"),
+    "Fallback Unsplash URL should use stable images.unsplash.com endpoint"
+  );
+  import_assert.default.strictEqual(
+    randomUrl,
+    buildUnsplashRandomUrl("mountain night"),
+    "Fallback Unsplash URL should be deterministic for same keyword"
+  );
+  import_assert.default.ok(
+    randomUrl.includes("fit=crop"),
+    "Fallback Unsplash URL should include crop params"
+  );
+  import_assert.default.ok(
+    randomUrl.includes("w=1920") && randomUrl.includes("h=1080"),
+    "Fallback Unsplash URL should default to 1920x1080 crop"
+  );
+  const customCropRandom = buildUnsplashRandomUrl("mountain night", {
+    aspectRatio: "1:1",
+    baseCropWidth: 1200,
+    baseCropHeight: 1200
+  });
+  import_assert.default.ok(
+    customCropRandom.includes("w=1200") && customCropRandom.includes("h=1200"),
+    "Fallback random URL should respect custom crop dimensions"
+  );
+  const croppedUrl = buildUnsplashCroppedImageUrl(
+    "https://images.unsplash.com/photo-1?ixid=abc",
+    { width: 1440, height: 1080 }
+  );
+  import_assert.default.ok(
+    croppedUrl.includes("w=1440") && croppedUrl.includes("h=1080"),
+    "Cropped URL builder should append width/height params"
+  );
+  console.log("testUnsplashImageInsertHelpers passed");
+}
+function testUnsplashRatioParsingAndCropResolve() {
+  import_assert.default.deepStrictEqual(parseAspectRatio("16:9"), {
+    label: "16:9",
+    width: 16,
+    height: 9
+  });
+  import_assert.default.deepStrictEqual(parseAspectRatio(" 4 / 3 "), {
+    label: "4:3",
+    width: 4,
+    height: 3
+  });
+  import_assert.default.strictEqual(parseAspectRatio("0:3"), null);
+  import_assert.default.strictEqual(parseAspectRatio("abc"), null);
+  import_assert.default.deepStrictEqual(parseAspectRatioPresetList("16:9,4:3,16:9,1:1"), [
+    "16:9",
+    "4:3",
+    "1:1"
+  ]);
+  const cropDefault = resolveCropDimensions({
+    aspectRatio: "16:9",
+    baseCropWidth: 1920,
+    baseCropHeight: 1080
+  });
+  import_assert.default.deepStrictEqual(cropDefault, {
+    width: 1920,
+    height: 1080,
+    ratioLabel: "16:9"
+  });
+  const cropSquare = resolveCropDimensions({
+    aspectRatio: "1:1",
+    baseCropWidth: 1920,
+    baseCropHeight: 1080
+  });
+  import_assert.default.deepStrictEqual(cropSquare, {
+    width: 1080,
+    height: 1080,
+    ratioLabel: "1:1"
+  });
+  const cropPortrait = resolveCropDimensions({
+    aspectRatio: "9:16",
+    baseCropWidth: 1920,
+    baseCropHeight: 1080
+  });
+  import_assert.default.deepStrictEqual(cropPortrait, {
+    width: 608,
+    height: 1080,
+    ratioLabel: "9:16"
+  });
+  console.log("testUnsplashRatioParsingAndCropResolve passed");
 }
 function testImagePickerPlacementAndSelection() {
   const bottomPlacement = computeImagePickerPlacement({
@@ -4407,9 +6155,156 @@ function testImagePickerPlacementAndSelection() {
   );
   console.log("testImagePickerPlacementAndSelection passed");
 }
+function testDuplicateGridBlockExtraAttributesIsolation() {
+  const target = {
+    id: "grid-origin",
+    type: "grid",
+    role: "grid",
+    rect: { x: 10, y: 20, width: 30, height: 40 },
+    content: "demo",
+    className: "",
+    style: "",
+    pad: "",
+    align: "",
+    flow: "",
+    filter: "",
+    justifyContent: "",
+    bg: "",
+    border: "",
+    animate: "",
+    opacity: "",
+    rotate: "",
+    frag: "",
+    extraAttributes: {
+      rectUnit: "px",
+      foo: "bar"
+    },
+    children: [{ id: "child-1" }]
+  };
+  const duplicated = createDuplicatedGridBlock({
+    target,
+    offset: 12,
+    idFactory: () => "grid-copy"
+  });
+  import_assert.default.notStrictEqual(
+    duplicated.extraAttributes,
+    target.extraAttributes,
+    "Duplicated block should clone extraAttributes to avoid shared reference"
+  );
+  import_assert.default.strictEqual(
+    duplicated.extraAttributes.rectUnit,
+    "px",
+    "Duplicated block should preserve rectUnit value"
+  );
+  duplicated.extraAttributes.rectUnit = "percent";
+  import_assert.default.strictEqual(
+    target.extraAttributes.rectUnit,
+    "px",
+    "Changing duplicate rectUnit should not affect original"
+  );
+  target.extraAttributes.rectUnit = "px";
+  import_assert.default.strictEqual(
+    duplicated.extraAttributes.rectUnit,
+    "percent",
+    "Duplicate should keep its own state after original changes"
+  );
+  import_assert.default.deepStrictEqual(
+    duplicated.children,
+    [],
+    "Duplicate should keep existing behavior of resetting children"
+  );
+  console.log("testDuplicateGridBlockExtraAttributesIsolation passed");
+}
+function testStrictBinaryToggleContinuousClicks() {
+  const history = [];
+  const toggle = createStrictBinaryToggleController({
+    initialValue: false,
+    onChange: (next) => {
+      history.push(next);
+    }
+  });
+  const clickedValues = [
+    toggle.toggle(),
+    toggle.toggle(),
+    toggle.toggle(),
+    toggle.toggle()
+  ];
+  import_assert.default.deepStrictEqual(
+    clickedValues,
+    [true, false, true, false],
+    "\u8FDE\u7EED\u70B9\u51FB\u5FC5\u987B\u4E25\u683C\u5728 true/false \u95F4\u4E8C\u503C\u7FFB\u8F6C"
+  );
+  import_assert.default.deepStrictEqual(
+    history,
+    [true, false, true, false],
+    "\u56DE\u8C03\u503C\u5FC5\u987B\u4E0E\u5B9E\u9645\u7FFB\u8F6C\u72B6\u6001\u4E25\u683C\u4E00\u81F4"
+  );
+  import_assert.default.strictEqual(toggle.getValue(), false, "\u56DB\u6B21\u7FFB\u8F6C\u540E\u5E94\u56DE\u5230\u521D\u59CB false");
+  console.log("testStrictBinaryToggleContinuousClicks passed");
+}
+function testStrictBinaryToggleBoundaryCases() {
+  const withoutCallback = createStrictBinaryToggleController({});
+  import_assert.default.strictEqual(
+    withoutCallback.getValue(),
+    false,
+    "\u672A\u4F20 initialValue \u65F6\u5E94\u9ED8\u8BA4 false"
+  );
+  import_assert.default.strictEqual(
+    withoutCallback.toggle(),
+    true,
+    "\u65E0\u56DE\u8C03\u573A\u666F\u4ECD\u9700\u6B63\u5E38\u7FFB\u8F6C\u5230 true"
+  );
+  import_assert.default.strictEqual(
+    withoutCallback.toggle(),
+    false,
+    "\u65E0\u56DE\u8C03\u573A\u666F\u7B2C\u4E8C\u6B21\u5E94\u7FFB\u8F6C\u56DE false"
+  );
+  withoutCallback.setValue(true);
+  import_assert.default.strictEqual(withoutCallback.getValue(), true, "setValue(true) \u5E94\u751F\u6548");
+  withoutCallback.setValue(false);
+  import_assert.default.strictEqual(
+    withoutCallback.getValue(),
+    false,
+    "setValue(false) \u5E94\u751F\u6548"
+  );
+  console.log("testStrictBinaryToggleBoundaryCases passed");
+}
+function testStrictBinaryToggleAsyncCallback() {
+  return __async(this, null, function* () {
+    const history = [];
+    const toggle = createStrictBinaryToggleController({
+      initialValue: true,
+      onChange: (next) => __async(this, null, function* () {
+        yield Promise.resolve();
+        history.push(next);
+      })
+    });
+    const first = toggle.toggle();
+    const second = toggle.toggle();
+    import_assert.default.strictEqual(first, false, "\u7B2C\u4E00\u6B21\u5F02\u6B65\u7FFB\u8F6C\u5E94\u4ECE true \u5230 false");
+    import_assert.default.strictEqual(second, true, "\u7B2C\u4E8C\u6B21\u5F02\u6B65\u7FFB\u8F6C\u5E94\u4ECE false \u5230 true");
+    import_assert.default.strictEqual(
+      toggle.getValue(),
+      true,
+      "\u5F02\u6B65\u56DE\u8C03\u4E0D\u5E94\u5F71\u54CD\u4E25\u683C\u4E8C\u503C\u72B6\u6001\u673A\u6700\u7EC8\u72B6\u6001"
+    );
+    yield Promise.resolve();
+    yield Promise.resolve();
+    import_assert.default.deepStrictEqual(
+      history,
+      [false, true],
+      "\u5F02\u6B65\u56DE\u8C03\u5E94\u6309\u70B9\u51FB\u987A\u5E8F\u63A5\u6536\u6BCF\u6B21\u7FFB\u8F6C\u7ED3\u679C"
+    );
+    console.log("testStrictBinaryToggleAsyncCallback passed");
+  });
+}
 function testInspectorLocaleKeysCompleteness() {
   const requiredKeys = [
     "Coordinates",
+    "Pixel Coordinates",
+    "Percent Coordinates",
+    "PX",
+    "Pct",
     "Rel",
     "Glob",
     "X",
@@ -4417,12 +6312,28 @@ function testInspectorLocaleKeysCompleteness() {
     "Width",
     "Height",
     "Insert local image",
+    "Insert SVG By AI",
     "Search local images",
     "No local images found",
     "Image Picker",
+    "Block Element Colors",
     "Pin picker",
     "Unpin picker",
     "Close picker",
+    "Ratio presets",
+    "Custom ratio",
+    "Current ratio",
+    "Crop size",
+    "Generate SVG with AI",
+    "Describe desired SVG shape",
+    "Use natural language to describe expected SVG",
+    "Generated SVG",
+    "Apply Generated SVG",
+    "Generating SVG...",
+    "AI SVG generated",
+    "Failed to generate SVG",
+    "AI SVG System Prompt",
+    "Optional custom system prompt for AI SVG generation",
     "Enter to insert \xB7 Esc to close",
     "Slide Thumbnails",
     "Switch to page",
@@ -4446,7 +6357,7 @@ function testInspectorLocaleKeysCompleteness() {
   console.log("testInspectorLocaleKeysCompleteness passed");
 }
 function testInspectorSelectOptionI18nAndFallback() {
-  const settings = globalThis.window.app.plugins.plugins["slides-rup"].settings;
+  const settings = globalThis.window.app.plugins.plugins[PLUGIN_ID].settings;
   settings.slidesRupRunningLanguage = "zh-cn";
   resetInspectorI18nWarnCacheForTests();
   const localized = localizeInspectorSelectOptions([
@@ -4834,48 +6745,258 @@ function testInlineStyleCompletionDataSourceAndMode() {
   );
   console.log("testInlineStyleCompletionDataSourceAndMode passed");
 }
+function testDispatchThemeColorChange() {
+  return __async(this, null, function* () {
+    const calls = [];
+    const plugin = {
+      settings: {
+        slidesRupThemeColor: "#0044FF"
+      },
+      saveSettings: () => __async(this, null, function* () {
+        calls.push("saveSettings");
+      }),
+      services: {
+        slidesRupStyleService: {
+          modifyStyleSection: (section) => __async(this, null, function* () {
+            calls.push(`modifyStyleSection:${section}`);
+          })
+        }
+      }
+    };
+    yield dispatchThemeColorChange(plugin, "#123456");
+    import_assert.default.strictEqual(
+      plugin.settings.slidesRupThemeColor,
+      "#123456",
+      "Theme color should sync to plugin.settings.slidesRupThemeColor"
+    );
+    import_assert.default.deepStrictEqual(calls, [
+      "saveSettings",
+      "modifyStyleSection:hsl"
+    ]);
+    console.log("testDispatchThemeColorChange passed");
+  });
+}
+function testInlineStyleAiOutputSanitization() {
+  import_assert.default.strictEqual(
+    sanitizeInlineStyleAiOutput(
+      "```css\ncolor: #fff; margin-top: 12px;\n```"
+    ),
+    "color: #fff;\nmargin-top: 12px;",
+    "Should sanitize fenced CSS to inline declarations"
+  );
+  import_assert.default.throws(
+    () => sanitizeInlineStyleAiOutput("@media (max-width:600px){color:red;}"),
+    /non-inline CSS syntax/,
+    "Should reject @rules and braces"
+  );
+  console.log("testInlineStyleAiOutputSanitization passed");
+}
+function testSvgAiOutputSanitization() {
+  import_assert.default.strictEqual(
+    sanitizeSvgAiOutput("```svg\n<svg viewBox='0 0 10 10'></svg>\n```"),
+    "<svg viewBox='0 0 10 10'></svg>",
+    "Should extract fenced SVG snippet"
+  );
+  import_assert.default.throws(
+    () => sanitizeSvgAiOutput("not svg"),
+    /valid SVG/,
+    "Non-SVG output should be rejected"
+  );
+  import_assert.default.throws(
+    () => sanitizeSvgAiOutput(
+      "<svg viewBox='0 0 10 10'><script>alert(1)</script></svg>"
+    ),
+    /unsafe SVG content/,
+    "Script tags should be rejected"
+  );
+  import_assert.default.throws(
+    () => sanitizeSvgAiOutput(
+      "<svg viewBox='0 0 10 10'><rect onload='x()' /></svg>"
+    ),
+    /unsafe SVG content/,
+    "Event handler attributes should be rejected"
+  );
+  console.log("testSvgAiOutputSanitization passed");
+}
+function testFilterAiOutputSanitization() {
+  import_assert.default.strictEqual(
+    sanitizeFilterAiOutput("blur(2px) saturate(120%)"),
+    "blur(2px) saturate(120%)",
+    "Should keep valid filter function chain"
+  );
+  import_assert.default.strictEqual(
+    sanitizeFilterAiOutput("filter: contrast(110%)"),
+    "contrast(110%)",
+    "Should strip filter prefix and keep value"
+  );
+  import_assert.default.throws(
+    () => sanitizeFilterAiOutput("```css\nfilter: blur(2px);\n```"),
+    /invalid filter syntax/,
+    "Semicolon-containing output should be rejected"
+  );
+  import_assert.default.throws(
+    () => sanitizeFilterAiOutput("@media (max-width:600px){filter: blur(2px)}"),
+    /invalid filter syntax/,
+    "At-rules should be rejected"
+  );
+  console.log("testFilterAiOutputSanitization passed");
+}
+function testSecretStoreFallbackBehavior() {
+  return __async(this, null, function* () {
+    const app = {};
+    const settings = __spreadProps(__spreadValues({}, DEFAULT_SETTINGS), {
+      aiProviderApiKeyFallback: ""
+    });
+    let saved = false;
+    const service = new SecretStoreService(app, settings, () => __async(this, null, function* () {
+      saved = true;
+    }));
+    import_assert.default.strictEqual(
+      service.getStorageMode(),
+      "fallback",
+      "Without keychain API should use fallback mode"
+    );
+    yield service.setAIProviderApiKey("sk-fallback");
+    import_assert.default.strictEqual(
+      settings.aiProviderApiKeyFallback,
+      "sk-fallback",
+      "Fallback mode should persist API key into settings"
+    );
+    import_assert.default.strictEqual(saved, true, "Fallback mode should trigger saveSettings");
+    import_assert.default.strictEqual(
+      yield service.getAIProviderApiKey(),
+      "sk-fallback",
+      "Fallback mode should read API key from settings"
+    );
+    console.log("testSecretStoreFallbackBehavior passed");
+  });
+}
+function testHtmlElementColorHelpers() {
+  const block = {
+    id: "grid-1",
+    type: "grid",
+    role: "grid",
+    rect: { x: 0, y: 0, width: 50, height: 50 },
+    content: "hello",
+    className: "",
+    style: "",
+    pad: "",
+    align: "",
+    flow: "",
+    filter: "",
+    justifyContent: "",
+    bg: "",
+    border: "",
+    animate: "",
+    opacity: "",
+    rotate: "",
+    frag: "",
+    extraAttributes: {}
+  };
+  import_assert.default.deepStrictEqual(
+    getHtmlElementColors(block),
+    {},
+    "Without style block, element colors should be empty"
+  );
+  updateHtmlElementColors(block, { h1: "#ff0000", p: "rgb(10, 20, 30)" });
+  import_assert.default.ok(
+    (block.extraAttributes.id || "").startsWith("grid-"),
+    "When applying first element color, grid id should be auto-generated"
+  );
+  import_assert.default.ok(
+    block.content.includes(`<style id="${block.extraAttributes.id}-colors">`),
+    "Content should include managed style block"
+  );
+  import_assert.default.ok(
+    block.content.includes(`#${block.extraAttributes.id} h1 { color: #ff0000; }`),
+    "Managed style should contain h1 color rule"
+  );
+  import_assert.default.deepStrictEqual(
+    getHtmlElementColors(block),
+    { h1: "#ff0000", p: "rgb(10, 20, 30)" },
+    "Parser should read managed element colors from style block"
+  );
+  updateHtmlElementColors(block, { p: "rgb(10, 20, 30)" });
+  import_assert.default.ok(
+    !block.content.includes(`#${block.extraAttributes.id} h1 { color: #ff0000; }`),
+    "Removing one element value should remove its rule"
+  );
+  updateHtmlElementColors(block, {});
+  import_assert.default.ok(
+    !block.content.includes(`<style id="${block.extraAttributes.id}-colors">`),
+    "When all values are empty, managed style block should be removed"
+  );
+  import_assert.default.ok(
+    (block.extraAttributes.id || "").startsWith("grid-"),
+    "When all values are empty, grid id should be kept"
+  );
+  console.log("testHtmlElementColorHelpers passed");
+}
 function runTests() {
-  try {
-    globalThis.window = {
-      app: {
-        plugins: {
+  return __async(this, null, function* () {
+    try {
+      globalThis.window = {
+        app: {
           plugins: {
-            "slides-rup": {
-              settings: {
-                slidesRupRunningLanguage: "en"
+            plugins: {
+              [PLUGIN_ID]: {
+                settings: {
+                  slidesRupRunningLanguage: "en"
+                }
               }
             }
           }
         }
-      }
-    };
-    testNestedGridSerialization();
-    testCoordinateConversion();
-    testTreeCircularDependency();
-    testDesignMakerRuntimeCssHasHelperClasses();
-    testSelectionDebounceStateMachine();
-    testNestedBlockVisibilityToggle();
-    testCanvasZoomTransformMath();
-    testDesignTemplateUnitConsistency();
-    testAdvancedSlidesWidthHeightParsing();
-    testInspectorRectFieldRealtimeSync();
-    testInsertLocalImageEmbed();
-    testImagePickerPlacementAndSelection();
-    testInspectorLocaleKeysCompleteness();
-    testInspectorSelectOptionI18nAndFallback();
-    testThumbnailVirtualizationMath();
-    testThumbnailKeyboardIndexMath();
-    testThumbnailBlockCountFormatting();
-    testLayerRenderOrderReverse();
-    testLayerDragPayloadCompatibility();
-    testLayerDropIntentAndInsertIndexMath();
-    testGeneratedMarkdownOrderAfterLayerMove();
-    testInlineStyleEditorAndTemplateNormalization();
-    testInlineStyleCompletionDataSourceAndMode();
-    console.log("All tests passed 100%!");
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
+      };
+      testNestedGridSerialization();
+      testCoordinateConversion();
+      testTreeCircularDependency();
+      testDesignMakerRuntimeCssHasHelperClasses();
+      testParseThemeDraftPrimaryColorFallbackFromSettings();
+      testSelectionDebounceStateMachine();
+      testNestedBlockVisibilityToggle();
+      testCanvasZoomTransformMath();
+      testResolveHostDocumentForPopoutWindow();
+      testResolvePickerHostForPopoutWindow();
+      testGridPlainTextFallbackRendering();
+      testDesignTemplateUnitConsistency();
+      testAdvancedSlidesWidthHeightParsing();
+      testInspectorRectFieldRealtimeSync();
+      testOpacitySliderValueHelpers();
+      testBackgroundColorPickerValueHelpers();
+      testBorderCompositeHelpers();
+      testPaddingCompositeHelpers();
+      testInsertLocalImageEmbed();
+      testInsertSvgIntoContent();
+      testUnsplashImageInsertHelpers();
+      testUnsplashRatioParsingAndCropResolve();
+      testImagePickerPlacementAndSelection();
+      testDuplicateGridBlockExtraAttributesIsolation();
+      testStrictBinaryToggleContinuousClicks();
+      testStrictBinaryToggleBoundaryCases();
+      yield testStrictBinaryToggleAsyncCallback();
+      testInspectorLocaleKeysCompleteness();
+      testInspectorSelectOptionI18nAndFallback();
+      testThumbnailVirtualizationMath();
+      testThumbnailKeyboardIndexMath();
+      testThumbnailBlockCountFormatting();
+      testLayerRenderOrderReverse();
+      testLayerDragPayloadCompatibility();
+      testLayerDropIntentAndInsertIndexMath();
+      testGeneratedMarkdownOrderAfterLayerMove();
+      testInlineStyleEditorAndTemplateNormalization();
+      testInlineStyleCompletionDataSourceAndMode();
+      yield testDispatchThemeColorChange();
+      testInlineStyleAiOutputSanitization();
+      testSvgAiOutputSanitization();
+      testFilterAiOutputSanitization();
+      yield testSecretStoreFallbackBehavior();
+      testHtmlElementColorHelpers();
+      console.log("All tests passed 100%!");
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
 }
 runTests();

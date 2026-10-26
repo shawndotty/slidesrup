@@ -92,6 +92,11 @@ export const ContentPageType = {
 export type ContentPageType =
 	(typeof ContentPageType)[keyof typeof ContentPageType];
 
+/** 插件 id（唯一真源）：源码、测试桩、迁移逻辑都读它 */
+export const PLUGIN_ID = "slidesrup";
+/** 旧 id：仅用于一次性识别历史配置/历史目录，不做业务判断 */
+export const LEGACY_PLUGIN_ID = "slides-rup";
+
 export const SLIDES_EXTENDED_PLUGIN_FOLDER = "plugins/slides-extended";
 export const ADVANCED_SLIDES_PLUGIN_FOLDER = "plugins/obsidian-advanced-slides";
 export const MARP_THEMES_FOLDER = "MarpThemes";
