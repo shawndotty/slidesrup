@@ -26,3 +26,7 @@ data.json
 src/airtable-config.ts
 
 WARP.md
+
+# 发版凭据
+.env
+.gitee-token

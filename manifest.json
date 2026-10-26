@@ -1,11 +1,10 @@
 {
-	"id": "slides-rup",
+	"id": "slidesrup",
 	"name": "SlidesRup",
-	"version": "1.6.3",
+	"version": "1.6.4",
 	"minAppVersion": "0.15.0",
 	"description": "Convert Markdown to Beautiful Presentation With One Click",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"author": "JohnnyLearns",
+	"authorUrl": "https://github.com/shawndotty",
 	"isDesktopOnly": false
 }
