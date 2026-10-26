@@ -3,8 +3,7 @@
  *
  * grid 属性是用户在设计稿里手写的那部分（`<grid drag="70 140" drop="-32 0">`），
  * 它决定每个块的坐标与对齐。这里**不构造 Properties**：`Properties` 的构造会跑全量
- * transformer 链，其中 FragmentTransformer / BackgroundTransformer 存在已记录的递归缺陷
- * （见 Plan-20261026-092649 §6），会让「只想测网格」的用例被无关缺陷带崩。
+ * transformer 链，只想测网格时不该被背景 / 片段等其它 transformer 的副作用干扰。
  * 所以给 transform() 传一个**只记录副作用**的假元素，断言它写出的 style / class。
  *
  * 依赖 `tests/helpers/setup.mjs` 种下的画布尺寸（1920×1080、center），
@@ -23,7 +22,7 @@ const { YamlStore } = await load('yamlStore');
 
 /**
  * 假的 Properties：只实现 GridTransformer 会调用的四个方法，把结果记在 Map/Set 里。
- * 读取语义与真实实现一致：`getAttribute` 缺失时返回空串（**不是 undefined**）。
+ * 读取语义与真实实现一致：`getAttribute` 缺失时返回 `undefined`（**不是空串**）。
  */
 function fakeElement(attrs = {}) {
 	const attributes = new Map(Object.entries(attrs));
@@ -31,7 +30,7 @@ function fakeElement(attrs = {}) {
 	const classes = new Set();
 
 	const element = {
-		getAttribute: (key) => attributes.get(key) ?? '',
+		getAttribute: (key) => attributes.get(key),
 		addStyle: (key, value) => {
 			styles.set(key, value);
 			return element;
@@ -97,15 +96,16 @@ test('grid: drop 用方位词时按剩余空间居中/贴边', () => {
 	assert.equal(element.style('top'), '30%');
 });
 
-test('grid: 缺 drag 时不写任何定位样式（默认值走不到）', () => {
-	// 现状：`element.getAttribute("drag") ?? defaultDrop` 里的 defaultDrop 永远用不上——
-	// getAttribute 缺失时返回空串（不是 undefined），`"" ?? x` 仍是 ""，
-	// 于是 readValues 拿不到宽高、直接返回 undefined。这属于 Plan-20261026-092649 §6
-	// 同一族的「空串 vs undefined」问题，此处只锁住现状。
+test('grid: 缺 drag 时回落到默认尺寸 50 100', () => {
+	// `getAttribute("drag") ?? defaultDrop`：缺失返回 undefined，于是 defaultDrop（相对模式 "50 100"）
+	// 终于可达。drop 仍按给定坐标解析，解析成功后 drag / drop 一并删除。
 	const element = transform({ drop: '0 0' });
 
-	assert.equal(element.style('width'), undefined);
-	assert.equal(element.hasAttribute('drop'), true);
+	assert.equal(element.style('width'), '50%');
+	assert.equal(element.style('height'), '100%');
+	assert.equal(element.style('left'), '0%');
+	assert.equal(element.style('top'), '0%');
+	assert.equal(element.hasAttribute('drop'), false);
 });
 
 test('grid: 非法 drop 不写任何定位样式，属性原样保留', () => {
@@ -151,16 +151,15 @@ test('grid: absolute 模式下负坐标按「贴另一侧」换算', () => {
 
 /* ── 对齐 ─────────────────────────────────────────────── */
 
-test('grid: 有 drop 时默认按列 flex，但 justify-content 被写成空串（已知缺陷）', () => {
+test('grid: 有 drop 时默认按列 flex，justify-content 取 align 的推导值', () => {
 	const element = transform({ drag: '5 5', drop: '1 1' });
 
 	assert.equal(element.style('display'), 'flex');
 	assert.equal(element.style('flex-direction'), 'column');
 	assert.equal(element.style('align-items'), 'center');
-	// `getAttribute("justify-content") ?? justifyContent` 中左侧恒为空串（不是 undefined），
-	// 于是推导出的 justifyContent 被覆盖成 ""。样式表里这条声明是无效值，会被浏览器丢弃，
-	// 表现为「align 推导出的纵向对齐不生效」。与 §6 同源，此处锁住现状。
-	assert.equal(element.style('justify-content'), '');
+	// 未写 align 时 getAlignment(undefined, undefined) 的推导值是 center；
+	// `getAttribute("justify-content") ?? justifyContent` 左侧缺失为 undefined，推导值生效。
+	assert.equal(element.style('justify-content'), 'center');
 });
 
 test('grid: flow="row" 走横向 flex 并加 flex-even', () => {
@@ -176,24 +175,23 @@ test('grid: flow="row" 走横向 flex 并加 flex-even', () => {
 	assert.equal(element.getAttribute('align'), 'left');
 });
 
-test('grid: stretch 默认落到 stretch-row，只有显式 flow="col" 才是 stretch-column', () => {
-	// 现状：getAlignment 里 `direction = flow ?? "col"`，而缺失流式属性时 flow 是空串，
-	// `"" ?? "col"` 仍是 ""，于是所有 `direction == "col"` 分支都进不去，默认走横向语义。
+test('grid: stretch 默认落到 stretch-column，显式 flow="row" 才是 stretch-row', () => {
+	// getAlignment 里 `direction = flow ?? "col"`：缺失流式属性时 flow 是 undefined，默认走向列语义。
 	const withoutFlow = transform({ align: 'stretch' });
-	assert.equal(withoutFlow.hasClass('stretch-row'), true);
-	assert.equal(withoutFlow.hasClass('stretch-column'), false);
+	assert.equal(withoutFlow.hasClass('stretch-column'), true);
+	assert.equal(withoutFlow.hasClass('stretch-row'), false);
 
-	const withCol = transform({ align: 'stretch', flow: 'col' });
-	assert.equal(withCol.hasClass('stretch-column'), true);
+	const withRow = transform({ align: 'stretch', flow: 'row' });
+	assert.equal(withRow.hasClass('stretch-row'), true);
+	assert.equal(withRow.hasClass('stretch-column'), false);
 });
 
-test('grid: flow="col" 时 align 推导的 align-items 生效', () => {
+test('grid: flow="col" 时 align 推导的 align-items / justify-content 同时生效', () => {
 	const element = transform({ align: 'left', flow: 'col' });
 
 	assert.equal(element.style('flex-direction'), 'column');
 	assert.equal(element.style('align-items'), 'flex-start');
-	// justify-content 仍被空串覆盖（同上一条缺陷）
-	assert.equal(element.style('justify-content'), '');
+	assert.equal(element.style('justify-content'), 'space-evenly');
 });
 
 test('grid: 解析后删掉 flow / justify-content 属性', () => {

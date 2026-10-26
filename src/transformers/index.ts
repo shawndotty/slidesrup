@@ -66,8 +66,8 @@ export class Properties {
 		return this.attributes.has(name);
 	}
 
-	public getAttribute(name: string): string {
-		return this.attributes.get(name) || "";
+	public getAttribute(name: string): string | undefined {
+		return this.attributes.get(name);
 	}
 
 	constructor(attributes: Map<string, string>) {
