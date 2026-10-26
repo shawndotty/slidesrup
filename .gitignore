@@ -31,3 +31,6 @@ WARP.md
 .env
 .gitee-token
 notes.md
+
+# 测试构建产物（npm run test:legacy 会重建，不入库）
+test.cjs
